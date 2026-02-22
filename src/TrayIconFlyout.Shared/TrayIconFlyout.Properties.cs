@@ -62,6 +62,14 @@ namespace U5BFA.Libraries
 			UpdateIslands();
 		}
 
+        partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            if ((Orientation)e.NewValue == (Orientation)e.OldValue)
+                return;
+
+            UpdateIslands();
+        }
+
 		partial void OnIsBackdropEnabledPropertyChanged(DependencyPropertyChangedEventArgs e)
 		{
 			if ((bool)e.NewValue == (bool)e.OldValue)
