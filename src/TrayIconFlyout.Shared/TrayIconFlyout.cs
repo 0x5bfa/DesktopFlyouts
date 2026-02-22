@@ -164,15 +164,15 @@ namespace U5BFA.Libraries
 
 			ISystemBackdropControllerWithTargets? controller = BackdropKind is BackdropKind.Acrylic
 				? (isTaskbarColorPrevalence
-					? BackdropControllerHelpers.GetAccentedAcrylicController(Resources)
+					? BackdropControllerHelpers.GetAccentedAcrylicController()
 					: isTaskbarLight
-						? BackdropControllerHelpers.GetLightAcrylicController(Resources)
-						: BackdropControllerHelpers.GetDarkAcrylicController(Resources))
+						? BackdropControllerHelpers.GetLightAcrylicController()
+						: BackdropControllerHelpers.GetDarkAcrylicController())
 				: (isTaskbarColorPrevalence
-					? BackdropControllerHelpers.GetAccentedMicaController(Resources)
+					? BackdropControllerHelpers.GetAccentedMicaController()
 					: isTaskbarLight
-						? BackdropControllerHelpers.GetLightMicaController(Resources)
-						: BackdropControllerHelpers.GetDarkMicaController(Resources));
+						? BackdropControllerHelpers.GetLightMicaController()
+						: BackdropControllerHelpers.GetDarkMicaController());
 			if (controller is null)
 				return;
 

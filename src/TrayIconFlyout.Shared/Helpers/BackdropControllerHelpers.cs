@@ -5,7 +5,7 @@ using Windows.UI;
 
 #if WASDK
 using Microsoft.UI.Composition.SystemBackdrops;
-using Microsoft.UI.Xaml;
+using Windows.UI.ViewManagement;
 #endif
 
 namespace U5BFA.Libraries
@@ -13,7 +13,9 @@ namespace U5BFA.Libraries
 #if WASDK
 	internal static class BackdropControllerHelpers
 	{
-		internal static DesktopAcrylicController? GetDarkAcrylicController(ResourceDictionary resources)
+        private static UISettings UISettings => field ??= new UISettings();
+
+        internal static DesktopAcrylicController? GetDarkAcrylicController()
 		{
 			return new DesktopAcrylicController()
 			{
@@ -24,7 +26,7 @@ namespace U5BFA.Libraries
 			};
 		}
 
-		internal static DesktopAcrylicController? GetLightAcrylicController(ResourceDictionary resources)
+		internal static DesktopAcrylicController? GetLightAcrylicController()
 		{
 			return new DesktopAcrylicController()
 			{
@@ -35,12 +37,10 @@ namespace U5BFA.Libraries
 			};
 		}
 
-		internal static DesktopAcrylicController? GetAccentedAcrylicController(ResourceDictionary resources)
+		internal static DesktopAcrylicController? GetAccentedAcrylicController()
 		{
-			if (!resources.TryGetValue("SystemAccentColorDark2", out var resource_SystemAccentColorDark2) || resource_SystemAccentColorDark2 is not Color systemAccentColorDark2)
-				return null;
-
-			return new DesktopAcrylicController()
+            var systemAccentColorDark2 = UISettings.GetColorValue(UIColorType.AccentDark2);
+            return new DesktopAcrylicController()
 			{
 				FallbackColor = systemAccentColorDark2,
 				LuminosityOpacity = 0.8F,
@@ -49,7 +49,7 @@ namespace U5BFA.Libraries
 			};
 		}
 
-		internal static MicaController? GetDarkMicaController(ResourceDictionary resources)
+		internal static MicaController? GetDarkMicaController()
 		{
 			return new MicaController()
 			{
@@ -60,7 +60,7 @@ namespace U5BFA.Libraries
 			};
 		}
 
-		internal static MicaController? GetLightMicaController(ResourceDictionary resources)
+		internal static MicaController? GetLightMicaController()
 		{
 			return new MicaController()
 			{
@@ -71,12 +71,10 @@ namespace U5BFA.Libraries
 			};
 		}
 
-		internal static MicaController? GetAccentedMicaController(ResourceDictionary resources)
+		internal static MicaController? GetAccentedMicaController()
 		{
-			if (!resources.TryGetValue("SystemAccentColorDark2", out var resource_SystemAccentColorDark2) || resource_SystemAccentColorDark2 is not Color systemAccentColorDark2)
-				return null;
-
-			return new MicaController()
+            var systemAccentColorDark2 = UISettings.GetColorValue(UIColorType.AccentDark2);
+            return new MicaController()
 			{
 				FallbackColor = systemAccentColorDark2,
 				LuminosityOpacity = 0.8F,
