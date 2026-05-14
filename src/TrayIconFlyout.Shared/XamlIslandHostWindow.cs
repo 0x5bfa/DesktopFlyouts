@@ -131,9 +131,18 @@ namespace U5BFA.Libraries
 
 		internal void SetHWndRectRegion(RectInt32 rect)
 		{
+			SetWindowRectRegion(HWnd, rect);
+			SetWindowRectRegion(_xamlHwnd, rect);
+		}
+
+		private static void SetWindowRectRegion(HWND hWnd, RectInt32 rect)
+		{
 			HRGN region = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.Width, rect.Height);
-			PInvoke.SetWindowRgn(HWnd, region, false);
-			PInvoke.SetWindowRgn(_xamlHwnd, region, false);
+			if (region.IsNull)
+				return;
+
+			if (PInvoke.SetWindowRgn(hWnd, region, false) == 0)
+				PInvoke.DeleteObject(region);
 		}
 
 		internal void UpdateWindowVisibility(bool isVisible)

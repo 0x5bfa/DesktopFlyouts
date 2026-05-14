@@ -44,6 +44,7 @@ IsWindowVisible
 ShowWindow
 CreateRectRgn
 SetWindowRgn
+DeleteObject
 GetWindowLongPtr
 SetWindowLongPtr
 GetCursorPos
