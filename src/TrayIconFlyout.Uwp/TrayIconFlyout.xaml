@@ -84,10 +84,10 @@
 				<ControlTemplate TargetType="local:TrayIconMenuFlyout">
 					<Grid
 						x:Name="PART_RootGrid"
-						Background="Red"
+						Background="Transparent"
 						BorderBrush="{TemplateBinding BorderBrush}"
 						BorderThickness="{TemplateBinding BorderThickness}">
-						<Border x:Name="PART_MenuFlyoutTargetControl" Background="Green" />
+						<Border x:Name="PART_MenuFlyoutTargetControl" Background="Transparent" />
 					</Grid>
 				</ControlTemplate>
 			</Setter.Value>

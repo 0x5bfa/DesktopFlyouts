@@ -1,4 +1,4 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using System;
@@ -26,6 +26,7 @@ namespace U5BFA.Libraries
 		private readonly HWND _hWnd = default;
 
 		private bool _created;
+		private HICON _currentHIcon = default;
 
 		private string _IconPath;
 		public string IconPath
@@ -99,6 +100,8 @@ namespace U5BFA.Libraries
 			HICON hIcon = (HICON)(void*)PInvoke.LoadImage(
 				HINSTANCE.Null, (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in IconPath.GetPinnableReference())),
 				GDI_IMAGE_TYPE.IMAGE_ICON, cx: 0, cy: 0, IMAGE_FLAGS.LR_LOADFROMFILE | IMAGE_FLAGS.LR_DEFAULTSIZE);
+			if (hIcon.IsNull)
+				return;
 
 			NOTIFYICONDATAW data = default;
 			data.cbSize = (uint)sizeof(NOTIFYICONDATAW);
@@ -123,18 +126,35 @@ namespace U5BFA.Libraries
 				data.szTip.Value[0] = '\0';
 			}
 
+			bool updated = false;
 			if (_created)
 			{
-				PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, &data);
+				updated = PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, &data);
+				if (!updated)
+					_created = false;
+			}
+
+			if (!_created)
+			{
+				PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, &data);
+				updated = PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, &data);
+				if (updated)
+				{
+					data.Anonymous.uVersion = 4u;
+					PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, &data);
+
+					_created = true;
+				}
+			}
+
+			if (updated)
+			{
+				DestroyCurrentIcon();
+				_currentHIcon = hIcon;
 			}
 			else
 			{
-				PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, &data);
-				PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, &data);
-				data.Anonymous.uVersion = 4u;
-				PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, &data);
-
-				_created = true;
+				PInvoke.DestroyIcon(hIcon);
 			}
 		}
 
@@ -155,6 +175,17 @@ namespace U5BFA.Libraries
 
 				_created = false;
 			}
+
+			DestroyCurrentIcon();
+		}
+
+		private void DestroyCurrentIcon()
+		{
+			if (_currentHIcon.IsNull)
+				return;
+
+			PInvoke.DestroyIcon(_currentHIcon);
+			_currentHIcon = default;
 		}
 
 		private Point GetCenterPointOfTrayIcon(HWND hWnd)

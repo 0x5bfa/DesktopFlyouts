@@ -1,4 +1,4 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using CommunityToolkit.WinUI;
@@ -28,8 +28,26 @@ namespace U5BFA.Libraries
 		[GeneratedDependencyProperty(DefaultValue = true)]
 		public partial bool IsBackdropEnabled { get; set; }
 
-		[GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
-		public partial Orientation PopupDirection { get; set; }
+		public static readonly DependencyProperty FlyoutWidthProperty =
+			DependencyProperty.Register(nameof(FlyoutWidth), typeof(GridLength), typeof(TrayIconFlyout), new PropertyMetadata(GridLength.Auto, OnFlyoutSizePropertyChanged));
+
+		public GridLength FlyoutWidth
+		{
+			get => (GridLength)GetValue(FlyoutWidthProperty);
+			set => SetValue(FlyoutWidthProperty, value);
+		}
+
+		public static readonly DependencyProperty FlyoutHeightProperty =
+			DependencyProperty.Register(nameof(FlyoutHeight), typeof(GridLength), typeof(TrayIconFlyout), new PropertyMetadata(GridLength.Auto, OnFlyoutSizePropertyChanged));
+
+		public GridLength FlyoutHeight
+		{
+			get => (GridLength)GetValue(FlyoutHeightProperty);
+			set => SetValue(FlyoutHeightProperty, value);
+		}
+
+		[GeneratedDependencyProperty(DefaultValue = TrayIconFlyoutPopupDirection.Vertical)]
+		public partial TrayIconFlyoutPopupDirection PopupDirection { get; set; }
 
 		[GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
 		public partial Orientation IslandsOrientation { get; set; }
@@ -48,6 +66,12 @@ namespace U5BFA.Libraries
 
 		[GeneratedDependencyProperty(DefaultValue = BackdropKind.Acrylic)]
 		public partial BackdropKind BackdropKind { get; set; }
+
+		private static void OnFlyoutSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+		{
+			if (dependencyObject is TrayIconFlyout flyout)
+				flyout.OnFlyoutSizeChanged();
+		}
 
 		partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e)
 		{

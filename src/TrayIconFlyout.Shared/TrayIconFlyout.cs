@@ -1,14 +1,17 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using System;
+using System.Drawing;
 using System.Threading.Tasks;
+using Windows.Graphics;
 
 #if UWP
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Markup;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -18,6 +21,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
@@ -40,6 +44,10 @@ namespace U5BFA.Libraries
 		private bool? _wasTaskbarLightLastTimeChecked;
 		private bool? _wasTaskbarColorPrevalenceLastTimeChecked;
 		private bool _isPopupAnimationPlaying;
+		private Point? _customPlacementBottomCenterPoint;
+		private TrayIconFlyoutPopupDirection? _customPopupDirection;
+		private TrayIconFlyoutPopupDirection _activePopupDirection = TrayIconFlyoutPopupDirection.BottomToTop;
+		private bool _disposed;
 
 		private Grid? RootGrid;
 		private Grid? IslandsGrid;
@@ -78,8 +86,12 @@ namespace U5BFA.Libraries
 
 		public void Show()
 		{
-			if (_host?.DesktopWindowXamlSource is null || RootGrid is null || _isPopupAnimationPlaying)
+			if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null || _isPopupAnimationPlaying)
+			{
+				_customPlacementBottomCenterPoint = null;
+				_customPopupDirection = null;
 				return;
+			}
 
 			_isPopupAnimationPlaying = true;
 			_host.Maximize();
@@ -92,6 +104,11 @@ namespace U5BFA.Libraries
 				RootGrid.DispatcherQueue.TryEnqueue(async () =>
 #endif
 				{
+					ResetResolvedFlyoutSize();
+					UpdateLayout();
+					await Task.Delay(1);
+					ApplyResolvedFlyoutSize();
+
 					UpdateLayout();
 					await Task.Delay(1);
 
@@ -99,16 +116,10 @@ namespace U5BFA.Libraries
 #if WASDK
 					UpdateBackdropManager();
 #endif
-					UpdateFlyoutRegion();
+					_activePopupDirection = UpdateFlyoutRegion();
 
 					// Ensure to hide first
-					if (RootGrid.RenderTransform is TranslateTransform translateTransform)
-					{
-						if (PopupDirection is Orientation.Vertical)
-							translateTransform.Y = DesiredSize.Height;
-						else
-							translateTransform.X = DesiredSize.Width;
-					}
+					SetClosedTransform(_activePopupDirection);
 
 					UpdateLayout();
 					await Task.Delay(1);
@@ -117,30 +128,45 @@ namespace U5BFA.Libraries
 
 					if (IsTransitionAnimationEnabled)
 					{
-						var storyboard = PopupDirection is Orientation.Vertical
-							? TransitionHelpers.GetWindows11BottomToTopTransitionStoryboard(RootGrid, (int)DesiredSize.Height, 0)
-							: TransitionHelpers.GetWindows11RightToLeftTransitionStoryboard(RootGrid, (int)DesiredSize.Width, 0);
-						storyboard.Begin();
+						var storyboard = GetOpenStoryboard(_activePopupDirection);
 						storyboard.Completed += OpenAnimationStoryboard_Completed;
+						storyboard.Begin();
+					}
+					else
+					{
+						CompleteOpen();
 					}
 				});
 			});
 		}
 
+		public void Show(Point bottomCenterPoint, TrayIconFlyoutPopupDirection popupDirection)
+		{
+			if (_isPopupAnimationPlaying)
+				return;
+
+			_customPlacementBottomCenterPoint = bottomCenterPoint;
+			_customPopupDirection = popupDirection;
+			Show();
+		}
+
 		public void Hide()
 		{
-			if (RootGrid is null || _isPopupAnimationPlaying)
+			if (_disposed || RootGrid is null || _isPopupAnimationPlaying)
 				return;
 
 			_isPopupAnimationPlaying = true;
+			SetOpenTransform();
 
 			if (IsTransitionAnimationEnabled)
 			{
-				var storyboard = PopupDirection is Orientation.Vertical
-					? TransitionHelpers.GetWindows11TopToBottomTransitionStoryboard(RootGrid, 0, (int)DesiredSize.Height)
-					: TransitionHelpers.GetWindows11LeftToRightTransitionStoryboard(RootGrid, 0, (int)DesiredSize.Width);
-				storyboard.Begin();
+				var storyboard = GetCloseStoryboard(_activePopupDirection);
 				storyboard.Completed += CloseAnimationStoryboard_Completed;
+				storyboard.Begin();
+			}
+			else
+			{
+				CompleteClose();
 			}
 		}
 
@@ -154,6 +180,9 @@ namespace U5BFA.Libraries
 #if WASDK
 		private void UpdateBackdropManager(bool coerce = false)
 		{
+			if (IslandsGrid is null)
+				return;
+
 			var isTaskbarLight = GeneralHelpers.IsTaskbarLight();
 			var isTaskbarColorPrevalence = GeneralHelpers.IsTaskbarColorPrevalenceEnabled();
 			bool shouldUpdateBackdrop = _wasTaskbarLightLastTimeChecked != isTaskbarLight || _wasTaskbarColorPrevalenceLastTimeChecked != isTaskbarColorPrevalence;
@@ -220,7 +249,7 @@ namespace U5BFA.Libraries
 					if (Islands[index] is not TrayIconFlyoutIsland island)
 						continue;
 
-					IslandsGrid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+					IslandsGrid.RowDefinitions.Add(new() { Height = island.IslandHeight });
 					Grid.SetRow(island, index);
 					Grid.SetColumn(island, 0);
 					island.SetOwner(this);
@@ -235,7 +264,7 @@ namespace U5BFA.Libraries
 					if (Islands[index] is not TrayIconFlyoutIsland island)
 						continue;
 
-					IslandsGrid.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+					IslandsGrid.ColumnDefinitions.Add(new() { Width = island.IslandWidth });
 					Grid.SetRow(island, 0);
 					Grid.SetColumn(island, index);
 					island.SetOwner(this);
@@ -244,19 +273,133 @@ namespace U5BFA.Libraries
 			}
 		}
 
-		private void UpdateFlyoutRegion()
+		private TrayIconFlyoutPopupDirection UpdateFlyoutRegion()
 		{
 			if (_host?.DesktopWindowXamlSource is null || IslandsGrid is null)
+				return ResolvePopupDirection(PopupDirection, default, 0, 0);
+
+			var scale = _host.XamlIslandRasterizationScale;
+			var flyoutWidth = GetCurrentFlyoutWidth();
+			var flyoutHeight = GetCurrentFlyoutHeight();
+			var scaledMargin = GetScaledMargin(Margin, scale);
+			var frameWidth = (flyoutWidth + Margin.Left + Margin.Right) * scale;
+			var frameHeight = (flyoutHeight + Margin.Top + Margin.Bottom) * scale;
+			var hostWidth = _host.WindowSize.Width;
+			var hostHeight = _host.WindowSize.Height;
+			var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, hostWidth)));
+			var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, hostHeight)));
+			var customBottomCenterPoint = _customPlacementBottomCenterPoint;
+			var requestedPopupDirection = _customPopupDirection ?? PopupDirection;
+			_customPlacementBottomCenterPoint = null;
+			_customPopupDirection = null;
+
+			double left;
+			double top;
+
+			if (customBottomCenterPoint is Point bottomCenterPoint)
+			{
+				left = bottomCenterPoint.X - ((flyoutWidth * scale) / 2) - scaledMargin.Left;
+				top = bottomCenterPoint.Y - (flyoutHeight * scale) - scaledMargin.Top;
+			}
+			else
+			{
+				(left, top) = GetPlacementOrigin(Placement, regionWidth, regionHeight, hostWidth, hostHeight);
+			}
+
+			left = Clamp(left, 0, hostWidth - regionWidth);
+			top = Clamp(top, 0, hostHeight - regionHeight);
+
+			var region = new RectInt32(
+				(int)Math.Round(left),
+				(int)Math.Round(top),
+				(int)regionWidth,
+				(int)regionHeight);
+
+			_host.MoveAndResize(region);
+			_host.SetHWndRectRegion(new(0, 0, region.Width, region.Height));
+
+			return ResolvePopupDirection(requestedPopupDirection, region, hostWidth, hostHeight);
+		}
+
+		private void OnFlyoutSizeChanged()
+		{
+			UpdateOpenFlyoutLayout();
+		}
+
+		internal void OnIslandSizeChanged()
+		{
+			UpdateIslands();
+			UpdateOpenFlyoutLayout();
+		}
+
+		private void UpdateOpenFlyoutLayout()
+		{
+			if (!IsOpen || _isPopupAnimationPlaying || RootGrid is null || _host?.DesktopWindowXamlSource is null)
 				return;
 
-			var flyoutWidth = DesiredSize.Width * _host.XamlIslandRasterizationScale;
-			var flyoutHeight = DesiredSize.Height * _host.XamlIslandRasterizationScale;
+			ResetResolvedFlyoutSize();
+			UpdateLayout();
+			ApplyResolvedFlyoutSize();
+			UpdateLayout();
+			_activePopupDirection = UpdateFlyoutRegion();
+			SetOpenTransform();
+#if WASDK
+			UpdateBackdrop(true);
+#endif
+		}
 
-			_host?.SetHWndRectRegion(new(
-				(int)(_host.WindowSize.Width - flyoutWidth),
-				(int)(_host.WindowSize.Height - flyoutHeight),
-				(int)_host.WindowSize.Width,
-				(int)_host.WindowSize.Height));
+		private void ResetResolvedFlyoutSize()
+		{
+			if (RootGrid is null)
+				return;
+
+			RootGrid.Width = double.NaN;
+			RootGrid.Height = double.NaN;
+		}
+
+		private void ApplyResolvedFlyoutSize()
+		{
+			if (RootGrid is null || _host is null)
+				return;
+
+			var (availableWidth, availableHeight) = GetAvailableFlyoutSizeInDips();
+			RootGrid.Width = ResolveFlyoutLength(FlyoutWidth, availableWidth, HasStarIslandWidth());
+			RootGrid.Height = ResolveFlyoutLength(FlyoutHeight, availableHeight, HasStarIslandHeight());
+		}
+
+		private (double Width, double Height) GetAvailableFlyoutSizeInDips()
+		{
+			if (_host is null)
+				return (0, 0);
+
+			var scale = _host.XamlIslandRasterizationScale;
+			var hostSize = _host.WindowSize;
+			var availableWidth = (hostSize.Width / scale) - Margin.Left - Margin.Right;
+			var availableHeight = (hostSize.Height / scale) - Margin.Top - Margin.Bottom;
+
+			return (Math.Max(0, availableWidth), Math.Max(0, availableHeight));
+		}
+
+		private bool HasStarIslandWidth()
+		{
+			foreach (var item in Islands)
+			{
+				if (item is TrayIconFlyoutIsland island && island.IslandWidth.IsStar)
+					return true;
+			}
+
+			return false;
+		}
+
+		private bool HasStarIslandHeight()
+		{
+			foreach (var item in Islands)
+			{
+				if (item is TrayIconFlyoutIsland island && island.IslandHeight.IsStar)
+					return true;
+			}
+
+			return false;
 		}
 
 #if WASDK
@@ -280,8 +423,8 @@ namespace U5BFA.Libraries
 				return;
 
 			storyboard.Completed -= OpenAnimationStoryboard_Completed;
-			_isPopupAnimationPlaying = false;
-			IsOpen = true;
+			storyboard.Stop();
+			CompleteOpen();
 		}
 
 		private void CloseAnimationStoryboard_Completed(object? sender, object e)
@@ -290,9 +433,153 @@ namespace U5BFA.Libraries
 				return;
 
 			storyboard.Completed -= CloseAnimationStoryboard_Completed;
+			storyboard.Stop();
+			CompleteClose();
+		}
+
+		private void CompleteOpen()
+		{
+			SetOpenTransform();
+			_isPopupAnimationPlaying = false;
+			IsOpen = true;
+		}
+
+		private void CompleteClose()
+		{
+			SetClosedTransform(_activePopupDirection);
 			_isPopupAnimationPlaying = false;
 			IsOpen = false;
 			_host?.UpdateWindowVisibility(false);
+		}
+
+		private Storyboard GetOpenStoryboard(TrayIconFlyoutPopupDirection popupDirection)
+		{
+			var rootGrid = RootGrid ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
+
+			return IsVerticalDirection(popupDirection)
+				? TransitionHelpers.GetWindows11BottomToTopTransitionStoryboard(rootGrid, GetClosedYOffset(popupDirection), 0)
+				: TransitionHelpers.GetWindows11RightToLeftTransitionStoryboard(rootGrid, GetClosedXOffset(popupDirection), 0);
+		}
+
+		private Storyboard GetCloseStoryboard(TrayIconFlyoutPopupDirection popupDirection)
+		{
+			var rootGrid = RootGrid ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
+
+			return IsVerticalDirection(popupDirection)
+				? TransitionHelpers.GetWindows11TopToBottomTransitionStoryboard(rootGrid, 0, GetClosedYOffset(popupDirection))
+				: TransitionHelpers.GetWindows11LeftToRightTransitionStoryboard(rootGrid, 0, GetClosedXOffset(popupDirection));
+		}
+
+		private void SetOpenTransform()
+		{
+			if (RootGrid?.RenderTransform is not TranslateTransform translateTransform)
+				return;
+
+			translateTransform.X = 0;
+			translateTransform.Y = 0;
+		}
+
+		private void SetClosedTransform(TrayIconFlyoutPopupDirection popupDirection)
+		{
+			if (RootGrid?.RenderTransform is not TranslateTransform translateTransform)
+				return;
+
+			translateTransform.X = GetClosedXOffset(popupDirection);
+			translateTransform.Y = GetClosedYOffset(popupDirection);
+		}
+
+		private int GetClosedXOffset(TrayIconFlyoutPopupDirection popupDirection)
+		{
+			return popupDirection switch
+			{
+				TrayIconFlyoutPopupDirection.LeftToRight => -(int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Left),
+				TrayIconFlyoutPopupDirection.RightToLeft => (int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Right),
+				_ => 0,
+			};
+		}
+
+		private int GetClosedYOffset(TrayIconFlyoutPopupDirection popupDirection)
+		{
+			return popupDirection switch
+			{
+				TrayIconFlyoutPopupDirection.TopToBottom => -(int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Top),
+				TrayIconFlyoutPopupDirection.BottomToTop => (int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Bottom),
+				_ => 0,
+			};
+		}
+
+		private double GetCurrentFlyoutWidth()
+		{
+			return RootGrid?.ActualWidth > 0 ? RootGrid.ActualWidth : DesiredSize.Width;
+		}
+
+		private double GetCurrentFlyoutHeight()
+		{
+			return RootGrid?.ActualHeight > 0 ? RootGrid.ActualHeight : DesiredSize.Height;
+		}
+
+		private static double ResolveFlyoutLength(GridLength length, double availableLength, bool stretchWhenAuto)
+		{
+			if (length.IsAuto)
+				return stretchWhenAuto ? availableLength : double.NaN;
+
+			if (length.IsStar)
+				return availableLength;
+
+			return Clamp(length.Value, 0, availableLength);
+		}
+
+		private static (double Left, double Top, double Right, double Bottom) GetScaledMargin(Thickness margin, double scale)
+		{
+			return (
+				margin.Left * scale,
+				margin.Top * scale,
+				margin.Right * scale,
+				margin.Bottom * scale);
+		}
+
+		private static (double Left, double Top) GetPlacementOrigin(FlyoutPlacementMode placement, double width, double height, double hostWidth, double hostHeight)
+		{
+			return placement switch
+			{
+				FlyoutPlacementMode.BottomEdgeAlignedLeft => (0, hostHeight - height),
+				FlyoutPlacementMode.TopEdgeAlignedLeft => (0, 0),
+				FlyoutPlacementMode.TopEdgeAlignedRight => (hostWidth - width, 0),
+				_ => (hostWidth - width, hostHeight - height),
+			};
+		}
+
+		private static TrayIconFlyoutPopupDirection ResolvePopupDirection(TrayIconFlyoutPopupDirection requestedDirection, RectInt32 region, double hostWidth, double hostHeight)
+		{
+			return requestedDirection switch
+			{
+				TrayIconFlyoutPopupDirection.BottomToTop => TrayIconFlyoutPopupDirection.BottomToTop,
+				TrayIconFlyoutPopupDirection.TopToBottom => TrayIconFlyoutPopupDirection.TopToBottom,
+				TrayIconFlyoutPopupDirection.LeftToRight => TrayIconFlyoutPopupDirection.LeftToRight,
+				TrayIconFlyoutPopupDirection.RightToLeft => TrayIconFlyoutPopupDirection.RightToLeft,
+				TrayIconFlyoutPopupDirection.Horizontal => IsRightHalf(region, hostWidth) ? TrayIconFlyoutPopupDirection.RightToLeft : TrayIconFlyoutPopupDirection.LeftToRight,
+				_ => IsBottomHalf(region, hostHeight) ? TrayIconFlyoutPopupDirection.BottomToTop : TrayIconFlyoutPopupDirection.TopToBottom,
+			};
+		}
+
+		private static bool IsBottomHalf(RectInt32 region, double hostHeight)
+		{
+			return region.Y + (region.Height / 2D) >= hostHeight / 2D;
+		}
+
+		private static bool IsRightHalf(RectInt32 region, double hostWidth)
+		{
+			return region.X + (region.Width / 2D) >= hostWidth / 2D;
+		}
+
+		private static bool IsVerticalDirection(TrayIconFlyoutPopupDirection popupDirection)
+		{
+			return popupDirection is TrayIconFlyoutPopupDirection.BottomToTop or TrayIconFlyoutPopupDirection.TopToBottom;
+		}
+
+		private static double Clamp(double value, double min, double max)
+		{
+			return Math.Min(Math.Max(value, min), Math.Max(min, max));
 		}
 
 		private void HostWindow_Inactivated(object? sender, EventArgs e)
@@ -302,11 +589,20 @@ namespace U5BFA.Libraries
 
 		public void Dispose()
 		{
+			if (_disposed)
+				return;
+
+			_disposed = true;
+
 #if WASDK
 			BackdropManager?.Dispose();
+			BackdropManager = null;
 #endif
 			_host?.WindowInactivated -= HostWindow_Inactivated;
 			_host?.Dispose();
+			IsOpen = false;
+
+			GC.SuppressFinalize(this);
 		}
 	}
 }

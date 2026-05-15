@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ManualDefinitions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\MouseEventReceivedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\PersistentAcrylicBackdrop.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\TrayIconFlyoutPopupDirection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\TransitionHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TrayIconFlyout.cs" />

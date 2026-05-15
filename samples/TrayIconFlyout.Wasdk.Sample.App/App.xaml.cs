@@ -1,4 +1,4 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using Microsoft.UI.Xaml;
@@ -25,6 +25,7 @@ namespace U5BFA.Libraries
 				new("28DE460A-8BD6-4539-A406-5F685584FD4D")));
 
 			_window = new MainWindow();
+			_window.Closed += (_, _) => TrayIconManager.Default.Dispose();
 			_window.Activate();
 			_window.DispatcherQueue.EnsureSystemDispatcherQueue();
 		}

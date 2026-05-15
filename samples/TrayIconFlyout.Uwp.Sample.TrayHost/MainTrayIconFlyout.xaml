@@ -7,7 +7,7 @@
 	xmlns:local="using:U5BFA.Libraries"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-	Width="360"
+	FlyoutWidth="360"
 	mc:Ignorable="d">
 
 	<local:TrayIconFlyout.Resources>
@@ -36,16 +36,16 @@
 		</ResourceDictionary>
 	</local:TrayIconFlyout.Resources>
 
-	<local:TrayIconFlyoutIsland Height="300" Background="{ThemeResource FlyoutAcrylicBrush}">
+	<local:TrayIconFlyoutIsland IslandHeight="*" Background="{ThemeResource FlyoutAcrylicBrush}">
 		<Button Content="A" />
 	</local:TrayIconFlyoutIsland>
-	<local:TrayIconFlyoutIsland Height="300" Background="{ThemeResource FlyoutAcrylicBrush}">
+	<local:TrayIconFlyoutIsland IslandHeight="300" Background="{ThemeResource FlyoutAcrylicBrush}">
 		<TextBlock
 			HorizontalAlignment="Center"
 			VerticalAlignment="Center"
 			Text="Island 2" />
 	</local:TrayIconFlyoutIsland>
-	<local:TrayIconFlyoutIsland Height="300" Background="{ThemeResource FlyoutAcrylicBrush}">
+	<local:TrayIconFlyoutIsland IslandHeight="300" Background="{ThemeResource FlyoutAcrylicBrush}">
 		<Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="*" />

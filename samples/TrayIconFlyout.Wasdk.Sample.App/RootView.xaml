@@ -53,6 +53,26 @@
 						ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
 						SelectedIndex="{x:Bind ViewModel.SelectedFlyoutPlacementIndex, Mode=TwoWay}" />
 				</wctcontrols:SettingsCard>
+				<wctcontrols:SettingsCard Header="Flyout width">
+					<NumberBox
+						x:Name="FlyoutWidthNumberBox"
+						Width="150"
+						Minimum="0"
+						PlaceholderText="Auto"
+						SmallChange="16"
+						SpinButtonPlacementMode="Inline"
+						ValueChanged="FlyoutWidthNumberBox_ValueChanged" />
+				</wctcontrols:SettingsCard>
+				<wctcontrols:SettingsCard Header="Flyout height">
+					<NumberBox
+						x:Name="FlyoutHeightNumberBox"
+						Width="150"
+						Minimum="0"
+						PlaceholderText="Auto"
+						SmallChange="16"
+						SpinButtonPlacementMode="Inline"
+						ValueChanged="FlyoutHeightNumberBox_ValueChanged" />
+				</wctcontrols:SettingsCard>
 				<wctcontrols:SettingsCard Header="Hide on losing focus">
 					<ToggleSwitch IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
 				</wctcontrols:SettingsCard>

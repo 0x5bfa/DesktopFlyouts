@@ -1,7 +1,8 @@
 <Application
-    x:Class="U5BFA.Libraries.App"
+    x:Class="U5BFA.Libraries.TrayHostApp"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:U5BFA.Libraries">
 
     <Application.Resources>
         <ResourceDictionary>

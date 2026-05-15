@@ -23,7 +23,7 @@ env:
   WORKING_DIR:           '${{ github.workspace }}' # 'D:\a\TrayIconFlyout\TrayIconFlyout'
   SOLUTION_PATH:         '${{ github.workspace }}\TrayIconFlyout.slnx'
   WASDK_APP_PROJ_PATH:   '${{ github.workspace }}\samples\TrayIconFlyout.Wasdk.Sample.App\TrayIconFlyout.Wasdk.Sample.App.csproj'
-  UWP_APP_PROJ_PATH:     '${{ github.workspace }}\samples\TrayIconFlyout.Uwp.Sample.Packaging\TrayIconFlyout.Uwp.Sample.Packaging.wapproj'
+  UWP_APP_PROJ_PATH:     '${{ github.workspace }}\samples\TrayIconFlyout.Uwp.Sample.App\TrayIconFlyout.Uwp.Sample.App.csproj'
 
 jobs:
   build-wasdk:

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using System;
@@ -13,13 +13,13 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace U5BFA.Libraries
 {
-	public partial class App : Application
+	public partial class TrayHostApp/* : Application*/
 	{
 		private static SystemTrayIcon? _systemTrayIcon;
 		private static TrayIconFlyout? _trayIconFlyout;
 		private static TrayIconMenuFlyout? _trayIconMenuFlyout;
 
-		public unsafe App()
+		public unsafe TrayHostApp()
 		{
 			PInvoke.RoInitialize(RO_INIT_TYPE.RO_INIT_SINGLETHREADED);
 

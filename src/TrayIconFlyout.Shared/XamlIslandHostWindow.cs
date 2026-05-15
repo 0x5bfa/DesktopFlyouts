@@ -1,4 +1,4 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using System;
@@ -40,6 +40,7 @@ namespace U5BFA.Libraries
 		private readonly WNDPROC _wndProc;
 
 		private HWND _xamlHwnd = default;
+		private bool _disposed;
 
 #if UWP
 		private HWND _coreHwnd = default;
@@ -113,17 +114,26 @@ namespace U5BFA.Libraries
 
 		internal void SetContent(UIElement content)
 		{
+			if (_disposed)
+				return;
+
 			DesktopWindowXamlSource!.Content = content;
 		}
 
 		internal void MoveAndResize(RectInt32 rect)
 		{
+			if (_disposed)
+				return;
+
 			PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, rect.X, rect.Y, rect.Width, rect.Height, 0U);
 			PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, rect.Width, rect.Height, 0U);
 		}
 
 		internal void Maximize()
 		{
+			if (_disposed)
+				return;
+
 			var bottomRightPoint = WindowHelpers.GetBottomRightCornerPoint();
 			PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, 0, 0, bottomRightPoint.X, bottomRightPoint.Y, 0U);
 			PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, bottomRightPoint.X, bottomRightPoint.Y, 0U);
@@ -131,13 +141,28 @@ namespace U5BFA.Libraries
 
 		internal void SetHWndRectRegion(RectInt32 rect)
 		{
-			HRGN region = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.Width, rect.Height);
-			PInvoke.SetWindowRgn(HWnd, region, false);
-			PInvoke.SetWindowRgn(_xamlHwnd, region, false);
+			if (_disposed)
+				return;
+
+			SetWindowRectRegion(HWnd, rect);
+			SetWindowRectRegion(_xamlHwnd, rect);
+		}
+
+		private static void SetWindowRectRegion(HWND hWnd, RectInt32 rect)
+		{
+			HRGN region = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
+			if (region.IsNull)
+				return;
+
+			if (PInvoke.SetWindowRgn(hWnd, region, false) == 0)
+				PInvoke.DeleteObject(region);
 		}
 
 		internal void UpdateWindowVisibility(bool isVisible)
 		{
+			if (_disposed)
+				return;
+
 			PInvoke.ShowWindow(HWnd, isVisible ? SHOW_WINDOW_CMD.SW_SHOW : SHOW_WINDOW_CMD.SW_HIDE);
 
 #if UWP
@@ -259,10 +284,25 @@ namespace U5BFA.Libraries
 
 		public void Dispose()
 		{
+			if (_disposed)
+				return;
+
+			_disposed = true;
+
+			try
+			{
+				DesktopWindowXamlSource?.Dispose();
+			}
+			catch { }
+			DesktopWindowXamlSource = null;
+
 			PInvoke.DestroyWindow(HWnd);
 			PInvoke.UnregisterClass((PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in WindowClassName.GetPinnableReference())), PInvoke.GetModuleHandle(null));
-			DesktopWindowXamlSource?.Dispose();
-			DesktopWindowXamlSource = null;
+
+			HWnd = default;
+			_xamlHwnd = default;
+
+			GC.SuppressFinalize(this);
 		}
 	}
 }

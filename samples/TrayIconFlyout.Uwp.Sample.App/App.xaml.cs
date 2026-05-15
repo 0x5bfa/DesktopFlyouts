@@ -1,7 +1,8 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using System;
+using System.Diagnostics;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
@@ -12,16 +13,35 @@ using WinRT;
 
 namespace U5BFA.Libraries
 {
-	public sealed partial class App2 : Application
+	public sealed partial class App : Application
 	{
-		public App2()
+		private bool _isTrayHostLaunchRequested;
+
+		public App()
 		{
 			InitializeComponent();
 
 			Suspending += OnSuspending;
 		}
 
+		protected override async void OnLaunched(LaunchActivatedEventArgs args)
+		{
+			InitializeWindow(args.PreviousExecutionState, args.Arguments);
+			await LaunchTrayHostAsync();
+		}
+
 		protected override void OnActivated(IActivatedEventArgs args)
+		{
+			object? navigationParameter = null;
+			if (args.Kind is ActivationKind.Protocol)
+			{
+				navigationParameter = args.As<ProtocolActivatedEventArgs>().Data;
+			}
+
+			InitializeWindow(args.PreviousExecutionState, navigationParameter);
+		}
+
+		private void InitializeWindow(ApplicationExecutionState previousExecutionState, object? navigationParameter)
 		{
 			// Do not repeat app initialization when the Window already has content,
 			// just ensure that the window is active.
@@ -31,7 +51,7 @@ namespace U5BFA.Libraries
 				rootFrame = new Frame();
 				rootFrame.NavigationFailed += OnNavigationFailed;
 
-				if (args.PreviousExecutionState == ApplicationExecutionState.Terminated)
+				if (previousExecutionState == ApplicationExecutionState.Terminated)
 				{
 					// TODO: Load state from previously suspended application
 				}
@@ -44,11 +64,28 @@ namespace U5BFA.Libraries
 			{
 				CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true; 
 				
-				rootFrame.Navigate(typeof(MainPage), args.As<ProtocolActivatedEventArgs>().Data);
+				rootFrame.Navigate(typeof(MainPage), navigationParameter);
 			}
 
 			// Ensure the current window is active
 			Window.Current.Activate();
+		}
+
+		private async System.Threading.Tasks.Task LaunchTrayHostAsync()
+		{
+			if (_isTrayHostLaunchRequested)
+				return;
+
+			_isTrayHostLaunchRequested = true;
+
+			try
+			{
+				await FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync();
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine($"Failed to launch tray host process: {ex}");
+			}
 		}
 
 		private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using System;
@@ -37,6 +37,24 @@ namespace U5BFA.Libraries
 		private long _propertyChangedCallbackTokenForContentProperty;
 		private long _propertyChangedCallbackTokenForCornerRadiusProperty;
 
+		public static readonly DependencyProperty IslandWidthProperty =
+			DependencyProperty.Register(nameof(IslandWidth), typeof(GridLength), typeof(TrayIconFlyoutIsland), new PropertyMetadata(GridLength.Auto, OnIslandSizePropertyChanged));
+
+		public GridLength IslandWidth
+		{
+			get => (GridLength)GetValue(IslandWidthProperty);
+			set => SetValue(IslandWidthProperty, value);
+		}
+
+		public static readonly DependencyProperty IslandHeightProperty =
+			DependencyProperty.Register(nameof(IslandHeight), typeof(GridLength), typeof(TrayIconFlyoutIsland), new PropertyMetadata(GridLength.Auto, OnIslandSizePropertyChanged));
+
+		public GridLength IslandHeight
+		{
+			get => (GridLength)GetValue(IslandHeightProperty);
+			set => SetValue(IslandHeightProperty, value);
+		}
+
 		public TrayIconFlyoutIsland()
 		{
 			DefaultStyleKey = typeof(TrayIconFlyoutIsland);
@@ -58,12 +76,25 @@ namespace U5BFA.Libraries
 			_propertyChangedCallbackTokenForContentProperty = RegisterPropertyChangedCallback(ContentProperty, (s, e) => ((TrayIconFlyoutIsland)s).OnContentChanged());
 			_propertyChangedCallbackTokenForCornerRadiusProperty = RegisterPropertyChangedCallback(CornerRadiusProperty, (s, e) => ((TrayIconFlyoutIsland)s).OnCornerRadiusChanged());
 
+#if WASDK
+			SizeChanged += TrayIconFlyoutIsland_SizeChanged;
+			MainContentPresenter.SizeChanged += MainContentPresenter_SizeChanged;
+#endif
 			Unloaded += TrayIconFlyoutIsland_Unloaded;
 		}
 
 		internal void SetOwner(TrayIconFlyout owner)
 		{
 			_owner = new(owner);
+		}
+
+		private static void OnIslandSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+		{
+			if (dependencyObject is not TrayIconFlyoutIsland island)
+				return;
+
+			if (island._owner is not null && island._owner.TryGetTarget(out var owner))
+				owner.OnIslandSizeChanged();
 		}
 
 #if WASDK
@@ -146,9 +177,27 @@ namespace U5BFA.Libraries
 #endif
 		}
 
+#if WASDK
+		private void TrayIconFlyoutIsland_SizeChanged(object sender, SizeChangedEventArgs e)
+		{
+			UpdateBackdropVisual();
+		}
+
+		private void MainContentPresenter_SizeChanged(object sender, SizeChangedEventArgs e)
+		{
+			UpdateBackdropVisual();
+		}
+#endif
+
 		private void TrayIconFlyoutIsland_Unloaded(object sender, RoutedEventArgs e)
 		{
 			Unloaded -= TrayIconFlyoutIsland_Unloaded;
+#if WASDK
+			SizeChanged -= TrayIconFlyoutIsland_SizeChanged;
+
+			if (MainContentPresenter is not null)
+				MainContentPresenter.SizeChanged -= MainContentPresenter_SizeChanged;
+#endif
 
 			UnregisterPropertyChangedCallback(ContentProperty, _propertyChangedCallbackTokenForContentProperty);
 			UnregisterPropertyChangedCallback(CornerRadiusProperty, _propertyChangedCallbackTokenForCornerRadiusProperty);

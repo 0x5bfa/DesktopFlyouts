@@ -1,4 +1,4 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using System;
@@ -13,6 +13,8 @@ namespace U5BFA.Libraries
 		internal SystemTrayIcon? SystemTrayIcon { get; set; }
 		internal TrayIconFlyout? TrayIconFlyout { get; set; }
 		internal TrayIconMenuFlyout? TrayIconMenuFlyout { get; set; }
+
+		private bool _disposed;
 
 		private TrayIconManager() { }
 
@@ -51,10 +53,22 @@ namespace U5BFA.Libraries
 
 		public void Dispose()
 		{
+			if (_disposed)
+				return;
+
+			_disposed = true;
+
 			SystemTrayIcon?.LeftClicked -= SystemTrayIcon_LeftClicked;
 			SystemTrayIcon?.RightClicked -= SystemTrayIcon_RightClicked;
 			SystemTrayIcon?.Destroy();
 			TrayIconFlyout?.Dispose();
+			TrayIconMenuFlyout?.Dispose();
+
+			SystemTrayIcon = null;
+			TrayIconFlyout = null;
+			TrayIconMenuFlyout = null;
+
+			GC.SuppressFinalize(this);
 		}
 	}
 }
