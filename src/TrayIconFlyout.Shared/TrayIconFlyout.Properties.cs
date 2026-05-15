@@ -68,6 +68,7 @@ namespace U5BFA.Libraries
                 return;
 
             UpdateIslands();
+			UpdateOpenFlyoutLayout();
         }
 
 		partial void OnIsBackdropEnabledPropertyChanged(DependencyPropertyChangedEventArgs e)
