@@ -52,10 +52,12 @@ namespace U5BFA.Libraries
 			SelectedPopupDirectionIndex = 0;
 
 			FlyoutPlacements.Add(FlyoutPlacementMode.TopEdgeAlignedLeft, "Top left");
+			FlyoutPlacements.Add(FlyoutPlacementMode.Top, "Top center");
 			FlyoutPlacements.Add(FlyoutPlacementMode.TopEdgeAlignedRight, "Top right");
 			FlyoutPlacements.Add(FlyoutPlacementMode.BottomEdgeAlignedLeft, "Bottom left");
+			FlyoutPlacements.Add(FlyoutPlacementMode.Bottom, "Bottom center");
 			FlyoutPlacements.Add(FlyoutPlacementMode.BottomEdgeAlignedRight, "Bottom right");
-			SelectedFlyoutPlacementIndex = 3;
+			SelectedFlyoutPlacementIndex = 5;
 
 			Backdrops.Add(BackdropKind.Acrylic, "Acrylic");
 			Backdrops.Add(BackdropKind.Mica, "Mica");

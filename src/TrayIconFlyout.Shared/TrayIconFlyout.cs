@@ -542,7 +542,9 @@ namespace U5BFA.Libraries
 		{
 			return placement switch
 			{
+				FlyoutPlacementMode.Bottom => ((hostWidth - width) / 2, hostHeight - height),
 				FlyoutPlacementMode.BottomEdgeAlignedLeft => (0, hostHeight - height),
+				FlyoutPlacementMode.Top => ((hostWidth - width) / 2, 0),
 				FlyoutPlacementMode.TopEdgeAlignedLeft => (0, 0),
 				FlyoutPlacementMode.TopEdgeAlignedRight => (hostWidth - width, 0),
 				_ => (hostWidth - width, hostHeight - height),
