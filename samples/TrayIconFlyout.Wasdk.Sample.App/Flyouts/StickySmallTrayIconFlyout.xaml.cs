@@ -3,9 +3,9 @@
 
 namespace U5BFA.Libraries
 {
-	internal sealed partial class RootView : Microsoft.UI.Xaml.Controls.UserControl
+	public sealed partial class StickySmallTrayIconFlyout : TrayIconFlyout
 	{
-		public RootView()
+		public StickySmallTrayIconFlyout()
 		{
 			InitializeComponent();
 		}

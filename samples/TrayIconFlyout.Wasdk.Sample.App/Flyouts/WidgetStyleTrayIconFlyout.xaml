@@ -1,0 +1,29 @@
+<local:TrayIconFlyout
+    x:Class="U5BFA.Libraries.WidgetStyleTrayIconFlyout"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:U5BFA.Libraries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    FlyoutWidth="500"
+    Placement="BottomEdgeAlignedLeft"
+    PopupDirection="Horizontal"
+    mc:Ignorable="d">
+
+    <local:TrayIconFlyoutIsland IslandHeight="*">
+        <Button
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Content="Button">
+            <Button.Flyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Text="A" />
+                    <MenuFlyoutItem Text="A" />
+                    <MenuFlyoutItem Text="A" />
+                </MenuFlyout>
+            </Button.Flyout>
+        </Button>
+    </local:TrayIconFlyoutIsland>
+
+</local:TrayIconFlyout>

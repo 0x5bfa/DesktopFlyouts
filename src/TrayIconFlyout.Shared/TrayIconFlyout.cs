@@ -44,7 +44,6 @@ namespace U5BFA.Libraries
 		private bool? _wasTaskbarLightLastTimeChecked;
 		private bool _isPopupAnimationPlaying;
 		private Point? _customPlacementBottomCenterPoint;
-		private TrayIconFlyoutPopupDirection? _customPopupDirection;
 		private TrayIconFlyoutPopupDirection _activePopupDirection = TrayIconFlyoutPopupDirection.BottomToTop;
 		private bool _disposed;
 
@@ -88,7 +87,6 @@ namespace U5BFA.Libraries
 			if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null || _isPopupAnimationPlaying)
 			{
 				_customPlacementBottomCenterPoint = null;
-				_customPopupDirection = null;
 				return;
 			}
 
@@ -139,13 +137,12 @@ namespace U5BFA.Libraries
 			});
 		}
 
-		public void Show(Point bottomCenterPoint, TrayIconFlyoutPopupDirection popupDirection)
+		public void Show(Point bottomCenterPoint)
 		{
 			if (_isPopupAnimationPlaying)
 				return;
 
 			_customPlacementBottomCenterPoint = bottomCenterPoint;
-			_customPopupDirection = popupDirection;
 			Show();
 		}
 
@@ -304,9 +301,8 @@ namespace U5BFA.Libraries
 			var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, hostWidth)));
 			var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, hostHeight)));
 			var customBottomCenterPoint = _customPlacementBottomCenterPoint;
-			var requestedPopupDirection = _customPopupDirection ?? PopupDirection;
+			var requestedPopupDirection = PopupDirection;
 			_customPlacementBottomCenterPoint = null;
-			_customPopupDirection = null;
 
 			double left;
 			double top;
@@ -557,7 +553,9 @@ namespace U5BFA.Libraries
 		{
 			return placement switch
 			{
+				FlyoutPlacementMode.Bottom => ((hostWidth - width) / 2, hostHeight - height),
 				FlyoutPlacementMode.BottomEdgeAlignedLeft => (0, hostHeight - height),
+				FlyoutPlacementMode.Top => ((hostWidth - width) / 2, 0),
 				FlyoutPlacementMode.TopEdgeAlignedLeft => (0, 0),
 				FlyoutPlacementMode.TopEdgeAlignedRight => (hostWidth - width, 0),
 				_ => (hostWidth - width, hostHeight - height),

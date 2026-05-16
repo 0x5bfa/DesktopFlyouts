@@ -1,90 +1,101 @@
 <UserControl
-	x:Class="U5BFA.Libraries.RootView"
-	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:local="using:U5BFA.Libraries"
-	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
-	mc:Ignorable="d">
-	<UserControl.DataContext>
-		<local:RootViewModel x:Name="ViewModel" />
-	</UserControl.DataContext>
+    x:Class="U5BFA.Libraries.RootView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:U5BFA.Libraries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
+    mc:Ignorable="d">
+    <UserControl.DataContext>
+        <local:RootViewModel x:Name="ViewModel" />
+    </UserControl.DataContext>
 
-	<ScrollViewer>
-		<StackPanel Padding="24" Spacing="24">
+    <ScrollViewer>
+        <StackPanel Padding="24" Spacing="24">
 
-			<StackPanel Spacing="4">
-				<TextBlock
-					Margin="4,0"
-					Style="{StaticResource BodyStrongTextBlockStyle}"
-					Text="Tray settings" />
-				<wctcontrols:SettingsCard Header="Icon path">
-					<TextBox
-						Width="300"
-						PlaceholderText="Enter path to the icon"
-						Text="{x:Bind ViewModel.IconPath, Mode=TwoWay}" />
-				</wctcontrols:SettingsCard>
-				<wctcontrols:SettingsCard Header="Tooltip">
-					<TextBox
-						Width="300"
-						PlaceholderText="Enter the tooltip text"
-						Text="{x:Bind ViewModel.TooltipText, Mode=TwoWay}" />
-				</wctcontrols:SettingsCard>
-			</StackPanel>
+            <StackPanel Spacing="4">
+                <TextBlock
+                    Margin="4,0"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="Tray settings" />
+                <wctcontrols:SettingsCard Header="Icon path">
+                    <TextBox
+                        Width="300"
+                        PlaceholderText="Enter path to the icon"
+                        Text="{x:Bind ViewModel.IconPath, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Tooltip">
+                    <TextBox
+                        Width="300"
+                        PlaceholderText="Enter the tooltip text"
+                        Text="{x:Bind ViewModel.TooltipText, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+            </StackPanel>
 
-			<StackPanel Spacing="4">
-				<TextBlock
-					Margin="4,0"
-					Style="{StaticResource BodyStrongTextBlockStyle}"
-					Text="Flyout settings" />
-				<wctcontrols:SettingsCard Header="Popup direction">
-					<ComboBox
-						Width="150"
-						ItemsSource="{x:Bind ViewModel.PopupDirections.Values}"
-						SelectedIndex="{x:Bind ViewModel.SelectedPopupDirectionIndex, Mode=TwoWay}" />
-				</wctcontrols:SettingsCard>
-				<wctcontrols:SettingsCard Header="Enable backdrop">
-					<ToggleSwitch IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
-				</wctcontrols:SettingsCard>
-				<wctcontrols:SettingsCard Header="Placement">
-					<ComboBox
-						Width="150"
-						ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
-						SelectedIndex="{x:Bind ViewModel.SelectedFlyoutPlacementIndex, Mode=TwoWay}" />
-				</wctcontrols:SettingsCard>
-				<wctcontrols:SettingsCard Header="Flyout width">
-					<NumberBox
-						x:Name="FlyoutWidthNumberBox"
-						Width="150"
-						Minimum="0"
-						PlaceholderText="Auto"
-						SmallChange="16"
-						SpinButtonPlacementMode="Inline"
-						ValueChanged="FlyoutWidthNumberBox_ValueChanged" />
-				</wctcontrols:SettingsCard>
-				<wctcontrols:SettingsCard Header="Flyout height">
-					<NumberBox
-						x:Name="FlyoutHeightNumberBox"
-						Width="150"
-						Minimum="0"
-						PlaceholderText="Auto"
-						SmallChange="16"
-						SpinButtonPlacementMode="Inline"
-						ValueChanged="FlyoutHeightNumberBox_ValueChanged" />
-				</wctcontrols:SettingsCard>
-				<wctcontrols:SettingsCard Header="Hide on losing focus">
-					<ToggleSwitch IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
-				</wctcontrols:SettingsCard>
-				<wctcontrols:SettingsCard Header="Backdrop kind">
-					<ComboBox
-						Width="150"
-						ItemsSource="{x:Bind ViewModel.Backdrops.Values}"
-						SelectedIndex="{x:Bind ViewModel.SelectedBackdropIndex, Mode=TwoWay}" />
-				</wctcontrols:SettingsCard>
-			</StackPanel>
+            <StackPanel Spacing="4">
+                <TextBlock
+                    Margin="4,0"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="Flyout settings" />
+                <wctcontrols:SettingsCard Header="Flyout example">
+                    <ComboBox
+                        Width="180"
+                        ItemsSource="{x:Bind ViewModel.FlyoutExamples.Values}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedFlyoutExampleIndex, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Popup direction">
+                    <ComboBox
+                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
+                        ItemsSource="{x:Bind ViewModel.PopupDirections.Values}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedPopupDirectionIndex, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Enable backdrop">
+                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Placement">
+                    <ComboBox
+                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
+                        ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedFlyoutPlacementIndex, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Flyout width">
+                    <NumberBox
+                        x:Name="FlyoutWidthNumberBox"
+                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
+                        Minimum="0"
+                        PlaceholderText="Auto"
+                        SmallChange="16"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModel.FlyoutWidthValue, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Flyout height">
+                    <NumberBox
+                        x:Name="FlyoutHeightNumberBox"
+                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
+                        Minimum="0"
+                        PlaceholderText="Auto"
+                        SmallChange="16"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModel.FlyoutHeightValue, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Hide on losing focus">
+                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Backdrop kind">
+                    <ComboBox
+                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
+                        ItemsSource="{x:Bind ViewModel.Backdrops.Values}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedBackdropIndex, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+            </StackPanel>
 
-		</StackPanel>
-	</ScrollViewer>
+        </StackPanel>
+    </ScrollViewer>
 
 </UserControl>

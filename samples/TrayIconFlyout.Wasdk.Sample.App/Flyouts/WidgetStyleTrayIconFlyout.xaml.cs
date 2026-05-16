@@ -3,9 +3,9 @@
 
 namespace U5BFA.Libraries
 {
-	internal sealed partial class RootView : Microsoft.UI.Xaml.Controls.UserControl
+	public sealed partial class WidgetStyleTrayIconFlyout : TrayIconFlyout
 	{
-		public RootView()
+		public WidgetStyleTrayIconFlyout()
 		{
 			InitializeComponent();
 		}
