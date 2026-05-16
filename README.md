@@ -82,7 +82,3 @@ _trayIconMenuFlyout.Show(e.Point);
     ```
 3. Open the solution
 4. Build the solution
-
-## Screenshot
-
-https://github.com/user-attachments/assets/95a63647-1f96-4035-a65d-1b602112c4bf
