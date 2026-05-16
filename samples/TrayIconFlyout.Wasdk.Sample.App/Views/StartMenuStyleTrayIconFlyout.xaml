@@ -1,60 +1,484 @@
 <local:TrayIconFlyout
-	x:Class="U5BFA.Libraries.StartMenuStyleTrayIconFlyout"
-	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:local="using:U5BFA.Libraries"
-	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	FlyoutWidth="360"
-	IslandsOrientation="Horizontal"
-	mc:Ignorable="d">
+    x:Class="U5BFA.Libraries.StartMenuStyleTrayIconFlyout"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:U5BFA.Libraries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
+    FlyoutHeight="725"
+    IslandsOrientation="Horizontal"
+    Placement="Bottom"
+    mc:Ignorable="d">
 
-	<local:TrayIconFlyoutIsland
-		Height="220"
-		IslandWidth="140">
-		<Grid Padding="16">
-			<StackPanel VerticalAlignment="Center" Spacing="8">
-				<TextBlock
-					FontFamily="Segoe UI Variable Display"
-					FontSize="18"
-					FontWeight="SemiBold"
-					Text="Now" />
-				<TextBlock
-					Opacity="0.72"
-					Text="Horizontal island"
-					TextWrapping="Wrap" />
-				<Button Content="Open" />
-			</StackPanel>
-		</Grid>
-	</local:TrayIconFlyoutIsland>
+    <local:TrayIconFlyoutIsland IslandWidth="640">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid Background="{ThemeResource FlyoutOverlayBackgroundBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="3*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="2*" />
+                </Grid.RowDefinitions>
+                <Border
+                    Height="28"
+                    Margin="36"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
+                <Border
+                    Grid.Row="1"
+                    Width="60"
+                    Height="18"
+                    Margin="64,8,64,20"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
+                <Border
+                    Grid.Row="1"
+                    Width="60"
+                    Height="18"
+                    Margin="64,8,64,20"
+                    HorizontalAlignment="Right"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
+                <wctcontrols:UniformGrid
+                    Grid.Row="2"
+                    Margin="36,0"
+                    Columns="6">
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="60"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                </wctcontrols:UniformGrid>
+                <Border
+                    Grid.Row="3"
+                    Width="60"
+                    Height="18"
+                    Margin="64,0,64,20"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
+                <Border
+                    Grid.Row="3"
+                    Width="60"
+                    Height="18"
+                    Margin="64,0,64,20"
+                    HorizontalAlignment="Right"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
+                <wctcontrols:UniformGrid
+                    Grid.Row="4"
+                    Margin="36,0,36,36"
+                    Columns="2"
+                    RowSpacing="0">
+                    <StackPanel
+                        Margin="28,0"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="180"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel
+                        Margin="28,0"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="180"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel
+                        Margin="28,0"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="180"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel
+                        Margin="28,0"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="180"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel
+                        Margin="28,0"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="180"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                    <StackPanel
+                        Margin="28,0"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Border
+                            Width="36"
+                            Height="36"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="180"
+                            Height="18"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                </wctcontrols:UniformGrid>
+            </Grid>
+            <Grid
+                Grid.Row="1"
+                Height="64"
+                Padding="64,0"
+                BorderBrush="{ThemeResource FlyoutSeparatorSecondaryBackgroundBrush}"
+                BorderThickness="0,1,0,0">
 
-	<local:TrayIconFlyoutIsland
-		Height="220"
-		IslandWidth="*">
-		<Grid Padding="16" RowSpacing="12">
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="*" />
-				<RowDefinition Height="Auto" />
-			</Grid.RowDefinitions>
+                <Border
+                    Width="180"
+                    Height="18"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
 
-			<TextBlock
-				FontFamily="Segoe UI Variable Display"
-				FontSize="18"
-				FontWeight="SemiBold"
-				Text="Details" />
+                <Border
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Right"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
 
-			<ListView Grid.Row="1" SelectionMode="None">
-				<ListViewItem Content="IslandWidth=*" />
-				<ListViewItem Content="Stretch content" />
-				<ListViewItem Content="Shared settings" />
-			</ListView>
+            </Grid>
+        </Grid>
+    </local:TrayIconFlyoutIsland>
 
-			<Slider
-				Grid.Row="2"
-				Maximum="100"
-				Value="42" />
-		</Grid>
-	</local:TrayIconFlyoutIsland>
+    <local:TrayIconFlyoutIsland IslandWidth="210">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Padding="32" RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="3*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="2*" />
+                </Grid.RowDefinitions>
+                <StackPanel Spacing="8">
+                    <Border
+                        Width="36"
+                        Height="64"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    <Border
+                        Width="64"
+                        Height="18"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="12">
+                        <Border
+                            Width="20"
+                            Height="20"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="20"
+                            Height="20"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                        <Border
+                            Width="36"
+                            Height="20"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="{StaticResource OverlayCornerRadius}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border
+                    Grid.Row="3"
+                    Width="60"
+                    Height="18"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
+
+            </Grid>
+
+            <Grid
+                Grid.Row="1"
+                Height="64"
+                Padding="16,0"
+                BorderBrush="{ThemeResource FlyoutSeparatorSecondaryBackgroundBrush}"
+                BorderThickness="0,1,0,0"
+                ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="130"
+                    Height="32"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
+
+                <Border
+                    Grid.Column="1"
+                    Width="36"
+                    Height="32"
+                    HorizontalAlignment="Right"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="{StaticResource OverlayCornerRadius}" />
+
+            </Grid>
+        </Grid>
+    </local:TrayIconFlyoutIsland>
 
 </local:TrayIconFlyout>

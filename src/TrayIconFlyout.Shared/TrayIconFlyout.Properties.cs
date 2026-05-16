@@ -70,7 +70,7 @@ namespace U5BFA.Libraries
 		private static void OnFlyoutSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
 		{
 			if (dependencyObject is TrayIconFlyout flyout)
-				flyout.OnFlyoutSizeChanged();
+				flyout.UpdateOpenFlyoutLayout();
 		}
 
 		partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e)

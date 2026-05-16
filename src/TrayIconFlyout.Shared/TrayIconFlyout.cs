@@ -332,11 +332,6 @@ namespace U5BFA.Libraries
 			return ResolvePopupDirection(requestedPopupDirection, region, hostWidth, hostHeight);
 		}
 
-		private void OnFlyoutSizeChanged()
-		{
-			UpdateOpenFlyoutLayout();
-		}
-
 		internal void OnIslandSizeChanged()
 		{
 			UpdateIslands();

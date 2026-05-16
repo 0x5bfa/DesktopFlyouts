@@ -11,10 +11,6 @@
     PopupDirection="Horizontal"
     mc:Ignorable="d">
 
-    <local:TrayIconFlyout.DataContext>
-        <local:WidgetStyleTrayIconFlyoutViewModel x:Name="ViewModel" />
-    </local:TrayIconFlyout.DataContext>
-
     <local:TrayIconFlyoutIsland IslandHeight="*">
         <Grid>
             <Grid.RowDefinitions>
