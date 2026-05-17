@@ -4,6 +4,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,6 +26,9 @@ namespace U5BFA.Libraries
 
         [ObservableProperty]
         internal partial bool HideOnLostFocus { get; set; }
+
+        [ObservableProperty]
+        internal partial double AutoCloseDelaySecondsValue { get; set; }
 
         [ObservableProperty]
         internal partial int SelectedPopupDirectionIndex { get; set; }
@@ -107,6 +111,12 @@ namespace U5BFA.Libraries
                 TrayIconManager.Default.TrayIconFlyout?.HideOnLostFocus = value;
         }
 
+        partial void OnAutoCloseDelaySecondsValueChanged(double value)
+        {
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.TrayIconFlyout!.AutoCloseDelay = ToAutoCloseDelay(value);
+        }
+
         partial void OnSelectedPopupDirectionIndexChanged(int value)
         {
             if (IsDefaultFlyoutSelected())
@@ -162,6 +172,7 @@ namespace U5BFA.Libraries
             flyout.BackdropKind = Backdrops.ElementAt(SelectedBackdropIndex).Key;
             flyout.FlyoutHeight = ToGridLength(FlyoutHeightValue);
             flyout.FlyoutWidth = ToGridLength(FlyoutWidthValue);
+            flyout.AutoCloseDelay = ToAutoCloseDelay(AutoCloseDelaySecondsValue);
             flyout.HideOnLostFocus = HideOnLostFocus;
             flyout.IsBackdropEnabled = IsBackdropEnabled;
             flyout.Placement = FlyoutPlacements.ElementAt(SelectedFlyoutPlacementIndex).Key;
@@ -178,6 +189,13 @@ namespace U5BFA.Libraries
             return double.IsNaN(value) || value <= 0
                 ? GridLength.Auto
                 : new(value);
+        }
+
+        private static TimeSpan ToAutoCloseDelay(double value)
+        {
+            return double.IsNaN(value) || value <= 0
+                ? TimeSpan.Zero
+                : TimeSpan.FromSeconds(value);
         }
     }
 }

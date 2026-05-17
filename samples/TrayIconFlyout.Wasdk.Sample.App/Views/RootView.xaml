@@ -86,6 +86,17 @@
                 <wctcontrols:SettingsCard Header="Hide on losing focus">
                     <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Auto close delay">
+                    <NumberBox
+                        x:Name="AutoCloseDelayNumberBox"
+                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
+                        Minimum="0"
+                        PlaceholderText="Off"
+                        SmallChange="0.5"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModel.AutoCloseDelaySecondsValue, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Backdrop kind">
                     <ComboBox
                         Width="150"

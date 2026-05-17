@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:U5BFA.Libraries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    AutoCloseDelay="0:0:1.5"
     IslandsOrientation="Horizontal"
     Placement="Bottom"
     mc:Ignorable="d">

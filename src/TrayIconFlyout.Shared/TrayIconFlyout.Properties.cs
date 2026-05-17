@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using CommunityToolkit.WinUI;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -64,6 +65,15 @@ namespace U5BFA.Libraries
 		[GeneratedDependencyProperty(DefaultValue = true)]
 		public partial bool HideOnLostFocus { get; set; }
 
+		public static readonly DependencyProperty AutoCloseDelayProperty =
+			DependencyProperty.Register(nameof(AutoCloseDelay), typeof(TimeSpan), typeof(TrayIconFlyout), new PropertyMetadata(TimeSpan.Zero, OnAutoCloseDelayPropertyChanged));
+
+		public TimeSpan AutoCloseDelay
+		{
+			get => (TimeSpan)GetValue(AutoCloseDelayProperty);
+			set => SetValue(AutoCloseDelayProperty, value);
+		}
+
 		[GeneratedDependencyProperty(DefaultValue = BackdropKind.Acrylic)]
 		public partial BackdropKind BackdropKind { get; set; }
 
@@ -71,6 +81,12 @@ namespace U5BFA.Libraries
 		{
 			if (dependencyObject is TrayIconFlyout flyout)
 				flyout.UpdateOpenFlyoutLayout();
+		}
+
+		private static void OnAutoCloseDelayPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+		{
+			if (dependencyObject is TrayIconFlyout flyout)
+				flyout.RestartAutoCloseTimer();
 		}
 
 		partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e)

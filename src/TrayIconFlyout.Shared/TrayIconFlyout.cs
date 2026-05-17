@@ -45,6 +45,7 @@ namespace U5BFA.Libraries
 		private bool _isPopupAnimationPlaying;
 		private Point? _customPlacementBottomCenterPoint;
 		private TrayIconFlyoutPopupDirection _activePopupDirection = TrayIconFlyoutPopupDirection.BottomToTop;
+		private DispatcherTimer? _autoCloseTimer;
 		private bool _disposed;
 
 		private Grid? RootGrid;
@@ -90,6 +91,7 @@ namespace U5BFA.Libraries
 				return;
 			}
 
+			StopAutoCloseTimer();
 			_isPopupAnimationPlaying = true;
 			_host.Maximize();
 
@@ -148,6 +150,8 @@ namespace U5BFA.Libraries
 
 		public void Hide()
 		{
+			StopAutoCloseTimer();
+
 			if (_disposed || RootGrid is null || _isPopupAnimationPlaying)
 				return;
 
@@ -448,14 +452,46 @@ namespace U5BFA.Libraries
 			SetOpenTransform();
 			_isPopupAnimationPlaying = false;
 			IsOpen = true;
+			RestartAutoCloseTimer();
 		}
 
 		private void CompleteClose()
 		{
+			StopAutoCloseTimer();
 			SetClosedTransform(_activePopupDirection);
 			_isPopupAnimationPlaying = false;
 			IsOpen = false;
 			_host?.UpdateWindowVisibility(false);
+		}
+
+		private void RestartAutoCloseTimer()
+		{
+			StopAutoCloseTimer();
+
+			if (_disposed || !IsOpen || AutoCloseDelay <= TimeSpan.Zero)
+				return;
+
+			_autoCloseTimer = new() { Interval = AutoCloseDelay };
+			_autoCloseTimer.Tick += AutoCloseTimer_Tick;
+			_autoCloseTimer.Start();
+		}
+
+		private void StopAutoCloseTimer()
+		{
+			if (_autoCloseTimer is null)
+				return;
+
+			_autoCloseTimer.Stop();
+			_autoCloseTimer.Tick -= AutoCloseTimer_Tick;
+			_autoCloseTimer = null;
+		}
+
+		private void AutoCloseTimer_Tick(object? sender, object e)
+		{
+			StopAutoCloseTimer();
+
+			if (IsOpen && !_isPopupAnimationPlaying)
+				Hide();
 		}
 
 		private Storyboard GetOpenStoryboard(TrayIconFlyoutPopupDirection popupDirection)
@@ -601,6 +637,7 @@ namespace U5BFA.Libraries
 				return;
 
 			_disposed = true;
+			StopAutoCloseTimer();
 
 #if WASDK
 			BackdropManager?.Dispose();

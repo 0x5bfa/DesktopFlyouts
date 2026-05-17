@@ -11,7 +11,7 @@ namespace U5BFA.Libraries
 		{
 			InitializeComponent();
 
-			AppWindow.Resize(new(800, 600));
+			AppWindow.Resize(new(600, 900));
 			ExtendsContentIntoTitleBar = true;
 			Content = new RootView();
 		}
