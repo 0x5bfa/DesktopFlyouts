@@ -60,6 +60,7 @@
                 <ControlTemplate TargetType="local:TrayIconFlyoutIsland">
                     <Grid
                         x:Name="PART_RootGrid"
+                        Background="Transparent"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"

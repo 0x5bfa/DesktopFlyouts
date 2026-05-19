@@ -30,6 +30,12 @@ namespace U5BFA.Libraries
         internal partial bool HideOnLostFocus { get; set; }
 
         [ObservableProperty]
+        internal partial bool IsSwipeToDismissEnabled { get; set; }
+
+        [ObservableProperty]
+        internal partial double SwipeDismissThresholdValue { get; set; } = 80D;
+
+        [ObservableProperty]
         internal partial int SelectedActivationModeIndex { get; set; }
 
         [ObservableProperty]
@@ -129,6 +135,18 @@ namespace U5BFA.Libraries
                 TrayIconManager.Default.TrayIconFlyout?.HideOnLostFocus = value;
         }
 
+        partial void OnIsSwipeToDismissEnabledChanged(bool value)
+        {
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.TrayIconFlyout!.IsSwipeToDismissEnabled = value;
+        }
+
+        partial void OnSwipeDismissThresholdValueChanged(double value)
+        {
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.TrayIconFlyout!.SwipeDismissThreshold = value;
+        }
+
         partial void OnAutoCloseDelaySecondsValueChanged(double value)
         {
             if (IsDefaultFlyoutSelected())
@@ -199,6 +217,8 @@ namespace U5BFA.Libraries
             flyout.AutoCloseDelay = ToAutoCloseDelay(AutoCloseDelaySecondsValue);
             flyout.ActivationMode = ActivationModes.ElementAt(SelectedActivationModeIndex).Key;
             flyout.HideOnLostFocus = HideOnLostFocus;
+            flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
+            flyout.SwipeDismissThreshold = SwipeDismissThresholdValue;
             flyout.IsBackdropEnabled = IsBackdropEnabled;
             flyout.Placement = FlyoutPlacements.ElementAt(SelectedFlyoutPlacementIndex).Key;
             flyout.PopupDirection = PopupDirections.ElementAt(SelectedPopupDirectionIndex).Key;

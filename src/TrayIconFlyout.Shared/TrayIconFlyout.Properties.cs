@@ -112,6 +112,18 @@ namespace U5BFA.Libraries
         public partial double PressedScale { get; set; }
 
         /// <summary>
+        /// Gets or sets whether the flyout can be dismissed by swiping in the opposite direction of the active popup direction.
+        /// </summary>
+        [GeneratedDependencyProperty(DefaultValue = false)]
+        public partial bool IsSwipeToDismissEnabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the swipe distance in DIPs required to dismiss the flyout.
+        /// </summary>
+        [GeneratedDependencyProperty(DefaultValue = 80.0D)]
+        public partial double SwipeDismissThreshold { get; set; }
+
+        /// <summary>
         /// Gets or sets whether the flyout closes when it loses focus.
         /// </summary>
         [GeneratedDependencyProperty(DefaultValue = true)]

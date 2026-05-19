@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using Windows.Graphics;
+using FoundationPoint = Windows.Foundation.Point;
 
 #if UWP
 using Windows.ApplicationModel.Core;
@@ -42,6 +43,8 @@ namespace U5BFA.Libraries
     {
         private const string PART_RootGrid = "PART_RootGrid";
         private const string PART_IslandsGrid = "PART_IslandsGrid";
+        private const double SwipeDismissDragStartThreshold = 4.0D;
+        private const double SwipeDismissAxisDominanceRatio = 1.2D;
 
 #if WASDK
         private static readonly PersistentAcrylicBackdrop _persistentBackdrop = new();
@@ -56,10 +59,15 @@ namespace U5BFA.Libraries
         private DispatcherTimer? _autoCloseTimer;
         private DispatcherTimer? _restoreActivationTimer;
         private Storyboard? _pressScaleStoryboard;
+        private Storyboard? _swipeDismissRestoreStoryboard;
+        private FoundationPoint _swipeDismissStartPoint;
         private double _pressScaleTargetScale = 1.0D;
+        private uint _swipeDismissPointerId;
         private int _restoreActivationTickCount;
         private readonly List<(Control Control, bool IsTabStop)> _suppressedTabStopStates = [];
         private readonly List<(FrameworkElement Element, bool AllowFocusOnInteraction)> _suppressedInteractionFocusStates = [];
+        private bool _isSwipeDismissTracking;
+        private bool _isSwipeDismissDragging;
         private bool _isFocusManagerGettingFocusSubscribed;
         private bool _disposed;
 
@@ -90,6 +98,7 @@ namespace U5BFA.Libraries
 
             RootGrid?.GettingFocus -= RootGrid_GettingFocus;
             RootGrid?.PointerPressed -= RootGrid_PointerPressed;
+            RootGrid?.PointerMoved -= RootGrid_PointerMoved;
             RootGrid?.PointerReleased -= RootGrid_PointerReleased;
             RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
             RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
@@ -104,6 +113,7 @@ namespace U5BFA.Libraries
 
             RootGrid.GettingFocus += RootGrid_GettingFocus;
             RootGrid.PointerPressed += RootGrid_PointerPressed;
+            RootGrid.PointerMoved += RootGrid_PointerMoved;
             RootGrid.PointerReleased += RootGrid_PointerReleased;
             RootGrid.PointerCanceled += RootGrid_PointerCanceled;
             RootGrid.PointerCaptureLost += RootGrid_PointerCaptureLost;
@@ -208,18 +218,26 @@ namespace U5BFA.Libraries
         /// </summary>
         public void Hide()
         {
+            Hide(false);
+        }
+
+        private void Hide(bool closeFromCurrentTransform)
+        {
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
+            StopSwipeDismissRestoreStoryboard();
+            ResetSwipeDismissTracking();
 
             if (_disposed || RootGrid is null || _isPopupAnimationPlaying)
                 return;
 
             _isPopupAnimationPlaying = true;
-            SetOpenTransform();
+            if (!closeFromCurrentTransform)
+                SetOpenTransform();
 
             if (IsTransitionAnimationEnabled)
             {
-                var storyboard = GetCloseStoryboard(_activePopupDirection);
+                var storyboard = GetCloseStoryboard(_activePopupDirection, closeFromCurrentTransform);
                 storyboard.Completed += CloseAnimationStoryboard_Completed;
                 storyboard.Begin();
             }
@@ -522,6 +540,8 @@ namespace U5BFA.Libraries
 
         private void CompleteOpen()
         {
+            StopSwipeDismissRestoreStoryboard();
+            ResetSwipeDismissTracking();
             SetOpenTransform();
             _isPopupAnimationPlaying = false;
             IsOpen = true;
@@ -535,6 +555,8 @@ namespace U5BFA.Libraries
         private void CompleteClose()
         {
             StopAutoCloseTimer();
+            StopSwipeDismissRestoreStoryboard();
+            ResetSwipeDismissTracking();
             RestoreFocusSuppression();
             ResetPressedScale();
             SetClosedTransform(_activePopupDirection);
@@ -667,35 +689,258 @@ namespace U5BFA.Libraries
 
         private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            if (!IsPressedScaleEnabled() || RootGrid is null || _isPopupAnimationPlaying)
+            if (RootGrid is null || _isPopupAnimationPlaying)
                 return;
 
-            _isPressAnimationActive = true;
+            var isPressedScaleEnabled = IsPressedScaleEnabled();
+            var isSwipeDismissEnabled = CanStartSwipeDismiss();
+            if (!isPressedScaleEnabled && !isSwipeDismissEnabled)
+                return;
+
+            StopSwipeDismissRestoreStoryboard();
             RootGrid.CapturePointer(e.Pointer);
-            AnimatePressedScale(GetResolvedPressedScale(), TimeSpan.FromMilliseconds(110));
+
+            if (isSwipeDismissEnabled)
+                StartSwipeDismiss(e);
+
+            if (isPressedScaleEnabled)
+            {
+                _isPressAnimationActive = true;
+                AnimatePressedScale(GetResolvedPressedScale(), TimeSpan.FromMilliseconds(110));
+            }
+        }
+
+        private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            if (UpdateSwipeDismiss(e))
+                e.Handled = true;
         }
 
         private void RootGrid_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
+            var dismissedBySwipe = CompleteSwipeDismiss(e);
+
             if (RootGrid is not null)
                 RootGrid.ReleasePointerCapture(e.Pointer);
 
-            RestorePressedScale();
+            if (!dismissedBySwipe)
+                RestorePressedScale();
         }
 
         private void RootGrid_PointerCanceled(object sender, PointerRoutedEventArgs e)
         {
+            CancelSwipeDismiss();
             RestorePressedScale();
         }
 
         private void RootGrid_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
         {
+            CancelSwipeDismiss();
             RestorePressedScale();
         }
 
         private void RootGrid_PointerExited(object sender, PointerRoutedEventArgs e)
         {
-            RestorePressedScale();
+            if (!_isSwipeDismissDragging)
+                RestorePressedScale();
+        }
+
+        private bool CanStartSwipeDismiss()
+        {
+            return IsSwipeToDismissEnabled &&
+                IsOpen &&
+                RootGrid is not null &&
+                GetSwipeDismissMaxDistance() > 0;
+        }
+
+        private void StartSwipeDismiss(PointerRoutedEventArgs e)
+        {
+            if (RootGrid is null)
+                return;
+
+            _swipeDismissPointerId = e.Pointer.PointerId;
+            _swipeDismissStartPoint = e.GetCurrentPoint(RootGrid).Position;
+            _isSwipeDismissTracking = true;
+            _isSwipeDismissDragging = false;
+        }
+
+        private bool UpdateSwipeDismiss(PointerRoutedEventArgs e)
+        {
+            if (!_isSwipeDismissTracking || RootGrid is null || e.Pointer.PointerId != _swipeDismissPointerId)
+                return false;
+
+            var currentPoint = e.GetCurrentPoint(RootGrid).Position;
+            var deltaX = currentPoint.X - _swipeDismissStartPoint.X;
+            var deltaY = currentPoint.Y - _swipeDismissStartPoint.Y;
+
+            if (!TryGetSwipeDismissTranslation(deltaX, deltaY, out var translateX, out var translateY))
+                return false;
+
+            if (!_isSwipeDismissDragging)
+            {
+                _isSwipeDismissDragging = true;
+                StopAutoCloseTimer();
+                RestorePressedScale();
+            }
+
+            var transform = GetRootTransform();
+            if (transform is null)
+                return false;
+
+            transform.TranslateX = translateX;
+            transform.TranslateY = translateY;
+            return true;
+        }
+
+        private bool CompleteSwipeDismiss(PointerRoutedEventArgs e)
+        {
+            if (!_isSwipeDismissTracking || e.Pointer.PointerId != _swipeDismissPointerId)
+                return false;
+
+            var shouldDismiss = _isSwipeDismissDragging && GetSwipeDismissDistance() >= GetResolvedSwipeDismissThreshold();
+            var shouldRestore = _isSwipeDismissDragging && !shouldDismiss;
+            ResetSwipeDismissTracking();
+
+            if (shouldDismiss)
+            {
+                ResetPressedScale();
+                Hide(true);
+                return true;
+            }
+
+            if (shouldRestore)
+                AnimateSwipeDismissRestore();
+
+            return false;
+        }
+
+        private void CancelSwipeDismiss()
+        {
+            var shouldRestore = _isSwipeDismissDragging;
+            ResetSwipeDismissTracking();
+
+            if (shouldRestore)
+                AnimateSwipeDismissRestore();
+        }
+
+        private void ResetSwipeDismissTracking()
+        {
+            _isSwipeDismissTracking = false;
+            _isSwipeDismissDragging = false;
+            _swipeDismissPointerId = 0;
+        }
+
+        private bool TryGetSwipeDismissTranslation(double deltaX, double deltaY, out double translateX, out double translateY)
+        {
+            translateX = 0;
+            translateY = 0;
+
+            var closedX = GetClosedXOffset(_activePopupDirection);
+            if (closedX != 0)
+            {
+                var primaryDistance = Math.Max(0, Math.Sign(closedX) * deltaX);
+                if (!CanStartSwipeDismissDrag(primaryDistance, Math.Abs(deltaY)))
+                    return false;
+
+                translateX = Math.Sign(closedX) * Math.Min(primaryDistance, Math.Abs(closedX));
+                return true;
+            }
+
+            var closedY = GetClosedYOffset(_activePopupDirection);
+            if (closedY == 0)
+                return false;
+
+            var verticalPrimaryDistance = Math.Max(0, Math.Sign(closedY) * deltaY);
+            if (!CanStartSwipeDismissDrag(verticalPrimaryDistance, Math.Abs(deltaX)))
+                return false;
+
+            translateY = Math.Sign(closedY) * Math.Min(verticalPrimaryDistance, Math.Abs(closedY));
+            return true;
+        }
+
+        private bool CanStartSwipeDismissDrag(double primaryDistance, double secondaryDistance)
+        {
+            if (_isSwipeDismissDragging)
+                return true;
+
+            if (primaryDistance < SwipeDismissDragStartThreshold)
+                return false;
+
+            return primaryDistance >= secondaryDistance * SwipeDismissAxisDominanceRatio;
+        }
+
+        private double GetSwipeDismissDistance()
+        {
+            var transform = GetRootTransform();
+            if (transform is null)
+                return 0;
+
+            var closedX = GetClosedXOffset(_activePopupDirection);
+            if (closedX != 0)
+                return Math.Max(0, Math.Sign(closedX) * transform.TranslateX);
+
+            var closedY = GetClosedYOffset(_activePopupDirection);
+            return closedY == 0
+                ? 0
+                : Math.Max(0, Math.Sign(closedY) * transform.TranslateY);
+        }
+
+        private double GetSwipeDismissMaxDistance()
+        {
+            var closedX = GetClosedXOffset(_activePopupDirection);
+            if (closedX != 0)
+                return Math.Abs(closedX);
+
+            return Math.Abs(GetClosedYOffset(_activePopupDirection));
+        }
+
+        private double GetResolvedSwipeDismissThreshold()
+        {
+            if (double.IsNaN(SwipeDismissThreshold) || double.IsInfinity(SwipeDismissThreshold))
+                return Math.Min(80.0D, Math.Max(1.0D, GetSwipeDismissMaxDistance()));
+
+            return Clamp(SwipeDismissThreshold, 1.0D, Math.Max(1.0D, GetSwipeDismissMaxDistance()));
+        }
+
+        private void AnimateSwipeDismissRestore()
+        {
+            StopSwipeDismissRestoreStoryboard();
+
+            if (!IsTransitionAnimationEnabled)
+            {
+                SetOpenTransform();
+                RestartAutoCloseTimer();
+                return;
+            }
+
+            _swipeDismissRestoreStoryboard = GetOpenStoryboard(_activePopupDirection, true);
+            _swipeDismissRestoreStoryboard.Completed += SwipeDismissRestoreStoryboard_Completed;
+            _swipeDismissRestoreStoryboard.Begin();
+        }
+
+        private void StopSwipeDismissRestoreStoryboard()
+        {
+            if (_swipeDismissRestoreStoryboard is null)
+                return;
+
+            _swipeDismissRestoreStoryboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
+            _swipeDismissRestoreStoryboard.Stop();
+            _swipeDismissRestoreStoryboard = null;
+        }
+
+        private void SwipeDismissRestoreStoryboard_Completed(object? sender, object e)
+        {
+            if (sender is not Storyboard storyboard)
+                return;
+
+            storyboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
+            storyboard.Stop();
+
+            if (ReferenceEquals(_swipeDismissRestoreStoryboard, storyboard))
+                _swipeDismissRestoreStoryboard = null;
+
+            SetOpenTransform();
+            RestartAutoCloseTimer();
         }
 
         private void RestorePressedScale()
@@ -831,22 +1076,22 @@ namespace U5BFA.Libraries
             _suppressedTabStopStates.Clear();
         }
 
-        private Storyboard GetOpenStoryboard(FlyoutPopupDirection popupDirection)
+        private Storyboard GetOpenStoryboard(FlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
         {
             var transform = GetRootTransform() ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
 
             return IsVerticalDirection(popupDirection)
-                ? TransitionHelpers.GetWindows11BottomToTopTransitionStoryboard(transform, GetClosedYOffset(popupDirection), 0)
-                : TransitionHelpers.GetWindows11RightToLeftTransitionStoryboard(transform, GetClosedXOffset(popupDirection), 0);
+                ? TransitionHelpers.GetWindows11BottomToTopTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateY : GetClosedYOffset(popupDirection), 0)
+                : TransitionHelpers.GetWindows11RightToLeftTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateX : GetClosedXOffset(popupDirection), 0);
         }
 
-        private Storyboard GetCloseStoryboard(FlyoutPopupDirection popupDirection)
+        private Storyboard GetCloseStoryboard(FlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
         {
             var transform = GetRootTransform() ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
 
             return IsVerticalDirection(popupDirection)
-                ? TransitionHelpers.GetWindows11TopToBottomTransitionStoryboard(transform, 0, GetClosedYOffset(popupDirection))
-                : TransitionHelpers.GetWindows11LeftToRightTransitionStoryboard(transform, 0, GetClosedXOffset(popupDirection));
+                ? TransitionHelpers.GetWindows11TopToBottomTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateY : 0, GetClosedYOffset(popupDirection))
+                : TransitionHelpers.GetWindows11LeftToRightTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateX : 0, GetClosedXOffset(popupDirection));
         }
 
         private void SetOpenTransform()
@@ -1025,6 +1270,7 @@ namespace U5BFA.Libraries
             _host?.WindowInactivated -= HostWindow_Inactivated;
             RootGrid?.GettingFocus -= RootGrid_GettingFocus;
             RootGrid?.PointerPressed -= RootGrid_PointerPressed;
+            RootGrid?.PointerMoved -= RootGrid_PointerMoved;
             RootGrid?.PointerReleased -= RootGrid_PointerReleased;
             RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
             RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;

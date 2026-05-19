@@ -9,6 +9,7 @@
     Width="360"
     ActivationMode="NoActivateOnOpen"
     HideOnLostFocus="False"
+    IsSwipeToDismissEnabled="True"
     IslandsOrientation="Vertical"
     Placement="BottomRight"
     PressedScale="0.9"

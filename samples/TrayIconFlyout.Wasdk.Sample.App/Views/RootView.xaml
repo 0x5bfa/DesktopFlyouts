@@ -94,6 +94,19 @@
                 <wctcontrols:SettingsCard Header="Hide on losing focus">
                     <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Swipe to dismiss">
+                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsSwipeToDismissEnabled, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Swipe dismiss threshold">
+                    <NumberBox
+                        x:Name="SwipeDismissThresholdNumberBox"
+                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
+                        Minimum="1"
+                        SmallChange="8"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModel.SwipeDismissThresholdValue, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Activation mode">
                     <ComboBox
                         Width="150"

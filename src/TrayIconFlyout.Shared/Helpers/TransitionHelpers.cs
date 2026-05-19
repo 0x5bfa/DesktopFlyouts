@@ -15,7 +15,7 @@ namespace U5BFA.Libraries
 {
     internal static class TransitionHelpers
     {
-        internal static Storyboard GetWindows11BottomToTopTransitionStoryboard(DependencyObject target, int from, int to)
+        internal static Storyboard GetWindows11BottomToTopTransitionStoryboard(DependencyObject target, double from, double to)
         {
             var storyboard = new Storyboard();
 
@@ -41,7 +41,7 @@ namespace U5BFA.Libraries
             return storyboard;
         }
 
-        internal static Storyboard GetWindows11TopToBottomTransitionStoryboard(DependencyObject target, int from, int to)
+        internal static Storyboard GetWindows11TopToBottomTransitionStoryboard(DependencyObject target, double from, double to)
         {
             var storyboard = new Storyboard();
 
@@ -67,7 +67,7 @@ namespace U5BFA.Libraries
             return storyboard;
         }
 
-        internal static Storyboard GetWindows11RightToLeftTransitionStoryboard(DependencyObject target, int from, int to)
+        internal static Storyboard GetWindows11RightToLeftTransitionStoryboard(DependencyObject target, double from, double to)
         {
             var storyboard = new Storyboard();
 
@@ -93,7 +93,7 @@ namespace U5BFA.Libraries
             return storyboard;
         }
 
-        internal static Storyboard GetWindows11LeftToRightTransitionStoryboard(DependencyObject target, int from, int to)
+        internal static Storyboard GetWindows11LeftToRightTransitionStoryboard(DependencyObject target, double from, double to)
         {
             var storyboard = new Storyboard();
 
