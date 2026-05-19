@@ -31,7 +31,14 @@ namespace U5BFA.Libraries
 
 		private Border? MenuFlyoutTargetControl;
 
-		public bool IsOpen { get; private set; }
+		public static readonly DependencyProperty IsOpenProperty =
+			DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(TrayIconMenuFlyout), new PropertyMetadata(false));
+
+		public bool IsOpen
+		{
+			get => (bool)GetValue(IsOpenProperty);
+			private set => SetValue(IsOpenProperty, value);
+		}
 
 		public TrayIconMenuFlyout()
 		{

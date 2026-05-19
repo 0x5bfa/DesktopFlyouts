@@ -29,6 +29,15 @@ namespace U5BFA.Libraries
 		[GeneratedDependencyProperty(DefaultValue = true)]
 		public partial bool IsBackdropEnabled { get; set; }
 
+		public static readonly DependencyProperty IsOpenProperty =
+			DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(TrayIconFlyout), new PropertyMetadata(false));
+
+		public bool IsOpen
+		{
+			get => (bool)GetValue(IsOpenProperty);
+			private set => SetValue(IsOpenProperty, value);
+		}
+
 		public static readonly DependencyProperty FlyoutWidthProperty =
 			DependencyProperty.Register(nameof(FlyoutWidth), typeof(GridLength), typeof(TrayIconFlyout), new PropertyMetadata(GridLength.Auto, OnFlyoutSizePropertyChanged));
 
