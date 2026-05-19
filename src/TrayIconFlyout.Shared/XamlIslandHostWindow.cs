@@ -345,9 +345,15 @@ namespace U5BFA.Libraries
         }
 #endif
 
-        internal void NavigateFocus()
+        internal bool NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
         {
-            DesktopWindowXamlSource?.NavigateFocus(new XamlSourceFocusNavigationRequest(XamlSourceFocusNavigationReason.Down));
+            if (_disposed || _xamlHwnd.IsNull || _activationMode is FlyoutActivationMode.NeverActivate)
+                return false;
+
+            PInvoke.SetFocus(_xamlHwnd);
+
+            var result = DesktopWindowXamlSource?.NavigateFocus(new(reason));
+            return result?.WasFocusMoved ?? false;
         }
 
         private static void SetNoActivateStyle(HWND hWnd, bool enabled)

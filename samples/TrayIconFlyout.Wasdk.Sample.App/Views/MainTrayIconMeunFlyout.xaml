@@ -1,32 +1,32 @@
 <local:TrayIconMenuFlyout
-	x:Class="U5BFA.Libraries.MainTrayIconMeunFlyout"
-	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:local="using:U5BFA.Libraries"
-	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	mc:Ignorable="d">
+    x:Class="U5BFA.Libraries.MainTrayIconMeunFlyout"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:U5BFA.Libraries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
 
-	<MenuFlyoutSubItem Text="Settings">
-		<MenuFlyoutSubItem.Icon>
-			<FontIcon Glyph="" />
-		</MenuFlyoutSubItem.Icon>
-		<MenuFlyoutSubItem.Items>
-			<MenuFlyoutItem Text="Theme" />
-			<MenuFlyoutItem Text="Language" />
-			<MenuFlyoutItem Text="Privacy" />
-		</MenuFlyoutSubItem.Items>
-	</MenuFlyoutSubItem>
-	<MenuFlyoutItem Text="Devices">
-		<MenuFlyoutItem.Icon>
-			<FontIcon Glyph="" />
-		</MenuFlyoutItem.Icon>
-	</MenuFlyoutItem>
-	<MenuFlyoutSeparator />
-	<MenuFlyoutItem Text="Exit">
-		<MenuFlyoutItem.Icon>
-			<FontIcon Glyph="" />
-		</MenuFlyoutItem.Icon>
-	</MenuFlyoutItem>
+    <MenuFlyoutSubItem Text="Settings">
+        <MenuFlyoutSubItem.Icon>
+            <FontIcon Glyph="" />
+        </MenuFlyoutSubItem.Icon>
+        <MenuFlyoutSubItem.Items>
+            <MenuFlyoutItem Text="Theme" />
+            <MenuFlyoutItem Text="Language" />
+            <MenuFlyoutItem Text="Privacy" />
+        </MenuFlyoutSubItem.Items>
+    </MenuFlyoutSubItem>
+    <MenuFlyoutItem Text="Devices">
+        <MenuFlyoutItem.Icon>
+            <FontIcon Glyph="" />
+        </MenuFlyoutItem.Icon>
+    </MenuFlyoutItem>
+    <MenuFlyoutSeparator />
+    <MenuFlyoutItem Text="Exit">
+        <MenuFlyoutItem.Icon>
+            <FontIcon Glyph="" />
+        </MenuFlyoutItem.Icon>
+    </MenuFlyoutItem>
 
 </local:TrayIconMenuFlyout>

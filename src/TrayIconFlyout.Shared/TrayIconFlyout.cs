@@ -13,6 +13,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Markup;
 using Windows.UI.Xaml.Media;
@@ -211,6 +212,15 @@ namespace U5BFA.Libraries
             {
                 CompleteClose();
             }
+        }
+
+        /// <summary>
+        /// Moves focus into the flyout's XAML island.
+        /// </summary>
+        /// <param name="reason">The focus navigation reason used by the XAML hosting layer.</param>
+        public void NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
+        {
+            _host?.NavigateFocus(reason);
         }
 
 #if UWP
@@ -501,7 +511,7 @@ namespace U5BFA.Libraries
             _isPopupAnimationPlaying = false;
             IsOpen = true;
             if (ShouldActivateOnOpen())
-                _host?.NavigateFocus();
+                PrepareInitialFocus();
             else
                 RestartRestoreActivationTimer();
             RestartAutoCloseTimer();
@@ -515,6 +525,18 @@ namespace U5BFA.Libraries
             _isPopupAnimationPlaying = false;
             IsOpen = false;
             _host?.UpdateWindowVisibility(false);
+        }
+
+        private void PrepareInitialFocus()
+        {
+            if (_host is null)
+                return;
+
+            IsTabStop = true;
+            _host.NavigateFocus(XamlSourceFocusNavigationReason.Programmatic);
+
+            // Keep the first real child unfocused until the user presses Tab.
+            Focus(FocusState.Programmatic);
         }
 
         private void RestartAutoCloseTimer()
