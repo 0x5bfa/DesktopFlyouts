@@ -6,8 +6,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/.global/">
-    <File Path=".github/workflows/cd.yml" />
-    <File Path=".github/workflows/ci.yml" />
+    <File Path=".editorconfig" />
     <File Path="nuget.config" />
     <File Path="README.md" />
   </Folder>
