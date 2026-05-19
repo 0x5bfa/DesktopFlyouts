@@ -6,7 +6,7 @@ namespace U5BFA.Libraries
     /// <summary>
     /// Specifies the direction used for flyout placement and transition animations.
     /// </summary>
-    public enum TrayIconFlyoutPopupDirection
+    public enum FlyoutPopupDirection
     {
         /// <summary>
         /// Opens upward from the bottom edge.

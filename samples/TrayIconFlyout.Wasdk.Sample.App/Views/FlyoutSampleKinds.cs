@@ -10,6 +10,8 @@ namespace U5BFA.Libraries
         /// </summary>
         Customizable,
 
+        Button,
+
         IndicatorStyle,
 
         NotificationCenterStyle,

@@ -9,7 +9,7 @@
     FlyoutWidth="360"
     HideOnLostFocus="False"
     IslandsOrientation="Vertical"
-    Placement="RightEdgeAlignedBottom"
+    Placement="BottomRight"
     PopupDirection="RightToLeft"
     mc:Ignorable="d">
 

@@ -13,12 +13,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackdropKind.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ContentBackdropManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\FlyoutActivationMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\FlyoutPlacementMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\GeneralHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\IXamlSourceTransparency.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ManualDefinitions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\MouseEventReceivedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\PersistentAcrylicBackdrop.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\TrayIconFlyoutPopupDirection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\FlyoutPopupDirection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\TransitionHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TrayIconFlyout.cs" />

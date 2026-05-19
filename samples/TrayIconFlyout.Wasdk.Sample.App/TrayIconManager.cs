@@ -48,6 +48,7 @@ namespace U5BFA.Libraries
         {
             return example switch
             {
+                FlyoutSampleKinds.Button => new ButtonFlyout(),
                 FlyoutSampleKinds.IndicatorStyle => new IndicatorStyleFlyout(),
                 FlyoutSampleKinds.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
                 FlyoutSampleKinds.StartMenuStyle => new StartMenuStyleFlyout(),

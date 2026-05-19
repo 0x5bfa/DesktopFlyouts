@@ -56,8 +56,6 @@ namespace U5BFA.Libraries
 
 #if UWP
         private HWND _coreHwnd = default;
-        private bool _xamlInitialized = false;
-        private WindowsXamlManager? _xamlManager = null;
         private CoreWindow? _coreWindow = null;
 
         private IDesktopWindowXamlSourceNative2 _pdwxsn2 = null!;
@@ -467,8 +465,6 @@ namespace U5BFA.Libraries
 
             var pcwi = (ICoreWindowInterop)sbcw.GetOrCreateObjectForComInstance((nint)ppv, CreateObjectFlags.None);
             pcwi.get_WindowHandle((HWND*)Unsafe.AsPointer(ref _coreHwnd));
-
-            _xamlInitialized = true;
 
 #elif WASDK
             DesktopWindowXamlSource!.Initialize(Win32Interop.GetWindowIdFromWindow(HWnd));

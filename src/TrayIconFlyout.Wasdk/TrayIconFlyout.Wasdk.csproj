@@ -12,8 +12,9 @@
 		<CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>preview</LangVersion>
-		<NoWarn>$(NoWarn);CS8305</NoWarn>
+		<NoWarn>$(NoWarn);CS8305;NU5104</NoWarn>
 		<DefineConstants>$(DefineConstants);WASDK</DefineConstants>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
 		<UseWinUI>true</UseWinUI>
 		<WinUISDKReferences>false</WinUISDKReferences>

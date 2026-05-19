@@ -78,8 +78,8 @@ namespace U5BFA.Libraries
         /// <summary>
         /// Gets or sets the preferred popup direction.
         /// </summary>
-        [GeneratedDependencyProperty(DefaultValue = TrayIconFlyoutPopupDirection.Vertical)]
-        public partial TrayIconFlyoutPopupDirection PopupDirection { get; set; }
+        [GeneratedDependencyProperty(DefaultValue = FlyoutPopupDirection.Vertical)]
+        public partial FlyoutPopupDirection PopupDirection { get; set; }
 
         /// <summary>
         /// Gets or sets how islands are arranged.
@@ -90,7 +90,7 @@ namespace U5BFA.Libraries
         /// <summary>
         /// Gets or sets the flyout placement on the work area.
         /// </summary>
-        [GeneratedDependencyProperty(DefaultValue = FlyoutPlacementMode.BottomEdgeAlignedRight)]
+        [GeneratedDependencyProperty(DefaultValue = FlyoutPlacementMode.BottomRight)]
         public partial FlyoutPlacementMode Placement { get; set; }
 
         /// <summary>
@@ -104,6 +104,12 @@ namespace U5BFA.Libraries
         /// </summary>
         [GeneratedDependencyProperty(DefaultValue = true)]
         public partial bool IsTransitionAnimationEnabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the scale applied while the flyout is pressed. Set to 1.0 to disable press scaling.
+        /// </summary>
+        [GeneratedDependencyProperty(DefaultValue = 1.0D)]
+        public partial double PressedScale { get; set; }
 
         /// <summary>
         /// Gets or sets whether the flyout closes when it loses focus.

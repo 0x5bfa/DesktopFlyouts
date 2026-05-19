@@ -8,7 +8,7 @@
     xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
     FlyoutHeight="725"
     IslandsOrientation="Horizontal"
-    Placement="Bottom"
+    Placement="BottomCenter"
     mc:Ignorable="d">
 
     <local:TrayIconFlyoutIsland IslandWidth="640">

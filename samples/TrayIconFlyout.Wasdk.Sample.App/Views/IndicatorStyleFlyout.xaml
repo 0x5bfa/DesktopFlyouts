@@ -9,7 +9,7 @@
     ActivationMode="NeverActivate"
     AutoCloseDelay="0:0:1.5"
     IslandsOrientation="Horizontal"
-    Placement="Bottom"
+    Placement="BottomCenter"
     mc:Ignorable="d">
 
     <local:TrayIconFlyoutIsland>

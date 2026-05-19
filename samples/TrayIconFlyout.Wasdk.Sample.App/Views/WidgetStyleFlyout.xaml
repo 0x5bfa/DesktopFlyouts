@@ -7,7 +7,7 @@
     xmlns:local="using:U5BFA.Libraries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     FlyoutWidth="1000"
-    Placement="BottomEdgeAlignedLeft"
+    Placement="BottomLeft"
     PopupDirection="Horizontal"
     mc:Ignorable="d">
 

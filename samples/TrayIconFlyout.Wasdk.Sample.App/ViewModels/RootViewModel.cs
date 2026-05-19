@@ -53,7 +53,7 @@ namespace U5BFA.Libraries
         [ObservableProperty]
         internal partial int SelectedBackdropIndex { get; set; }
 
-        public Dictionary<TrayIconFlyoutPopupDirection, string> PopupDirections { get; private set; } = [];
+        public Dictionary<FlyoutPopupDirection, string> PopupDirections { get; private set; } = [];
         public Dictionary<FlyoutPlacementMode, string> FlyoutPlacements { get; private set; } = [];
         public Dictionary<FlyoutActivationMode, string> ActivationModes { get; private set; } = [];
         public Dictionary<FlyoutSampleKinds, string> FlyoutExamples { get; private set; } = [];
@@ -75,6 +75,7 @@ namespace U5BFA.Libraries
             SelectedActivationModeIndex = 0;
 
             FlyoutExamples.Add(FlyoutSampleKinds.Customizable, "Default");
+            FlyoutExamples.Add(FlyoutSampleKinds.Button, "Button");
             FlyoutExamples.Add(FlyoutSampleKinds.IndicatorStyle, "Indicator");
             FlyoutExamples.Add(FlyoutSampleKinds.NotificationCenterStyle, "Notification Center");
             FlyoutExamples.Add(FlyoutSampleKinds.StartMenuStyle, "Start Menu");
@@ -83,20 +84,20 @@ namespace U5BFA.Libraries
             FlyoutExamples.Add(FlyoutSampleKinds.Severity, "Severity");
             SelectedFlyoutExampleIndex = 0;
 
-            PopupDirections.Add(TrayIconFlyoutPopupDirection.Vertical, "Vertical");
-            PopupDirections.Add(TrayIconFlyoutPopupDirection.BottomToTop, "Bottom to top");
-            PopupDirections.Add(TrayIconFlyoutPopupDirection.TopToBottom, "Top to bottom");
-            PopupDirections.Add(TrayIconFlyoutPopupDirection.Horizontal, "Horizontal");
-            PopupDirections.Add(TrayIconFlyoutPopupDirection.LeftToRight, "Left to right");
-            PopupDirections.Add(TrayIconFlyoutPopupDirection.RightToLeft, "Right to left");
+            PopupDirections.Add(FlyoutPopupDirection.Vertical, "Vertical");
+            PopupDirections.Add(FlyoutPopupDirection.BottomToTop, "Bottom to top");
+            PopupDirections.Add(FlyoutPopupDirection.TopToBottom, "Top to bottom");
+            PopupDirections.Add(FlyoutPopupDirection.Horizontal, "Horizontal");
+            PopupDirections.Add(FlyoutPopupDirection.LeftToRight, "Left to right");
+            PopupDirections.Add(FlyoutPopupDirection.RightToLeft, "Right to left");
             SelectedPopupDirectionIndex = 0;
 
-            FlyoutPlacements.Add(FlyoutPlacementMode.TopEdgeAlignedLeft, "Top left");
-            FlyoutPlacements.Add(FlyoutPlacementMode.Top, "Top center");
-            FlyoutPlacements.Add(FlyoutPlacementMode.TopEdgeAlignedRight, "Top right");
-            FlyoutPlacements.Add(FlyoutPlacementMode.BottomEdgeAlignedLeft, "Bottom left");
-            FlyoutPlacements.Add(FlyoutPlacementMode.Bottom, "Bottom center");
-            FlyoutPlacements.Add(FlyoutPlacementMode.BottomEdgeAlignedRight, "Bottom right");
+            FlyoutPlacements.Add(FlyoutPlacementMode.TopLeft, "Top left");
+            FlyoutPlacements.Add(FlyoutPlacementMode.TopCenter, "Top center");
+            FlyoutPlacements.Add(FlyoutPlacementMode.TopRight, "Top right");
+            FlyoutPlacements.Add(FlyoutPlacementMode.BottomLeft, "Bottom left");
+            FlyoutPlacements.Add(FlyoutPlacementMode.BottomCenter, "Bottom center");
+            FlyoutPlacements.Add(FlyoutPlacementMode.BottomRight, "Bottom right");
             SelectedFlyoutPlacementIndex = 5;
 
             Backdrops.Add(BackdropKind.Acrylic, "Acrylic");

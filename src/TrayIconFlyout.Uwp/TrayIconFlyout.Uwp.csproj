@@ -12,8 +12,9 @@
 		<CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>preview</LangVersion>
-		<NoWarn>$(NoWarn);CS8305</NoWarn>
+		<NoWarn>$(NoWarn);CS8305;NU5104</NoWarn>
 		<DefineConstants>$(DefineConstants);UWP</DefineConstants>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
 		<UseUwp>true</UseUwp>
 		<DisableEmbeddedXbf>false</DisableEmbeddedXbf>
@@ -43,8 +44,8 @@
 		<None Include="..\..\.nuget\README.md" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 		<None Include="TrayIconFlyout.Uwp.props" Pack="true" PackagePath="buildTransitive" />
-        <None Include="..\..\.nuget\icon-128.png" Pack="true" PackagePath="" />
-    </ItemGroup>
+		<None Include="..\..\.nuget\icon-128.png" Pack="true" PackagePath="" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Labs.Uwp.DependencyPropertyGenerator" Version="0.1.251101-build.2372" />
