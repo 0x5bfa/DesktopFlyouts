@@ -1,10 +1,10 @@
 {
 	"profiles": {
-		"DesktopFlyouts.Samples.Wasdk (Package)": {
+		"Run (Packaged)": {
 			"commandName": "MsixPackage",
 			"nativeDebugging": true
 		},
-		"DesktopFlyouts.Samples.Wasdk (Unpackaged)": {
+		"Run (Unpackaged)": {
 			"commandName": "Project",
 			"nativeDebugging": true
 		}

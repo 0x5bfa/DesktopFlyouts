@@ -25,6 +25,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Properties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandTemplateSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandApplication.cs" />

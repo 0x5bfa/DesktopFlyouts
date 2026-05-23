@@ -260,20 +260,12 @@ namespace U5BFA.Libraries
         {
             if ((bool)e.NewValue == (bool)e.OldValue)
                 return;
-
-#if WASDK
-            UpdateBackdropManager(true);
-#endif
         }
 
         partial void OnBackdropKindPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
             if ((BackdropKind)e.NewValue == (BackdropKind)e.OldValue)
                 return;
-
-#if WASDK
-            UpdateBackdropManager(true);
-#endif
         }
 
         partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e)

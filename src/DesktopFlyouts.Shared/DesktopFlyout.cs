@@ -9,23 +9,18 @@ using Windows.Graphics;
 using FoundationPoint = Windows.Foundation.Point;
 
 #if UWP
-using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Markup;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
-using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 #elif WASDK
-using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Markup;
@@ -53,11 +48,6 @@ namespace U5BFA.Libraries
         private const double SwipeDismissDragStartThreshold = 4.0D;
         private const double SwipeDismissAxisDominanceRatio = 1.2D;
 
-#if WASDK
-        private static readonly PersistentAcrylicBackdrop _persistentBackdrop = new();
-        private bool? _wasTaskbarLightLastTimeChecked;
-#endif
-
         private readonly XamlIslandHostWindow? _host;
         private bool _isPopupAnimationPlaying;
         private bool _isPressAnimationActive;
@@ -80,10 +70,6 @@ namespace U5BFA.Libraries
 
         private Grid? RootGrid;
         private Grid? IslandsGrid;
-
-#if WASDK
-        internal ContentBackdropManager? BackdropManager { get; private set; }
-#endif
 
         /// <summary>
         /// Initializes a new instance of <see cref="DesktopFlyout"/>.
@@ -135,10 +121,6 @@ namespace U5BFA.Libraries
                 _isFocusManagerGettingFocusSubscribed = true;
             }
 
-#if WASDK
-            LayoutUpdated += DesktopFlyout_LayoutUpdated;
-#endif
-
             UpdateIslands();
         }
 
@@ -186,9 +168,6 @@ namespace U5BFA.Libraries
                     await Task.Delay(1);
 
                     UpdateFlyoutTheme();
-#if WASDK
-                    UpdateBackdropManager();
-#endif
                     UpdateFocusSuppression();
                     _activePopupDirection = UpdateFlyoutRegion();
 
@@ -298,64 +277,6 @@ namespace U5BFA.Libraries
         public unsafe bool TryPreTranslateMessage(MSG* msg)
         {
             return _host?.TryPreTranslateMessage(msg) ?? false;
-        }
-#endif
-
-#if WASDK
-        private void UpdateBackdropManager(bool coerce = false)
-        {
-            if (IslandsGrid is null)
-                return;
-
-            var isTaskbarLight = GeneralHelpers.IsTaskbarLight();
-            var isTaskbarColorPrevalence = GeneralHelpers.IsTaskbarColorPrevalenceEnabled();
-
-            ISystemBackdropControllerWithTargets? controller = null;
-            if (coerce)
-            {
-                controller = BackdropKind is BackdropKind.Acrylic
-                ? (isTaskbarColorPrevalence
-                  ? BackdropControllerHelpers.GetAccentedAcrylicController()
-                  : isTaskbarLight
-                    ? BackdropControllerHelpers.GetLightAcrylicController()
-                    : BackdropControllerHelpers.GetDarkAcrylicController())
-                : (isTaskbarColorPrevalence
-                  ? BackdropControllerHelpers.GetAccentedMicaController()
-                  : isTaskbarLight
-                    ? BackdropControllerHelpers.GetLightMicaController()
-                    : BackdropControllerHelpers.GetDarkMicaController());
-            }
-            else if (isTaskbarColorPrevalence)  // Force update backdrop when color prevalence is on, as the accent color might change
-            {
-                controller = BackdropKind is BackdropKind.Acrylic
-                  ? BackdropControllerHelpers.GetAccentedAcrylicController()
-                  : BackdropControllerHelpers.GetAccentedMicaController();
-            }
-            else if (_wasTaskbarLightLastTimeChecked != isTaskbarLight)
-            {
-                controller = BackdropKind is BackdropKind.Acrylic
-                  ? (isTaskbarLight
-                    ? BackdropControllerHelpers.GetLightAcrylicController()
-                    : BackdropControllerHelpers.GetDarkAcrylicController())
-                  : (isTaskbarLight
-                    ? BackdropControllerHelpers.GetLightMicaController()
-                    : BackdropControllerHelpers.GetDarkMicaController());
-                _wasTaskbarLightLastTimeChecked = isTaskbarLight;
-            }
-            if (controller is null)
-                return;
-
-            BackdropManager?.Dispose();
-            BackdropManager = null;
-            BackdropManager = ContentBackdropManager.Create(controller, ElementCompositionPreview.GetElementVisual(IslandsGrid).Compositor, ActualTheme);
-
-            UpdateBackdrop(true);
-        }
-
-        private void UpdateBackdrop(bool coerce = false)
-        {
-            foreach (var island in Islands)
-                island.UpdateBackdrop(IsBackdropEnabled, coerce);
         }
 #endif
 
@@ -477,9 +398,6 @@ namespace U5BFA.Libraries
             UpdateLayout();
             _activePopupDirection = UpdateFlyoutRegion();
             SetOpenTransform();
-#if WASDK
-            UpdateBackdrop(true);
-#endif
         }
 
         private void ResetResolvedFlyoutSize()
@@ -535,21 +453,6 @@ namespace U5BFA.Libraries
 
             return false;
         }
-
-#if WASDK
-        private void DesktopFlyout_LayoutUpdated(object? sender, object e)
-        {
-            //if (_host?.DesktopWindowXamlSource is null)
-            //	return;
-
-            //var flyouts = VisualTreeHelper.GetOpenPopupsForXamlRoot(_host.DesktopWindowXamlSource.Content.XamlRoot);
-            //foreach (var flyout in flyouts)
-            //{
-            //	if (flyout.SystemBackdrop is not PersistentAcrylicBackdrop)
-            //		flyout.SystemBackdrop = _persistentBackdrop;
-            //}
-        }
-#endif
 
         private void OpenAnimationStoryboard_Completed(object? sender, object e)
         {
@@ -1298,10 +1201,6 @@ namespace U5BFA.Libraries
             StopRestoreActivationTimer();
             RestoreFocusSuppression();
 
-#if WASDK
-            BackdropManager?.Dispose();
-            BackdropManager = null;
-#endif
             _host?.WindowInactivated -= HostWindow_Inactivated;
             RootGrid?.GettingFocus -= RootGrid_GettingFocus;
             RootGrid?.PointerPressed -= RootGrid_PointerPressed;
