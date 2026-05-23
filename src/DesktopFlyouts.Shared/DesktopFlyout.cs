@@ -151,7 +151,7 @@ namespace U5BFA.Libraries
                 _host.PreserveActivationState();
 
             _host.SetActivationMode(ActivationMode);
-            _host.Maximize(shouldActivateOnOpen);
+            _host.Maximize(WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint), shouldActivateOnOpen);
 
             _ = Task.Run(async () =>
             {
@@ -361,8 +361,9 @@ namespace U5BFA.Libraries
         private DesktopFlyoutPopupDirection UpdateFlyoutRegion()
         {
             if (_host?.DesktopWindowXamlSource is null || IslandsGrid is null)
-                return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect());
+                return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint));
 
+            var customBottomCenterPoint = _customPlacementBottomCenterPoint;
             var scale = _host.XamlIslandRasterizationScale;
             var flyoutWidth = GetCurrentFlyoutWidth();
             var flyoutHeight = GetCurrentFlyoutHeight();
@@ -370,12 +371,11 @@ namespace U5BFA.Libraries
             var scaledMargin = GetScaledMargin(Margin, scale);
             var frameWidth = scaledFlyoutSize.Width + scaledMargin.Left + scaledMargin.Right;
             var frameHeight = scaledFlyoutSize.Height + scaledMargin.Top + scaledMargin.Bottom;
-            var workArea = WindowHelpers.GetFlyoutWorkAreaRect();
+            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(customBottomCenterPoint);
             var hostWidth = workArea.Width;
             var hostHeight = workArea.Height;
             var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, hostWidth)));
             var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, hostHeight)));
-            var customBottomCenterPoint = _customPlacementBottomCenterPoint;
             var requestedPopupDirection = PopupDirection;
             _customPlacementBottomCenterPoint = null;
 
@@ -456,7 +456,7 @@ namespace U5BFA.Libraries
                 return (0, 0);
 
             var scale = _host.XamlIslandRasterizationScale;
-            var workArea = WindowHelpers.GetFlyoutWorkAreaRect();
+            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint);
             var availableWidth = (workArea.Width / scale) - Margin.Left - Margin.Right;
             var availableHeight = (workArea.Height / scale) - Margin.Top - Margin.Bottom;
 

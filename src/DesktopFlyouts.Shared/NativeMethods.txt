@@ -68,3 +68,5 @@ SetWindowLongPtr
 GetCursorPos
 Shell_NotifyIconGetRect
 SHAppBarMessage
+MonitorFromRect
+GetMonitorInfo

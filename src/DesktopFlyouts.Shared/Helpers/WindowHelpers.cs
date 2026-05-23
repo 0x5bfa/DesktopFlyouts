@@ -5,6 +5,7 @@ using System;
 using System.Drawing;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 
@@ -27,8 +28,11 @@ namespace U5BFA.Libraries
             return new(rect.Right, rect.Bottom);
         }
 
-        internal static Rectangle GetFlyoutWorkAreaRect()
+        internal static Rectangle GetFlyoutWorkAreaRect(Point? anchorPoint = null)
         {
+            if (anchorPoint is Point point && TryGetMonitorWorkAreaRect(point, out var monitorWorkArea))
+                return monitorWorkArea;
+
             var workArea = GetSystemWorkAreaRect();
             if (!TryGetTaskbarInfo(out var taskbarRect, out var edge))
                 return workArea;
@@ -57,6 +61,38 @@ namespace U5BFA.Libraries
                     Math.Min(workArea.Bottom, taskbarRect.Top)),
                 _ => workArea,
             };
+        }
+
+        private static bool TryGetMonitorWorkAreaRect(Point point, out Rectangle workArea)
+        {
+            RECT anchorRect = new()
+            {
+                left = point.X,
+                top = point.Y,
+                right = point.X + 1,
+                bottom = point.Y + 1,
+            };
+            var monitor = PInvoke.MonitorFromRect(&anchorRect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+            if (monitor.IsNull)
+            {
+                workArea = default;
+                return false;
+            }
+
+            MONITORINFO monitorInfo = new() { cbSize = (uint)sizeof(MONITORINFO) };
+            if (!PInvoke.GetMonitorInfo(monitor, &monitorInfo))
+            {
+                workArea = default;
+                return false;
+            }
+
+            workArea = Rectangle.FromLTRB(
+                monitorInfo.rcWork.left,
+                monitorInfo.rcWork.top,
+                monitorInfo.rcWork.right,
+                monitorInfo.rcWork.bottom);
+
+            return true;
         }
 
         internal static bool TryGetTaskbarInfoForPoint(Point point, out Rectangle rect, out TaskbarEdge edge)

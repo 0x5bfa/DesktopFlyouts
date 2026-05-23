@@ -164,13 +164,12 @@ namespace U5BFA.Libraries
             PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, rect.Width, rect.Height, flags);
         }
 
-        internal void Maximize(bool activate = true)
+        internal void Maximize(System.Drawing.Rectangle workArea, bool activate = true)
         {
             if (_disposed)
                 return;
 
             var flags = activate ? 0 : SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
-            var workArea = WindowHelpers.GetFlyoutWorkAreaRect();
             PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, workArea.X, workArea.Y, workArea.Width, workArea.Height, flags);
             PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, workArea.Width, workArea.Height, flags);
         }
