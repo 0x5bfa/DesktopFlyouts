@@ -31,7 +31,7 @@
 		<PackageId>0x5BFA.DesktopFlyouts.Uwp</PackageId>
 		<Title>0x5BFA.DesktopFlyouts.Uwp</Title>
 		<Authors>0x5BFA</Authors>
-		<Version>1.1.0</Version>
+		<Version>1.2.0</Version>
 		<Description>WinUI library for showing desktop flyouts from tray icons or programmatically.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
