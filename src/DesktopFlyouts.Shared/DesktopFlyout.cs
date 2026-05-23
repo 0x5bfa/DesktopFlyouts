@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 using Windows.Graphics;
 using FoundationPoint = Windows.Foundation.Point;
+using FoundationSize = Windows.Foundation.Size;
 
 #if UWP
 using Windows.UI.Core;
@@ -360,15 +361,18 @@ namespace U5BFA.Libraries
         private DesktopFlyoutPopupDirection UpdateFlyoutRegion()
         {
             if (_host?.DesktopWindowXamlSource is null || IslandsGrid is null)
-                return ResolvePopupDirection(PopupDirection, default, 0, 0);
+                return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect());
 
             var scale = _host.XamlIslandRasterizationScale;
             var flyoutWidth = GetCurrentFlyoutWidth();
             var flyoutHeight = GetCurrentFlyoutHeight();
+            var scaledFlyoutSize = new FoundationSize(flyoutWidth * scale, flyoutHeight * scale);
             var scaledMargin = GetScaledMargin(Margin, scale);
-            var frameWidth = (flyoutWidth + Margin.Left + Margin.Right) * scale;
-            var frameHeight = (flyoutHeight + Margin.Top + Margin.Bottom) * scale;
-            var (hostWidth, hostHeight) = GetWorkAreaSizeInPixels();
+            var frameWidth = scaledFlyoutSize.Width + scaledMargin.Left + scaledMargin.Right;
+            var frameHeight = scaledFlyoutSize.Height + scaledMargin.Top + scaledMargin.Bottom;
+            var workArea = WindowHelpers.GetFlyoutWorkAreaRect();
+            var hostWidth = workArea.Width;
+            var hostHeight = workArea.Height;
             var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, hostWidth)));
             var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, hostHeight)));
             var customBottomCenterPoint = _customPlacementBottomCenterPoint;
@@ -380,16 +384,21 @@ namespace U5BFA.Libraries
 
             if (customBottomCenterPoint is Point bottomCenterPoint)
             {
-                left = bottomCenterPoint.X - ((flyoutWidth * scale) / 2) - scaledMargin.Left;
-                top = bottomCenterPoint.Y - (flyoutHeight * scale) - scaledMargin.Top;
+                (left, top) = GetCustomPlacementOrigin(
+                    bottomCenterPoint,
+                    regionWidth,
+                    regionHeight,
+                    scaledFlyoutSize,
+                    scaledMargin,
+                    workArea);
             }
             else
             {
-                (left, top) = GetPlacementOrigin(Placement, regionWidth, regionHeight, hostWidth, hostHeight);
+                (left, top) = GetPlacementOrigin(Placement, regionWidth, regionHeight, workArea);
             }
 
-            left = Clamp(left, 0, hostWidth - regionWidth);
-            top = Clamp(top, 0, hostHeight - regionHeight);
+            left = Clamp(left, workArea.Left, workArea.Right - regionWidth);
+            top = Clamp(top, workArea.Top, workArea.Bottom - regionHeight);
 
             var region = new RectInt32(
                 (int)Math.Round(left),
@@ -400,7 +409,7 @@ namespace U5BFA.Libraries
             _host.MoveAndResize(region, ShouldActivateOnOpen());
             _host.SetHWndRectRegion(new(0, 0, region.Width, region.Height));
 
-            return ResolvePopupDirection(requestedPopupDirection, region, hostWidth, hostHeight);
+            return ResolvePopupDirection(requestedPopupDirection, region, workArea);
         }
 
         internal void OnIslandSizeChanged()
@@ -447,18 +456,11 @@ namespace U5BFA.Libraries
                 return (0, 0);
 
             var scale = _host.XamlIslandRasterizationScale;
-            var (workAreaWidth, workAreaHeight) = GetWorkAreaSizeInPixels();
-            var availableWidth = (workAreaWidth / scale) - Margin.Left - Margin.Right;
-            var availableHeight = (workAreaHeight / scale) - Margin.Top - Margin.Bottom;
+            var workArea = WindowHelpers.GetFlyoutWorkAreaRect();
+            var availableWidth = (workArea.Width / scale) - Margin.Left - Margin.Right;
+            var availableHeight = (workArea.Height / scale) - Margin.Top - Margin.Bottom;
 
             return (Math.Max(0, availableWidth), Math.Max(0, availableHeight));
-        }
-
-        private static (double Width, double Height) GetWorkAreaSizeInPixels()
-        {
-            var bottomRightPoint = WindowHelpers.GetBottomRightCornerPoint();
-
-            return (Math.Max(0, bottomRightPoint.X), Math.Max(0, bottomRightPoint.Y));
         }
 
         private bool HasStarIslandWidth()
@@ -1151,32 +1153,56 @@ namespace U5BFA.Libraries
             return Clamp(length.Value, 0, availableLength);
         }
 
-        private static (double Left, double Top, double Right, double Bottom) GetScaledMargin(Thickness margin, double scale)
+        private static Thickness GetScaledMargin(Thickness margin, double scale)
         {
-            return (
+            return new(
                 margin.Left * scale,
                 margin.Top * scale,
                 margin.Right * scale,
                 margin.Bottom * scale);
         }
 
-        private static (double Left, double Top) GetPlacementOrigin(DesktopFlyoutPlacementMode placement, double width, double height, double hostWidth, double hostHeight)
+        private static (double Left, double Top) GetCustomPlacementOrigin(
+            Point point,
+            int regionWidth,
+            int regionHeight,
+            FoundationSize flyoutSize,
+            Thickness scaledMargin,
+            Rectangle workArea)
+        {
+            if (WindowHelpers.TryGetTaskbarInfoForPoint(point, out _, out var taskbarEdge))
+            {
+                return taskbarEdge switch
+                {
+                    TaskbarEdge.Left => (workArea.Left, point.Y - (regionHeight / 2D)),
+                    TaskbarEdge.Top => (point.X - (regionWidth / 2D), workArea.Top),
+                    TaskbarEdge.Right => (workArea.Right - regionWidth, point.Y - (regionHeight / 2D)),
+                    _ => (point.X - (regionWidth / 2D), workArea.Bottom - regionHeight),
+                };
+            }
+
+            return (
+                point.X - (flyoutSize.Width / 2D) - scaledMargin.Left,
+                point.Y - flyoutSize.Height - scaledMargin.Top);
+        }
+
+        private static (double Left, double Top) GetPlacementOrigin(DesktopFlyoutPlacementMode placement, double width, double height, Rectangle workArea)
         {
             return placement switch
             {
-                DesktopFlyoutPlacementMode.BottomCenter => ((hostWidth - width) / 2, hostHeight - height),
-                DesktopFlyoutPlacementMode.BottomLeft => (0, hostHeight - height),
-                DesktopFlyoutPlacementMode.BottomRight => (hostWidth - width, hostHeight - height),
-                DesktopFlyoutPlacementMode.TopCenter => ((hostWidth - width) / 2, 0),
-                DesktopFlyoutPlacementMode.TopLeft => (0, 0),
-                DesktopFlyoutPlacementMode.TopRight => (hostWidth - width, 0),
-                DesktopFlyoutPlacementMode.LeftCenter => (0, (hostHeight - height) / 2),
-                DesktopFlyoutPlacementMode.RightCenter => (hostWidth - width, (hostHeight - height) / 2),
-                _ => (hostWidth - width, hostHeight - height),
+                DesktopFlyoutPlacementMode.BottomCenter => (workArea.Left + ((workArea.Width - width) / 2), workArea.Bottom - height),
+                DesktopFlyoutPlacementMode.BottomLeft => (workArea.Left, workArea.Bottom - height),
+                DesktopFlyoutPlacementMode.BottomRight => (workArea.Right - width, workArea.Bottom - height),
+                DesktopFlyoutPlacementMode.TopCenter => (workArea.Left + ((workArea.Width - width) / 2), workArea.Top),
+                DesktopFlyoutPlacementMode.TopLeft => (workArea.Left, workArea.Top),
+                DesktopFlyoutPlacementMode.TopRight => (workArea.Right - width, workArea.Top),
+                DesktopFlyoutPlacementMode.LeftCenter => (workArea.Left, workArea.Top + ((workArea.Height - height) / 2)),
+                DesktopFlyoutPlacementMode.RightCenter => (workArea.Right - width, workArea.Top + ((workArea.Height - height) / 2)),
+                _ => (workArea.Right - width, workArea.Bottom - height),
             };
         }
 
-        private static DesktopFlyoutPopupDirection ResolvePopupDirection(DesktopFlyoutPopupDirection requestedDirection, RectInt32 region, double hostWidth, double hostHeight)
+        private static DesktopFlyoutPopupDirection ResolvePopupDirection(DesktopFlyoutPopupDirection requestedDirection, RectInt32 region, Rectangle workArea)
         {
             return requestedDirection switch
             {
@@ -1184,19 +1210,19 @@ namespace U5BFA.Libraries
                 DesktopFlyoutPopupDirection.TopToBottom => DesktopFlyoutPopupDirection.TopToBottom,
                 DesktopFlyoutPopupDirection.LeftToRight => DesktopFlyoutPopupDirection.LeftToRight,
                 DesktopFlyoutPopupDirection.RightToLeft => DesktopFlyoutPopupDirection.RightToLeft,
-                DesktopFlyoutPopupDirection.Horizontal => IsRightHalf(region, hostWidth) ? DesktopFlyoutPopupDirection.RightToLeft : DesktopFlyoutPopupDirection.LeftToRight,
-                _ => IsBottomHalf(region, hostHeight) ? DesktopFlyoutPopupDirection.BottomToTop : DesktopFlyoutPopupDirection.TopToBottom,
+                DesktopFlyoutPopupDirection.Horizontal => IsRightHalf(region, workArea) ? DesktopFlyoutPopupDirection.RightToLeft : DesktopFlyoutPopupDirection.LeftToRight,
+                _ => IsBottomHalf(region, workArea) ? DesktopFlyoutPopupDirection.BottomToTop : DesktopFlyoutPopupDirection.TopToBottom,
             };
         }
 
-        private static bool IsBottomHalf(RectInt32 region, double hostHeight)
+        private static bool IsBottomHalf(RectInt32 region, Rectangle workArea)
         {
-            return region.Y + (region.Height / 2D) >= hostHeight / 2D;
+            return region.Y + (region.Height / 2D) >= workArea.Top + (workArea.Height / 2D);
         }
 
-        private static bool IsRightHalf(RectInt32 region, double hostWidth)
+        private static bool IsRightHalf(RectInt32 region, Rectangle workArea)
         {
-            return region.X + (region.Width / 2D) >= hostWidth / 2D;
+            return region.X + (region.Width / 2D) >= workArea.Left + (workArea.Width / 2D);
         }
 
         private static bool IsVerticalDirection(DesktopFlyoutPopupDirection popupDirection)

@@ -11,6 +11,8 @@ WINDOWS_HOOK_ID
 HCBT_ACTIVATE
 HCBT_SETFOCUS
 HSTRING
+ABM_*
+ABE_*
 
 IDesktopWindowXamlSourceNative2
 ICoreWindowInterop
@@ -65,3 +67,4 @@ GetWindowLongPtr
 SetWindowLongPtr
 GetCursorPos
 Shell_NotifyIconGetRect
+SHAppBarMessage

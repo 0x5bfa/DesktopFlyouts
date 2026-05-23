@@ -170,9 +170,9 @@ namespace U5BFA.Libraries
                 return;
 
             var flags = activate ? 0 : SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
-            var bottomRightPoint = WindowHelpers.GetBottomRightCornerPoint();
-            PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, 0, 0, bottomRightPoint.X, bottomRightPoint.Y, flags);
-            PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, bottomRightPoint.X, bottomRightPoint.Y, flags);
+            var workArea = WindowHelpers.GetFlyoutWorkAreaRect();
+            PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, workArea.X, workArea.Y, workArea.Width, workArea.Height, flags);
+            PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, workArea.Width, workArea.Height, flags);
         }
 
         internal void SetHWndRectRegion(RectInt32 rect)
