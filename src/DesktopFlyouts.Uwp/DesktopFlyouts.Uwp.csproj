@@ -28,8 +28,8 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<PackageId>0x5BFA.DesktopFlyouts.Uwp</PackageId>
-		<Title>0x5BFA.DesktopFlyouts.Uwp</Title>
+		<PackageId>DesktopFlyouts.Uwp</PackageId>
+		<Title>DesktopFlyouts.Uwp</Title>
 		<Authors>0x5BFA</Authors>
 		<Version>1.2.0</Version>
 		<Description>WinUI library for showing desktop flyouts from tray icons or programmatically.</Description>
