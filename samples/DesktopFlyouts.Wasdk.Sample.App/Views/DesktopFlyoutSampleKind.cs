@@ -3,7 +3,7 @@
 
 namespace U5BFA.Libraries
 {
-    internal enum FlyoutSampleKinds
+    internal enum DesktopFlyoutSampleKind
     {
         /// <summary>
         /// The customizable flyout. When selected, the flyout will be shown with all the features enabled and being customizable.

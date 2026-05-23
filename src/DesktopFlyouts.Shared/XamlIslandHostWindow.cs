@@ -5,26 +5,22 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
-using System.Threading;
 using Windows.Foundation;
 using Windows.Graphics;
-using Windows.System;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
-using Windows.Win32.System.WinRT.Xaml;
 using Windows.Win32.UI.WindowsAndMessaging;
-using Windows.Win32.System.WinRT;
-using Windows.Win32.System.Com;
-using WinRT;
-using System.Runtime.InteropServices.JavaScript;
-
 
 #if UWP
+using System.Runtime.InteropServices.Marshalling;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Hosting;
+using Windows.Win32.System.Com;
+using Windows.Win32.System.WinRT;
+using Windows.Win32.System.WinRT.Xaml;
+using WinRT;
 #elif WASDK
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -52,7 +48,7 @@ namespace U5BFA.Libraries
         private HWND _preservedFocusHWnd = default;
         private readonly Dictionary<nint, nint> _subclassedXamlWndProcs = [];
         private bool _disposed;
-        private FlyoutActivationMode _activationMode = FlyoutActivationMode.Activate;
+        private DesktopFlyoutActivationMode _activationMode = DesktopFlyoutActivationMode.Activate;
 
 #if UWP
         private HWND _coreHwnd = default;
@@ -228,7 +224,7 @@ namespace U5BFA.Libraries
                 ApplyActivationModeToWindows();
         }
 
-        internal void SetActivationMode(FlyoutActivationMode activationMode)
+        internal void SetActivationMode(DesktopFlyoutActivationMode activationMode)
         {
             if (_disposed)
                 return;
@@ -239,7 +235,7 @@ namespace U5BFA.Libraries
 
         private void ApplyActivationModeToWindows()
         {
-            var neverActivate = _activationMode is FlyoutActivationMode.NeverActivate;
+            var neverActivate = _activationMode is DesktopFlyoutActivationMode.NeverActivate;
             UpdateCbtHook(neverActivate);
             if (neverActivate)
                 RefreshXamlIslandWindowSubclasses();
@@ -345,7 +341,7 @@ namespace U5BFA.Libraries
 
         internal bool NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
         {
-            if (_disposed || _xamlHwnd.IsNull || _activationMode is FlyoutActivationMode.NeverActivate)
+            if (_disposed || _xamlHwnd.IsNull || _activationMode is DesktopFlyoutActivationMode.NeverActivate)
                 return false;
 
             PInvoke.SetFocus(_xamlHwnd);
@@ -432,10 +428,6 @@ namespace U5BFA.Libraries
             DesktopWindowXamlSource = new();
 
 #if UWP
-            // NOTE: Is this needed anymore? maybe for older builds?
-            PInvoke.LoadLibrary((PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in "twinapi.appcore.dll".GetPinnableReference())));
-            PInvoke.LoadLibrary((PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in "threadpoolwinrt.dll".GetPinnableReference())));
-
             // QI for IDesktopWindowXamlSourceNative2
             void* ppv;
             ((IUnknown*)((IWinRTObject)DesktopWindowXamlSource).NativeObject.ThisPtr)->QueryInterface(
@@ -507,7 +499,7 @@ namespace U5BFA.Libraries
 #endif
                 case PInvoke.WM_SETFOCUS:
                     {
-                        if (_activationMode is FlyoutActivationMode.NeverActivate)
+                        if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
                         {
                             RestoreActivationState();
                             return (LRESULT)0;
@@ -530,7 +522,7 @@ namespace U5BFA.Libraries
                     break;
                 case PInvoke.WM_MOUSEACTIVATE:
                     {
-                        if (_activationMode is FlyoutActivationMode.NeverActivate)
+                        if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
                         {
                             RestoreActivationState();
                             return (LRESULT)(int)PInvoke.MA_NOACTIVATE;
@@ -553,7 +545,7 @@ namespace U5BFA.Libraries
             {
                 case PInvoke.WM_MOUSEACTIVATE:
                     {
-                        if (_activationMode is FlyoutActivationMode.NeverActivate)
+                        if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
                         {
                             RestoreActivationState();
                             return (LRESULT)(int)PInvoke.MA_NOACTIVATE;
@@ -563,7 +555,7 @@ namespace U5BFA.Libraries
                     }
                 case PInvoke.WM_SETFOCUS:
                     {
-                        if (_activationMode is FlyoutActivationMode.NeverActivate)
+                        if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
                         {
                             RestoreActivationState();
                             return (LRESULT)0;
@@ -584,7 +576,7 @@ namespace U5BFA.Libraries
                 var targetHWnd = (HWND)(nint)(nuint)wParam;
                 foreach (var target in GetCbtHookTargets(PInvoke.GetCurrentThreadId()))
                 {
-                    if (target._activationMode is FlyoutActivationMode.NeverActivate && target.IsFlyoutWindow(targetHWnd))
+                    if (target._activationMode is DesktopFlyoutActivationMode.NeverActivate && target.IsFlyoutWindow(targetHWnd))
                     {
                         target.RestoreActivationState();
                         return (LRESULT)1;

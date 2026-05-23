@@ -4,7 +4,9 @@
 #if UWP
 using Windows.UI.Xaml;
 #elif WASDK
+using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 #endif
 
 namespace U5BFA.Libraries
@@ -16,22 +18,22 @@ namespace U5BFA.Libraries
     /// This follows the same pattern as platform template settings classes such as
     /// <c>NavigationViewTemplateSettings</c>. It is intended for control templates, not for general app logic.
     /// </remarks>
-    public class DesktopFlyoutIslandTemplateSettings : DependencyObject
+    public partial class DesktopFlyoutIslandTemplateSettings : DependencyObject
     {
-        /// <summary>
-        /// Identifies the <see cref="BackdropCornerRadius"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty BackdropCornerRadiusProperty =
-            DependencyProperty.Register(nameof(BackdropCornerRadius), typeof(CornerRadius), typeof(DesktopFlyoutIslandTemplateSettings), new PropertyMetadata(default(CornerRadius)));
-
+#if WASDK
         /// <summary>
         /// Gets the corner radius used by backdrop elements inside the island template.
         /// </summary>
         /// <value>The owner island's corner radius reduced for its inner backdrop surface.</value>
-        public CornerRadius BackdropCornerRadius
-        {
-            get => (CornerRadius)GetValue(BackdropCornerRadiusProperty);
-            internal set => SetValue(BackdropCornerRadiusProperty, value);
-        }
+        [GeneratedDependencyProperty]
+        public partial CornerRadius BackdropCornerRadius { get; internal set; }
+
+        /// <summary>
+        /// Gets the library-created system backdrop used by backdrop elements inside the island template.
+        /// </summary>
+        /// <value>The owning flyout's generated system backdrop for this island.</value>
+        [GeneratedDependencyProperty]
+        public partial SystemBackdrop? SystemBackdrop { get; internal set; }
+#endif
     }
 }

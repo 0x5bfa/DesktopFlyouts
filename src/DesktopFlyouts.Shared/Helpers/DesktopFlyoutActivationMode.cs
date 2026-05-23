@@ -10,7 +10,7 @@ namespace U5BFA.Libraries
     /// Activation behavior is applied when a <see cref="DesktopFlyout"/> opens and while it is hosted
     /// in its desktop island window.
     /// </remarks>
-    public enum FlyoutActivationMode
+    public enum DesktopFlyoutActivationMode
     {
         /// <summary>
         /// Activates the flyout when it opens.

@@ -9,17 +9,17 @@
     <Import_RootNamespace>DesktopFlyouts.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.Properties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackdropControllerHelpers.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackdropKind.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ContentBackdropManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\FlyoutActivationMode.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\FlyoutPlacementMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutBackdropKind.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutSystemBackdrops.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutActivationMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPlacementMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\GeneralHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\IXamlSourceTransparency.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ManualDefinitions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\MouseEventReceivedEventArgs.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\PersistentAcrylicBackdrop.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\FlyoutPopupDirection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPopupDirection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\TransitionHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.cs" />

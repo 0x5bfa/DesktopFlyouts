@@ -3,7 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
     xmlns:local="using:U5BFA.Libraries"
-    xmlns:systembackdrops="using:Microsoft.UI.Composition.SystemBackdrops"
     xmlns:wct="using:CommunityToolkit.WinUI">
 
     <Style BasedOn="{StaticResource DefaultWindows11DesktopFlyoutStyle}" TargetType="local:DesktopFlyout" />
@@ -71,18 +70,17 @@
                         </Grid.Shadow>
 
                         <!--  Backdrop  -->
-                        <SystemBackdropElement CornerRadius="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.BackdropCornerRadius}">
-                            <SystemBackdropElement.SystemBackdrop>
-                                <MicaBackdrop />
-                            </SystemBackdropElement.SystemBackdrop>
-                        </SystemBackdropElement>
+                        <SystemBackdropElement CornerRadius="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.BackdropCornerRadius}" SystemBackdrop="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.SystemBackdrop}" />
 
+                        <!--  Background  -->
                         <Border Background="{TemplateBinding Background}" />
 
+                        <!--  Content  -->
                         <ContentPresenter
                             x:Name="PART_MainContentPresenter"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

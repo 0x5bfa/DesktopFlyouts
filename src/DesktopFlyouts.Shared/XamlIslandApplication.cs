@@ -1,7 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+// Copyright (c) 0x5BFA. All rights reserved.
+// Licensed under the MIT license.
+
+#if UWP
 using Windows.UI.Xaml;
+#endif
 
 namespace DesktopFlyouts.Shared
 {

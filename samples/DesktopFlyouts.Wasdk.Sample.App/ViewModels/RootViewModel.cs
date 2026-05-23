@@ -4,7 +4,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,13 +56,13 @@ namespace U5BFA.Libraries
         internal partial double FlyoutHeightValue { get; set; } = double.NaN;
 
         [ObservableProperty]
-        internal partial int SelectedBackdropIndex { get; set; }
+        internal partial int SelectedSystemBackdropIndex { get; set; }
 
-        public Dictionary<FlyoutPopupDirection, string> PopupDirections { get; private set; } = [];
-        public Dictionary<FlyoutPlacementMode, string> FlyoutPlacements { get; private set; } = [];
-        public Dictionary<FlyoutActivationMode, string> ActivationModes { get; private set; } = [];
-        public Dictionary<FlyoutSampleKinds, string> FlyoutExamples { get; private set; } = [];
-        public Dictionary<BackdropKind, string> Backdrops { get; private set; } = [];
+        public Dictionary<DesktopFlyoutPopupDirection, string> PopupDirections { get; private set; } = [];
+        public Dictionary<DesktopFlyoutPlacementMode, string> FlyoutPlacements { get; private set; } = [];
+        public Dictionary<DesktopFlyoutActivationMode, string> ActivationModes { get; private set; } = [];
+        public Dictionary<DesktopFlyoutSampleKind, string> FlyoutExamples { get; private set; } = [];
+        public Dictionary<DesktopFlyoutBackdropKind, string> SystemBackdrops { get; private set; } = [];
 
         public ICommand ToggleFlyoutOpenCommand { get; }
 
@@ -75,42 +74,42 @@ namespace U5BFA.Libraries
             IsBackdropEnabled = true;
             HideOnLostFocus = true;
 
-            ActivationModes.Add(FlyoutActivationMode.Activate, "Activate");
-            ActivationModes.Add(FlyoutActivationMode.NoActivateOnOpen, "No activate on open");
-            ActivationModes.Add(FlyoutActivationMode.NeverActivate, "Never activate");
+            ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
+            ActivationModes.Add(DesktopFlyoutActivationMode.NoActivateOnOpen, "No activate on open");
+            ActivationModes.Add(DesktopFlyoutActivationMode.NeverActivate, "Never activate");
             SelectedActivationModeIndex = 0;
 
-            FlyoutExamples.Add(FlyoutSampleKinds.Customizable, "Default");
-            FlyoutExamples.Add(FlyoutSampleKinds.Button, "Button");
-            FlyoutExamples.Add(FlyoutSampleKinds.IndicatorStyle, "Indicator");
-            FlyoutExamples.Add(FlyoutSampleKinds.NotificationCenterStyle, "Notification Center");
-            FlyoutExamples.Add(FlyoutSampleKinds.StartMenuStyle, "Start Menu");
-            FlyoutExamples.Add(FlyoutSampleKinds.StickySmallStyle, "Sticky small");
-            FlyoutExamples.Add(FlyoutSampleKinds.WidgetStyle, "Widget");
-            FlyoutExamples.Add(FlyoutSampleKinds.Severity, "Severity");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.Customizable, "Default");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.Button, "Button");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.IndicatorStyle, "Indicator");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.NotificationCenterStyle, "Notification Center");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.StartMenuStyle, "Start Menu");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.StickySmallStyle, "Sticky small");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.WidgetStyle, "Widget");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.Severity, "Severity");
             SelectedFlyoutExampleIndex = 0;
 
-            PopupDirections.Add(FlyoutPopupDirection.Vertical, "Vertical");
-            PopupDirections.Add(FlyoutPopupDirection.BottomToTop, "Bottom to top");
-            PopupDirections.Add(FlyoutPopupDirection.TopToBottom, "Top to bottom");
-            PopupDirections.Add(FlyoutPopupDirection.Horizontal, "Horizontal");
-            PopupDirections.Add(FlyoutPopupDirection.LeftToRight, "Left to right");
-            PopupDirections.Add(FlyoutPopupDirection.RightToLeft, "Right to left");
+            PopupDirections.Add(DesktopFlyoutPopupDirection.Vertical, "Vertical");
+            PopupDirections.Add(DesktopFlyoutPopupDirection.BottomToTop, "Bottom to top");
+            PopupDirections.Add(DesktopFlyoutPopupDirection.TopToBottom, "Top to bottom");
+            PopupDirections.Add(DesktopFlyoutPopupDirection.Horizontal, "Horizontal");
+            PopupDirections.Add(DesktopFlyoutPopupDirection.LeftToRight, "Left to right");
+            PopupDirections.Add(DesktopFlyoutPopupDirection.RightToLeft, "Right to left");
             SelectedPopupDirectionIndex = 0;
 
-            FlyoutPlacements.Add(FlyoutPlacementMode.TopLeft, "Top left");
-            FlyoutPlacements.Add(FlyoutPlacementMode.TopCenter, "Top center");
-            FlyoutPlacements.Add(FlyoutPlacementMode.TopRight, "Top right");
-            FlyoutPlacements.Add(FlyoutPlacementMode.BottomLeft, "Bottom left");
-            FlyoutPlacements.Add(FlyoutPlacementMode.BottomCenter, "Bottom center");
-            FlyoutPlacements.Add(FlyoutPlacementMode.BottomRight, "Bottom right");
-            FlyoutPlacements.Add(FlyoutPlacementMode.LeftCenter, "Left center");
-            FlyoutPlacements.Add(FlyoutPlacementMode.RightCenter, "Right center");
+            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.TopLeft, "Top left");
+            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.TopCenter, "Top center");
+            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.TopRight, "Top right");
+            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.BottomLeft, "Bottom left");
+            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.BottomCenter, "Bottom center");
+            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.BottomRight, "Bottom right");
+            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.LeftCenter, "Left center");
+            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.RightCenter, "Right center");
             SelectedFlyoutPlacementIndex = 5;
 
-            Backdrops.Add(BackdropKind.Acrylic, "Acrylic");
-            Backdrops.Add(BackdropKind.Mica, "Mica");
-            SelectedBackdropIndex = 0;
+            SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica");
+            SystemBackdrops.Add(DesktopFlyoutBackdropKind.DesktopAcrylic, "Desktop Acrylic");
+            SelectedSystemBackdropIndex = 0;
 
             ToggleFlyoutOpenCommand = new RelayCommand(ExecuteToggleFlyoutOpenCommand);
         }
@@ -178,7 +177,7 @@ namespace U5BFA.Libraries
             var flyoutKind = FlyoutExamples.ElementAt(value).Key;
 
             TrayIconManager.Default.SwitchFlyout(flyoutKind);
-            if (flyoutKind is FlyoutSampleKinds.Customizable)
+            if (flyoutKind is DesktopFlyoutSampleKind.Customizable)
             {
                 IsModifiable = true;
                 ApplyDefaultFlyoutSettings();
@@ -189,10 +188,10 @@ namespace U5BFA.Libraries
             }
         }
 
-        partial void OnSelectedBackdropIndexChanged(int value)
+        partial void OnSelectedSystemBackdropIndexChanged(int value)
         {
             if (IsDefaultFlyoutSelected())
-                TrayIconManager.Default.DesktopFlyout?.BackdropKind = Backdrops.ElementAt(value).Key;
+                TrayIconManager.Default.DesktopFlyout!.BackdropKind = SystemBackdrops.ElementAt(value).Key;
         }
 
         partial void OnFlyoutWidthValueChanged(double value)
@@ -213,7 +212,7 @@ namespace U5BFA.Libraries
                 return;
 
             var flyout = TrayIconManager.Default.DesktopFlyout!;
-            flyout.BackdropKind = Backdrops.ElementAt(SelectedBackdropIndex).Key;
+            flyout.BackdropKind = SystemBackdrops.ElementAt(SelectedSystemBackdropIndex).Key;
             flyout.FlyoutHeight = ToGridLength(FlyoutHeightValue);
             flyout.FlyoutWidth = ToGridLength(FlyoutWidthValue);
             flyout.AutoCloseDelay = ToAutoCloseDelay(AutoCloseDelaySecondsValue);

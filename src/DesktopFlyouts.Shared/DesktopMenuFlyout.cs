@@ -3,14 +3,14 @@
 
 using System;
 using System.Drawing;
+using CommunityToolkit.WinUI;
+
 
 #if UWP
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Markup;
 using Windows.Win32.UI.WindowsAndMessaging;
-using Windows.Win32.Foundation;
-
 #elif WASDK
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -30,7 +30,6 @@ namespace U5BFA.Libraries
     [ContentProperty(Name = nameof(Items))]
     public partial class DesktopMenuFlyout : ItemsControl, IDisposable
     {
-        private const string PART_RootGrid = "PART_RootGrid";
         private const string PART_MenuFlyoutTargetControl = "PART_MenuFlyoutTargetControl";
 
         private readonly XamlIslandHostWindow? _host;
@@ -40,23 +39,11 @@ namespace U5BFA.Libraries
         private Border? MenuFlyoutTargetControl;
 
         /// <summary>
-        /// Identifies the <see cref="IsOpen"/> dependency property.
-        /// </summary>
-        /// <remarks>
-        /// The property is read-only to consumers and is updated when the hosted menu opens or closes.
-        /// </remarks>
-        public static readonly DependencyProperty IsOpenProperty =
-            DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(DesktopMenuFlyout), new PropertyMetadata(false));
-
-        /// <summary>
         /// Gets whether the menu flyout is currently open.
         /// </summary>
         /// <value><see langword="true"/> while the hosted menu is open; otherwise, <see langword="false"/>.</value>
-        public bool IsOpen
-        {
-            get => (bool)GetValue(IsOpenProperty);
-            private set => SetValue(IsOpenProperty, value);
-        }
+        [GeneratedDependencyProperty]
+        public partial bool IsOpen { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="DesktopMenuFlyout"/>.
@@ -78,8 +65,6 @@ namespace U5BFA.Libraries
         {
             base.OnApplyTemplate();
 
-            if (GetTemplateChild(PART_RootGrid) is not Grid)
-                throw new MissingFieldException($"Could not find {PART_RootGrid} in the given {nameof(DesktopMenuFlyout)}'s style.");
             MenuFlyoutTargetControl = GetTemplateChild(PART_MenuFlyoutTargetControl) as Border
                 ?? throw new MissingFieldException($"Could not find {PART_MenuFlyoutTargetControl} in the given {nameof(DesktopMenuFlyout)}'s style.");
         }

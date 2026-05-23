@@ -10,7 +10,7 @@ namespace U5BFA.Libraries
     /// The automatic values, <see cref="Vertical"/> and <see cref="Horizontal"/>, are resolved from
     /// the final flyout region when the flyout opens.
     /// </remarks>
-    public enum FlyoutPopupDirection
+    public enum DesktopFlyoutPopupDirection
     {
         /// <summary>
         /// Opens upward from the bottom edge.

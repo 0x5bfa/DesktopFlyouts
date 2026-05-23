@@ -20,13 +20,6 @@
 		<WinUISDKReferences>false</WinUISDKReferences>
 		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
 
-		<!--
-			ContentExternalBackdropLink is an experimental WASDK API. While using an experimental WASDK package in an app is
-			not allowed in Microsoft Store, experimental APIs are still included in every WASDK package but just not projected.
-			We can still have CsWinRT generate projections for the experimental API and use it in our library.
-		-->
-		<CsWinRTIncludes>Microsoft.UI.Content.ContentExternalBackdropLink;Microsoft.UI.Content.IContentExternalBackdropLink</CsWinRTIncludes>
-
 		<Deterministic>true</Deterministic>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -50,7 +43,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<CsWinRTInputs Include="Microsoft.UI.winmd" /> <!--  Extracted from the WASDK 1.8 MSIX package installation  -->
 		<None Include="..\..\.nuget\README.md" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 		<None Include="..\..\.nuget\icon-128.png" Pack="true" PackagePath="" />

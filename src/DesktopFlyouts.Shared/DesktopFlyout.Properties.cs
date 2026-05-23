@@ -9,11 +9,9 @@ using System.Collections.ObjectModel;
 #if UWP
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 #elif WASDK
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 #endif
 
 namespace U5BFA.Libraries
@@ -104,13 +102,13 @@ namespace U5BFA.Libraries
         /// <summary>
         /// Gets or sets the preferred popup direction.
         /// </summary>
-        /// <value>The preferred direction for open and close transitions. The default is <see cref="FlyoutPopupDirection.Vertical"/>.</value>
+        /// <value>The preferred direction for open and close transitions. The default is <see cref="DesktopFlyoutPopupDirection.Vertical"/>.</value>
         /// <remarks>
         /// Automatic directions are resolved from the final flyout position. A flyout in the bottom
         /// half of the work area opens upward; a flyout in the top half opens downward.
         /// </remarks>
-        [GeneratedDependencyProperty(DefaultValue = FlyoutPopupDirection.Vertical)]
-        public partial FlyoutPopupDirection PopupDirection { get; set; }
+        [GeneratedDependencyProperty(DefaultValue = DesktopFlyoutPopupDirection.Vertical)]
+        public partial DesktopFlyoutPopupDirection PopupDirection { get; set; }
 
         /// <summary>
         /// Gets or sets how islands are arranged.
@@ -122,13 +120,13 @@ namespace U5BFA.Libraries
         /// <summary>
         /// Gets or sets the flyout placement on the work area.
         /// </summary>
-        /// <value>The work-area placement used by <see cref="DesktopFlyout.Show()"/>. The default is <see cref="FlyoutPlacementMode.BottomRight"/>.</value>
+        /// <value>The work-area placement used by <see cref="DesktopFlyout.Show()"/>. The default is <see cref="DesktopFlyoutPlacementMode.BottomRight"/>.</value>
         /// <remarks>
         /// This property is ignored for the one open operation started by the point-based
         /// <see cref="DesktopFlyout.Show()"/> overload.
         /// </remarks>
-        [GeneratedDependencyProperty(DefaultValue = FlyoutPlacementMode.BottomRight)]
-        public partial FlyoutPlacementMode Placement { get; set; }
+        [GeneratedDependencyProperty(DefaultValue = DesktopFlyoutPlacementMode.BottomRight)]
+        public partial DesktopFlyoutPlacementMode Placement { get; set; }
 
         /// <summary>
         /// Gets or sets the menu flyout associated with the desktop flyout.
@@ -187,9 +185,9 @@ namespace U5BFA.Libraries
         /// <summary>
         /// Gets or sets how the flyout participates in activation and focus.
         /// </summary>
-        /// <value>The activation behavior used when opening the flyout. The default is <see cref="FlyoutActivationMode.Activate"/>.</value>
-        [GeneratedDependencyProperty(DefaultValue = FlyoutActivationMode.Activate)]
-        public partial FlyoutActivationMode ActivationMode { get; set; }
+        /// <value>The activation behavior used when opening the flyout. The default is <see cref="DesktopFlyoutActivationMode.Activate"/>.</value>
+        [GeneratedDependencyProperty(DefaultValue = DesktopFlyoutActivationMode.Activate)]
+        public partial DesktopFlyoutActivationMode ActivationMode { get; set; }
 
         /// <summary>
         /// Identifies the <see cref="AutoCloseDelay"/> dependency property.
@@ -212,15 +210,17 @@ namespace U5BFA.Libraries
         }
 
         /// <summary>
-        /// Gets or sets the backdrop kind used by flyout islands.
+        /// Gets or sets the backdrop material used by flyout islands.
         /// </summary>
-        /// <value>The system backdrop kind. The default is <see cref="BackdropKind.Acrylic"/>.</value>
+        /// <value>The backdrop material used by flyout islands. The default is <see cref="DesktopFlyoutBackdropKind.DesktopAcrylic"/>.</value>
         /// <remarks>
-        /// This property affects Windows App SDK builds when <see cref="IsBackdropEnabled"/> is
-        /// <see langword="true"/>.
+        /// Windows App SDK builds create library-owned system backdrop instances from this value.
+        /// UWP builds keep the property for API compatibility, but do not create a Windows App SDK
+        /// system backdrop. Custom <c>SystemBackdrop</c> instances are intentionally not exposed so
+        /// flyout islands can keep a stable transient surface when the host window loses activation.
         /// </remarks>
-        [GeneratedDependencyProperty(DefaultValue = BackdropKind.Acrylic)]
-        public partial BackdropKind BackdropKind { get; set; }
+        [GeneratedDependencyProperty(DefaultValue = DesktopFlyoutBackdropKind.DesktopAcrylic)]
+        public partial DesktopFlyoutBackdropKind BackdropKind { get; set; }
 
         private static void OnFlyoutSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
         {
@@ -249,7 +249,7 @@ namespace U5BFA.Libraries
 
         partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
-            if ((Orientation)e.NewValue == (Orientation)e.OldValue)
+            if (ReferenceEquals(e.NewValue, e.OldValue))
                 return;
 
             UpdateIslands();
@@ -258,22 +258,32 @@ namespace U5BFA.Libraries
 
         partial void OnIsBackdropEnabledPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
-            if ((bool)e.NewValue == (bool)e.OldValue)
+            if (ReferenceEquals(e.NewValue, e.OldValue))
                 return;
+
+#if WASDK
+            foreach (var island in Islands)
+                island.UpdateOwnerBackdrop();
+#endif
         }
 
         partial void OnBackdropKindPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
-            if ((BackdropKind)e.NewValue == (BackdropKind)e.OldValue)
+            if ((DesktopFlyoutBackdropKind)e.NewValue == (DesktopFlyoutBackdropKind)e.OldValue)
                 return;
+
+#if WASDK
+            foreach (var island in Islands)
+                island.UpdateOwnerBackdrop();
+#endif
         }
 
         partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e)
         {
-            if ((FlyoutActivationMode)e.NewValue == (FlyoutActivationMode)e.OldValue)
+            if ((DesktopFlyoutActivationMode)e.NewValue == (DesktopFlyoutActivationMode)e.OldValue)
                 return;
 
-            _host?.SetActivationMode((FlyoutActivationMode)e.NewValue);
+            _host?.SetActivationMode((DesktopFlyoutActivationMode)e.NewValue);
             UpdateFocusSuppression();
         }
     }

@@ -21,65 +21,19 @@ namespace U5BFA.Libraries
     /// <see cref="DesktopFlyout.IslandsOrientation"/>. Put the XAML content for one visual section
     /// in each island.
     /// </remarks>
+#if WASDK
+    [WinRT.GeneratedBindableCustomProperty([nameof(TemplateSettings)], [])]
+#endif
     public partial class DesktopFlyoutIsland : ContentControl
     {
-        private const string PART_RootGrid = "PART_RootGrid";
-        private const string PART_MainContentPresenter = "PART_MainContentPresenter";
-
-        private Grid? RootGrid;
-        private ContentPresenter? MainContentPresenter;
-
         private WeakReference<DesktopFlyout>? _owner;
-        private long _propertyChangedCallbackTokenForContentProperty;
         private long _propertyChangedCallbackTokenForCornerRadiusProperty;
-
-        /// <summary>
-        /// Identifies the <see cref="TemplateSettings"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty TemplateSettingsProperty =
-            DependencyProperty.Register(nameof(TemplateSettings), typeof(DesktopFlyoutIslandTemplateSettings), typeof(DesktopFlyoutIsland), new PropertyMetadata(null));
 
         /// <summary>
         /// Gets an object that provides calculated values that can be referenced from the island template.
         /// </summary>
         /// <value>The calculated template settings for this island.</value>
-        public DesktopFlyoutIslandTemplateSettings TemplateSettings
-        {
-            get => (DesktopFlyoutIslandTemplateSettings)GetValue(TemplateSettingsProperty);
-            private set => SetValue(TemplateSettingsProperty, value);
-        }
-
-        /// <summary>
-        /// Identifies the <see cref="IslandWidth"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty IslandWidthProperty =
-            DependencyProperty.Register(nameof(IslandWidth), typeof(GridLength), typeof(DesktopFlyoutIsland), new PropertyMetadata(GridLength.Auto, OnIslandSizePropertyChanged));
-
-        /// <summary>
-        /// Gets or sets the island width.
-        /// </summary>
-        /// <value>The width used when the owner flyout arranges islands horizontally. The default is <see cref="GridLength.Auto"/>.</value>
-        public GridLength IslandWidth
-        {
-            get => (GridLength)GetValue(IslandWidthProperty);
-            set => SetValue(IslandWidthProperty, value);
-        }
-
-        /// <summary>
-        /// Identifies the <see cref="IslandHeight"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty IslandHeightProperty =
-            DependencyProperty.Register(nameof(IslandHeight), typeof(GridLength), typeof(DesktopFlyoutIsland), new PropertyMetadata(GridLength.Auto, OnIslandSizePropertyChanged));
-
-        /// <summary>
-        /// Gets or sets the island height.
-        /// </summary>
-        /// <value>The height used when the owner flyout arranges islands vertically. The default is <see cref="GridLength.Auto"/>.</value>
-        public GridLength IslandHeight
-        {
-            get => (GridLength)GetValue(IslandHeightProperty);
-            set => SetValue(IslandHeightProperty, value);
-        }
+        public DesktopFlyoutIslandTemplateSettings TemplateSettings { get; } = new();
 
         /// <summary>
         /// Initializes a new instance of <see cref="DesktopFlyoutIsland"/>.
@@ -90,7 +44,6 @@ namespace U5BFA.Libraries
         public DesktopFlyoutIsland()
         {
             DefaultStyleKey = typeof(DesktopFlyoutIsland);
-            TemplateSettings = new();
             UpdateTemplateSettings();
         }
 
@@ -99,21 +52,20 @@ namespace U5BFA.Libraries
         {
             base.OnApplyTemplate();
 
-            RootGrid = GetTemplateChild(PART_RootGrid) as Grid
-                ?? throw new MissingFieldException($"Could not find {PART_RootGrid} in the given {nameof(DesktopFlyoutIsland)}'s style.");
-            MainContentPresenter = GetTemplateChild(PART_MainContentPresenter) as ContentPresenter
-                ?? throw new MissingFieldException($"Could not find {PART_MainContentPresenter} in the given {nameof(DesktopFlyoutIsland)}'s style.");
-
-            _propertyChangedCallbackTokenForContentProperty = RegisterPropertyChangedCallback(ContentProperty, (s, e) => ((DesktopFlyoutIsland)s).OnContentChanged());
-            _propertyChangedCallbackTokenForCornerRadiusProperty = RegisterPropertyChangedCallback(CornerRadiusProperty, (s, e) => ((DesktopFlyoutIsland)s).OnCornerRadiusChanged());
-            UpdateTemplateSettings();
-
             Unloaded += DesktopFlyoutIsland_Unloaded;
+
+            _propertyChangedCallbackTokenForCornerRadiusProperty = RegisterPropertyChangedCallback(CornerRadiusProperty, (s, e) => ((DesktopFlyoutIsland)s).OnCornerRadiusChanged());
+
+            UpdateTemplateSettings();
         }
 
         internal void SetOwner(DesktopFlyout owner)
         {
             _owner = new(owner);
+
+#if WASDK
+            UpdateOwnerBackdrop();
+#endif
         }
 
         private static void OnIslandSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
@@ -125,11 +77,6 @@ namespace U5BFA.Libraries
                 owner.OnIslandSizeChanged();
         }
 
-        private void OnContentChanged()
-        {
-            MainContentPresenter?.Content = Content;
-        }
-
         private void OnCornerRadiusChanged()
         {
             UpdateTemplateSettings();
@@ -137,19 +84,34 @@ namespace U5BFA.Libraries
 
         private void UpdateTemplateSettings()
         {
+#if WASDK
             TemplateSettings.BackdropCornerRadius = new(
-                CornerRadius.TopLeft > 0D ? CornerRadius.TopLeft : 0,
-                CornerRadius.TopRight > 0D ? CornerRadius.TopRight : 0,
-                CornerRadius.BottomRight > 0D ? CornerRadius.BottomRight : 0,
-                CornerRadius.BottomLeft > 0D ? CornerRadius.BottomLeft : 0);
+                GetBackdropCornerRadius(CornerRadius.TopLeft),
+                GetBackdropCornerRadius(CornerRadius.TopRight),
+                GetBackdropCornerRadius(CornerRadius.BottomRight),
+                GetBackdropCornerRadius(CornerRadius.BottomLeft));
+#endif
         }
+
+#if WASDK
+        private static double GetBackdropCornerRadius(double cornerRadius)
+        {
+            return Math.Max(0D, cornerRadius > 0D ? cornerRadius - 1D : 0D);
+        }
+
+        internal void UpdateOwnerBackdrop()
+        {
+            TemplateSettings.SystemBackdrop = _owner is not null && _owner.TryGetTarget(out var owner)
+                ? owner.CreateIslandSystemBackdrop()
+                : null;
+        }
+#endif
 
         private void DesktopFlyoutIsland_Unloaded(object sender, RoutedEventArgs e)
         {
-            Unloaded -= DesktopFlyoutIsland_Unloaded;
-
-            UnregisterPropertyChangedCallback(ContentProperty, _propertyChangedCallbackTokenForContentProperty);
             UnregisterPropertyChangedCallback(CornerRadiusProperty, _propertyChangedCallbackTokenForCornerRadiusProperty);
+
+            Unloaded -= DesktopFlyoutIsland_Unloaded;
         }
     }
 }

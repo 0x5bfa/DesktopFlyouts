@@ -14,7 +14,7 @@ namespace U5BFA.Libraries
         internal SystemTrayIcon? SystemTrayIcon { get; set; }
         internal DesktopFlyout? DesktopFlyout { get; set; }
         internal DesktopMenuFlyout? DesktopMenuFlyout { get; set; }
-        internal FlyoutSampleKinds SelectedFlyoutExample { get; private set; }
+        internal DesktopFlyoutSampleKind SelectedFlyoutExample { get; private set; }
 
         private bool _disposed;
 
@@ -31,7 +31,7 @@ namespace U5BFA.Libraries
             SystemTrayIcon.RightClicked += SystemTrayIcon_RightClicked;
         }
 
-        internal void SwitchFlyout(FlyoutSampleKinds example)
+        internal void SwitchFlyout(DesktopFlyoutSampleKind example)
         {
             if (_disposed || (DesktopFlyout is not null && SelectedFlyoutExample == example))
                 return;
@@ -44,17 +44,17 @@ namespace U5BFA.Libraries
             oldFlyout?.Dispose();
         }
 
-        private static DesktopFlyout CreateFlyout(FlyoutSampleKinds example)
+        private static DesktopFlyout CreateFlyout(DesktopFlyoutSampleKind example)
         {
             return example switch
             {
-                FlyoutSampleKinds.Button => new ButtonFlyout(),
-                FlyoutSampleKinds.IndicatorStyle => new IndicatorStyleFlyout(),
-                FlyoutSampleKinds.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
-                FlyoutSampleKinds.StartMenuStyle => new StartMenuStyleFlyout(),
-                FlyoutSampleKinds.StickySmallStyle => new StickySmallFlyout(),
-                FlyoutSampleKinds.WidgetStyle => new WidgetStyleFlyout(),
-                FlyoutSampleKinds.Severity => new SeverityFlyout(),
+                DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
+                DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
+                DesktopFlyoutSampleKind.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
+                DesktopFlyoutSampleKind.StartMenuStyle => new StartMenuStyleFlyout(),
+                DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
+                DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
+                DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
                 _ => new CustomizableFlyout(),
             };
         }

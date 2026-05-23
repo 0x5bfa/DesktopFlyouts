@@ -52,7 +52,7 @@ namespace U5BFA.Libraries
         private bool _isPopupAnimationPlaying;
         private bool _isPressAnimationActive;
         private Point? _customPlacementBottomCenterPoint;
-        private FlyoutPopupDirection _activePopupDirection = FlyoutPopupDirection.BottomToTop;
+        private DesktopFlyoutPopupDirection _activePopupDirection = DesktopFlyoutPopupDirection.BottomToTop;
         private DispatcherTimer? _autoCloseTimer;
         private DispatcherTimer? _restoreActivationTimer;
         private Storyboard? _pressScaleStoryboard;
@@ -225,6 +225,20 @@ namespace U5BFA.Libraries
             Hide(false);
         }
 
+#if WASDK
+        internal SystemBackdrop? CreateIslandSystemBackdrop()
+        {
+            if (!IsBackdropEnabled)
+                return null;
+
+            return BackdropKind switch
+            {
+                DesktopFlyoutBackdropKind.Mica => new DesktopFlyoutMicaBackdrop(),
+                _ => new DesktopFlyoutAcrylicBackdrop(),
+            };
+        }
+#endif
+
         private void Hide(bool closeFromCurrentTransform)
         {
             StopAutoCloseTimer();
@@ -257,7 +271,7 @@ namespace U5BFA.Libraries
         /// <param name="reason">The focus navigation reason used by the XAML hosting layer.</param>
         /// <remarks>
         /// Focus cannot be moved into the flyout while <see cref="ActivationMode"/> is
-        /// <see cref="FlyoutActivationMode.NeverActivate"/>.
+        /// <see cref="DesktopFlyoutActivationMode.NeverActivate"/>.
         /// </remarks>
         public void NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
         {
@@ -334,7 +348,7 @@ namespace U5BFA.Libraries
             }
         }
 
-        private FlyoutPopupDirection UpdateFlyoutRegion()
+        private DesktopFlyoutPopupDirection UpdateFlyoutRegion()
         {
             if (_host?.DesktopWindowXamlSource is null || IslandsGrid is null)
                 return ResolvePopupDirection(PopupDirection, default, 0, 0);
@@ -579,7 +593,7 @@ namespace U5BFA.Libraries
 
         private void RootGrid_GettingFocus(UIElement sender, GettingFocusEventArgs args)
         {
-            if (ActivationMode is not FlyoutActivationMode.NeverActivate)
+            if (ActivationMode is not DesktopFlyoutActivationMode.NeverActivate)
                 return;
 
             args.Cancel = true;
@@ -589,7 +603,7 @@ namespace U5BFA.Libraries
 
         private void FocusManager_GettingFocus(object? sender, GettingFocusEventArgs args)
         {
-            if (ActivationMode is not FlyoutActivationMode.NeverActivate || args.NewFocusedElement is not DependencyObject newFocusedElement)
+            if (ActivationMode is not DesktopFlyoutActivationMode.NeverActivate || args.NewFocusedElement is not DependencyObject newFocusedElement)
                 return;
 
             if (!IsFlyoutElement(newFocusedElement))
@@ -966,7 +980,7 @@ namespace U5BFA.Libraries
 
         private void UpdateFocusSuppression()
         {
-            if (ActivationMode is FlyoutActivationMode.NeverActivate)
+            if (ActivationMode is DesktopFlyoutActivationMode.NeverActivate)
                 SuppressFocus();
             else
                 RestoreFocusSuppression();
@@ -1012,7 +1026,7 @@ namespace U5BFA.Libraries
             _suppressedTabStopStates.Clear();
         }
 
-        private Storyboard GetOpenStoryboard(FlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
+        private Storyboard GetOpenStoryboard(DesktopFlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
         {
             var transform = GetRootTransform() ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
 
@@ -1021,7 +1035,7 @@ namespace U5BFA.Libraries
                 : TransitionHelpers.GetWindows11RightToLeftTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateX : GetClosedXOffset(popupDirection), 0);
         }
 
-        private Storyboard GetCloseStoryboard(FlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
+        private Storyboard GetCloseStoryboard(DesktopFlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
         {
             var transform = GetRootTransform() ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
 
@@ -1040,7 +1054,7 @@ namespace U5BFA.Libraries
             transform.TranslateY = 0;
         }
 
-        private void SetClosedTransform(FlyoutPopupDirection popupDirection)
+        private void SetClosedTransform(DesktopFlyoutPopupDirection popupDirection)
         {
             var transform = GetRootTransform();
             if (transform is null)
@@ -1081,22 +1095,22 @@ namespace U5BFA.Libraries
             return transform;
         }
 
-        private int GetClosedXOffset(FlyoutPopupDirection popupDirection)
+        private int GetClosedXOffset(DesktopFlyoutPopupDirection popupDirection)
         {
             return popupDirection switch
             {
-                FlyoutPopupDirection.LeftToRight => -(int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Left),
-                FlyoutPopupDirection.RightToLeft => (int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Right),
+                DesktopFlyoutPopupDirection.LeftToRight => -(int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Left),
+                DesktopFlyoutPopupDirection.RightToLeft => (int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Right),
                 _ => 0,
             };
         }
 
-        private int GetClosedYOffset(FlyoutPopupDirection popupDirection)
+        private int GetClosedYOffset(DesktopFlyoutPopupDirection popupDirection)
         {
             return popupDirection switch
             {
-                FlyoutPopupDirection.TopToBottom => -(int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Top),
-                FlyoutPopupDirection.BottomToTop => (int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Bottom),
+                DesktopFlyoutPopupDirection.TopToBottom => -(int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Top),
+                DesktopFlyoutPopupDirection.BottomToTop => (int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Bottom),
                 _ => 0,
             };
         }
@@ -1131,32 +1145,32 @@ namespace U5BFA.Libraries
                 margin.Bottom * scale);
         }
 
-        private static (double Left, double Top) GetPlacementOrigin(FlyoutPlacementMode placement, double width, double height, double hostWidth, double hostHeight)
+        private static (double Left, double Top) GetPlacementOrigin(DesktopFlyoutPlacementMode placement, double width, double height, double hostWidth, double hostHeight)
         {
             return placement switch
             {
-                FlyoutPlacementMode.BottomCenter => ((hostWidth - width) / 2, hostHeight - height),
-                FlyoutPlacementMode.BottomLeft => (0, hostHeight - height),
-                FlyoutPlacementMode.BottomRight => (hostWidth - width, hostHeight - height),
-                FlyoutPlacementMode.TopCenter => ((hostWidth - width) / 2, 0),
-                FlyoutPlacementMode.TopLeft => (0, 0),
-                FlyoutPlacementMode.TopRight => (hostWidth - width, 0),
-                FlyoutPlacementMode.LeftCenter => (0, (hostHeight - height) / 2),
-                FlyoutPlacementMode.RightCenter => (hostWidth - width, (hostHeight - height) / 2),
+                DesktopFlyoutPlacementMode.BottomCenter => ((hostWidth - width) / 2, hostHeight - height),
+                DesktopFlyoutPlacementMode.BottomLeft => (0, hostHeight - height),
+                DesktopFlyoutPlacementMode.BottomRight => (hostWidth - width, hostHeight - height),
+                DesktopFlyoutPlacementMode.TopCenter => ((hostWidth - width) / 2, 0),
+                DesktopFlyoutPlacementMode.TopLeft => (0, 0),
+                DesktopFlyoutPlacementMode.TopRight => (hostWidth - width, 0),
+                DesktopFlyoutPlacementMode.LeftCenter => (0, (hostHeight - height) / 2),
+                DesktopFlyoutPlacementMode.RightCenter => (hostWidth - width, (hostHeight - height) / 2),
                 _ => (hostWidth - width, hostHeight - height),
             };
         }
 
-        private static FlyoutPopupDirection ResolvePopupDirection(FlyoutPopupDirection requestedDirection, RectInt32 region, double hostWidth, double hostHeight)
+        private static DesktopFlyoutPopupDirection ResolvePopupDirection(DesktopFlyoutPopupDirection requestedDirection, RectInt32 region, double hostWidth, double hostHeight)
         {
             return requestedDirection switch
             {
-                FlyoutPopupDirection.BottomToTop => FlyoutPopupDirection.BottomToTop,
-                FlyoutPopupDirection.TopToBottom => FlyoutPopupDirection.TopToBottom,
-                FlyoutPopupDirection.LeftToRight => FlyoutPopupDirection.LeftToRight,
-                FlyoutPopupDirection.RightToLeft => FlyoutPopupDirection.RightToLeft,
-                FlyoutPopupDirection.Horizontal => IsRightHalf(region, hostWidth) ? FlyoutPopupDirection.RightToLeft : FlyoutPopupDirection.LeftToRight,
-                _ => IsBottomHalf(region, hostHeight) ? FlyoutPopupDirection.BottomToTop : FlyoutPopupDirection.TopToBottom,
+                DesktopFlyoutPopupDirection.BottomToTop => DesktopFlyoutPopupDirection.BottomToTop,
+                DesktopFlyoutPopupDirection.TopToBottom => DesktopFlyoutPopupDirection.TopToBottom,
+                DesktopFlyoutPopupDirection.LeftToRight => DesktopFlyoutPopupDirection.LeftToRight,
+                DesktopFlyoutPopupDirection.RightToLeft => DesktopFlyoutPopupDirection.RightToLeft,
+                DesktopFlyoutPopupDirection.Horizontal => IsRightHalf(region, hostWidth) ? DesktopFlyoutPopupDirection.RightToLeft : DesktopFlyoutPopupDirection.LeftToRight,
+                _ => IsBottomHalf(region, hostHeight) ? DesktopFlyoutPopupDirection.BottomToTop : DesktopFlyoutPopupDirection.TopToBottom,
             };
         }
 
@@ -1170,14 +1184,14 @@ namespace U5BFA.Libraries
             return region.X + (region.Width / 2D) >= hostWidth / 2D;
         }
 
-        private static bool IsVerticalDirection(FlyoutPopupDirection popupDirection)
+        private static bool IsVerticalDirection(DesktopFlyoutPopupDirection popupDirection)
         {
-            return popupDirection is FlyoutPopupDirection.BottomToTop or FlyoutPopupDirection.TopToBottom;
+            return popupDirection is DesktopFlyoutPopupDirection.BottomToTop or DesktopFlyoutPopupDirection.TopToBottom;
         }
 
         private bool ShouldActivateOnOpen()
         {
-            return ActivationMode is FlyoutActivationMode.Activate;
+            return ActivationMode is DesktopFlyoutActivationMode.Activate;
         }
 
         private static double Clamp(double value, double min, double max)
