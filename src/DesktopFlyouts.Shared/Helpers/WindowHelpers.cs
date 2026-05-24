@@ -9,7 +9,7 @@ using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     internal enum TaskbarEdge
     {

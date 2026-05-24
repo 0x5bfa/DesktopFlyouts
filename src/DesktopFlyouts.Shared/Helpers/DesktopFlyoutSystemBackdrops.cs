@@ -9,7 +9,7 @@ using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
     {

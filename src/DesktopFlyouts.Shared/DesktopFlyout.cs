@@ -29,7 +29,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 #endif
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     /// <summary>
     /// Displays a desktop flyout in an independent XAML island window.

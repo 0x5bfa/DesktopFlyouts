@@ -2,7 +2,7 @@
 
 #include "Libraries.MouseEventReceivedEventArgs.g.h"
 
-namespace winrt::U5BFA::Libraries::implementation
+namespace winrt::DesktopFlyouts::implementation
 {
     struct MouseEventReceivedEventArgs : MouseEventReceivedEventArgsT<MouseEventReceivedEventArgs>
     {
@@ -15,7 +15,7 @@ namespace winrt::U5BFA::Libraries::implementation
     };
 }
 
-namespace winrt::U5BFA::Libraries::factory_implementation
+namespace winrt::DesktopFlyouts::factory_implementation
 {
     struct MouseEventReceivedEventArgs : MouseEventReceivedEventArgsT<MouseEventReceivedEventArgs, implementation::MouseEventReceivedEventArgs>
     {

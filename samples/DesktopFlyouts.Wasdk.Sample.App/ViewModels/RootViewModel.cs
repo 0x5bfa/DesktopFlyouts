@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     internal partial class RootViewModel : ObservableObject
     {

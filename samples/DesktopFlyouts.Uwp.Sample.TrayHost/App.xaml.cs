@@ -11,7 +11,7 @@ using Windows.Win32.Foundation;
 using Windows.Win32.System.WinRT;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
 	public partial class App : Application
 	{

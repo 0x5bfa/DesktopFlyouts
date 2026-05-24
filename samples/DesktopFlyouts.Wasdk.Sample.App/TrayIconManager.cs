@@ -4,7 +4,7 @@
 using System;
 using System.Drawing;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     internal partial class TrayIconManager : IDisposable
     {

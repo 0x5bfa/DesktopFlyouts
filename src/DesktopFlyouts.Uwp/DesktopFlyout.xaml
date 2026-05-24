@@ -1,7 +1,7 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:U5BFA.Libraries">
+    xmlns:local="using:DesktopFlyouts">
 
     <Style BasedOn="{StaticResource DefaultWindows11DesktopFlyoutStyle}" TargetType="local:DesktopFlyout" />
     <Style BasedOn="{StaticResource DefaultDesktopFlyoutIslandStyle}" TargetType="local:DesktopFlyoutIsland" />

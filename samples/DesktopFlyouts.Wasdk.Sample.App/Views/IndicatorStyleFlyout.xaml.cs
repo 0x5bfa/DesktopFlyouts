@@ -3,7 +3,7 @@
 
 using Microsoft.UI.Xaml.Controls;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     public sealed partial class IndicatorStyleFlyout : DesktopFlyout
     {

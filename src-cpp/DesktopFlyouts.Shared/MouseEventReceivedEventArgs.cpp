@@ -4,7 +4,7 @@
 #include "Libraries.MouseEventReceivedEventArgs.g.cpp"
 #endif
 
-namespace winrt::U5BFA::Libraries::implementation
+namespace winrt::DesktopFlyouts::implementation
 {
     MouseEventReceivedEventArgs::MouseEventReceivedEventArgs(winrt::Windows::Foundation::Point const& point) :
         m_point(point)

@@ -4,7 +4,7 @@
 using System;
 using System.Drawing;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     /// <summary>
     /// Provides the screen point associated with a tray icon mouse event.

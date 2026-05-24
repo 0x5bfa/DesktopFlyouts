@@ -8,7 +8,7 @@ using Microsoft.UI.Composition.SystemBackdrops;
 using Windows.UI.ViewManagement;
 #endif
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
 #if WASDK
     internal static class BackdropControllerHelpers

@@ -14,7 +14,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 #endif
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     public partial class DesktopFlyout
     {

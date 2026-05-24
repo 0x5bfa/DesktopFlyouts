@@ -4,7 +4,7 @@
 
 #include <optional>
 
-namespace winrt::U5BFA::Libraries::implementation
+namespace winrt::DesktopFlyouts::implementation
 {
     struct SystemTrayIcon : SystemTrayIconT<SystemTrayIcon>
     {
@@ -26,13 +26,13 @@ namespace winrt::U5BFA::Libraries::implementation
         void Show();
         void Destroy();
 
-        winrt::event_token IconDestroyed(winrt::Windows::Foundation::TypedEventHandler<winrt::U5BFA::Libraries::SystemTrayIcon, winrt::Windows::Foundation::IInspectable> const& handler);
+        winrt::event_token IconDestroyed(winrt::Windows::Foundation::TypedEventHandler<winrt::DesktopFlyouts::SystemTrayIcon, winrt::Windows::Foundation::IInspectable> const& handler);
         void IconDestroyed(winrt::event_token const& token) noexcept;
 
-        winrt::event_token LeftClicked(winrt::Windows::Foundation::TypedEventHandler<winrt::U5BFA::Libraries::SystemTrayIcon, winrt::U5BFA::Libraries::MouseEventReceivedEventArgs> const& handler);
+        winrt::event_token LeftClicked(winrt::Windows::Foundation::TypedEventHandler<winrt::DesktopFlyouts::SystemTrayIcon, winrt::DesktopFlyouts::MouseEventReceivedEventArgs> const& handler);
         void LeftClicked(winrt::event_token const& token) noexcept;
 
-        winrt::event_token RightClicked(winrt::Windows::Foundation::TypedEventHandler<winrt::U5BFA::Libraries::SystemTrayIcon, winrt::U5BFA::Libraries::MouseEventReceivedEventArgs> const& handler);
+        winrt::event_token RightClicked(winrt::Windows::Foundation::TypedEventHandler<winrt::DesktopFlyouts::SystemTrayIcon, winrt::DesktopFlyouts::MouseEventReceivedEventArgs> const& handler);
         void RightClicked(winrt::event_token const& token) noexcept;
 
     private:
@@ -48,7 +48,7 @@ namespace winrt::U5BFA::Libraries::implementation
         std::optional<winrt::Windows::Foundation::Point> GetCenterPointOfTrayIcon() const noexcept;
         LRESULT InstanceWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
         void DestroyCurrentIcon() noexcept;
-        void RaiseMouseEvent(winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::U5BFA::Libraries::SystemTrayIcon, winrt::U5BFA::Libraries::MouseEventReceivedEventArgs>>& mouseEvent);
+        void RaiseMouseEvent(winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::DesktopFlyouts::SystemTrayIcon, winrt::DesktopFlyouts::MouseEventReceivedEventArgs>>& mouseEvent);
 
         winrt::hstring m_iconPath;
         winrt::hstring m_tooltip;
@@ -59,13 +59,13 @@ namespace winrt::U5BFA::Libraries::implementation
         bool m_isVisible{ true };
         bool m_created{};
 
-        winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::U5BFA::Libraries::SystemTrayIcon, winrt::Windows::Foundation::IInspectable>> m_iconDestroyed;
-        winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::U5BFA::Libraries::SystemTrayIcon, winrt::U5BFA::Libraries::MouseEventReceivedEventArgs>> m_leftClicked;
-        winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::U5BFA::Libraries::SystemTrayIcon, winrt::U5BFA::Libraries::MouseEventReceivedEventArgs>> m_rightClicked;
+        winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::DesktopFlyouts::SystemTrayIcon, winrt::Windows::Foundation::IInspectable>> m_iconDestroyed;
+        winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::DesktopFlyouts::SystemTrayIcon, winrt::DesktopFlyouts::MouseEventReceivedEventArgs>> m_leftClicked;
+        winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::DesktopFlyouts::SystemTrayIcon, winrt::DesktopFlyouts::MouseEventReceivedEventArgs>> m_rightClicked;
     };
 }
 
-namespace winrt::U5BFA::Libraries::factory_implementation
+namespace winrt::DesktopFlyouts::factory_implementation
 {
     struct SystemTrayIcon : SystemTrayIconT<SystemTrayIcon, implementation::SystemTrayIcon>
     {

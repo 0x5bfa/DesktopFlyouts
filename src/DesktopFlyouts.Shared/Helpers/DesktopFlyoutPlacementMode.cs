@@ -1,7 +1,7 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     /// <summary>
     /// Specifies where a desktop flyout is placed in the work area.

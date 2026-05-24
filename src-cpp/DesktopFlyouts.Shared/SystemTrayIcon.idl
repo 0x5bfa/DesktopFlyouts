@@ -1,4 +1,4 @@
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     [default_interface]
     runtimeclass MouseEventReceivedEventArgs

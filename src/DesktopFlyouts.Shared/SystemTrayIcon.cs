@@ -10,7 +10,7 @@ using Windows.Win32.Foundation;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     /// <summary>
     /// Provides functionality for displaying and managing a system tray icon in the taskbar.

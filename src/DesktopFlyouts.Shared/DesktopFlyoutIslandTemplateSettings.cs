@@ -9,7 +9,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 #endif
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     /// <summary>
     /// Provides calculated values that can be referenced from a <see cref="DesktopFlyoutIsland"/> template.

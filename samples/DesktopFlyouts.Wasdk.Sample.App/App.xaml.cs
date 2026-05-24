@@ -4,7 +4,7 @@
 using Microsoft.UI.Xaml;
 using System;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     public partial class App : Application
     {

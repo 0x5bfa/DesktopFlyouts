@@ -5,7 +5,7 @@ using System;
 
 using Windows.System;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     public sealed partial class MainDesktopMenuFlyout : DesktopMenuFlyout
     {

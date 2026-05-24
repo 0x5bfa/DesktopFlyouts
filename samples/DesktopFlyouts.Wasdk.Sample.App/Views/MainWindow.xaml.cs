@@ -3,7 +3,7 @@
 
 using Microsoft.UI.Xaml;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     public sealed partial class MainWindow : Window
     {

@@ -1,10 +1,10 @@
-﻿// Copyright (c) 0x5BFA. All rights reserved.
+// Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using Windows.ApplicationModel.Core;
 using Windows.UI.Xaml.Controls;
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
 	public sealed partial class MainPage : Page
 	{

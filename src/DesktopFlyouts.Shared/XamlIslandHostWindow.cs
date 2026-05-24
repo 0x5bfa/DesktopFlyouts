@@ -27,7 +27,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
 #endif
 
-namespace U5BFA.Libraries
+namespace DesktopFlyouts
 {
     internal unsafe partial class XamlIslandHostWindow : IDisposable
     {

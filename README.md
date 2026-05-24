@@ -14,7 +14,7 @@ The UWP version of sample app is currently under development. Recommend to use W
 <a style="text-decoration:none" href="https://www.nuget.org/packages/DesktopFlyouts.Uwp"><img src="https://img.shields.io/nuget/v/DesktopFlyouts.Uwp" alt="NuGet badge" /></a>
 
 ```console
-> dotnet add package DesktopFlyouts.Uwp --prerelease
+> dotnet add package DesktopFlyouts.Uwp
 ```
 
 ### WinUI (WinAppSDK/WinUI3)
@@ -22,7 +22,7 @@ The UWP version of sample app is currently under development. Recommend to use W
 <a style="text-decoration:none" href="https://www.nuget.org/packages/DesktopFlyouts.WinUI"><img src="https://img.shields.io/nuget/v/DesktopFlyouts.WinUI" alt="NuGet badge" /></a>
 
 ```console
-> dotnet add package DesktopFlyouts.WinUI --prerelease
+> dotnet add package DesktopFlyouts.WinUI
 ```
 
 ## Documentation
@@ -42,7 +42,7 @@ This project provides `DesktopFlyout` for lightweight desktop panels and `Deskto
 ```xml
 <me:DesktopFlyout
     x:Class="..."
-    xmlns:me="using:U5BFA.Libraries"
+    xmlns:me="using:DesktopFlyouts"
     FlyoutWidth="360">
 
     <me:DesktopFlyoutIsland IslandHeight="300">
@@ -67,7 +67,7 @@ else
 ```xml
 <me:DesktopMenuFlyout
     x:Class="..."
-    xmlns:me="using:U5BFA.Libraries">
+    xmlns:me="using:DesktopFlyouts">
 
     <MenuFlyoutItem Text="Theme" />
     <MenuFlyoutItem Text="Language" />
@@ -90,8 +90,5 @@ _desktopMenuFlyout.Show(e.Point);
     - Visual Studio 2022
     - .NET 9/10 SDK
 2. Clone the repo
-    ```console
-    git clone https://github.com/0x5bfa/DesktopFlyouts.git
-    ```
 3. Open the solution
 4. Build the solution
