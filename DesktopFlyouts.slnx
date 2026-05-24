@@ -43,6 +43,11 @@
   </Folder>
   <Folder Name="/src-cpp/">
     <Project Path="src-cpp/DesktopFlyouts.Shared/DesktopFlyouts.Shared.vcxitems" Id="812b3310-7cdc-4d34-96a1-9ff0f7214a4b" />
+    <Project Path="src-cpp/DesktopFlyouts.Projection/DesktopFlyouts.Projection.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
     <Project Path="src-cpp/DesktopFlyouts.Wasdk/DesktopFlyouts.Wasdk.vcxproj" Id="0a5b46ca-869c-4dc8-b309-98a99e464188" />
   </Folder>
 

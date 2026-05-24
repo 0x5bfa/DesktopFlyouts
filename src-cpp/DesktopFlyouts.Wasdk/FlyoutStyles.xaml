@@ -25,7 +25,10 @@
                         <Grid.RenderTransform>
                             <CompositeTransform ScaleX="1" ScaleY="1" />
                         </Grid.RenderTransform>
-                        <Grid x:Name="PART_IslandsGrid" ColumnSpacing="12" RowSpacing="12" />
+                        <Grid
+                            x:Name="PART_IslandsGrid"
+                            ColumnSpacing="12"
+                            RowSpacing="12" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
@@ -51,9 +54,7 @@
                         <Grid.Shadow>
                             <ThemeShadow />
                         </Grid.Shadow>
-                        <SystemBackdropElement
-                            CornerRadius="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.BackdropCornerRadius}"
-                            SystemBackdrop="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.SystemBackdrop}" />
+                        <SystemBackdropElement CornerRadius="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.BackdropCornerRadius}" SystemBackdrop="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.SystemBackdrop}" />
                         <Border Background="{TemplateBinding Background}" />
                         <ContentPresenter
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"

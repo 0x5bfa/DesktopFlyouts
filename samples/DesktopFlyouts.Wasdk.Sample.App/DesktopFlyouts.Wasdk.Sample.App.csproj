@@ -26,8 +26,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-        <!--<ProjectReference Include="..\..\src\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.csproj" />-->
-        <ProjectReference Include="..\..\src-cpp\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.vcxproj" />
+		<ProjectReference Include="..\..\src\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.csproj" />
+		<!--<ProjectReference Include="..\..\src-cpp\DesktopFlyouts.Projection\DesktopFlyouts.Projection.csproj" />-->
 	</ItemGroup>
 
 </Project>

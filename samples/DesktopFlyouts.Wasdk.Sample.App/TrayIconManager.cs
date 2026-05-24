@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 using System;
-using System.Drawing;
+using Windows.Foundation;
 
 namespace DesktopFlyouts
 {
@@ -72,7 +72,7 @@ namespace DesktopFlyouts
             {
                 if (DesktopFlyout is StickySmallFlyout && point is not null)
                 {
-                    DesktopFlyout.Show(point.Value);
+                    DesktopFlyout.Show(new((int)point.Value.X, (int)point.Value.Y));
 
                 }
                 else
@@ -84,7 +84,7 @@ namespace DesktopFlyouts
 
         private void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
         {
-            ToggleFlyout(e.Point);
+            ToggleFlyout(new((int)e.Point.X, (int)e.Point.Y));
         }
 
         private void SystemTrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)
