@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "MouseEventReceivedEventArgs.h"
-#if __has_include("Libraries.MouseEventReceivedEventArgs.g.cpp")
-#include "Libraries.MouseEventReceivedEventArgs.g.cpp"
+#if __has_include("MouseEventReceivedEventArgs.g.cpp")
+#include "MouseEventReceivedEventArgs.g.cpp"
 #endif
 
 namespace winrt::DesktopFlyouts::implementation

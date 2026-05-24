@@ -14,14 +14,26 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)DesktopFlyout.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandTemplateSettings.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)FlyoutHelpers.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MouseEventReceivedEventArgs.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)SystemTrayIcon.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)DesktopFlyout.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandTemplateSettings.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)FlyoutHelpers.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MouseEventReceivedEventArgs.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="$(MSBuildThisFileDirectory)SystemTrayIcon.idl" />
+    <Midl Include="$(MSBuildThisFileDirectory)DesktopFlyouts.idl" />
   </ItemGroup>
 </Project>

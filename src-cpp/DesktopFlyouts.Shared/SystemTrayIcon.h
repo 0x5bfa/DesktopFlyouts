@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Libraries.SystemTrayIcon.g.h"
+#include "SystemTrayIcon.g.h"
 
 #include <optional>
 

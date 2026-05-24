@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "SystemTrayIcon.h"
 #include "MouseEventReceivedEventArgs.h"
-#if __has_include("Libraries.SystemTrayIcon.g.cpp")
-#include "Libraries.SystemTrayIcon.g.cpp"
+#if __has_include("SystemTrayIcon.g.cpp")
+#include "SystemTrayIcon.g.cpp"
 #endif
 
 #include <mutex>
@@ -89,7 +89,7 @@ namespace winrt::DesktopFlyouts::implementation
 
         if (!icon)
         {
-            return;
+            winrt::throw_hresult(HRESULT_FROM_WIN32(GetLastError()));
         }
 
         NOTIFYICONDATAW data{};

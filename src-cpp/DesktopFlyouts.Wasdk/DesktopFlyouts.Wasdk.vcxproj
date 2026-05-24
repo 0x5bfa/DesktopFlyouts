@@ -20,7 +20,7 @@
     <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{0a5b46ca-869c-4dc8-b309-98a99e464188}</ProjectGuid>
     <ProjectName>DesktopFlyouts.Wasdk</ProjectName>
-    <RootNamespace>U5BFA</RootNamespace>
+    <RootNamespace>DesktopFlyouts</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <AppContainerApplication>false</AppContainerApplication>
@@ -103,7 +103,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateWindowsMetadata>true</GenerateWindowsMetadata>
       <ModuleDefinitionFile>DesktopFlyouts_Wasdk.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Shell32.lib;User32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -132,6 +132,10 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="DesktopFlyouts_Wasdk.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="FlyoutStyles.xaml" />
+    <Page Include="Themes\Generic.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt">

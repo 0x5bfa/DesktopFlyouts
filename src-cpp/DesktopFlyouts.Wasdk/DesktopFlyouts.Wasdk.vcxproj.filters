@@ -23,4 +23,12 @@
   <ItemGroup>
     <Text Include="readme.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Page Include="FlyoutStyles.xaml">
+      <Filter>Resources</Filter>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <Filter>Resources</Filter>
+    </Page>
+  </ItemGroup>
 </Project>

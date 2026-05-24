@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Libraries.MouseEventReceivedEventArgs.g.h"
+#include "MouseEventReceivedEventArgs.g.h"
 
 namespace winrt::DesktopFlyouts::implementation
 {
