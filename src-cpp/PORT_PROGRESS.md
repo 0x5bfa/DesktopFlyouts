@@ -12,10 +12,10 @@ the C# Windows App SDK sample through C#/WinRT projection.
 
 | Area | Native implementation | State | Notes |
 | --- | --- | --- | --- |
-| Public WinRT API | `DesktopFlyouts.idl` | In progress | `DesktopFlyout.Islands` now exposes `IVector<T>` for C#/WinRT `IList<T>` projection; runtime validation remains. |
+| Public WinRT API | `DesktopFlyouts.idl` | In progress | `DesktopFlyout.Islands` exposes `IVector<T>` and its dependency property for XAML content collection projection; runtime validation remains. |
 | `SystemTrayIcon` | `SystemTrayIcon.cpp`, `SystemTrayIcon.h` | Reviewed | Notification icon behavior matches the C# path; the native window callback now contains exceptions before crossing `WNDPROC`. |
 | XAML island host | `XamlIslandHostWindow.cpp`, `XamlIslandHostWindow.h` | In progress | Host-window path exists. `NeverActivate` now protects XAML child windows and thread activation attempts; validation is pending. |
-| `DesktopFlyout` | `DesktopFlyout.cpp`, `DesktopFlyout.h` | In progress | The XAML content collection now projects as `IList<T>` while retaining observable native storage; focus/backdrop parity remains. |
+| `DesktopFlyout` | `DesktopFlyout.cpp`, `DesktopFlyout.h` | In progress | The typed XAML content collection is now stored as a dependency-property value, following WinUI `MenuBar`/`MenuBarItem`; focus/backdrop parity remains. |
 | `DesktopFlyoutIsland` | `DesktopFlyoutIsland.cpp`, `DesktopFlyoutIsland.h` | Needs review | Native control exists; property and backdrop parity have not yet been audited. |
 | `DesktopMenuFlyout` | `DesktopMenuFlyout.cpp`, `DesktopMenuFlyout.h` | In progress | Native implementation uses show-time menu rebuilding and avoids opening for an empty `Items` collection. |
 | Helpers and template settings | `FlyoutHelpers.*`, `DesktopFlyoutIslandTemplateSettings.*`, `MouseEventReceivedEventArgs.*` | Needs review | Native files exist; C# behavior comparison remains. |
@@ -40,6 +40,7 @@ the C# Windows App SDK sample through C#/WinRT projection.
 - confirmed that `FlyoutWidth`, `FlyoutHeight`, and the typed `Islands` content property are declared in IDL and registered in native code;
 - changed `IslandsSource` synchronization to accept `IIterable<DesktopFlyoutIsland>`, so projected C# enumerable collections are not limited to `IObservableVector<DesktopFlyoutIsland>`.
 - changed the public `Islands` getter from `IObservableVector<DesktopFlyoutIsland>` to `IVector<DesktopFlyoutIsland>` so C#/WinRT projects the XAML content collection as `IList<DesktopFlyoutIsland>`, matching the C# implementation; the native backing vector remains observable.
+- added `IslandsProperty` and moved the observable vector from a native field into the dependency-property value; the getter and native collection consumers retrieve the vector through `Islands()`, matching the WinUI `MenuBar`/`MenuBarItem` content collection pattern.
 
 ## Known Issues And Risks
 

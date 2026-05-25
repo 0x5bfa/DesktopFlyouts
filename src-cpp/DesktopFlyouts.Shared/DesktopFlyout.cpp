@@ -25,6 +25,9 @@ namespace winrt::DesktopFlyouts::implementation
         }
     }
 
+    DependencyProperty DesktopFlyout::s_islandsProperty = DependencyProperty::Register(
+        L"Islands", winrt::xaml_typename<winrt::Windows::Foundation::Collections::IVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>(), winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyout>(),
+        Metadata());
     DependencyProperty DesktopFlyout::s_islandsSourceProperty = DependencyProperty::Register(
         L"IslandsSource", winrt::xaml_typename<winrt::Windows::Foundation::IInspectable>(), winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyout>(),
         Metadata());
@@ -71,12 +74,13 @@ namespace winrt::DesktopFlyouts::implementation
         Metadata(winrt::box_value(winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::DesktopAcrylic)));
 
     DesktopFlyout::DesktopFlyout() :
-        m_islands(winrt::single_threaded_observable_vector<winrt::DesktopFlyouts::DesktopFlyoutIsland>()),
         m_host(std::make_unique<winrt::DesktopFlyouts::details::XamlIslandHostWindow>())
     {
         DefaultStyleKey(winrt::box_value(L"DesktopFlyouts.DesktopFlyout"));
+        auto islands = winrt::single_threaded_observable_vector<winrt::DesktopFlyouts::DesktopFlyoutIsland>();
+        m_vectorChangedToken = islands.VectorChanged([this](auto const&, auto const&) { UpdateIslands(); });
+        SetValue(s_islandsProperty, islands);
         RegisterPropertyCallbacks();
-        m_vectorChangedToken = m_islands.VectorChanged([this](auto const&, auto const&) { UpdateIslands(); });
         m_host->WindowInactivated = [this]()
         {
             if (HideOnLostFocus())
@@ -99,6 +103,7 @@ namespace winrt::DesktopFlyouts::implementation
         Close();
     }
 
+    DependencyProperty DesktopFlyout::IslandsProperty() { return s_islandsProperty; }
     DependencyProperty DesktopFlyout::IslandsSourceProperty() { return s_islandsSourceProperty; }
     DependencyProperty DesktopFlyout::IsBackdropEnabledProperty() { return s_isBackdropEnabledProperty; }
     DependencyProperty DesktopFlyout::IsOpenProperty() { return s_isOpenProperty; }
@@ -119,7 +124,7 @@ namespace winrt::DesktopFlyouts::implementation
 
     winrt::Windows::Foundation::Collections::IVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> DesktopFlyout::Islands()
     {
-        return m_islands.as<winrt::Windows::Foundation::Collections::IVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
+        return GetValue(s_islandsProperty).as<winrt::Windows::Foundation::Collections::IVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
     }
     winrt::Windows::Foundation::IInspectable DesktopFlyout::IslandsSource() { return GetValue(s_islandsSourceProperty); }
     void DesktopFlyout::IslandsSource(winrt::Windows::Foundation::IInspectable const& value) { SetValue(s_islandsSourceProperty, value); }
@@ -256,9 +261,12 @@ namespace winrt::DesktopFlyouts::implementation
             m_storyboard.Stop();
             m_storyboard = nullptr;
         }
-        if (m_islands && m_vectorChangedToken.value)
+        if (m_vectorChangedToken.value)
         {
-            m_islands.VectorChanged(m_vectorChangedToken);
+            if (auto islands = GetValue(s_islandsProperty).try_as<winrt::Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>())
+            {
+                islands.VectorChanged(m_vectorChangedToken);
+            }
         }
         ClearIslandSubscriptions();
         if (m_host)
@@ -351,21 +359,22 @@ namespace winrt::DesktopFlyouts::implementation
 
     void DesktopFlyout::SynchronizeIslandsSource()
     {
+        auto islands = Islands();
         auto source = IslandsSource().try_as<winrt::Windows::Foundation::Collections::IIterable<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
         if (!source)
         {
             return;
         }
-        if (auto sourceVector = source.try_as<winrt::Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
-            sourceVector && sourceVector == m_islands)
+        if (auto sourceVector = source.try_as<winrt::Windows::Foundation::Collections::IVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
+            sourceVector && sourceVector == islands)
         {
             return;
         }
 
-        m_islands.Clear();
+        islands.Clear();
         for (auto const& island : source)
         {
-            m_islands.Append(island);
+            islands.Append(island);
         }
     }
 
@@ -398,7 +407,7 @@ namespace winrt::DesktopFlyouts::implementation
         m_islandsGrid.RowDefinitions().Clear();
         m_islandsGrid.ColumnDefinitions().Clear();
         uint32_t index = 0;
-        for (auto const& island : m_islands)
+        for (auto const& island : Islands())
         {
             if (IslandsOrientation() == Orientation::Vertical)
             {
@@ -429,7 +438,7 @@ namespace winrt::DesktopFlyouts::implementation
 
     void DesktopFlyout::UpdateIslandBackdrops()
     {
-        for (auto const& island : m_islands)
+        for (auto const& island : Islands())
         {
             island.TemplateSettings().SetValue(
                 winrt::DesktopFlyouts::DesktopFlyoutIslandTemplateSettings::SystemBackdropProperty(),
@@ -440,7 +449,7 @@ namespace winrt::DesktopFlyouts::implementation
     void DesktopFlyout::UpdateFlyoutTheme()
     {
         auto theme = winrt::DesktopFlyouts::details::IsTaskbarLight() ? ElementTheme::Light : ElementTheme::Dark;
-        for (auto const& island : m_islands)
+        for (auto const& island : Islands())
         {
             island.RequestedTheme(theme);
         }

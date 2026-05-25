@@ -109,6 +109,7 @@ namespace DesktopFlyouts
         Windows.Foundation.TimeSpan AutoCloseDelay;
         DesktopFlyoutBackdropKind BackdropKind;
 
+        static Microsoft.UI.Xaml.DependencyProperty IslandsProperty { get; };
         static Microsoft.UI.Xaml.DependencyProperty IslandsSourceProperty { get; };
         static Microsoft.UI.Xaml.DependencyProperty IsBackdropEnabledProperty { get; };
         static Microsoft.UI.Xaml.DependencyProperty IsOpenProperty { get; };

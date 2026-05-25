@@ -10,6 +10,7 @@ namespace winrt::DesktopFlyouts::implementation
         DesktopFlyout();
         ~DesktopFlyout();
 
+        static winrt::Microsoft::UI::Xaml::DependencyProperty IslandsProperty();
         static winrt::Microsoft::UI::Xaml::DependencyProperty IslandsSourceProperty();
         static winrt::Microsoft::UI::Xaml::DependencyProperty IsBackdropEnabledProperty();
         static winrt::Microsoft::UI::Xaml::DependencyProperty IsOpenProperty();
@@ -124,6 +125,7 @@ namespace winrt::DesktopFlyouts::implementation
         static double ResolveLength(winrt::Microsoft::UI::Xaml::GridLength const&, double available, bool stretchWhenAuto);
         static double Clamp(double value, double minimum, double maximum);
 
+        static winrt::Microsoft::UI::Xaml::DependencyProperty s_islandsProperty;
         static winrt::Microsoft::UI::Xaml::DependencyProperty s_islandsSourceProperty;
         static winrt::Microsoft::UI::Xaml::DependencyProperty s_isBackdropEnabledProperty;
         static winrt::Microsoft::UI::Xaml::DependencyProperty s_isOpenProperty;
@@ -150,7 +152,6 @@ namespace winrt::DesktopFlyouts::implementation
         };
 
         std::unique_ptr<winrt::DesktopFlyouts::details::XamlIslandHostWindow> m_host;
-        winrt::Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> m_islands{ nullptr };
         std::vector<IslandSubscription> m_islandSubscriptions;
         winrt::event_token m_vectorChangedToken{};
         int64_t m_islandsSourceToken{};
