@@ -46,7 +46,7 @@ namespace winrt::DesktopFlyouts::implementation
         void DestroyMessageWindow() noexcept;
         void FillNotifyIconData(NOTIFYICONDATAW& data, HICON hIcon = nullptr) const noexcept;
         std::optional<winrt::Windows::Foundation::Point> GetCenterPointOfTrayIcon() const noexcept;
-        LRESULT InstanceWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
+        LRESULT InstanceWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
         void DestroyCurrentIcon() noexcept;
         void RaiseMouseEvent(winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::DesktopFlyouts::SystemTrayIcon, winrt::DesktopFlyouts::MouseEventReceivedEventArgs>>& mouseEvent);
 

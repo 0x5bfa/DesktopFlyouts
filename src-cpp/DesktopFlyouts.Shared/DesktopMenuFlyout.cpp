@@ -1,9 +1,8 @@
+#pragma once
 #include "pch.h"
 #include "DesktopMenuFlyout.h"
-#include "FlyoutHelpers.h"
-#if __has_include("DesktopMenuFlyout.g.cpp")
 #include "DesktopMenuFlyout.g.cpp"
-#endif
+#include "FlyoutHelpers.h"
 
 namespace winrt::DesktopFlyouts::implementation
 {
@@ -21,6 +20,7 @@ namespace winrt::DesktopFlyouts::implementation
         m_menu(MenuFlyout{})
     {
         DefaultStyleKey(winrt::box_value(L"DesktopFlyouts.DesktopMenuFlyout"));
+
         m_closedToken = m_menu.Closed([this](auto const&, auto const&)
         {
             if (m_host)
@@ -32,6 +32,15 @@ namespace winrt::DesktopFlyouts::implementation
         m_host->SystemSettingsChanged = [this]() { UpdateTheme(); };
         m_host->SetContent(*this);
         m_host->SetVisible(false);
+    }
+
+    void DesktopMenuFlyout::OnApplyTemplate()
+    {
+        m_target = GetTemplateChild(L"PART_MenuFlyoutTargetControl").try_as<Border>();
+        if (!m_target)
+        {
+            throw winrt::hresult_error(E_FAIL, L"DesktopMenuFlyout template must define PART_MenuFlyoutTargetControl.");
+        }
     }
 
     DesktopMenuFlyout::~DesktopMenuFlyout()
@@ -49,19 +58,15 @@ namespace winrt::DesktopFlyouts::implementation
         return winrt::unbox_value<bool>(GetValue(s_isOpenProperty));
     }
 
-    void DesktopMenuFlyout::OnApplyTemplate()
-    {
-        m_target = GetTemplateChild(L"PART_MenuFlyoutTargetControl").try_as<Border>();
-        if (!m_target)
-        {
-            throw winrt::hresult_error(E_FAIL, L"DesktopMenuFlyout template must define PART_MenuFlyoutTargetControl.");
-        }
-    }
-
     void DesktopMenuFlyout::Show(winrt::Windows::Foundation::Point const& point)
     {
         if (m_closed || !m_host)
         {
+            return;
+        }
+        if (Items().Size() == 0)
+        {
+            m_menu.Items().Clear();
             return;
         }
         ApplyTemplate();

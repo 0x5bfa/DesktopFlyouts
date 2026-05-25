@@ -90,7 +90,7 @@ namespace DesktopFlyouts
     {
         DesktopFlyout();
 
-        Windows.Foundation.Collections.IObservableVector<DesktopFlyoutIsland> Islands { get; };
+        Windows.Foundation.Collections.IVector<DesktopFlyoutIsland> Islands { get; };
         Object IslandsSource;
         Boolean IsBackdropEnabled;
         Boolean IsOpen { get; };

@@ -1,10 +1,9 @@
+#pragma once
 #include "pch.h"
 #include "DesktopFlyout.h"
+#include "DesktopFlyout.g.cpp"
 #include "DesktopFlyoutIsland.h"
 #include "FlyoutHelpers.h"
-#if __has_include("DesktopFlyout.g.cpp")
-#include "DesktopFlyout.g.cpp"
-#endif
 
 namespace winrt::DesktopFlyouts::implementation
 {
@@ -118,7 +117,10 @@ namespace winrt::DesktopFlyouts::implementation
     DependencyProperty DesktopFlyout::AutoCloseDelayProperty() { return s_autoCloseDelayProperty; }
     DependencyProperty DesktopFlyout::BackdropKindProperty() { return s_backdropKindProperty; }
 
-    winrt::Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> DesktopFlyout::Islands() { return m_islands; }
+    winrt::Windows::Foundation::Collections::IVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> DesktopFlyout::Islands()
+    {
+        return m_islands.as<winrt::Windows::Foundation::Collections::IVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
+    }
     winrt::Windows::Foundation::IInspectable DesktopFlyout::IslandsSource() { return GetValue(s_islandsSourceProperty); }
     void DesktopFlyout::IslandsSource(winrt::Windows::Foundation::IInspectable const& value) { SetValue(s_islandsSourceProperty, value); }
     bool DesktopFlyout::IsBackdropEnabled() { return winrt::unbox_value<bool>(GetValue(s_isBackdropEnabledProperty)); }
@@ -349,11 +351,17 @@ namespace winrt::DesktopFlyouts::implementation
 
     void DesktopFlyout::SynchronizeIslandsSource()
     {
-        auto source = IslandsSource().try_as<winrt::Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
-        if (!source || source == m_islands)
+        auto source = IslandsSource().try_as<winrt::Windows::Foundation::Collections::IIterable<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
+        if (!source)
         {
             return;
         }
+        if (auto sourceVector = source.try_as<winrt::Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
+            sourceVector && sourceVector == m_islands)
+        {
+            return;
+        }
+
         m_islands.Clear();
         for (auto const& island : source)
         {

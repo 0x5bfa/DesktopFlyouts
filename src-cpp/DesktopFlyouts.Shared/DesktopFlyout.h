@@ -28,7 +28,7 @@ namespace winrt::DesktopFlyouts::implementation
         static winrt::Microsoft::UI::Xaml::DependencyProperty AutoCloseDelayProperty();
         static winrt::Microsoft::UI::Xaml::DependencyProperty BackdropKindProperty();
 
-        winrt::Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> Islands();
+        winrt::Windows::Foundation::Collections::IVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> Islands();
         winrt::Windows::Foundation::IInspectable IslandsSource();
         void IslandsSource(winrt::Windows::Foundation::IInspectable const& value);
         bool IsBackdropEnabled();

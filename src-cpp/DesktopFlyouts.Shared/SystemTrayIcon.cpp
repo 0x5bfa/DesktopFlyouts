@@ -211,7 +211,14 @@ namespace winrt::DesktopFlyouts::implementation
         auto instance = reinterpret_cast<SystemTrayIcon*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
         if (instance)
         {
-            return instance->InstanceWindowProc(hWnd, message, wParam, lParam);
+            try
+            {
+                return instance->InstanceWindowProc(hWnd, message, wParam, lParam);
+            }
+            catch (...)
+            {
+                return DefWindowProcW(hWnd, message, wParam, lParam);
+            }
         }
 
         return DefWindowProcW(hWnd, message, wParam, lParam);
@@ -286,7 +293,7 @@ namespace winrt::DesktopFlyouts::implementation
         };
     }
 
-    LRESULT SystemTrayIcon::InstanceWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept
+    LRESULT SystemTrayIcon::InstanceWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         UNREFERENCED_PARAMETER(wParam);
 

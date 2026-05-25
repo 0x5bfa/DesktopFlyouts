@@ -23,11 +23,12 @@
 		<PackageReference Include="Microsoft.WindowsAppSDK" />
 		<PackageReference Include="CommunityToolkit.Mvvm" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
-	</ItemGroup>
+        <PackageReference Include="Microsoft.Windows.CsWinRT" />
+    </ItemGroup>
 
 	<ItemGroup>
-		<!--<ProjectReference Include="..\..\src\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.csproj" />-->
-		<ProjectReference Include="..\..\src-cpp\DesktopFlyouts.Projection\DesktopFlyouts.Projection.csproj" />
+		<ProjectReference Include="..\..\src\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.csproj" />
+		<!--<ProjectReference Include="..\..\src-cpp\DesktopFlyouts.Projection\DesktopFlyouts.Projection.csproj" />-->
 	</ItemGroup>
 
 </Project>

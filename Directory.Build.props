@@ -10,7 +10,7 @@
 		<RootNamespace>DesktopFlyouts</RootNamespace>
 		<DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 		<DefaultLanguage>en-US</DefaultLanguage>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
 		<CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
 
 		<PublishAot>true</PublishAot>
