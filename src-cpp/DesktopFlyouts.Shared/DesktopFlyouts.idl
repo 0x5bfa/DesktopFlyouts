@@ -61,6 +61,7 @@ namespace DesktopFlyouts
         event Windows.Foundation.TypedEventHandler<SystemTrayIcon, MouseEventReceivedEventArgs> RightClicked;
     }
 
+    [Microsoft.UI.Xaml.Data.Bindable]
     unsealed runtimeclass DesktopFlyoutIslandTemplateSettings : Microsoft.UI.Xaml.DependencyObject
     {
         DesktopFlyoutIslandTemplateSettings();
@@ -72,6 +73,7 @@ namespace DesktopFlyouts
         static Microsoft.UI.Xaml.DependencyProperty SystemBackdropProperty { get; };
     }
 
+    [Microsoft.UI.Xaml.Data.Bindable]
     [contentproperty("Content")]
     unsealed runtimeclass DesktopFlyoutIsland : Microsoft.UI.Xaml.Controls.ContentControl
     {
