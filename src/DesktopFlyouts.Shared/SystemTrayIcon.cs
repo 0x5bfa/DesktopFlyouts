@@ -123,6 +123,22 @@ namespace DesktopFlyouts
         public event EventHandler<MouseEventReceivedEventArgs>? RightClicked;
 
         /// <summary>
+        /// Occurs when the tray icon receives a left double-click.
+        /// </summary>
+        /// <remarks>
+        /// The event argument contains the center point of the tray icon in physical screen pixels.
+        /// </remarks>
+        public event EventHandler<MouseEventReceivedEventArgs>? LeftDoubleClicked;
+
+        /// <summary>
+        /// Occurs when the tray icon receives a right double-click.
+        /// </summary>
+        /// <remarks>
+        /// The event argument contains the center point of the tray icon in physical screen pixels.
+        /// </remarks>
+        public event EventHandler<MouseEventReceivedEventArgs>? RightDoubleClicked;
+
+        /// <summary>
         /// Initializes a new instance of <see cref="SystemTrayIcon"/>.
         /// </summary>
         /// <param name="iconPath">The path to the icon file.</param>
@@ -302,6 +318,24 @@ namespace DesktopFlyouts
                                     var point = GetCenterPointOfTrayIcon(hWnd);
                                     if (!point.IsEmpty)
                                         RightClicked?.Invoke(this, new MouseEventReceivedEventArgs(point));
+
+                                    break;
+                                }
+                            case PInvoke.WM_LBUTTONDBLCLK:
+                                {
+                                    PInvoke.SetForegroundWindow(hWnd);
+                                    var point = GetCenterPointOfTrayIcon(hWnd);
+                                    if (!point.IsEmpty)
+                                        LeftDoubleClicked?.Invoke(this, new MouseEventReceivedEventArgs(point));
+
+                                    break;
+                                }
+                            case PInvoke.WM_RBUTTONDBLCLK:
+                                {
+                                    PInvoke.SetForegroundWindow(hWnd);
+                                    var point = GetCenterPointOfTrayIcon(hWnd);
+                                    if (!point.IsEmpty)
+                                        RightDoubleClicked?.Invoke(this, new MouseEventReceivedEventArgs(point));
 
                                     break;
                                 }
