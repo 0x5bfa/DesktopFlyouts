@@ -23,6 +23,7 @@ using Windows.Win32.System.WinRT.Xaml;
 using WinRT;
 #elif WASDK
 using Microsoft.UI;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
 #endif
@@ -33,6 +34,7 @@ namespace DesktopFlyouts
     {
         private const string WindowClassNamePrefix = "DesktopFlyoutHostClass";
         private const string WindowName = "DesktopFlyoutHostWindow";
+        private const int HTCAPTION = 2;
         private static readonly object s_cbtHookTargetsLock = new();
         private static readonly Dictionary<uint, List<XamlIslandHostWindow>> s_cbtHookTargetsByThread = [];
 
@@ -47,15 +49,22 @@ namespace DesktopFlyouts
         private HWND _preservedActiveHWnd = default;
         private HWND _preservedFocusHWnd = default;
         private readonly Dictionary<nint, nint> _subclassedXamlWndProcs = [];
+        private readonly List<RectInt32> _dragRegionRects = [];
         private bool _disposed;
         private DesktopFlyoutActivationMode _activationMode = DesktopFlyoutActivationMode.Activate;
+        private DesktopFlyoutDragMode _dragMode = DesktopFlyoutDragMode.None;
 
 #if UWP
         private HWND _coreHwnd = default;
         private CoreWindow? _coreWindow = null;
 
         private IDesktopWindowXamlSourceNative2 _pdwxsn2 = null!;
+#elif WASDK
+        private InputNonClientPointerSource? _nonClientPointerSource;
 #endif
+
+        [DllImport("user32.dll")]
+        private static extern bool ReleaseCapture();
 
         internal HWND HWnd
         {
@@ -98,7 +107,12 @@ namespace DesktopFlyouts
         }
 
         internal event EventHandler? WindowInactivated;
+#if WASDK
+        internal event EventHandler? NativeMoveSizeStarted;
+        internal event EventHandler? NativeMoveSizeEnded;
+#endif
         internal event EventHandler? SystemSettingsChanged;
+        internal event EventHandler<XamlSourceFocusNavigationRequest>? TakeFocusRequested;
 
         internal XamlIslandHostWindow()
         {
@@ -127,6 +141,17 @@ namespace DesktopFlyouts
 
             DesktopWindowXamlSource!.Content = content;
             ApplyActivationModeToWindows();
+        }
+
+        internal void BeginNativeDragMove()
+        {
+            if (_disposed || HWnd.IsNull)
+                return;
+
+#if UWP
+            ReleaseCapture();
+            PInvoke.SendMessage(HWnd, PInvoke.WM_NCLBUTTONDOWN, (WPARAM)HTCAPTION, default);
+#endif
         }
 
         internal void PreserveActivationState()
@@ -162,6 +187,7 @@ namespace DesktopFlyouts
             var flags = activate ? 0 : SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
             PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, rect.X, rect.Y, rect.Width, rect.Height, flags);
             PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, rect.Width, rect.Height, flags);
+            ApplyNativeDragRegions();
         }
 
         internal void Maximize(System.Drawing.Rectangle workArea, bool activate = true)
@@ -172,6 +198,7 @@ namespace DesktopFlyouts
             var flags = activate ? 0 : SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
             PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, workArea.X, workArea.Y, workArea.Width, workArea.Height, flags);
             PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, workArea.Width, workArea.Height, flags);
+            ApplyNativeDragRegions();
         }
 
         internal void SetHWndRectRegion(RectInt32 rect)
@@ -233,11 +260,72 @@ namespace DesktopFlyouts
             ApplyActivationModeToWindows();
         }
 
+        internal void SetDragMode(DesktopFlyoutDragMode dragMode)
+        {
+            if (_disposed)
+                return;
+
+            _dragMode = dragMode;
+            ApplyNativeDragRegions();
+        }
+
+        internal void SetDragRegions(IReadOnlyList<RectInt32> dragRegionRects)
+        {
+            if (_disposed)
+                return;
+
+            _dragRegionRects.Clear();
+            foreach (var rect in dragRegionRects)
+                _dragRegionRects.Add(rect);
+
+            ApplyNativeDragRegions();
+        }
+
+        private void ApplyNativeDragRegions()
+        {
+#if WASDK
+            if (_nonClientPointerSource is null)
+                return;
+
+            _nonClientPointerSource.ClearRegionRects(NonClientRegionKind.Caption);
+            var dragRegions = GetNativeDragRegions();
+            if (dragRegions.Length > 0)
+                _nonClientPointerSource.SetRegionRects(NonClientRegionKind.Caption, dragRegions);
+#endif
+        }
+
+#if WASDK
+        private RectInt32[] GetNativeDragRegions()
+        {
+            if (_dragMode is DesktopFlyoutDragMode.None)
+                return [];
+
+            if (_dragMode is DesktopFlyoutDragMode.Full)
+            {
+                RECT clientRect;
+                if (!PInvoke.GetClientRect(HWnd, &clientRect) || clientRect.Width <= 0 || clientRect.Height <= 0)
+                    return [];
+
+                return [new(0, 0, clientRect.Width, clientRect.Height)];
+            }
+
+            List<RectInt32> dragRegions = [];
+            foreach (var rect in _dragRegionRects)
+            {
+                if (rect.Width > 0 && rect.Height > 0)
+                    dragRegions.Add(rect);
+            }
+
+            return [.. dragRegions];
+        }
+#endif
+
         private void ApplyActivationModeToWindows()
         {
             var neverActivate = _activationMode is DesktopFlyoutActivationMode.NeverActivate;
+            var needsXamlIslandSubclass = neverActivate;
             UpdateCbtHook(neverActivate);
-            if (neverActivate)
+            if (needsXamlIslandSubclass)
                 RefreshXamlIslandWindowSubclasses();
 
             SetNoActivateStyle(HWnd, neverActivate);
@@ -245,7 +333,7 @@ namespace DesktopFlyouts
             foreach (var hWnd in _subclassedXamlWndProcs.Keys)
                 SetNoActivateStyle((HWND)hWnd, neverActivate);
 
-            if (!neverActivate)
+            if (!needsXamlIslandSubclass)
                 UnsubclassXamlIslandWindows();
         }
 
@@ -350,6 +438,11 @@ namespace DesktopFlyouts
             return result?.WasFocusMoved ?? false;
         }
 
+        internal bool ContainsForegroundWindow()
+        {
+            return !_disposed && IsFlyoutWindow(PInvoke.GetForegroundWindow());
+        }
+
         private static void SetNoActivateStyle(HWND hWnd, bool enabled)
         {
             if (hWnd.IsNull)
@@ -426,6 +519,7 @@ namespace DesktopFlyouts
         private void InitializeDesktopWindowXamlSource()
         {
             DesktopWindowXamlSource = new();
+            DesktopWindowXamlSource.TakeFocusRequested += DesktopWindowXamlSource_TakeFocusRequested;
 
 #if UWP
             // QI for IDesktopWindowXamlSourceNative2
@@ -461,15 +555,43 @@ namespace DesktopFlyouts
 #elif WASDK
             DesktopWindowXamlSource!.Initialize(Win32Interop.GetWindowIdFromWindow(HWnd));
             _xamlHwnd = (HWND)Win32Interop.GetWindowFromWindowId(DesktopWindowXamlSource.SiteBridge.WindowId);
+            _nonClientPointerSource = InputNonClientPointerSource.GetForWindowId(Win32Interop.GetWindowIdFromWindow(HWnd));
+            _nonClientPointerSource.EnteringMoveSize += NonClientPointerSource_EnteringMoveSize;
+            _nonClientPointerSource.ExitedMoveSize += NonClientPointerSource_ExitedMoveSize;
 #endif
 
             ApplyActivationModeToWindows();
+        }
+
+#if WASDK
+        private void NonClientPointerSource_EnteringMoveSize(InputNonClientPointerSource sender, EnteringMoveSizeEventArgs args)
+        {
+            NativeMoveSizeStarted?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void NonClientPointerSource_ExitedMoveSize(InputNonClientPointerSource sender, ExitedMoveSizeEventArgs args)
+        {
+            ApplyNativeDragRegions();
+            NativeMoveSizeEnded?.Invoke(this, EventArgs.Empty);
+        }
+#endif
+
+        private void DesktopWindowXamlSource_TakeFocusRequested(DesktopWindowXamlSource sender, DesktopWindowXamlSourceTakeFocusRequestedEventArgs args)
+        {
+            TakeFocusRequested?.Invoke(this, args.Request);
         }
 
         private LRESULT WndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
         {
             switch (uMsg)
             {
+                case PInvoke.WM_NCHITTEST:
+                    {
+                        if (IsNativeDragHit(lParam))
+                            return (LRESULT)HTCAPTION;
+
+                        return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
+                    }
 #if UWP
                 case PInvoke.WM_SIZE:
                     {
@@ -571,6 +693,47 @@ namespace DesktopFlyouts
             return CallPreviousXamlWndProc(hWnd, uMsg, wParam, lParam);
         }
 
+        private bool IsNativeDragHit(LPARAM lParam)
+        {
+            if (_dragMode is DesktopFlyoutDragMode.None)
+                return false;
+
+            RECT hostRect;
+            if (!PInvoke.GetWindowRect(HWnd, &hostRect))
+                return false;
+
+            var x = GetSignedLoWord((nint)lParam) - hostRect.left;
+            var y = GetSignedHiWord((nint)lParam) - hostRect.top;
+            if (x < 0 || y < 0 || x >= hostRect.Width || y >= hostRect.Height)
+                return false;
+
+            if (_dragMode is DesktopFlyoutDragMode.Full)
+                return true;
+
+            foreach (var rect in _dragRegionRects)
+            {
+                if (x >= rect.X &&
+                    x < rect.X + rect.Width &&
+                    y >= rect.Y &&
+                    y < rect.Y + rect.Height)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static int GetSignedLoWord(nint value)
+        {
+            return unchecked((short)LOWORD(value));
+        }
+
+        private static int GetSignedHiWord(nint value)
+        {
+            return unchecked((short)HIWORD(value));
+        }
+
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
         private static LRESULT CbtHookProc(int code, WPARAM wParam, LPARAM lParam)
         {
@@ -639,10 +802,23 @@ namespace DesktopFlyouts
             {
                 RemoveCbtHook();
                 UnsubclassXamlIslandWindows();
+#if WASDK
+                if (_nonClientPointerSource is not null)
+                {
+                    _nonClientPointerSource.EnteringMoveSize -= NonClientPointerSource_EnteringMoveSize;
+                    _nonClientPointerSource.ExitedMoveSize -= NonClientPointerSource_ExitedMoveSize;
+                    _nonClientPointerSource.ClearRegionRects(NonClientRegionKind.Caption);
+                }
+#endif
+                if (DesktopWindowXamlSource is not null)
+                    DesktopWindowXamlSource.TakeFocusRequested -= DesktopWindowXamlSource_TakeFocusRequested;
                 DesktopWindowXamlSource?.Dispose();
             }
             catch { }
             DesktopWindowXamlSource = null;
+#if WASDK
+            _nonClientPointerSource = null;
+#endif
 
             PInvoke.DestroyWindow(HWnd);
             PInvoke.UnregisterClass((PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in _windowClassName.GetPinnableReference())), PInvoke.GetModuleHandle(null));

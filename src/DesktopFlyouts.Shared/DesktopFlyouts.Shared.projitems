@@ -10,8 +10,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.Properties.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutDragRegion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackdropControllerHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutBackdropKind.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutDragMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutIslandLayoutMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutSystemBackdrops.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutActivationMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPlacementMode.cs" />

@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Threading.Tasks;
 using Windows.Graphics;
 using FoundationPoint = Windows.Foundation.Point;
 using FoundationRect = Windows.Foundation.Rect;
@@ -33,119 +32,72 @@ using Microsoft.UI.Xaml.Media.Animation;
 namespace DesktopFlyouts
 {
     /// <summary>
-    /// Displays a desktop flyout in an independent XAML island window.
+    /// Displays a desktop flyout using independent XAML island windows.
     /// </summary>
     /// <remarks>
-    /// Use <see cref="DesktopFlyout"/> when you need a lightweight desktop surface that can be opened
-    /// from a tray icon or from application code. Add one or more <see cref="DesktopFlyoutIsland"/>
-    /// instances to define the visible sections, then call <see cref="Show()"/> or the point-based
-    /// overload to display the flyout. Dispose the instance when it is no longer used
-    /// so the underlying host window and XAML island can be released.
+    /// Use <see cref="DesktopFlyout"/> when you need lightweight desktop surfaces that can be
+    /// opened from a tray icon or from application code. Each <see cref="DesktopFlyoutIsland"/>
+    /// is hosted by its own desktop XAML island so islands can participate in native window
+    /// movement independently.
     /// </remarks>
     [ContentProperty(Name = nameof(Islands))]
     public partial class DesktopFlyout : Control, IDisposable
     {
-        private const string PART_RootGrid = "PART_RootGrid";
-        private const string PART_IslandsGrid = "PART_IslandsGrid";
+        private const double IslandSpacing = 12.0D;
         private const double SwipeDismissDragStartThreshold = 4.0D;
         private const double SwipeDismissAxisDominanceRatio = 1.2D;
-        private const double DragMoveStartThreshold = 4.0D;
 
-        private readonly XamlIslandHostWindow? _host;
+        private readonly Dictionary<DesktopFlyoutIsland, XamlIslandHostWindow> _islandHosts = [];
+        private readonly Dictionary<DesktopFlyoutIsland, FoundationRect> _islandLayoutRects = [];
+        private readonly List<(Control Control, bool IsTabStop)> _suppressedTabStopStates = [];
+        private readonly List<(FrameworkElement Element, bool AllowFocusOnInteraction)> _suppressedInteractionFocusStates = [];
+        private readonly List<DesktopFlyoutDragRegion> _dragRegions = [];
+        private readonly List<Storyboard> _transitionStoryboards = [];
         private bool _isPopupAnimationPlaying;
         private bool _isPressAnimationActive;
+        private bool _isSwipeDismissTracking;
+        private bool _isSwipeDismissDragging;
+        private bool _isPointerCaptured;
+        private bool _isClosingTransition;
+        private bool _isNavigatingFocusAcrossHosts;
+        private bool _disposed;
+        private int _pendingTransitionStoryboardCount;
+        private int _restoreActivationTickCount;
         private Point? _customPlacementBottomCenterPoint;
+        private DesktopFlyoutIsland? _capturedPointerIsland;
         private DesktopFlyoutPopupDirection _activePopupDirection = DesktopFlyoutPopupDirection.BottomToTop;
         private DispatcherTimer? _autoCloseTimer;
         private DispatcherTimer? _restoreActivationTimer;
-        private Storyboard? _pressScaleStoryboard;
+        private DispatcherTimer? _lostFocusCloseTimer;
         private Storyboard? _swipeDismissRestoreStoryboard;
         private FoundationPoint _swipeDismissStartPoint;
-        private Point _dragMoveStartCursorPoint;
-        private Point? _dragMoveOrigin;
-        private FoundationRect _dragMoveStartWindowRect;
+        private double _xamlIslandRasterizationScale = 1.0D;
+        private double _currentFlyoutWidth = 1.0D;
+        private double _currentFlyoutHeight = 1.0D;
         private double _pressScaleTargetScale = 1.0D;
         private uint _swipeDismissPointerId;
-        private uint _dragMovePointerId;
-        private int _restoreActivationTickCount;
-        private readonly List<(Control Control, bool IsTabStop)> _suppressedTabStopStates = [];
-        private readonly List<(FrameworkElement Element, bool AllowFocusOnInteraction)> _suppressedInteractionFocusStates = [];
-        private bool _isSwipeDismissTracking;
-        private bool _isSwipeDismissDragging;
-        private bool _isDragMoveTracking;
-        private bool _isDragMoving;
-        private bool _isFocusManagerGettingFocusSubscribed;
-        private bool _disposed;
-
-        private Grid? RootGrid;
-        private Grid? IslandsGrid;
 
         /// <summary>
         /// Initializes a new instance of <see cref="DesktopFlyout"/>.
         /// </summary>
-        /// <remarks>
-        /// The constructor creates the hidden desktop host window used to display the flyout.
-        /// </remarks>
         public DesktopFlyout()
         {
             DefaultStyleKey = typeof(DesktopFlyout);
-
-            _host = new XamlIslandHostWindow();
-            _host.SetContent(this);
-            _host.UpdateWindowVisibility(false);
-            _host.WindowInactivated += HostWindow_Inactivated;
-            _host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
-        }
-
-        /// <inheritdoc/>
-        protected override void OnApplyTemplate()
-        {
-            base.OnApplyTemplate();
-
-            RootGrid?.GettingFocus -= RootGrid_GettingFocus;
-            RootGrid?.PointerPressed -= RootGrid_PointerPressed;
-            RootGrid?.PointerMoved -= RootGrid_PointerMoved;
-            RootGrid?.PointerReleased -= RootGrid_PointerReleased;
-            RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
-            RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
-            RootGrid?.PointerExited -= RootGrid_PointerExited;
-
-            RootGrid = GetTemplateChild(PART_RootGrid) as Grid
-                ?? throw new MissingFieldException($"Could not find {PART_RootGrid} in the given {nameof(DesktopFlyout)}'s style.");
-            IslandsGrid = GetTemplateChild(PART_IslandsGrid) as Grid
-                ?? throw new MissingFieldException($"Could not find {PART_IslandsGrid} in the given {nameof(DesktopFlyout)}'s style.");
-
-            EnsureRootTransform();
-
-            RootGrid.GettingFocus += RootGrid_GettingFocus;
-            RootGrid.PointerPressed += RootGrid_PointerPressed;
-            RootGrid.PointerMoved += RootGrid_PointerMoved;
-            RootGrid.PointerReleased += RootGrid_PointerReleased;
-            RootGrid.PointerCanceled += RootGrid_PointerCanceled;
-            RootGrid.PointerCaptureLost += RootGrid_PointerCaptureLost;
-            RootGrid.PointerExited += RootGrid_PointerExited;
-
-            if (!_isFocusManagerGettingFocusSubscribed)
-            {
-                FocusManager.GettingFocus += FocusManager_GettingFocus;
-                _isFocusManagerGettingFocusSubscribed = true;
-            }
-
-            UpdateIslands();
         }
 
         /// <summary>
         /// Opens the flyout using its configured placement.
         /// </summary>
-        /// <remarks>
-        /// The flyout is positioned from <see cref="Placement"/> and animated from the direction
-        /// resolved by <see cref="PopupDirection"/>. Calls made while an open or close transition is
-        /// running are ignored. <see cref="IsOpen"/> becomes <see langword="true"/> after the open
-        /// transition completes.
-        /// </remarks>
         public void Show()
         {
-            if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null || _isPopupAnimationPlaying)
+            if (_disposed || _isPopupAnimationPlaying)
+            {
+                _customPlacementBottomCenterPoint = null;
+                return;
+            }
+
+            EnsureIslandHosts();
+            if (_islandHosts.Count == 0)
             {
                 _customPlacementBottomCenterPoint = null;
                 return;
@@ -153,68 +105,33 @@ namespace DesktopFlyouts
 
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
-            _dragMoveOrigin = null;
+            StopLostFocusCloseTimer();
+            StopTransitionStoryboards();
+            StopSwipeDismissRestoreStoryboard();
+            ResetPressedScale();
+            ResetSwipeDismissTracking();
+
             _isPopupAnimationPlaying = true;
             var shouldActivateOnOpen = ShouldActivateOnOpen();
-            if (!shouldActivateOnOpen)
-                _host.PreserveActivationState();
+            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint);
 
-            _host.SetActivationMode(ActivationMode);
-            _host.Maximize(WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint), shouldActivateOnOpen);
-
-            _ = Task.Run(async () =>
+            foreach (var host in _islandHosts.Values)
             {
-#if UWP
-                await RootGrid.Dispatcher.TryRunAsync(CoreDispatcherPriority.Normal, async () =>
-#elif WASDK
-                RootGrid.DispatcherQueue.TryEnqueue(async () =>
-#endif
-                {
-                    ResetResolvedFlyoutSize();
-                    UpdateLayout();
-                    await Task.Delay(1);
-                    ApplyResolvedFlyoutSize();
+                host.SetActivationMode(ActivationMode);
+                host.SetDragMode(DragMode);
+                host.Maximize(workArea, shouldActivateOnOpen);
 
-                    UpdateLayout();
-                    await Task.Delay(1);
+                if (!shouldActivateOnOpen)
+                    host.PreserveActivationState();
+            }
 
-                    UpdateFlyoutTheme();
-                    UpdateFocusSuppression();
-                    _activePopupDirection = UpdateFlyoutRegion();
-
-                    // Ensure to hide first
-                    SetClosedTransform(_activePopupDirection);
-
-                    UpdateLayout();
-                    await Task.Delay(1);
-
-                    _host.UpdateWindowVisibility(true, shouldActivateOnOpen);
-                    if (!shouldActivateOnOpen)
-                        RestartRestoreActivationTimer();
-
-                    if (IsTransitionAnimationEnabled)
-                    {
-                        var storyboard = GetOpenStoryboard(_activePopupDirection);
-                        storyboard.Completed += OpenAnimationStoryboard_Completed;
-                        storyboard.Begin();
-                    }
-                    else
-                    {
-                        CompleteOpen();
-                    }
-                });
-            });
+            QueueShowStep(shouldActivateOnOpen, 0);
         }
 
         /// <summary>
         /// Opens the flyout at the specified bottom-center screen point.
         /// </summary>
         /// <param name="bottomCenterPoint">The desired bottom-center point of the flyout in physical screen pixels.</param>
-        /// <remarks>
-        /// This overload is useful when opening from a tray icon or another screen-space target.
-        /// The requested point is used for this open operation only; later calls to <see cref="Show()"/>
-        /// return to the configured <see cref="Placement"/>.
-        /// </remarks>
         public void Show(Point bottomCenterPoint)
         {
             if (_isPopupAnimationPlaying)
@@ -227,10 +144,6 @@ namespace DesktopFlyouts
         /// <summary>
         /// Closes the flyout.
         /// </summary>
-        /// <remarks>
-        /// Calls made while an open or close transition is running are ignored. <see cref="IsOpen"/>
-        /// becomes <see langword="false"/> after the close transition completes.
-        /// </remarks>
         public void Hide()
         {
             Hide(false);
@@ -250,15 +163,147 @@ namespace DesktopFlyouts
         }
 #endif
 
+        /// <summary>
+        /// Moves focus into the first hosted flyout island.
+        /// </summary>
+        /// <param name="reason">The focus navigation reason used by the XAML hosting layer.</param>
+        public void NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
+        {
+            foreach (var island in GetSpatiallyOrderedIslands())
+            {
+                if (_islandHosts.TryGetValue(island, out var host) && host.NavigateFocus(reason))
+                    return;
+            }
+        }
+
+#if UWP
+        /// <summary>
+        /// Lets the hosted XAML islands process a native keyboard message before dispatch.
+        /// </summary>
+        /// <param name="msg">The native message to process.</param>
+        /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
+        public unsafe bool TryPreTranslateMessage(MSG* msg)
+        {
+            foreach (var host in _islandHosts.Values)
+            {
+                if (host.TryPreTranslateMessage(msg))
+                    return true;
+            }
+
+            return false;
+        }
+#endif
+
+        internal void OnIslandSizeChanged()
+        {
+            UpdateIslands();
+            UpdateOpenFlyoutLayout();
+        }
+
+        internal void OnIslandPositionChanged(DesktopFlyoutIsland island)
+        {
+            UpdateIslands();
+            UpdateOpenFlyoutLayout();
+        }
+
+        internal void RegisterDragRegion(DesktopFlyoutDragRegion region)
+        {
+            if (!_dragRegions.Contains(region))
+                _dragRegions.Add(region);
+
+            if (DragMode is DesktopFlyoutDragMode.Region)
+                UpdateHostDragRegions();
+        }
+
+        internal void UnregisterDragRegion(DesktopFlyoutDragRegion region)
+        {
+            _dragRegions.Remove(region);
+
+            if (DragMode is DesktopFlyoutDragMode.Region)
+                UpdateHostDragRegions();
+        }
+
+        internal void OnDragRegionChanged()
+        {
+            if (DragMode is DesktopFlyoutDragMode.Region)
+                UpdateHostDragRegions();
+        }
+
+        internal void BeginDragMove(DesktopFlyoutDragRegion region, PointerRoutedEventArgs e)
+        {
+            if (DragMode is not DesktopFlyoutDragMode.Region)
+                return;
+
+            if (FindAncestorIsland(region) is DesktopFlyoutIsland island)
+                BeginIslandNativeDragMove(island, e);
+        }
+
+        private void QueueShowStep(bool shouldActivateOnOpen, int step)
+        {
+            if (!TryEnqueueOnFlyoutDispatcher(() => RunQueuedShowStep(shouldActivateOnOpen, step)))
+                AbortQueuedShow();
+        }
+
+        private void RunQueuedShowStep(bool shouldActivateOnOpen, int step)
+        {
+            if (_disposed || _islandHosts.Count == 0 || !_isPopupAnimationPlaying)
+            {
+                if (!_disposed)
+                    AbortQueuedShow();
+
+                return;
+            }
+
+            switch (step)
+            {
+                case 0:
+                    ResetIslandLayoutSizes();
+                    UpdateHostedIslandLayouts();
+                    QueueShowStep(shouldActivateOnOpen, 1);
+                    break;
+                case 1:
+                    UpdateFlyoutTheme();
+                    UpdateIslandBackdrops();
+                    UpdateFocusSuppression();
+                    UpdateXamlIslandRasterizationScale();
+                    _activePopupDirection = UpdateFlyoutRegion();
+                    SetClosedTransform(_activePopupDirection);
+                    QueueShowStep(shouldActivateOnOpen, 2);
+                    break;
+                case 2:
+                    foreach (var host in _islandHosts.Values)
+                        host.UpdateWindowVisibility(true, shouldActivateOnOpen);
+
+                    if (!shouldActivateOnOpen)
+                        RestartRestoreActivationTimer();
+
+                    if (IsTransitionAnimationEnabled)
+                        BeginTransition(isClosing: false, fromCurrentTransform: false);
+                    else
+                        CompleteOpen();
+                    break;
+                default:
+                    AbortQueuedShow();
+                    break;
+            }
+        }
+
+        private void AbortQueuedShow()
+        {
+            _isPopupAnimationPlaying = false;
+            _customPlacementBottomCenterPoint = null;
+        }
+
         private void Hide(bool closeFromCurrentTransform)
         {
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
+            StopLostFocusCloseTimer();
             StopSwipeDismissRestoreStoryboard();
-            ResetDragMoveTracking();
+            ReleaseCapturedPointers();
             ResetSwipeDismissTracking();
 
-            if (_disposed || RootGrid is null || _isPopupAnimationPlaying)
+            if (_disposed || _isPopupAnimationPlaying)
                 return;
 
             _isPopupAnimationPlaying = true;
@@ -266,45 +311,467 @@ namespace DesktopFlyouts
                 SetOpenTransform();
 
             if (IsTransitionAnimationEnabled)
+                BeginTransition(isClosing: true, closeFromCurrentTransform);
+            else
+                CompleteClose();
+        }
+
+        private void EnsureIslandHosts()
+        {
+            List<DesktopFlyoutIsland> detachedIslands = [];
+            foreach (var item in _islandHosts)
             {
-                var storyboard = GetCloseStoryboard(_activePopupDirection, closeFromCurrentTransform);
-                storyboard.Completed += CloseAnimationStoryboard_Completed;
-                storyboard.Begin();
+                if (!Islands.Contains(item.Key))
+                    detachedIslands.Add(item.Key);
+            }
+
+            foreach (var island in detachedIslands)
+            {
+                if (_islandHosts.TryGetValue(island, out var host))
+                {
+                    DetachIslandEvents(island);
+                    host.WindowInactivated -= HostWindow_Inactivated;
+#if WASDK
+                    host.NativeMoveSizeStarted -= HostWindow_NativeMoveSizeStarted;
+                    host.NativeMoveSizeEnded -= HostWindow_NativeMoveSizeEnded;
+#endif
+                    host.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
+                    host.TakeFocusRequested -= HostWindow_TakeFocusRequested;
+                    host.Dispose();
+                    _islandHosts.Remove(island);
+                }
+            }
+
+            foreach (var island in Islands)
+            {
+                island.SetOwner(this);
+
+                if (_islandHosts.ContainsKey(island))
+                    continue;
+
+                var host = new XamlIslandHostWindow();
+                host.SetActivationMode(ActivationMode);
+                host.SetDragMode(DragMode);
+                host.SetContent(island);
+                host.UpdateWindowVisibility(false);
+                host.WindowInactivated += HostWindow_Inactivated;
+#if WASDK
+                host.NativeMoveSizeStarted += HostWindow_NativeMoveSizeStarted;
+                host.NativeMoveSizeEnded += HostWindow_NativeMoveSizeEnded;
+#endif
+                host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
+                host.TakeFocusRequested += HostWindow_TakeFocusRequested;
+                _islandHosts[island] = host;
+
+                AttachIslandEvents(island);
+            }
+        }
+
+        private void AttachIslandEvents(DesktopFlyoutIsland island)
+        {
+            DetachIslandEvents(island);
+            island.PointerPressed += Island_PointerPressed;
+            island.PointerMoved += Island_PointerMoved;
+            island.PointerReleased += Island_PointerReleased;
+            island.PointerCanceled += Island_PointerCanceled;
+            island.PointerCaptureLost += Island_PointerCaptureLost;
+            island.PointerExited += Island_PointerExited;
+        }
+
+        private void DetachIslandEvents(DesktopFlyoutIsland island)
+        {
+            island.PointerPressed -= Island_PointerPressed;
+            island.PointerMoved -= Island_PointerMoved;
+            island.PointerReleased -= Island_PointerReleased;
+            island.PointerCanceled -= Island_PointerCanceled;
+            island.PointerCaptureLost -= Island_PointerCaptureLost;
+            island.PointerExited -= Island_PointerExited;
+        }
+
+        private void UpdateIslands()
+        {
+            foreach (var island in Islands)
+                island.SetOwner(this);
+
+            if (_islandHosts.Count > 0 || IsOpen)
+            {
+                EnsureIslandHosts();
+                UpdateHostDragMode();
+                UpdateHostDragRegions();
+            }
+        }
+
+        private void UpdateOpenFlyoutLayout()
+        {
+            if (!IsOpen || _isPopupAnimationPlaying || _islandHosts.Count == 0)
+                return;
+
+            UpdateXamlIslandRasterizationScale();
+            _activePopupDirection = UpdateFlyoutRegion();
+            SetOpenTransform();
+        }
+
+        private void UpdateHostedIslandLayouts()
+        {
+            foreach (var island in Islands)
+                island.UpdateLayout();
+        }
+
+        private void ResetIslandLayoutSizes()
+        {
+            foreach (var island in Islands)
+            {
+                island.Width = double.NaN;
+                island.Height = double.NaN;
+            }
+        }
+
+        private DesktopFlyoutPopupDirection UpdateFlyoutRegion()
+        {
+            if (_islandHosts.Count == 0)
+                return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint));
+
+            var customBottomCenterPoint = _customPlacementBottomCenterPoint;
+            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(customBottomCenterPoint);
+            UpdateIslandLayoutRects(workArea);
+
+            var scale = _xamlIslandRasterizationScale;
+            var scaledMargin = GetScaledMargin(Margin, scale);
+            var frameWidth = (_currentFlyoutWidth * scale) + scaledMargin.Left + scaledMargin.Right;
+            var frameHeight = (_currentFlyoutHeight * scale) + scaledMargin.Top + scaledMargin.Bottom;
+            var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, workArea.Width)));
+            var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, workArea.Height)));
+            var requestedPopupDirection = PopupDirection;
+            _customPlacementBottomCenterPoint = null;
+
+            double left;
+            double top;
+            if (customBottomCenterPoint is Point bottomCenterPoint)
+            {
+                (left, top) = GetCustomPlacementOrigin(
+                    bottomCenterPoint,
+                    regionWidth,
+                    regionHeight,
+                    new(_currentFlyoutWidth * scale, _currentFlyoutHeight * scale),
+                    scaledMargin,
+                    workArea);
             }
             else
             {
-                CompleteClose();
+                (left, top) = GetPlacementOrigin(Placement, regionWidth, regionHeight, workArea);
+            }
+
+            left = Clamp(left, workArea.Left, workArea.Right - regionWidth);
+            top = Clamp(top, workArea.Top, workArea.Bottom - regionHeight);
+
+            var flyoutRegion = new RectInt32(
+                (int)Math.Round(left),
+                (int)Math.Round(top),
+                regionWidth,
+                regionHeight);
+
+            foreach (var item in _islandHosts)
+            {
+                if (!_islandLayoutRects.TryGetValue(item.Key, out var rect))
+                    continue;
+
+                var islandLeft = flyoutRegion.X + (int)Math.Round((Margin.Left + rect.X) * scale);
+                var islandTop = flyoutRegion.Y + (int)Math.Round((Margin.Top + rect.Y) * scale);
+                var islandWidth = Math.Max(1, (int)Math.Ceiling(rect.Width * scale));
+                var islandHeight = Math.Max(1, (int)Math.Ceiling(rect.Height * scale));
+                var hostRect = new RectInt32(islandLeft, islandTop, islandWidth, islandHeight);
+
+                item.Value.MoveAndResize(hostRect, ShouldActivateOnOpen());
+                item.Value.SetHWndRectRegion(new(0, 0, hostRect.Width, hostRect.Height));
+            }
+
+            UpdateHostDragRegions();
+            return ResolvePopupDirection(requestedPopupDirection, flyoutRegion, workArea);
+        }
+
+        private void UpdateIslandLayoutRects(Rectangle workArea)
+        {
+            _islandLayoutRects.Clear();
+            var availableSize = GetAvailableFlyoutSizeInDips(workArea);
+
+            if (IslandLayoutMode is DesktopFlyoutIslandLayoutMode.Freeform)
+            {
+                UpdateFreeformIslandLayoutRects(availableSize);
+                return;
+            }
+
+            if (IslandsOrientation is Orientation.Horizontal)
+                UpdateHorizontalStackIslandLayoutRects(availableSize);
+            else
+                UpdateVerticalStackIslandLayoutRects(availableSize);
+        }
+
+        private void UpdateVerticalStackIslandLayoutRects((double Width, double Height) availableSize)
+        {
+            var desiredSizes = GetIslandDesiredSizes(availableSize);
+            var rootWidth = ResolveStackRootWidth(availableSize, desiredSizes);
+            var rootHeight = ResolveVerticalStackRootHeight(availableSize, desiredSizes);
+            var starHeight = GetVerticalStackStarLength(rootHeight, desiredSizes);
+            var top = 0.0D;
+
+            foreach (var island in Islands)
+            {
+                var desired = desiredSizes[island];
+                var height = island.IslandHeight.IsStar && starHeight > 0
+                    ? starHeight * Math.Max(1.0D, island.IslandHeight.Value)
+                    : ResolveIslandLength(island.IslandHeight, desired.Height);
+                var width = island.IslandWidth.IsAbsolute
+                    ? island.IslandWidth.Value
+                    : rootWidth;
+
+                SetIslandLayoutRect(island, new(0, top, Math.Max(1, width), Math.Max(1, height)));
+                top += height + IslandSpacing;
+            }
+
+            _currentFlyoutWidth = Math.Max(1, rootWidth);
+            _currentFlyoutHeight = Math.Max(1, rootHeight);
+        }
+
+        private void UpdateHorizontalStackIslandLayoutRects((double Width, double Height) availableSize)
+        {
+            var desiredSizes = GetIslandDesiredSizes(availableSize);
+            var rootWidth = ResolveHorizontalStackRootWidth(availableSize, desiredSizes);
+            var rootHeight = ResolveStackRootHeight(availableSize, desiredSizes);
+            var starWidth = GetHorizontalStackStarLength(rootWidth, desiredSizes);
+            var left = 0.0D;
+
+            foreach (var island in Islands)
+            {
+                var desired = desiredSizes[island];
+                var width = island.IslandWidth.IsStar && starWidth > 0
+                    ? starWidth * Math.Max(1.0D, island.IslandWidth.Value)
+                    : ResolveIslandLength(island.IslandWidth, desired.Width);
+                var height = island.IslandHeight.IsAbsolute
+                    ? island.IslandHeight.Value
+                    : rootHeight;
+
+                SetIslandLayoutRect(island, new(left, 0, Math.Max(1, width), Math.Max(1, height)));
+                left += width + IslandSpacing;
+            }
+
+            _currentFlyoutWidth = Math.Max(1, rootWidth);
+            _currentFlyoutHeight = Math.Max(1, rootHeight);
+        }
+
+        private void UpdateFreeformIslandLayoutRects((double Width, double Height) availableSize)
+        {
+            var desiredSizes = GetIslandDesiredSizes(availableSize);
+            var right = 0.0D;
+            var bottom = 0.0D;
+
+            foreach (var island in Islands)
+            {
+                var desired = desiredSizes[island];
+                var left = GetFiniteOrZero(island.CanvasLeft);
+                var top = GetFiniteOrZero(island.CanvasTop);
+                var width = ResolveIslandLength(island.IslandWidth, desired.Width);
+                var height = ResolveIslandLength(island.IslandHeight, desired.Height);
+                var rect = new FoundationRect(left, top, Math.Max(1, width), Math.Max(1, height));
+
+                SetIslandLayoutRect(island, rect);
+                right = Math.Max(right, rect.X + rect.Width);
+                bottom = Math.Max(bottom, rect.Y + rect.Height);
+            }
+
+            _currentFlyoutWidth = ResolveFlyoutLength(FlyoutWidth, availableSize.Width, false, Math.Max(1, right));
+            _currentFlyoutHeight = ResolveFlyoutLength(FlyoutHeight, availableSize.Height, false, Math.Max(1, bottom));
+        }
+
+        private Dictionary<DesktopFlyoutIsland, FoundationSize> GetIslandDesiredSizes((double Width, double Height) availableSize)
+        {
+            Dictionary<DesktopFlyoutIsland, FoundationSize> desiredSizes = [];
+
+            foreach (var island in Islands)
+            {
+                island.Width = island.IslandWidth.IsAbsolute ? Math.Max(1, island.IslandWidth.Value) : double.NaN;
+                island.Height = island.IslandHeight.IsAbsolute ? Math.Max(1, island.IslandHeight.Value) : double.NaN;
+                island.Measure(new(Math.Max(1, availableSize.Width), Math.Max(1, availableSize.Height)));
+                island.UpdateLayout();
+
+                var desired = island.DesiredSize;
+                var width = desired.Width > 0 ? desired.Width : island.ActualWidth;
+                var height = desired.Height > 0 ? desired.Height : island.ActualHeight;
+                desiredSizes[island] = new(Math.Max(1, width), Math.Max(1, height));
+            }
+
+            return desiredSizes;
+        }
+
+        private void SetIslandLayoutRect(DesktopFlyoutIsland island, FoundationRect rect)
+        {
+            _islandLayoutRects[island] = rect;
+            island.Width = rect.Width;
+            island.Height = rect.Height;
+            island.UpdateLayout();
+        }
+
+        private double ResolveStackRootWidth((double Width, double Height) availableSize, Dictionary<DesktopFlyoutIsland, FoundationSize> desiredSizes)
+        {
+            var desiredWidth = 1.0D;
+            foreach (var island in Islands)
+            {
+                var width = island.IslandWidth.IsAbsolute
+                    ? island.IslandWidth.Value
+                    : desiredSizes[island].Width;
+                desiredWidth = Math.Max(desiredWidth, width);
+            }
+
+            return ResolveFlyoutLength(FlyoutWidth, availableSize.Width, HasStarIslandWidth(), desiredWidth);
+        }
+
+        private double ResolveStackRootHeight((double Width, double Height) availableSize, Dictionary<DesktopFlyoutIsland, FoundationSize> desiredSizes)
+        {
+            var desiredHeight = 1.0D;
+            foreach (var island in Islands)
+            {
+                var height = island.IslandHeight.IsAbsolute
+                    ? island.IslandHeight.Value
+                    : desiredSizes[island].Height;
+                desiredHeight = Math.Max(desiredHeight, height);
+            }
+
+            return ResolveFlyoutLength(FlyoutHeight, availableSize.Height, HasStarIslandHeight(), desiredHeight);
+        }
+
+        private double ResolveVerticalStackRootHeight((double Width, double Height) availableSize, Dictionary<DesktopFlyoutIsland, FoundationSize> desiredSizes)
+        {
+            var desiredHeight = 0.0D;
+            for (var index = 0; index < Islands.Count; index++)
+            {
+                var island = Islands[index];
+                desiredHeight += island.IslandHeight.IsStar
+                    ? desiredSizes[island].Height
+                    : ResolveIslandLength(island.IslandHeight, desiredSizes[island].Height);
+            }
+
+            desiredHeight += Math.Max(0, Islands.Count - 1) * IslandSpacing;
+            return ResolveFlyoutLength(FlyoutHeight, availableSize.Height, HasStarIslandHeight(), Math.Max(1, desiredHeight));
+        }
+
+        private double ResolveHorizontalStackRootWidth((double Width, double Height) availableSize, Dictionary<DesktopFlyoutIsland, FoundationSize> desiredSizes)
+        {
+            var desiredWidth = 0.0D;
+            for (var index = 0; index < Islands.Count; index++)
+            {
+                var island = Islands[index];
+                desiredWidth += island.IslandWidth.IsStar
+                    ? desiredSizes[island].Width
+                    : ResolveIslandLength(island.IslandWidth, desiredSizes[island].Width);
+            }
+
+            desiredWidth += Math.Max(0, Islands.Count - 1) * IslandSpacing;
+            return ResolveFlyoutLength(FlyoutWidth, availableSize.Width, HasStarIslandWidth(), Math.Max(1, desiredWidth));
+        }
+
+        private double GetVerticalStackStarLength(double rootHeight, Dictionary<DesktopFlyoutIsland, FoundationSize> desiredSizes)
+        {
+            var fixedHeight = Math.Max(0, Islands.Count - 1) * IslandSpacing;
+            var starWeight = 0.0D;
+
+            foreach (var island in Islands)
+            {
+                if (island.IslandHeight.IsStar)
+                    starWeight += Math.Max(1.0D, island.IslandHeight.Value);
+                else
+                    fixedHeight += ResolveIslandLength(island.IslandHeight, desiredSizes[island].Height);
+            }
+
+            return starWeight <= 0 ? 0 : Math.Max(0, rootHeight - fixedHeight) / starWeight;
+        }
+
+        private double GetHorizontalStackStarLength(double rootWidth, Dictionary<DesktopFlyoutIsland, FoundationSize> desiredSizes)
+        {
+            var fixedWidth = Math.Max(0, Islands.Count - 1) * IslandSpacing;
+            var starWeight = 0.0D;
+
+            foreach (var island in Islands)
+            {
+                if (island.IslandWidth.IsStar)
+                    starWeight += Math.Max(1.0D, island.IslandWidth.Value);
+                else
+                    fixedWidth += ResolveIslandLength(island.IslandWidth, desiredSizes[island].Width);
+            }
+
+            return starWeight <= 0 ? 0 : Math.Max(0, rootWidth - fixedWidth) / starWeight;
+        }
+
+        private static double ResolveIslandLength(GridLength length, double desiredLength)
+        {
+            if (length.IsAbsolute)
+                return Math.Max(1, length.Value);
+
+            return Math.Max(1, desiredLength);
+        }
+
+        private (double Width, double Height) GetAvailableFlyoutSizeInDips(Rectangle workArea)
+        {
+            var scale = _xamlIslandRasterizationScale;
+            var availableWidth = (workArea.Width / scale) - Margin.Left - Margin.Right;
+            var availableHeight = (workArea.Height / scale) - Margin.Top - Margin.Bottom;
+
+            return (Math.Max(1, availableWidth), Math.Max(1, availableHeight));
+        }
+
+        private void UpdateXamlIslandRasterizationScale()
+        {
+            foreach (var host in _islandHosts.Values)
+            {
+                _xamlIslandRasterizationScale = NormalizeRasterizationScale(host.XamlIslandRasterizationScale);
+                return;
+            }
+
+            _xamlIslandRasterizationScale = 1.0D;
+        }
+
+        private static double NormalizeRasterizationScale(double scale)
+        {
+            return double.IsNaN(scale) || double.IsInfinity(scale) || scale <= 0 ? 1.0D : scale;
+        }
+
+        private void UpdateHostDragMode()
+        {
+            foreach (var host in _islandHosts.Values)
+                host.SetDragMode(DragMode);
+        }
+
+        private void UpdateHostDragRegions()
+        {
+            Dictionary<DesktopFlyoutIsland, List<RectInt32>> dragRegionsByIsland = [];
+
+            if (DragMode is DesktopFlyoutDragMode.Region)
+            {
+                foreach (var region in _dragRegions)
+                {
+                    if (FindAncestorIsland(region) is not DesktopFlyoutIsland island ||
+                        !_islandHosts.TryGetValue(island, out var host) ||
+                        !TryGetScaledDragRegionRect(region, island, NormalizeRasterizationScale(host.XamlIslandRasterizationScale), out var rect))
+                    {
+                        continue;
+                    }
+
+                    if (!dragRegionsByIsland.TryGetValue(island, out var dragRegions))
+                    {
+                        dragRegions = [];
+                        dragRegionsByIsland[island] = dragRegions;
+                    }
+
+                    dragRegions.Add(rect);
+                }
+            }
+
+            foreach (var item in _islandHosts)
+            {
+                if (dragRegionsByIsland.TryGetValue(item.Key, out var dragRegions))
+                    item.Value.SetDragRegions(dragRegions);
+                else
+                    item.Value.SetDragRegions([]);
             }
         }
-
-        /// <summary>
-        /// Moves focus into the flyout's XAML island.
-        /// </summary>
-        /// <param name="reason">The focus navigation reason used by the XAML hosting layer.</param>
-        /// <remarks>
-        /// Focus cannot be moved into the flyout while <see cref="ActivationMode"/> is
-        /// <see cref="DesktopFlyoutActivationMode.NeverActivate"/>.
-        /// </remarks>
-        public void NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
-        {
-            _host?.NavigateFocus(reason);
-        }
-
-#if UWP
-        /// <summary>
-        /// Lets the XAML island process a native keyboard message before dispatch.
-        /// </summary>
-        /// <param name="msg">The native message to process.</param>
-        /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
-        /// <remarks>
-        /// UWP desktop-host scenarios should call this from their native message loop so keyboard
-        /// navigation and accelerator processing can reach the hosted XAML island.
-        /// </remarks>
-        public unsafe bool TryPreTranslateMessage(MSG* msg)
-        {
-            return _host?.TryPreTranslateMessage(msg) ?? false;
-        }
-#endif
 
         private void UpdateFlyoutTheme()
         {
@@ -328,210 +795,19 @@ namespace DesktopFlyouts
 #endif
         }
 
-        private void UpdateIslands()
-        {
-            if (IslandsGrid is null)
-                return;
-
-            IslandsGrid.Children.Clear();
-            IslandsGrid.RowDefinitions.Clear();
-            IslandsGrid.ColumnDefinitions.Clear();
-
-            if (IslandsOrientation is Orientation.Vertical)
-            {
-                for (int index = 0; index < Islands.Count; index++)
-                {
-                    if (Islands[index] is not DesktopFlyoutIsland island)
-                        continue;
-
-                    IslandsGrid.RowDefinitions.Add(new() { Height = island.IslandHeight });
-                    Grid.SetRow(island, index);
-                    Grid.SetColumn(island, 0);
-                    island.SetOwner(this);
-                    IslandsGrid.Children.Add(island);
-                }
-            }
-            else
-            {
-                for (int index = 0; index < Islands.Count; index++)
-                {
-
-                    if (Islands[index] is not DesktopFlyoutIsland island)
-                        continue;
-
-                    IslandsGrid.ColumnDefinitions.Add(new() { Width = island.IslandWidth });
-                    Grid.SetRow(island, 0);
-                    Grid.SetColumn(island, index);
-                    island.SetOwner(this);
-                    IslandsGrid.Children.Add(island);
-                }
-            }
-        }
-
-        private DesktopFlyoutPopupDirection UpdateFlyoutRegion()
-        {
-            if (_host?.DesktopWindowXamlSource is null || IslandsGrid is null)
-                return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint ?? _dragMoveOrigin));
-
-            var customBottomCenterPoint = _customPlacementBottomCenterPoint;
-            var dragMoveOrigin = _dragMoveOrigin;
-            var scale = _host.XamlIslandRasterizationScale;
-            var flyoutWidth = GetCurrentFlyoutWidth();
-            var flyoutHeight = GetCurrentFlyoutHeight();
-            var scaledFlyoutSize = new FoundationSize(flyoutWidth * scale, flyoutHeight * scale);
-            var scaledMargin = GetScaledMargin(Margin, scale);
-            var frameWidth = scaledFlyoutSize.Width + scaledMargin.Left + scaledMargin.Right;
-            var frameHeight = scaledFlyoutSize.Height + scaledMargin.Top + scaledMargin.Bottom;
-            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(customBottomCenterPoint ?? dragMoveOrigin);
-            var hostWidth = workArea.Width;
-            var hostHeight = workArea.Height;
-            var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, hostWidth)));
-            var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, hostHeight)));
-            var requestedPopupDirection = PopupDirection;
-            _customPlacementBottomCenterPoint = null;
-
-            double left;
-            double top;
-
-            if (customBottomCenterPoint is Point bottomCenterPoint)
-            {
-                (left, top) = GetCustomPlacementOrigin(
-                    bottomCenterPoint,
-                    regionWidth,
-                    regionHeight,
-                    scaledFlyoutSize,
-                    scaledMargin,
-                    workArea);
-            }
-            else if (dragMoveOrigin is Point origin)
-            {
-                (left, top) = (origin.X, origin.Y);
-            }
-            else
-            {
-                (left, top) = GetPlacementOrigin(Placement, regionWidth, regionHeight, workArea);
-            }
-
-            left = Clamp(left, workArea.Left, workArea.Right - regionWidth);
-            top = Clamp(top, workArea.Top, workArea.Bottom - regionHeight);
-
-            var region = new RectInt32(
-                (int)Math.Round(left),
-                (int)Math.Round(top),
-                (int)regionWidth,
-                (int)regionHeight);
-
-            _host.MoveAndResize(region, ShouldActivateOnOpen());
-            _host.SetHWndRectRegion(new(0, 0, region.Width, region.Height));
-
-            return ResolvePopupDirection(requestedPopupDirection, region, workArea);
-        }
-
-        internal void OnIslandSizeChanged()
-        {
-            UpdateIslands();
-            UpdateOpenFlyoutLayout();
-        }
-
-        private void UpdateOpenFlyoutLayout()
-        {
-            if (!IsOpen || _isPopupAnimationPlaying || RootGrid is null || _host?.DesktopWindowXamlSource is null)
-                return;
-
-            ResetResolvedFlyoutSize();
-            UpdateLayout();
-            ApplyResolvedFlyoutSize();
-            UpdateLayout();
-            _activePopupDirection = UpdateFlyoutRegion();
-            SetOpenTransform();
-        }
-
-        private void ResetResolvedFlyoutSize()
-        {
-            if (RootGrid is null)
-                return;
-
-            RootGrid.Width = double.NaN;
-            RootGrid.Height = double.NaN;
-        }
-
-        private void ApplyResolvedFlyoutSize()
-        {
-            if (RootGrid is null || _host is null)
-                return;
-
-            var (availableWidth, availableHeight) = GetAvailableFlyoutSizeInDips();
-            RootGrid.Width = ResolveFlyoutLength(FlyoutWidth, availableWidth, HasStarIslandWidth());
-            RootGrid.Height = ResolveFlyoutLength(FlyoutHeight, availableHeight, HasStarIslandHeight());
-        }
-
-        private (double Width, double Height) GetAvailableFlyoutSizeInDips()
-        {
-            if (_host is null)
-                return (0, 0);
-
-            var scale = _host.XamlIslandRasterizationScale;
-            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint);
-            var availableWidth = (workArea.Width / scale) - Margin.Left - Margin.Right;
-            var availableHeight = (workArea.Height / scale) - Margin.Top - Margin.Bottom;
-
-            return (Math.Max(0, availableWidth), Math.Max(0, availableHeight));
-        }
-
-        private bool HasStarIslandWidth()
-        {
-            foreach (var item in Islands)
-            {
-                if (item is DesktopFlyoutIsland island && island.IslandWidth.IsStar)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private bool HasStarIslandHeight()
-        {
-            foreach (var item in Islands)
-            {
-                if (item is DesktopFlyoutIsland island && island.IslandHeight.IsStar)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private void OpenAnimationStoryboard_Completed(object? sender, object e)
-        {
-            if (sender is not Storyboard storyboard)
-                return;
-
-            storyboard.Completed -= OpenAnimationStoryboard_Completed;
-            storyboard.Stop();
-            CompleteOpen();
-        }
-
-        private void CloseAnimationStoryboard_Completed(object? sender, object e)
-        {
-            if (sender is not Storyboard storyboard)
-                return;
-
-            storyboard.Completed -= CloseAnimationStoryboard_Completed;
-            storyboard.Stop();
-            CompleteClose();
-        }
-
         private void CompleteOpen()
         {
             StopSwipeDismissRestoreStoryboard();
-            ResetDragMoveTracking();
             ResetSwipeDismissTracking();
             SetOpenTransform();
             _isPopupAnimationPlaying = false;
             IsOpen = true;
+
             if (ShouldActivateOnOpen())
                 PrepareInitialFocus();
             else
                 RestartRestoreActivationTimer();
+
             RestartAutoCloseTimer();
         }
 
@@ -539,27 +815,21 @@ namespace DesktopFlyouts
         {
             StopAutoCloseTimer();
             StopSwipeDismissRestoreStoryboard();
-            ResetDragMoveTracking();
+            StopTransitionStoryboards();
             ResetSwipeDismissTracking();
             RestoreFocusSuppression();
             ResetPressedScale();
             SetClosedTransform(_activePopupDirection);
             _isPopupAnimationPlaying = false;
             IsOpen = false;
-            _dragMoveOrigin = null;
-            _host?.UpdateWindowVisibility(false);
+
+            foreach (var host in _islandHosts.Values)
+                host.UpdateWindowVisibility(false);
         }
 
         private void PrepareInitialFocus()
         {
-            if (_host is null)
-                return;
-
-            IsTabStop = true;
-            _host.NavigateFocus(XamlSourceFocusNavigationReason.Programmatic);
-
-            // Keep the first real child unfocused until the user presses Tab.
-            Focus(FocusState.Programmatic);
+            NavigateFocus(XamlSourceFocusNavigationReason.Programmatic);
         }
 
         private void RestartAutoCloseTimer()
@@ -592,7 +862,7 @@ namespace DesktopFlyouts
                 return;
 
             _restoreActivationTickCount = 0;
-            _host?.RestoreActivationState();
+            RestoreActivationState();
             _restoreActivationTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
             _restoreActivationTimer.Tick += RestoreActivationTimer_Tick;
             _restoreActivationTimer.Start();
@@ -609,6 +879,25 @@ namespace DesktopFlyouts
             _restoreActivationTickCount = 0;
         }
 
+        private void RestartLostFocusCloseTimer()
+        {
+            StopLostFocusCloseTimer();
+
+            _lostFocusCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
+            _lostFocusCloseTimer.Tick += LostFocusCloseTimer_Tick;
+            _lostFocusCloseTimer.Start();
+        }
+
+        private void StopLostFocusCloseTimer()
+        {
+            if (_lostFocusCloseTimer is null)
+                return;
+
+            _lostFocusCloseTimer.Stop();
+            _lostFocusCloseTimer.Tick -= LostFocusCloseTimer_Tick;
+            _lostFocusCloseTimer = null;
+        }
+
         private void AutoCloseTimer_Tick(object? sender, object e)
         {
             StopAutoCloseTimer();
@@ -619,77 +908,63 @@ namespace DesktopFlyouts
 
         private void RestoreActivationTimer_Tick(object? sender, object e)
         {
-            _host?.RestoreActivationState();
+            RestoreActivationState();
             _restoreActivationTickCount++;
 
             if (_restoreActivationTickCount >= 8)
                 StopRestoreActivationTimer();
         }
 
-        private void RootGrid_GettingFocus(UIElement sender, GettingFocusEventArgs args)
+        private void LostFocusCloseTimer_Tick(object? sender, object e)
         {
-            if (ActivationMode is not DesktopFlyoutActivationMode.NeverActivate)
-                return;
+            StopLostFocusCloseTimer();
 
-            args.Cancel = true;
-            args.Handled = true;
-            _host?.RestoreActivationState();
+            if (IsOpen && !_isPopupAnimationPlaying && !ContainsForegroundWindow())
+                Hide();
         }
 
-        private void FocusManager_GettingFocus(object? sender, GettingFocusEventArgs args)
+        private void RestoreActivationState()
         {
-            if (ActivationMode is not DesktopFlyoutActivationMode.NeverActivate || args.NewFocusedElement is not DependencyObject newFocusedElement)
-                return;
-
-            if (!IsFlyoutElement(newFocusedElement))
-                return;
-
-            args.Cancel = true;
-            args.Handled = true;
-            _host?.RestoreActivationState();
+            foreach (var host in _islandHosts.Values)
+                host.RestoreActivationState();
         }
 
-        private bool IsFlyoutElement(DependencyObject element)
+        private bool ContainsForegroundWindow()
         {
-            var rootGrid = RootGrid;
-            if (rootGrid is null)
-                return false;
-
-            if (ReferenceEquals(element, this) || ReferenceEquals(element, rootGrid))
-                return true;
-
-            var current = element;
-            while (current is not null)
+            foreach (var host in _islandHosts.Values)
             {
-                if (ReferenceEquals(current, this) || ReferenceEquals(current, rootGrid))
+                if (host.ContainsForegroundWindow())
                     return true;
-
-                current = VisualTreeHelper.GetParent(current);
             }
 
-            return element is FrameworkElement frameworkElement &&
-                rootGrid.XamlRoot is not null &&
-                ReferenceEquals(frameworkElement.XamlRoot, rootGrid.XamlRoot);
+            return false;
         }
 
-        private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
+        private void Island_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            if (RootGrid is null || _isPopupAnimationPlaying)
+            if (sender is not DesktopFlyoutIsland island || _isPopupAnimationPlaying)
                 return;
 
+            if (DragMode is DesktopFlyoutDragMode.Full)
+            {
+#if UWP
+                BeginIslandNativeDragMove(island, e);
+#endif
+                return;
+            }
+
             var isPressedScaleEnabled = IsPressedScaleEnabled();
-            var isDragMoveEnabled = CanStartDragMove();
             var isSwipeDismissEnabled = CanStartSwipeDismiss();
-            if (!isPressedScaleEnabled && !isDragMoveEnabled && !isSwipeDismissEnabled)
+            if (!isPressedScaleEnabled && !isSwipeDismissEnabled)
                 return;
 
             StopSwipeDismissRestoreStoryboard();
-            RootGrid.CapturePointer(e.Pointer);
 
-            if (isDragMoveEnabled)
-                StartDragMove(e);
-            else if (isSwipeDismissEnabled)
-                StartSwipeDismiss(e);
+            if (isSwipeDismissEnabled)
+                StartSwipeDismiss(island, e);
+
+            _capturedPointerIsland = island;
+            _isPointerCaptured = island.CapturePointer(e.Pointer);
 
             if (isPressedScaleEnabled)
             {
@@ -698,172 +973,91 @@ namespace DesktopFlyouts
             }
         }
 
-        private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e)
+        private void Island_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            if (UpdateDragMove(e))
-            {
-                e.Handled = true;
-                return;
-            }
-
             if (UpdateSwipeDismiss(e))
                 e.Handled = true;
         }
 
-        private void RootGrid_PointerReleased(object sender, PointerRoutedEventArgs e)
+        private void Island_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
-            var movedByDrag = CompleteDragMove(e);
-            var dismissedBySwipe = movedByDrag ? false : CompleteSwipeDismiss(e);
+            var dismissedBySwipe = CompleteSwipeDismiss(e);
 
-            if (RootGrid is not null)
-                RootGrid.ReleasePointerCapture(e.Pointer);
-
-            if (movedByDrag)
-                e.Handled = true;
+            ReleaseCapturedPointers();
 
             if (!dismissedBySwipe)
                 RestorePressedScale();
         }
 
-        private void RootGrid_PointerCanceled(object sender, PointerRoutedEventArgs e)
+        private void Island_PointerCanceled(object sender, PointerRoutedEventArgs e)
         {
-            CancelDragMove();
             CancelSwipeDismiss();
+            ReleaseCapturedPointers();
             RestorePressedScale();
         }
 
-        private void RootGrid_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        private void Island_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
         {
-            CancelDragMove();
             CancelSwipeDismiss();
+            _isPointerCaptured = false;
+            _capturedPointerIsland = null;
             RestorePressedScale();
         }
 
-        private void RootGrid_PointerExited(object sender, PointerRoutedEventArgs e)
+        private void Island_PointerExited(object sender, PointerRoutedEventArgs e)
         {
-            if (!_isSwipeDismissDragging && !_isDragMoving)
+            if (!_isSwipeDismissDragging)
                 RestorePressedScale();
         }
 
-        private bool CanStartDragMove()
+        private void BeginIslandNativeDragMove(DesktopFlyoutIsland island, PointerRoutedEventArgs e)
         {
-            return IsDragMoveEnabled &&
-                IsOpen &&
-                RootGrid is not null &&
-                _host?.DesktopWindowXamlSource is not null;
-        }
-
-        private void StartDragMove(PointerRoutedEventArgs e)
-        {
-            if (_host is null || !WindowHelpers.TryGetCursorPoint(out var cursorPoint))
+            if (!IsOpen || _isPopupAnimationPlaying || !_islandHosts.TryGetValue(island, out var host))
                 return;
 
-            _dragMovePointerId = e.Pointer.PointerId;
-            _dragMoveStartCursorPoint = cursorPoint;
-            _dragMoveStartWindowRect = _host.WindowSize;
-            _isDragMoveTracking = true;
-            _isDragMoving = false;
-        }
+            StopAutoCloseTimer();
+            ReleaseCapturedPointers();
+            ResetSwipeDismissTracking();
+            RestorePressedScale();
 
-        private bool UpdateDragMove(PointerRoutedEventArgs e)
-        {
-            if (!_isDragMoveTracking || e.Pointer.PointerId != _dragMovePointerId || _host is null)
-                return false;
+            e.Handled = true;
+            host.BeginNativeDragMove();
 
-            if (!WindowHelpers.TryGetCursorPoint(out var cursorPoint))
-                return false;
-
-            var offsetX = cursorPoint.X - _dragMoveStartCursorPoint.X;
-            var offsetY = cursorPoint.Y - _dragMoveStartCursorPoint.Y;
-            if (!_isDragMoving && !CanStartDragMoveDrag(offsetX, offsetY))
-                return false;
-
-            if (!_isDragMoving)
-            {
-                _isDragMoving = true;
-                StopAutoCloseTimer();
-                ResetSwipeDismissTracking();
-                RestorePressedScale();
-            }
-
-            var width = Math.Max(1, (int)Math.Round(_dragMoveStartWindowRect.Width));
-            var height = Math.Max(1, (int)Math.Round(_dragMoveStartWindowRect.Height));
-            var nextRect = new RectInt32(
-                (int)Math.Round(_dragMoveStartWindowRect.X + offsetX),
-                (int)Math.Round(_dragMoveStartWindowRect.Y + offsetY),
-                width,
-                height);
-            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(cursorPoint);
-            nextRect = ClampWindowRectToWorkArea(nextRect, workArea);
-
-            _host.MoveAndResize(nextRect, ShouldActivateOnOpen());
-            _dragMoveOrigin = new(nextRect.X, nextRect.Y);
-            _activePopupDirection = ResolvePopupDirection(PopupDirection, nextRect, workArea);
-
-            return true;
-        }
-
-        private bool CompleteDragMove(PointerRoutedEventArgs e)
-        {
-            if (!_isDragMoveTracking || e.Pointer.PointerId != _dragMovePointerId)
-                return false;
-
-            var moved = _isDragMoving;
-            ResetDragMoveTracking();
-
-            if (moved)
-                RestartAutoCloseTimer();
-
-            return moved;
-        }
-
-        private void CancelDragMove()
-        {
-            var shouldRestartAutoCloseTimer = _isDragMoving;
-            ResetDragMoveTracking();
-
-            if (shouldRestartAutoCloseTimer)
+            if (IsOpen)
                 RestartAutoCloseTimer();
         }
 
-        private void ResetDragMoveTracking()
+        private void ReleaseCapturedPointers()
         {
-            _isDragMoveTracking = false;
-            _isDragMoving = false;
-            _dragMovePointerId = 0;
-        }
+            if (!_isPointerCaptured || _capturedPointerIsland is null)
+                return;
 
-        private bool CanStartDragMoveDrag(double offsetX, double offsetY)
-        {
-            var threshold = DragMoveStartThreshold * (_host?.XamlIslandRasterizationScale ?? 1.0D);
-            return Math.Abs(offsetX) >= threshold || Math.Abs(offsetY) >= threshold;
+            _capturedPointerIsland.ReleasePointerCaptures();
+            _capturedPointerIsland = null;
+            _isPointerCaptured = false;
         }
 
         private bool CanStartSwipeDismiss()
         {
             return IsSwipeToDismissEnabled &&
                 IsOpen &&
-                RootGrid is not null &&
                 GetSwipeDismissMaxDistance() > 0;
         }
 
-        private void StartSwipeDismiss(PointerRoutedEventArgs e)
+        private void StartSwipeDismiss(DesktopFlyoutIsland island, PointerRoutedEventArgs e)
         {
-            if (RootGrid is null)
-                return;
-
             _swipeDismissPointerId = e.Pointer.PointerId;
-            _swipeDismissStartPoint = e.GetCurrentPoint(RootGrid).Position;
+            _swipeDismissStartPoint = e.GetCurrentPoint(island).Position;
             _isSwipeDismissTracking = true;
             _isSwipeDismissDragging = false;
         }
 
         private bool UpdateSwipeDismiss(PointerRoutedEventArgs e)
         {
-            if (!_isSwipeDismissTracking || RootGrid is null || e.Pointer.PointerId != _swipeDismissPointerId)
+            if (!_isSwipeDismissTracking || _capturedPointerIsland is null || e.Pointer.PointerId != _swipeDismissPointerId)
                 return false;
 
-            var currentPoint = e.GetCurrentPoint(RootGrid).Position;
+            var currentPoint = e.GetCurrentPoint(_capturedPointerIsland).Position;
             var deltaX = currentPoint.X - _swipeDismissStartPoint.X;
             var deltaY = currentPoint.Y - _swipeDismissStartPoint.Y;
 
@@ -877,12 +1071,7 @@ namespace DesktopFlyouts
                 RestorePressedScale();
             }
 
-            var transform = GetRootTransform();
-            if (transform is null)
-                return false;
-
-            transform.TranslateX = translateX;
-            transform.TranslateY = translateY;
+            SetTransformTranslation(translateX, translateY);
             return true;
         }
 
@@ -965,7 +1154,7 @@ namespace DesktopFlyouts
 
         private double GetSwipeDismissDistance()
         {
-            var transform = GetRootTransform();
+            var transform = GetFirstIslandTransform();
             if (transform is null)
                 return 0;
 
@@ -1007,7 +1196,15 @@ namespace DesktopFlyouts
                 return;
             }
 
-            _swipeDismissRestoreStoryboard = GetOpenStoryboard(_activePopupDirection, true);
+            var transform = GetFirstIslandTransform();
+            if (transform is null)
+            {
+                SetOpenTransform();
+                RestartAutoCloseTimer();
+                return;
+            }
+
+            _swipeDismissRestoreStoryboard = GetOpenStoryboard(transform, _activePopupDirection, true);
             _swipeDismissRestoreStoryboard.Completed += SwipeDismissRestoreStoryboard_Completed;
             _swipeDismissRestoreStoryboard.Begin();
         }
@@ -1037,6 +1234,66 @@ namespace DesktopFlyouts
             RestartAutoCloseTimer();
         }
 
+        private void BeginTransition(bool isClosing, bool fromCurrentTransform)
+        {
+            StopTransitionStoryboards();
+
+            _isClosingTransition = isClosing;
+            _pendingTransitionStoryboardCount = 0;
+
+            foreach (var island in Islands)
+            {
+                var transform = EnsureIslandTransform(island);
+                var storyboard = isClosing
+                    ? GetCloseStoryboard(transform, _activePopupDirection, fromCurrentTransform)
+                    : GetOpenStoryboard(transform, _activePopupDirection, fromCurrentTransform);
+
+                storyboard.Completed += TransitionStoryboard_Completed;
+                _transitionStoryboards.Add(storyboard);
+                _pendingTransitionStoryboardCount++;
+                storyboard.Begin();
+            }
+
+            if (_pendingTransitionStoryboardCount == 0)
+            {
+                if (isClosing)
+                    CompleteClose();
+                else
+                    CompleteOpen();
+            }
+        }
+
+        private void TransitionStoryboard_Completed(object? sender, object e)
+        {
+            if (sender is Storyboard storyboard)
+            {
+                storyboard.Completed -= TransitionStoryboard_Completed;
+                storyboard.Stop();
+                _transitionStoryboards.Remove(storyboard);
+            }
+
+            _pendingTransitionStoryboardCount--;
+            if (_pendingTransitionStoryboardCount > 0)
+                return;
+
+            if (_isClosingTransition)
+                CompleteClose();
+            else
+                CompleteOpen();
+        }
+
+        private void StopTransitionStoryboards()
+        {
+            foreach (var storyboard in _transitionStoryboards)
+            {
+                storyboard.Completed -= TransitionStoryboard_Completed;
+                storyboard.Stop();
+            }
+
+            _transitionStoryboards.Clear();
+            _pendingTransitionStoryboardCount = 0;
+        }
+
         private void RestorePressedScale()
         {
             if (!_isPressAnimationActive)
@@ -1049,64 +1306,48 @@ namespace DesktopFlyouts
         private void ResetPressedScale()
         {
             _isPressAnimationActive = false;
-            StopPressedScaleStoryboard();
-            _pressScaleStoryboard = null;
             _pressScaleTargetScale = 1.0D;
 
-            var transform = GetRootTransform();
-            if (transform is null)
-                return;
-
-            transform.ScaleX = 1.0D;
-            transform.ScaleY = 1.0D;
+            foreach (var island in Islands)
+            {
+                var transform = EnsureIslandTransform(island);
+                transform.ScaleX = 1.0D;
+                transform.ScaleY = 1.0D;
+            }
         }
 
         private void AnimatePressedScale(double scale, TimeSpan duration)
         {
-            var transform = GetRootTransform();
-            if (transform is null)
-                return;
-
-            var currentScaleX = transform.ScaleX;
-            var currentScaleY = transform.ScaleY;
-
-            StopPressedScaleStoryboard();
-            transform.ScaleX = currentScaleX;
-            transform.ScaleY = currentScaleY;
             _pressScaleTargetScale = scale;
-            _pressScaleStoryboard = TransitionHelpers.GetPressedScaleTransitionStoryboard(
-                transform,
-                currentScaleX,
-                currentScaleY,
-                scale,
-                duration);
-            _pressScaleStoryboard.Completed += PressScaleStoryboard_Completed;
-            _pressScaleStoryboard.Begin();
-        }
 
-        private void StopPressedScaleStoryboard()
-        {
-            if (_pressScaleStoryboard is null)
-                return;
-
-            _pressScaleStoryboard.Completed -= PressScaleStoryboard_Completed;
-            _pressScaleStoryboard.Stop();
-            _pressScaleStoryboard = null;
+            foreach (var island in Islands)
+            {
+                var transform = EnsureIslandTransform(island);
+                var storyboard = TransitionHelpers.GetPressedScaleTransitionStoryboard(
+                    transform,
+                    transform.ScaleX,
+                    transform.ScaleY,
+                    scale,
+                    duration);
+                storyboard.Completed += PressScaleStoryboard_Completed;
+                storyboard.Begin();
+            }
         }
 
         private void PressScaleStoryboard_Completed(object? sender, object e)
         {
-            if (!ReferenceEquals(sender, _pressScaleStoryboard))
-                return;
+            if (sender is Storyboard storyboard)
+            {
+                storyboard.Completed -= PressScaleStoryboard_Completed;
+                storyboard.Stop();
+            }
 
-            StopPressedScaleStoryboard();
-
-            var transform = GetRootTransform();
-            if (transform is null)
-                return;
-
-            transform.ScaleX = _pressScaleTargetScale;
-            transform.ScaleY = _pressScaleTargetScale;
+            foreach (var island in Islands)
+            {
+                var transform = EnsureIslandTransform(island);
+                transform.ScaleX = _pressScaleTargetScale;
+                transform.ScaleY = _pressScaleTargetScale;
+            }
         }
 
         private bool IsPressedScaleEnabled()
@@ -1132,11 +1373,10 @@ namespace DesktopFlyouts
 
         private void SuppressFocus()
         {
-            if (RootGrid is null)
-                return;
-
             RestoreFocusSuppression();
-            SuppressFocus(RootGrid);
+
+            foreach (var island in Islands)
+                SuppressFocus(island);
         }
 
         private void SuppressFocus(DependencyObject element)
@@ -1170,19 +1410,15 @@ namespace DesktopFlyouts
             _suppressedTabStopStates.Clear();
         }
 
-        private Storyboard GetOpenStoryboard(DesktopFlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
+        private Storyboard GetOpenStoryboard(CompositeTransform transform, DesktopFlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
         {
-            var transform = GetRootTransform() ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
-
             return IsVerticalDirection(popupDirection)
                 ? TransitionHelpers.GetWindows11BottomToTopTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateY : GetClosedYOffset(popupDirection), 0)
                 : TransitionHelpers.GetWindows11RightToLeftTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateX : GetClosedXOffset(popupDirection), 0);
         }
 
-        private Storyboard GetCloseStoryboard(DesktopFlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
+        private Storyboard GetCloseStoryboard(CompositeTransform transform, DesktopFlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
         {
-            var transform = GetRootTransform() ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
-
             return IsVerticalDirection(popupDirection)
                 ? TransitionHelpers.GetWindows11TopToBottomTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateY : 0, GetClosedYOffset(popupDirection))
                 : TransitionHelpers.GetWindows11LeftToRightTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateX : 0, GetClosedXOffset(popupDirection));
@@ -1190,37 +1426,35 @@ namespace DesktopFlyouts
 
         private void SetOpenTransform()
         {
-            var transform = GetRootTransform();
-            if (transform is null)
-                return;
-
-            transform.TranslateX = 0;
-            transform.TranslateY = 0;
+            SetTransformTranslation(0, 0);
         }
 
         private void SetClosedTransform(DesktopFlyoutPopupDirection popupDirection)
         {
-            var transform = GetRootTransform();
-            if (transform is null)
-                return;
-
-            transform.TranslateX = GetClosedXOffset(popupDirection);
-            transform.TranslateY = GetClosedYOffset(popupDirection);
+            SetTransformTranslation(GetClosedXOffset(popupDirection), GetClosedYOffset(popupDirection));
         }
 
-        private CompositeTransform? GetRootTransform()
+        private void SetTransformTranslation(double translateX, double translateY)
         {
-            if (RootGrid is null)
-                return null;
-
-            return EnsureRootTransform();
+            foreach (var island in Islands)
+            {
+                var transform = EnsureIslandTransform(island);
+                transform.TranslateX = translateX;
+                transform.TranslateY = translateY;
+            }
         }
 
-        private CompositeTransform EnsureRootTransform()
+        private CompositeTransform? GetFirstIslandTransform()
         {
-            var rootGrid = RootGrid ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
+            foreach (var island in Islands)
+                return EnsureIslandTransform(island);
 
-            if (rootGrid.RenderTransform is CompositeTransform compositeTransform)
+            return null;
+        }
+
+        private static CompositeTransform EnsureIslandTransform(DesktopFlyoutIsland island)
+        {
+            if (island.RenderTransform is CompositeTransform compositeTransform)
                 return compositeTransform;
 
             var transform = new CompositeTransform()
@@ -1229,13 +1463,13 @@ namespace DesktopFlyouts
                 ScaleY = 1.0D,
             };
 
-            if (rootGrid.RenderTransform is TranslateTransform translateTransform)
+            if (island.RenderTransform is TranslateTransform translateTransform)
             {
                 transform.TranslateX = translateTransform.X;
                 transform.TranslateY = translateTransform.Y;
             }
 
-            rootGrid.RenderTransform = transform;
+            island.RenderTransform = transform;
             return transform;
         }
 
@@ -1243,8 +1477,8 @@ namespace DesktopFlyouts
         {
             return popupDirection switch
             {
-                DesktopFlyoutPopupDirection.LeftToRight => -(int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Left),
-                DesktopFlyoutPopupDirection.RightToLeft => (int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Right),
+                DesktopFlyoutPopupDirection.LeftToRight => -(int)Math.Ceiling(_currentFlyoutWidth + Margin.Left),
+                DesktopFlyoutPopupDirection.RightToLeft => (int)Math.Ceiling(_currentFlyoutWidth + Margin.Right),
                 _ => 0,
             };
         }
@@ -1253,31 +1487,139 @@ namespace DesktopFlyouts
         {
             return popupDirection switch
             {
-                DesktopFlyoutPopupDirection.TopToBottom => -(int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Top),
-                DesktopFlyoutPopupDirection.BottomToTop => (int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Bottom),
+                DesktopFlyoutPopupDirection.TopToBottom => -(int)Math.Ceiling(_currentFlyoutHeight + Margin.Top),
+                DesktopFlyoutPopupDirection.BottomToTop => (int)Math.Ceiling(_currentFlyoutHeight + Margin.Bottom),
                 _ => 0,
             };
         }
 
-        private double GetCurrentFlyoutWidth()
+        private bool HasStarIslandWidth()
         {
-            return RootGrid?.ActualWidth > 0 ? RootGrid.ActualWidth : DesiredSize.Width;
+            foreach (var island in Islands)
+            {
+                if (island.IslandWidth.IsStar)
+                    return true;
+            }
+
+            return false;
         }
 
-        private double GetCurrentFlyoutHeight()
+        private bool HasStarIslandHeight()
         {
-            return RootGrid?.ActualHeight > 0 ? RootGrid.ActualHeight : DesiredSize.Height;
+            foreach (var island in Islands)
+            {
+                if (island.IslandHeight.IsStar)
+                    return true;
+            }
+
+            return false;
         }
 
-        private static double ResolveFlyoutLength(GridLength length, double availableLength, bool stretchWhenAuto)
+        private List<DesktopFlyoutIsland> GetSpatiallyOrderedIslands()
+        {
+            List<DesktopFlyoutIsland> orderedIslands = [];
+            foreach (var island in Islands)
+                orderedIslands.Add(island);
+
+            orderedIslands.Sort(CompareIslandSpatialOrder);
+            return orderedIslands;
+        }
+
+        private int CompareIslandSpatialOrder(DesktopFlyoutIsland x, DesktopFlyoutIsland y)
+        {
+            var xRect = GetIslandSpatialRect(x);
+            var yRect = GetIslandSpatialRect(y);
+            var rowThreshold = Math.Max(16.0D, Math.Min(xRect.Height, yRect.Height) * 0.5D);
+            if (Math.Abs(xRect.Y - yRect.Y) > rowThreshold)
+                return xRect.Y.CompareTo(yRect.Y);
+
+            if (Math.Abs(xRect.X - yRect.X) > 0.001D)
+                return xRect.X.CompareTo(yRect.X);
+
+            return Islands.IndexOf(x).CompareTo(Islands.IndexOf(y));
+        }
+
+        private FoundationRect GetIslandSpatialRect(DesktopFlyoutIsland island)
+        {
+            if (_islandHosts.TryGetValue(island, out var host) && IsOpen)
+                return host.WindowSize;
+
+            if (_islandLayoutRects.TryGetValue(island, out var rect))
+                return rect;
+
+            return new(GetFiniteOrZero(island.CanvasLeft), GetFiniteOrZero(island.CanvasTop), Math.Max(1, island.ActualWidth), Math.Max(1, island.ActualHeight));
+        }
+
+        private static DesktopFlyoutIsland? FindAncestorIsland(DependencyObject element)
+        {
+            var current = element;
+            while (current is not null)
+            {
+                if (current is DesktopFlyoutIsland island)
+                    return island;
+
+                current = VisualTreeHelper.GetParent(current);
+            }
+
+            return null;
+        }
+
+        private static bool TryGetScaledDragRegionRect(DesktopFlyoutDragRegion region, DesktopFlyoutIsland island, double scale, out RectInt32 rect)
+        {
+            rect = default;
+            if (region.Visibility is not Visibility.Visible || region.ActualWidth <= 0 || region.ActualHeight <= 0)
+                return false;
+
+            FoundationRect bounds;
+            try
+            {
+                bounds = region.TransformToVisual(island).TransformBounds(new(0, 0, region.ActualWidth, region.ActualHeight));
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+
+            var islandWidth = island.ActualWidth > 0 ? island.ActualWidth : island.Width;
+            var islandHeight = island.ActualHeight > 0 ? island.ActualHeight : island.Height;
+            var left = Clamp(bounds.X, 0, islandWidth);
+            var top = Clamp(bounds.Y, 0, islandHeight);
+            var right = Clamp(bounds.X + bounds.Width, 0, islandWidth);
+            var bottom = Clamp(bounds.Y + bounds.Height, 0, islandHeight);
+            if (right <= left || bottom <= top)
+                return false;
+
+            var scaledLeft = (int)Math.Floor(left * scale);
+            var scaledTop = (int)Math.Floor(top * scale);
+            var scaledRight = (int)Math.Ceiling(right * scale);
+            var scaledBottom = (int)Math.Ceiling(bottom * scale);
+            rect = new(
+                scaledLeft,
+                scaledTop,
+                Math.Max(1, scaledRight - scaledLeft),
+                Math.Max(1, scaledBottom - scaledTop));
+            return true;
+        }
+
+        private bool TryEnqueueOnFlyoutDispatcher(Action action)
+        {
+#if UWP
+            _ = Dispatcher.TryRunAsync(CoreDispatcherPriority.Normal, () => action());
+            return true;
+#elif WASDK
+            return DispatcherQueue.TryEnqueue(() => action());
+#endif
+        }
+
+        private static double ResolveFlyoutLength(GridLength length, double availableLength, bool stretchWhenAuto, double desiredLength)
         {
             if (length.IsAuto)
-                return stretchWhenAuto ? availableLength : double.NaN;
+                return stretchWhenAuto ? availableLength : Math.Min(Math.Max(1, desiredLength), availableLength);
 
             if (length.IsStar)
                 return availableLength;
 
-            return Clamp(length.Value, 0, availableLength);
+            return Clamp(length.Value, 1, availableLength);
         }
 
         private static Thickness GetScaledMargin(Thickness margin, double scale)
@@ -1329,18 +1671,6 @@ namespace DesktopFlyouts
             };
         }
 
-        private static RectInt32 ClampWindowRectToWorkArea(RectInt32 rect, Rectangle workArea)
-        {
-            var left = Clamp(rect.X, workArea.Left, workArea.Right - rect.Width);
-            var top = Clamp(rect.Y, workArea.Top, workArea.Bottom - rect.Height);
-
-            return new(
-                (int)Math.Round(left),
-                (int)Math.Round(top),
-                rect.Width,
-                rect.Height);
-        }
-
         private static DesktopFlyoutPopupDirection ResolvePopupDirection(DesktopFlyoutPopupDirection requestedDirection, RectInt32 region, Rectangle workArea)
         {
             return requestedDirection switch
@@ -1379,10 +1709,35 @@ namespace DesktopFlyouts
             return Math.Min(Math.Max(value, min), Math.Max(min, max));
         }
 
+        private static double GetFiniteOrZero(double value)
+        {
+            return double.IsNaN(value) || double.IsInfinity(value) ? 0 : value;
+        }
+
         private void HostWindow_Inactivated(object? sender, EventArgs e)
         {
-            if (HideOnLostFocus) Hide();
+            if (HideOnLostFocus)
+                RestartLostFocusCloseTimer();
         }
+
+#if WASDK
+        private void HostWindow_NativeMoveSizeStarted(object? sender, EventArgs e)
+        {
+            StopAutoCloseTimer();
+            ReleaseCapturedPointers();
+            ResetSwipeDismissTracking();
+            RestorePressedScale();
+        }
+
+        private void HostWindow_NativeMoveSizeEnded(object? sender, EventArgs e)
+        {
+            if (IsOpen && !_isPopupAnimationPlaying)
+            {
+                UpdateHostDragRegions();
+                RestartAutoCloseTimer();
+            }
+        }
+#endif
 
         private void HostWindow_SystemSettingsChanged(object? sender, EventArgs e)
         {
@@ -1391,6 +1746,49 @@ namespace DesktopFlyouts
 
             UpdateFlyoutTheme();
             UpdateIslandBackdrops();
+        }
+
+        private void HostWindow_TakeFocusRequested(object? sender, XamlSourceFocusNavigationRequest request)
+        {
+            if (_isNavigatingFocusAcrossHosts || ActivationMode is DesktopFlyoutActivationMode.NeverActivate || sender is not XamlIslandHostWindow sourceHost)
+                return;
+
+            DesktopFlyoutIsland? sourceIsland = null;
+            foreach (var item in _islandHosts)
+            {
+                if (ReferenceEquals(item.Value, sourceHost))
+                {
+                    sourceIsland = item.Key;
+                    break;
+                }
+            }
+
+            if (sourceIsland is null)
+                return;
+
+            var orderedIslands = GetSpatiallyOrderedIslands();
+            var sourceIndex = orderedIslands.IndexOf(sourceIsland);
+            if (sourceIndex < 0)
+                return;
+
+            var isBackward = request.Reason is XamlSourceFocusNavigationReason.Last;
+            var targetIndex = isBackward ? sourceIndex - 1 : sourceIndex + 1;
+            if (targetIndex < 0 || targetIndex >= orderedIslands.Count)
+                return;
+
+            var targetIsland = orderedIslands[targetIndex];
+            if (!_islandHosts.TryGetValue(targetIsland, out var targetHost))
+                return;
+
+            _isNavigatingFocusAcrossHosts = true;
+            try
+            {
+                targetHost.NavigateFocus(isBackward ? XamlSourceFocusNavigationReason.Last : XamlSourceFocusNavigationReason.First);
+            }
+            finally
+            {
+                _isNavigatingFocusAcrossHosts = false;
+            }
         }
 
         /// <inheritdoc/>
@@ -1402,24 +1800,26 @@ namespace DesktopFlyouts
             _disposed = true;
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
+            StopLostFocusCloseTimer();
+            StopTransitionStoryboards();
+            StopSwipeDismissRestoreStoryboard();
+            ReleaseCapturedPointers();
             RestoreFocusSuppression();
 
-            _host?.WindowInactivated -= HostWindow_Inactivated;
-            _host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
-            RootGrid?.GettingFocus -= RootGrid_GettingFocus;
-            RootGrid?.PointerPressed -= RootGrid_PointerPressed;
-            RootGrid?.PointerMoved -= RootGrid_PointerMoved;
-            RootGrid?.PointerReleased -= RootGrid_PointerReleased;
-            RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
-            RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
-            RootGrid?.PointerExited -= RootGrid_PointerExited;
-
-            if (_isFocusManagerGettingFocusSubscribed)
+            foreach (var item in _islandHosts)
             {
-                FocusManager.GettingFocus -= FocusManager_GettingFocus;
-                _isFocusManagerGettingFocusSubscribed = false;
+                DetachIslandEvents(item.Key);
+                item.Value.WindowInactivated -= HostWindow_Inactivated;
+#if WASDK
+                item.Value.NativeMoveSizeStarted -= HostWindow_NativeMoveSizeStarted;
+                item.Value.NativeMoveSizeEnded -= HostWindow_NativeMoveSizeEnded;
+#endif
+                item.Value.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
+                item.Value.TakeFocusRequested -= HostWindow_TakeFocusRequested;
+                item.Value.Dispose();
             }
-            _host?.Dispose();
+
+            _islandHosts.Clear();
             IsOpen = false;
 
             GC.SuppressFinalize(this);

@@ -31,6 +31,8 @@ flyout.Show();
 ## Islands
 
 The flyout content is the `Islands` collection. Each island is a `DesktopFlyoutIsland`.
+Each island is hosted in its own `DesktopWindowXamlSource`, so stacked and freeform layouts are
+computed by `DesktopFlyout` but rendered as separate native island windows.
 
 ```xml
 <desktop:DesktopFlyout IslandsOrientation="Horizontal">
@@ -40,6 +42,26 @@ The flyout content is the `Islands` collection. Each island is a `DesktopFlyoutI
 ```
 
 Use `IslandsOrientation="Vertical"` for stacked sections and `Horizontal` for side-by-side sections. `IslandHeight` is used for vertical layout. `IslandWidth` is used for horizontal layout.
+
+Use `IslandLayoutMode="Freeform"` when islands should be placed on a canvas instead of the stack grid. Freeform layout uses each island's `CanvasLeft` and `CanvasTop` values.
+
+```xml
+<desktop:DesktopFlyout
+    FlyoutWidth="620"
+    FlyoutHeight="340"
+    IslandLayoutMode="Freeform">
+    <desktop:DesktopFlyoutIsland
+        CanvasLeft="0"
+        CanvasTop="0"
+        IslandWidth="188"
+        IslandHeight="250" />
+    <desktop:DesktopFlyoutIsland
+        CanvasLeft="210"
+        CanvasTop="42"
+        IslandWidth="188"
+        IslandHeight="250" />
+</desktop:DesktopFlyout>
+```
 
 ## Placement
 
@@ -106,10 +128,35 @@ Use `TimeSpan.Zero` or a negative value to disable automatic close.
 <desktop:DesktopFlyout PressedScale="0.92" />
 ```
 
-`IsDragMoveEnabled` lets the user move the open flyout by dragging it with the cursor. The flyout stays inside the current monitor work area.
+`DragMode` lets the user move the native island window. `Full` starts native movement from the
+whole island surface.
 
 ```xml
-<desktop:DesktopFlyout IsDragMoveEnabled="True" />
+<desktop:DesktopFlyout DragMode="Full" />
+```
+
+Use `DragMode="Region"` with `DesktopFlyoutDragRegion` to limit native window movement to specific
+visual areas. The region only starts the native move; it does not run a XAML pointer drag loop.
+
+```xml
+<desktop:DesktopFlyout DragMode="Region">
+    <desktop:DesktopFlyoutIsland>
+        <Grid RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <desktop:DesktopFlyoutDragRegion>
+                <Grid Height="48">
+                    <TextBlock Text="Drag here" />
+                </Grid>
+            </desktop:DesktopFlyoutDragRegion>
+
+            <Button Grid.Row="1" Content="Interactive content" />
+        </Grid>
+    </desktop:DesktopFlyoutIsland>
+</desktop:DesktopFlyout>
 ```
 
 `IsSwipeToDismissEnabled` enables swipe-to-dismiss in the opposite direction of the active popup direction.

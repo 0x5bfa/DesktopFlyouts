@@ -7,6 +7,7 @@
 
     <Style BasedOn="{StaticResource DefaultWindows11DesktopFlyoutStyle}" TargetType="local:DesktopFlyout" />
     <Style BasedOn="{StaticResource DefaultDesktopFlyoutIslandStyle}" TargetType="local:DesktopFlyoutIsland" />
+    <Style BasedOn="{StaticResource DefaultDesktopFlyoutDragRegionStyle}" TargetType="local:DesktopFlyoutDragRegion" />
 
     <Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
 
@@ -23,6 +24,7 @@
                 <ControlTemplate TargetType="local:DesktopFlyout">
                     <Grid
                         x:Name="PART_RootGrid"
+                        Background="Transparent"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         RenderTransformOrigin="0.5,0.5"
@@ -39,7 +41,26 @@
                             x:Name="PART_IslandsGrid"
                             ColumnSpacing="12"
                             RowSpacing="12" />
+                        <Canvas
+                            x:Name="PART_IslandsCanvas"
+                            Visibility="Collapsed" />
                     </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DefaultDesktopFlyoutDragRegionStyle" TargetType="local:DesktopFlyoutDragRegion">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:DesktopFlyoutDragRegion">
+                    <ContentPresenter
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                        Content="{TemplateBinding Content}" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

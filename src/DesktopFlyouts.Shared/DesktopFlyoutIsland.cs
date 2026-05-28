@@ -18,8 +18,8 @@ namespace DesktopFlyouts
     /// </summary>
     /// <remarks>
     /// Islands are arranged by their owner flyout according to
-    /// <see cref="DesktopFlyout.IslandsOrientation"/>. Put the XAML content for one visual section
-    /// in each island.
+    /// <see cref="DesktopFlyout.IslandLayoutMode"/> and <see cref="DesktopFlyout.IslandsOrientation"/>.
+    /// Put the XAML content for one visual section in each island.
     /// </remarks>
 #if WASDK
     [WinRT.GeneratedBindableCustomProperty([nameof(TemplateSettings)], [])]
@@ -28,6 +28,17 @@ namespace DesktopFlyouts
     {
         private WeakReference<DesktopFlyout>? _owner;
         private long _propertyChangedCallbackTokenForCornerRadiusProperty;
+
+        internal DesktopFlyout? Owner
+        {
+            get
+            {
+                if (_owner is not null && _owner.TryGetTarget(out var owner))
+                    return owner;
+
+                return null;
+            }
+        }
 
         /// <summary>
         /// Gets an object that provides calculated values that can be referenced from the island template.
@@ -77,6 +88,15 @@ namespace DesktopFlyouts
                 owner.OnIslandSizeChanged();
         }
 
+        private static void OnIslandPositionPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+        {
+            if (dependencyObject is not DesktopFlyoutIsland island)
+                return;
+
+            if (island._owner is not null && island._owner.TryGetTarget(out var owner))
+                owner.OnIslandPositionChanged(island);
+        }
+
         private void OnCornerRadiusChanged()
         {
             UpdateTemplateSettings();
@@ -101,7 +121,7 @@ namespace DesktopFlyouts
 
         internal void UpdateOwnerBackdrop()
         {
-            TemplateSettings.SystemBackdrop = _owner is not null && _owner.TryGetTarget(out var owner)
+            TemplateSettings.SystemBackdrop = Owner is DesktopFlyout owner
                 ? owner.CreateIslandSystemBackdrop()
                 : null;
         }

@@ -46,5 +46,37 @@ namespace DesktopFlyouts
             get => (GridLength)GetValue(IslandHeightProperty);
             set => SetValue(IslandHeightProperty, value);
         }
+
+        /// <summary>
+        /// Identifies the <see cref="CanvasLeft"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty CanvasLeftProperty =
+            DependencyProperty.Register(nameof(CanvasLeft), typeof(double), typeof(DesktopFlyoutIsland), new PropertyMetadata(0.0D, OnIslandPositionPropertyChanged));
+
+        /// <summary>
+        /// Gets or sets the island's left position in freeform layout.
+        /// </summary>
+        /// <value>The left canvas position in device-independent pixels. The default is <c>0</c>.</value>
+        public double CanvasLeft
+        {
+            get => (double)GetValue(CanvasLeftProperty);
+            set => SetValue(CanvasLeftProperty, value);
+        }
+
+        /// <summary>
+        /// Identifies the <see cref="CanvasTop"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty CanvasTopProperty =
+            DependencyProperty.Register(nameof(CanvasTop), typeof(double), typeof(DesktopFlyoutIsland), new PropertyMetadata(0.0D, OnIslandPositionPropertyChanged));
+
+        /// <summary>
+        /// Gets or sets the island's top position in freeform layout.
+        /// </summary>
+        /// <value>The top canvas position in device-independent pixels. The default is <c>0</c>.</value>
+        public double CanvasTop
+        {
+            get => (double)GetValue(CanvasTopProperty);
+            set => SetValue(CanvasTopProperty, value);
+        }
     }
 }
