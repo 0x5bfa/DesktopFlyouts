@@ -50,12 +50,13 @@ namespace DesktopFlyouts
             {
                 DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
                 DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
+                DesktopFlyoutSampleKind.Draggable => new DraggableFlyout(),
                 DesktopFlyoutSampleKind.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
                 DesktopFlyoutSampleKind.StartMenuStyle => new StartMenuStyleFlyout(),
                 DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
                 DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
                 DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
-                _ => new CustomizableFlyout(),
+                _ => new ButtonFlyout(),
             };
         }
 

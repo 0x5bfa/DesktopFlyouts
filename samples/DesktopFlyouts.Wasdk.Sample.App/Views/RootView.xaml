@@ -39,8 +39,8 @@
                 <TextBlock
                     Margin="4,0"
                     Style="{StaticResource BodyStrongTextBlockStyle}"
-                    Text="Flyout settings" />
-                <wctcontrols:SettingsCard Header="Flyout example">
+                    Text="Flyout examples" />
+                <wctcontrols:SettingsCard Description="{x:Bind ViewModel.SelectedFlyoutDescription, Mode=OneWay}" Header="Flyout example">
                     <ComboBox
                         Width="150"
                         ItemsSource="{x:Bind ViewModel.FlyoutExamples.Values}"
@@ -52,68 +52,51 @@
                         Command="{x:Bind ViewModel.ToggleFlyoutOpenCommand}"
                         Content="Toggle open" />
                 </wctcontrols:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.ButtonSettingsVisibility, Mode=OneWay}">
+                <TextBlock
+                    Margin="4,0"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="Button settings" />
                 <wctcontrols:SettingsCard Header="Popup direction">
                     <ComboBox
                         Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         ItemsSource="{x:Bind ViewModel.PopupDirections.Values}"
                         SelectedIndex="{x:Bind ViewModel.SelectedPopupDirectionIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Enable backdrop">
-                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Placement">
-                    <ComboBox
-                        Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                        ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedFlyoutPlacementIndex, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Flyout width">
-                    <NumberBox
-                        x:Name="FlyoutWidthNumberBox"
-                        Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                        Minimum="0"
-                        PlaceholderText="Auto"
-                        SmallChange="16"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.FlyoutWidthValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Flyout height">
-                    <NumberBox
-                        x:Name="FlyoutHeightNumberBox"
-                        Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                        Minimum="0"
-                        PlaceholderText="Auto"
-                        SmallChange="16"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.FlyoutHeightValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Hide on losing focus">
-                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Swipe to dismiss">
-                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsSwipeToDismissEnabled, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Drag move">
-                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsDragMoveEnabled, Mode=TwoWay}" />
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.IsSwipeToDismissEnabled, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Swipe dismiss threshold">
                     <NumberBox
                         x:Name="SwipeDismissThresholdNumberBox"
                         Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         Minimum="1"
                         SmallChange="8"
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModel.SwipeDismissThresholdValue, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Pressed scale">
+                    <NumberBox
+                        x:Name="PressedScaleNumberBox"
+                        Width="150"
+                        Maximum="2"
+                        Minimum="0.1"
+                        SmallChange="0.05"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModel.PressedScaleValue, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IndicatorSettingsVisibility, Mode=OneWay}">
+                <TextBlock
+                    Margin="4,0"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="Indicator settings" />
                 <wctcontrols:SettingsCard Header="Activation mode">
                     <ComboBox
-                        Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
+                        Width="180"
                         ItemsSource="{x:Bind ViewModel.ActivationModes.Values}"
                         SelectedIndex="{x:Bind ViewModel.SelectedActivationModeIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
@@ -121,17 +104,44 @@
                     <NumberBox
                         x:Name="AutoCloseDelayNumberBox"
                         Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         Minimum="0"
                         PlaceholderText="Off"
                         SmallChange="0.5"
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModel.AutoCloseDelaySecondsValue, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Hide on losing focus">
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.DragMoveSettingsVisibility, Mode=OneWay}">
+                <TextBlock
+                    Margin="4,0"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="Draggable settings" />
+                <wctcontrols:SettingsCard Header="Drag move">
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.IsDragMoveEnabled, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Placement">
+                    <ComboBox
+                        Width="150"
+                        ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedFlyoutPlacementIndex, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.BackdropSettingsVisibility, Mode=OneWay}">
+                <TextBlock
+                    Margin="4,0"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="Widget settings" />
+                <wctcontrols:SettingsCard Header="Enable backdrop">
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="System backdrop">
                     <ComboBox
                         Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         ItemsSource="{x:Bind ViewModel.SystemBackdrops.Values}"
                         SelectedIndex="{x:Bind ViewModel.SelectedSystemBackdropIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
