@@ -73,6 +73,7 @@ namespace DesktopFlyouts
         internal void SetOwner(DesktopFlyout owner)
         {
             _owner = new(owner);
+            TemplateSettings.ShadowMargin = owner.GetIslandShadowMargin();
 
 #if WASDK
             UpdateOwnerBackdrop();

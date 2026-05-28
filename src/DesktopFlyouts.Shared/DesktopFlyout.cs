@@ -44,8 +44,10 @@ namespace DesktopFlyouts
     public partial class DesktopFlyout : Control, IDisposable
     {
         private const double IslandSpacing = 12.0D;
+        private const double IslandThemeShadowDepth = 36.0D;
         private const double SwipeDismissDragStartThreshold = 4.0D;
         private const double SwipeDismissAxisDominanceRatio = 1.2D;
+        private static readonly Thickness s_islandShadowMargin = GetThemeShadowMargin(IslandThemeShadowDepth);
 
         private readonly Dictionary<DesktopFlyoutIsland, XamlIslandHostWindow> _islandHosts = [];
         private readonly Dictionary<DesktopFlyoutIsland, FoundationRect> _islandLayoutRects = [];
@@ -206,6 +208,11 @@ namespace DesktopFlyouts
             UpdateOpenFlyoutLayout();
         }
 
+        internal Thickness GetIslandShadowMargin()
+        {
+            return s_islandShadowMargin;
+        }
+
         internal void RegisterDragRegion(DesktopFlyoutDragRegion region)
         {
             if (!_dragRegions.Contains(region))
@@ -352,6 +359,7 @@ namespace DesktopFlyouts
                 var host = new XamlIslandHostWindow();
                 host.SetActivationMode(ActivationMode);
                 host.SetDragMode(DragMode);
+                host.SetContentMargin(island.TemplateSettings.ShadowMargin);
                 host.SetContent(island);
                 host.UpdateWindowVisibility(false);
                 host.WindowInactivated += HostWindow_Inactivated;
@@ -437,8 +445,10 @@ namespace DesktopFlyouts
 
             var scale = _xamlIslandRasterizationScale;
             var scaledMargin = GetScaledMargin(Margin, scale);
-            var frameWidth = (_currentFlyoutWidth * scale) + scaledMargin.Left + scaledMargin.Right;
-            var frameHeight = (_currentFlyoutHeight * scale) + scaledMargin.Top + scaledMargin.Bottom;
+            var islandShadowMargin = GetIslandShadowMargin();
+            var scaledIslandShadowMargin = GetScaledMargin(islandShadowMargin, scale);
+            var frameWidth = (_currentFlyoutWidth * scale) + scaledMargin.Left + scaledMargin.Right + scaledIslandShadowMargin.Left + scaledIslandShadowMargin.Right;
+            var frameHeight = (_currentFlyoutHeight * scale) + scaledMargin.Top + scaledMargin.Bottom + scaledIslandShadowMargin.Top + scaledIslandShadowMargin.Bottom;
             var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, workArea.Width)));
             var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, workArea.Height)));
             var requestedPopupDirection = PopupDirection;
@@ -453,7 +463,7 @@ namespace DesktopFlyouts
                     regionWidth,
                     regionHeight,
                     new(_currentFlyoutWidth * scale, _currentFlyoutHeight * scale),
-                    scaledMargin,
+                    AddThickness(scaledMargin, scaledIslandShadowMargin),
                     workArea);
             }
             else
@@ -479,8 +489,17 @@ namespace DesktopFlyouts
                 var islandTop = flyoutRegion.Y + (int)Math.Round((Margin.Top + rect.Y) * scale);
                 var islandWidth = Math.Max(1, (int)Math.Ceiling(rect.Width * scale));
                 var islandHeight = Math.Max(1, (int)Math.Ceiling(rect.Height * scale));
-                var hostRect = new RectInt32(islandLeft, islandTop, islandWidth, islandHeight);
+                var shadowLeft = Math.Max(0, (int)Math.Floor(islandShadowMargin.Left * scale));
+                var shadowTop = Math.Max(0, (int)Math.Floor(islandShadowMargin.Top * scale));
+                var shadowRight = Math.Max(0, (int)Math.Ceiling(islandShadowMargin.Right * scale));
+                var shadowBottom = Math.Max(0, (int)Math.Ceiling(islandShadowMargin.Bottom * scale));
+                var hostRect = new RectInt32(
+                    islandLeft,
+                    islandTop,
+                    islandWidth + shadowLeft + shadowRight,
+                    islandHeight + shadowTop + shadowBottom);
 
+                item.Value.SetContentMargin(islandShadowMargin);
                 item.Value.MoveAndResize(hostRect, ShouldActivateOnOpen());
                 item.Value.SetHWndRectRegion(new(0, 0, hostRect.Width, hostRect.Height));
             }
@@ -711,8 +730,9 @@ namespace DesktopFlyouts
         private (double Width, double Height) GetAvailableFlyoutSizeInDips(Rectangle workArea)
         {
             var scale = _xamlIslandRasterizationScale;
-            var availableWidth = (workArea.Width / scale) - Margin.Left - Margin.Right;
-            var availableHeight = (workArea.Height / scale) - Margin.Top - Margin.Bottom;
+            var islandShadowMargin = GetIslandShadowMargin();
+            var availableWidth = (workArea.Width / scale) - Margin.Left - Margin.Right - islandShadowMargin.Left - islandShadowMargin.Right;
+            var availableHeight = (workArea.Height / scale) - Margin.Top - Margin.Bottom - islandShadowMargin.Top - islandShadowMargin.Bottom;
 
             return (Math.Max(1, availableWidth), Math.Max(1, availableHeight));
         }
@@ -749,7 +769,7 @@ namespace DesktopFlyouts
                 {
                     if (FindAncestorIsland(region) is not DesktopFlyoutIsland island ||
                         !_islandHosts.TryGetValue(island, out var host) ||
-                        !TryGetScaledDragRegionRect(region, island, NormalizeRasterizationScale(host.XamlIslandRasterizationScale), out var rect))
+                        !TryGetScaledDragRegionRect(region, island, NormalizeRasterizationScale(host.XamlIslandRasterizationScale), island.TemplateSettings.ShadowMargin, out var rect))
                     {
                         continue;
                     }
@@ -1542,7 +1562,7 @@ namespace DesktopFlyouts
         private FoundationRect GetIslandSpatialRect(DesktopFlyoutIsland island)
         {
             if (_islandHosts.TryGetValue(island, out var host) && IsOpen)
-                return host.WindowSize;
+                return host.ContentWindowSize;
 
             if (_islandLayoutRects.TryGetValue(island, out var rect))
                 return rect;
@@ -1564,7 +1584,7 @@ namespace DesktopFlyouts
             return null;
         }
 
-        private static bool TryGetScaledDragRegionRect(DesktopFlyoutDragRegion region, DesktopFlyoutIsland island, double scale, out RectInt32 rect)
+        private static bool TryGetScaledDragRegionRect(DesktopFlyoutDragRegion region, DesktopFlyoutIsland island, double scale, Thickness shadowMargin, out RectInt32 rect)
         {
             rect = default;
             if (region.Visibility is not Visibility.Visible || region.ActualWidth <= 0 || region.ActualHeight <= 0)
@@ -1593,9 +1613,11 @@ namespace DesktopFlyouts
             var scaledTop = (int)Math.Floor(top * scale);
             var scaledRight = (int)Math.Ceiling(right * scale);
             var scaledBottom = (int)Math.Ceiling(bottom * scale);
+            var scaledShadowLeft = Math.Max(0, (int)Math.Floor(shadowMargin.Left * scale));
+            var scaledShadowTop = Math.Max(0, (int)Math.Floor(shadowMargin.Top * scale));
             rect = new(
-                scaledLeft,
-                scaledTop,
+                scaledLeft + scaledShadowLeft,
+                scaledTop + scaledShadowTop,
                 Math.Max(1, scaledRight - scaledLeft),
                 Math.Max(1, scaledBottom - scaledTop));
             return true;
@@ -1629,6 +1651,22 @@ namespace DesktopFlyouts
                 margin.Top * scale,
                 margin.Right * scale,
                 margin.Bottom * scale);
+        }
+
+        private static Thickness AddThickness(Thickness left, Thickness right)
+        {
+            return new(
+                left.Left + right.Left,
+                left.Top + right.Top,
+                left.Right + right.Right,
+                left.Bottom + right.Bottom);
+        }
+
+        private static Thickness GetThemeShadowMargin(double shadowDepth)
+        {
+            var sideMargin = Math.Ceiling(shadowDepth * 2D / 3D);
+            var bottomMargin = Math.Ceiling(shadowDepth * 4D / 3D);
+            return new(sideMargin, sideMargin, sideMargin, bottomMargin);
         }
 
         private static (double Left, double Top) GetCustomPlacementOrigin(

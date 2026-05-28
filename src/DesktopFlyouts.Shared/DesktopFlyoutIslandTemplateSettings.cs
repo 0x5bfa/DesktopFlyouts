@@ -20,6 +20,22 @@ namespace DesktopFlyouts
     /// </remarks>
     public partial class DesktopFlyoutIslandTemplateSettings : DependencyObject
     {
+        /// <summary>
+        /// Identifies the <see cref="ShadowMargin"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty ShadowMarginProperty =
+            DependencyProperty.Register(nameof(ShadowMargin), typeof(Thickness), typeof(DesktopFlyoutIslandTemplateSettings), new PropertyMetadata(default(Thickness)));
+
+        /// <summary>
+        /// Gets the transparent margin reserved for shadows around the island content.
+        /// </summary>
+        /// <value>The margin reserved outside the visible island surface.</value>
+        public Thickness ShadowMargin
+        {
+            get => (Thickness)GetValue(ShadowMarginProperty);
+            internal set => SetValue(ShadowMarginProperty, value);
+        }
+
 #if WASDK
         /// <summary>
         /// Gets the corner radius used by backdrop elements inside the island template.

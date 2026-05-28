@@ -16,6 +16,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 using System.Runtime.InteropServices.Marshalling;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.Win32.System.Com;
 using Windows.Win32.System.WinRT;
@@ -25,6 +26,7 @@ using WinRT;
 using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 #endif
 
@@ -34,6 +36,7 @@ namespace DesktopFlyouts
     {
         private const string WindowClassNamePrefix = "DesktopFlyoutHostClass";
         private const string WindowName = "DesktopFlyoutHostWindow";
+        private const int HTTRANSPARENT = -1;
         private const int HTCAPTION = 2;
         private static readonly object s_cbtHookTargetsLock = new();
         private static readonly Dictionary<uint, List<XamlIslandHostWindow>> s_cbtHookTargetsByThread = [];
@@ -48,8 +51,10 @@ namespace DesktopFlyouts
         private HWND _preservedForegroundHWnd = default;
         private HWND _preservedActiveHWnd = default;
         private HWND _preservedFocusHWnd = default;
+        private Border? _contentRoot;
         private readonly Dictionary<nint, nint> _subclassedXamlWndProcs = [];
         private readonly List<RectInt32> _dragRegionRects = [];
+        private Thickness _contentMargin = default;
         private bool _disposed;
         private DesktopFlyoutActivationMode _activationMode = DesktopFlyoutActivationMode.Activate;
         private DesktopFlyoutDragMode _dragMode = DesktopFlyoutDragMode.None;
@@ -90,6 +95,21 @@ namespace DesktopFlyouts
                 RECT rect;
                 PInvoke.GetWindowRect(HWnd, &rect);
                 return new(rect.X, rect.Y, rect.Width, rect.Height);
+            }
+        }
+
+        internal Rect ContentWindowSize
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                var windowSize = WindowSize;
+                var contentRect = GetScaledContentRect();
+                return new(
+                    windowSize.X + contentRect.X,
+                    windowSize.Y + contentRect.Y,
+                    contentRect.Width,
+                    contentRect.Height);
             }
         }
 
@@ -139,8 +159,24 @@ namespace DesktopFlyouts
             if (_disposed)
                 return;
 
-            DesktopWindowXamlSource!.Content = content;
+            _contentRoot ??= new();
+            _contentRoot.Padding = _contentMargin;
+            _contentRoot.Child = content;
+            DesktopWindowXamlSource!.Content = _contentRoot;
             ApplyActivationModeToWindows();
+        }
+
+        internal void SetContentMargin(Thickness margin)
+        {
+            if (_disposed)
+                return;
+
+            _contentMargin = NormalizeThickness(margin);
+            if (_contentRoot is not null)
+                _contentRoot.Padding = _contentMargin;
+
+            ApplyActivationModeToWindows();
+            ApplyNativeDragRegions();
         }
 
         internal void BeginNativeDragMove()
@@ -281,6 +317,37 @@ namespace DesktopFlyouts
             ApplyNativeDragRegions();
         }
 
+        private RectInt32 GetScaledContentRect()
+        {
+            RECT clientRect;
+            if (!PInvoke.GetClientRect(HWnd, &clientRect))
+                return default;
+
+            var scale = XamlIslandRasterizationScale;
+            var marginLeft = Math.Max(0, (int)Math.Floor(_contentMargin.Left * scale));
+            var marginTop = Math.Max(0, (int)Math.Floor(_contentMargin.Top * scale));
+            var marginRight = Math.Max(0, (int)Math.Ceiling(_contentMargin.Right * scale));
+            var marginBottom = Math.Max(0, (int)Math.Ceiling(_contentMargin.Bottom * scale));
+            var width = Math.Max(0, clientRect.Width - marginLeft - marginRight);
+            var height = Math.Max(0, clientRect.Height - marginTop - marginBottom);
+
+            return new(marginLeft, marginTop, width, height);
+        }
+
+        private static Thickness NormalizeThickness(Thickness thickness)
+        {
+            return new(
+                GetFiniteOrZero(thickness.Left),
+                GetFiniteOrZero(thickness.Top),
+                GetFiniteOrZero(thickness.Right),
+                GetFiniteOrZero(thickness.Bottom));
+        }
+
+        private static double GetFiniteOrZero(double value)
+        {
+            return double.IsNaN(value) || double.IsInfinity(value) || value < 0 ? 0 : value;
+        }
+
         private void ApplyNativeDragRegions()
         {
 #if WASDK
@@ -302,11 +369,11 @@ namespace DesktopFlyouts
 
             if (_dragMode is DesktopFlyoutDragMode.Full)
             {
-                RECT clientRect;
-                if (!PInvoke.GetClientRect(HWnd, &clientRect) || clientRect.Width <= 0 || clientRect.Height <= 0)
+                var contentRect = GetScaledContentRect();
+                if (contentRect.Width <= 0 || contentRect.Height <= 0)
                     return [];
 
-                return [new(0, 0, clientRect.Width, clientRect.Height)];
+                return [contentRect];
             }
 
             List<RectInt32> dragRegions = [];
@@ -323,7 +390,7 @@ namespace DesktopFlyouts
         private void ApplyActivationModeToWindows()
         {
             var neverActivate = _activationMode is DesktopFlyoutActivationMode.NeverActivate;
-            var needsXamlIslandSubclass = neverActivate;
+            var needsXamlIslandSubclass = neverActivate || HasContentMargin();
             UpdateCbtHook(neverActivate);
             if (needsXamlIslandSubclass)
                 RefreshXamlIslandWindowSubclasses();
@@ -587,6 +654,9 @@ namespace DesktopFlyouts
             {
                 case PInvoke.WM_NCHITTEST:
                     {
+                        if (IsTransparentMarginHit(lParam))
+                            return (LRESULT)HTTRANSPARENT;
+
                         if (IsNativeDragHit(lParam))
                             return (LRESULT)HTCAPTION;
 
@@ -668,6 +738,13 @@ namespace DesktopFlyouts
         {
             switch (uMsg)
             {
+                case PInvoke.WM_NCHITTEST:
+                    {
+                        if (IsTransparentMarginHit(lParam))
+                            return (LRESULT)HTTRANSPARENT;
+
+                        break;
+                    }
                 case PInvoke.WM_MOUSEACTIVATE:
                     {
                         if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
@@ -698,30 +775,59 @@ namespace DesktopFlyouts
             if (_dragMode is DesktopFlyoutDragMode.None)
                 return false;
 
+            if (!TryGetHostPoint(lParam, out var x, out var y))
+                return false;
+
+            if (_dragMode is DesktopFlyoutDragMode.Full)
+                return IsPointInRect(x, y, GetScaledContentRect());
+
+            foreach (var rect in _dragRegionRects)
+            {
+                if (IsPointInRect(x, y, rect))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool IsTransparentMarginHit(LPARAM lParam)
+        {
+            if (!HasContentMargin() || !TryGetHostPoint(lParam, out var x, out var y))
+                return false;
+
+            return !IsPointInRect(x, y, GetScaledContentRect());
+        }
+
+        private bool TryGetHostPoint(LPARAM lParam, out int x, out int y)
+        {
+            x = 0;
+            y = 0;
+
             RECT hostRect;
             if (!PInvoke.GetWindowRect(HWnd, &hostRect))
                 return false;
 
-            var x = GetSignedLoWord((nint)lParam) - hostRect.left;
-            var y = GetSignedHiWord((nint)lParam) - hostRect.top;
-            if (x < 0 || y < 0 || x >= hostRect.Width || y >= hostRect.Height)
-                return false;
+            x = GetSignedLoWord((nint)lParam) - hostRect.left;
+            y = GetSignedHiWord((nint)lParam) - hostRect.top;
+            return x >= 0 && y >= 0 && x < hostRect.Width && y < hostRect.Height;
+        }
 
-            if (_dragMode is DesktopFlyoutDragMode.Full)
-                return true;
+        private bool HasContentMargin()
+        {
+            return _contentMargin.Left > 0 ||
+                _contentMargin.Top > 0 ||
+                _contentMargin.Right > 0 ||
+                _contentMargin.Bottom > 0;
+        }
 
-            foreach (var rect in _dragRegionRects)
-            {
-                if (x >= rect.X &&
-                    x < rect.X + rect.Width &&
-                    y >= rect.Y &&
-                    y < rect.Y + rect.Height)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+        private static bool IsPointInRect(int x, int y, RectInt32 rect)
+        {
+            return rect.Width > 0 &&
+                rect.Height > 0 &&
+                x >= rect.X &&
+                x < rect.X + rect.Width &&
+                y >= rect.Y &&
+                y < rect.Y + rect.Height;
         }
 
         private static int GetSignedLoWord(nint value)
