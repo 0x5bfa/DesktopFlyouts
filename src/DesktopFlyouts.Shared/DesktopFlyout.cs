@@ -44,10 +44,10 @@ namespace DesktopFlyouts
     public partial class DesktopFlyout : Control, IDisposable
     {
         private const double IslandSpacing = 12.0D;
-        private const double IslandThemeShadowDepth = 36.0D;
+        private const double IslandShadowMargin = 12.0D;
         private const double SwipeDismissDragStartThreshold = 4.0D;
         private const double SwipeDismissAxisDominanceRatio = 1.2D;
-        private static readonly Thickness s_islandShadowMargin = GetThemeShadowMargin(IslandThemeShadowDepth);
+        private static readonly Thickness s_islandShadowMargin = new(IslandShadowMargin);
 
         private readonly Dictionary<DesktopFlyoutIsland, XamlIslandHostWindow> _islandHosts = [];
         private readonly Dictionary<DesktopFlyoutIsland, FoundationRect> _islandLayoutRects = [];
@@ -1495,20 +1495,24 @@ namespace DesktopFlyouts
 
         private int GetClosedXOffset(DesktopFlyoutPopupDirection popupDirection)
         {
+            var shadowMargin = GetIslandShadowMargin();
+            var shadowWidth = shadowMargin.Left + shadowMargin.Right;
             return popupDirection switch
             {
-                DesktopFlyoutPopupDirection.LeftToRight => -(int)Math.Ceiling(_currentFlyoutWidth + Margin.Left),
-                DesktopFlyoutPopupDirection.RightToLeft => (int)Math.Ceiling(_currentFlyoutWidth + Margin.Right),
+                DesktopFlyoutPopupDirection.LeftToRight => -(int)Math.Ceiling(_currentFlyoutWidth + Margin.Left + shadowWidth),
+                DesktopFlyoutPopupDirection.RightToLeft => (int)Math.Ceiling(_currentFlyoutWidth + Margin.Right + shadowWidth),
                 _ => 0,
             };
         }
 
         private int GetClosedYOffset(DesktopFlyoutPopupDirection popupDirection)
         {
+            var shadowMargin = GetIslandShadowMargin();
+            var shadowHeight = shadowMargin.Top + shadowMargin.Bottom;
             return popupDirection switch
             {
-                DesktopFlyoutPopupDirection.TopToBottom => -(int)Math.Ceiling(_currentFlyoutHeight + Margin.Top),
-                DesktopFlyoutPopupDirection.BottomToTop => (int)Math.Ceiling(_currentFlyoutHeight + Margin.Bottom),
+                DesktopFlyoutPopupDirection.TopToBottom => -(int)Math.Ceiling(_currentFlyoutHeight + Margin.Top + shadowHeight),
+                DesktopFlyoutPopupDirection.BottomToTop => (int)Math.Ceiling(_currentFlyoutHeight + Margin.Bottom + shadowHeight),
                 _ => 0,
             };
         }
@@ -1660,13 +1664,6 @@ namespace DesktopFlyouts
                 left.Top + right.Top,
                 left.Right + right.Right,
                 left.Bottom + right.Bottom);
-        }
-
-        private static Thickness GetThemeShadowMargin(double shadowDepth)
-        {
-            var sideMargin = Math.Ceiling(shadowDepth * 2D / 3D);
-            var bottomMargin = Math.Ceiling(shadowDepth * 4D / 3D);
-            return new(sideMargin, sideMargin, sideMargin, bottomMargin);
         }
 
         private static (double Left, double Top) GetCustomPlacementOrigin(

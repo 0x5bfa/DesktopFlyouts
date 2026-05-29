@@ -14,7 +14,6 @@
     <Style x:Key="DefaultWindows11DesktopFlyoutStyle" TargetType="local:DesktopFlyout">
         <Setter Property="HorizontalAlignment" Value="Right" />
         <Setter Property="VerticalAlignment" Value="Bottom" />
-        <Setter Property="Margin" Value="12" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
         <Setter Property="AutomationProperties.LandmarkType" Value="Navigation" />
@@ -41,9 +40,7 @@
                             x:Name="PART_IslandsGrid"
                             ColumnSpacing="12"
                             RowSpacing="12" />
-                        <Canvas
-                            x:Name="PART_IslandsCanvas"
-                            Visibility="Collapsed" />
+                        <Canvas x:Name="PART_IslandsCanvas" Visibility="Collapsed" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
