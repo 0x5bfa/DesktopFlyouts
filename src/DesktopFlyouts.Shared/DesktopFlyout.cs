@@ -55,8 +55,10 @@ namespace DesktopFlyouts
         private readonly List<(FrameworkElement Element, bool AllowFocusOnInteraction)> _suppressedInteractionFocusStates = [];
         private readonly List<DesktopFlyoutDragRegion> _dragRegions = [];
         private readonly List<Storyboard> _transitionStoryboards = [];
+        private readonly Dictionary<DesktopFlyoutIsland, Storyboard> _pressedScaleStoryboards = [];
+        private readonly Dictionary<Storyboard, (DesktopFlyoutIsland Island, double TargetScale)> _pressedScaleStoryboardStates = [];
+        private readonly HashSet<DesktopFlyoutIsland> _pressedScaleIslands = [];
         private bool _isPopupAnimationPlaying;
-        private bool _isPressAnimationActive;
         private bool _isSwipeDismissTracking;
         private bool _isSwipeDismissDragging;
         private bool _isPointerCaptured;
@@ -67,6 +69,8 @@ namespace DesktopFlyouts
         private int _restoreActivationTickCount;
         private Point? _customPlacementBottomCenterPoint;
         private DesktopFlyoutIsland? _capturedPointerIsland;
+        private DesktopFlyoutIsland? _swipeDismissIsland;
+        private DesktopFlyoutIsland? _swipeDismissRestoreIsland;
         private DesktopFlyoutPopupDirection _activePopupDirection = DesktopFlyoutPopupDirection.BottomToTop;
         private DispatcherTimer? _autoCloseTimer;
         private DispatcherTimer? _restoreActivationTimer;
@@ -76,7 +80,6 @@ namespace DesktopFlyouts
         private double _xamlIslandRasterizationScale = 1.0D;
         private double _currentFlyoutWidth = 1.0D;
         private double _currentFlyoutHeight = 1.0D;
-        private double _pressScaleTargetScale = 1.0D;
         private uint _swipeDismissPointerId;
 
         /// <summary>
@@ -336,6 +339,13 @@ namespace DesktopFlyouts
             {
                 if (_islandHosts.TryGetValue(island, out var host))
                 {
+                    ResetPressedScale(island);
+                    if (ReferenceEquals(_swipeDismissIsland, island))
+                        ResetSwipeDismissTracking();
+
+                    if (ReferenceEquals(_swipeDismissRestoreIsland, island))
+                        StopSwipeDismissRestoreStoryboard();
+
                     DetachIslandEvents(island);
                     host.WindowInactivated -= HostWindow_Inactivated;
 #if WASDK
@@ -987,10 +997,7 @@ namespace DesktopFlyouts
             _isPointerCaptured = island.CapturePointer(e.Pointer);
 
             if (isPressedScaleEnabled)
-            {
-                _isPressAnimationActive = true;
-                AnimatePressedScale(GetResolvedPressedScale(), TimeSpan.FromMilliseconds(110));
-            }
+                StartPressedScale(island);
         }
 
         private void Island_PointerMoved(object sender, PointerRoutedEventArgs e)
@@ -1001,33 +1008,38 @@ namespace DesktopFlyouts
 
         private void Island_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
+            var island = _capturedPointerIsland ?? sender as DesktopFlyoutIsland;
             var dismissedBySwipe = CompleteSwipeDismiss(e);
 
             ReleaseCapturedPointers();
 
-            if (!dismissedBySwipe)
-                RestorePressedScale();
+            if (!dismissedBySwipe && island is not null)
+                RestorePressedScale(island);
         }
 
         private void Island_PointerCanceled(object sender, PointerRoutedEventArgs e)
         {
+            var island = _capturedPointerIsland ?? sender as DesktopFlyoutIsland;
             CancelSwipeDismiss();
             ReleaseCapturedPointers();
-            RestorePressedScale();
+            if (island is not null)
+                RestorePressedScale(island);
         }
 
         private void Island_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
         {
+            var island = _capturedPointerIsland ?? sender as DesktopFlyoutIsland;
             CancelSwipeDismiss();
             _isPointerCaptured = false;
             _capturedPointerIsland = null;
-            RestorePressedScale();
+            if (island is not null)
+                RestorePressedScale(island);
         }
 
         private void Island_PointerExited(object sender, PointerRoutedEventArgs e)
         {
-            if (!_isSwipeDismissDragging)
-                RestorePressedScale();
+            if (sender is DesktopFlyoutIsland island && (!_isSwipeDismissDragging || !ReferenceEquals(_swipeDismissIsland, island)))
+                RestorePressedScale(island);
         }
 
         private void BeginIslandNativeDragMove(DesktopFlyoutIsland island, PointerRoutedEventArgs e)
@@ -1038,7 +1050,7 @@ namespace DesktopFlyouts
             StopAutoCloseTimer();
             ReleaseCapturedPointers();
             ResetSwipeDismissTracking();
-            RestorePressedScale();
+            RestorePressedScale(island);
 
             e.Handled = true;
             host.BeginNativeDragMove();
@@ -1067,17 +1079,19 @@ namespace DesktopFlyouts
         private void StartSwipeDismiss(DesktopFlyoutIsland island, PointerRoutedEventArgs e)
         {
             _swipeDismissPointerId = e.Pointer.PointerId;
-            _swipeDismissStartPoint = e.GetCurrentPoint(island).Position;
+            _swipeDismissStartPoint = GetSwipeDismissPointerPosition(e);
+            _swipeDismissIsland = island;
             _isSwipeDismissTracking = true;
             _isSwipeDismissDragging = false;
         }
 
         private bool UpdateSwipeDismiss(PointerRoutedEventArgs e)
         {
-            if (!_isSwipeDismissTracking || _capturedPointerIsland is null || e.Pointer.PointerId != _swipeDismissPointerId)
+            var island = _swipeDismissIsland;
+            if (!_isSwipeDismissTracking || island is null || e.Pointer.PointerId != _swipeDismissPointerId)
                 return false;
 
-            var currentPoint = e.GetCurrentPoint(_capturedPointerIsland).Position;
+            var currentPoint = GetSwipeDismissPointerPosition(e);
             var deltaX = currentPoint.X - _swipeDismissStartPoint.X;
             var deltaY = currentPoint.Y - _swipeDismissStartPoint.Y;
 
@@ -1088,49 +1102,57 @@ namespace DesktopFlyouts
             {
                 _isSwipeDismissDragging = true;
                 StopAutoCloseTimer();
-                RestorePressedScale();
+                ResetPressedScale(island);
             }
 
-            SetTransformTranslation(translateX, translateY);
+            SetIslandTransformTranslation(island, translateX, translateY);
             return true;
         }
 
         private bool CompleteSwipeDismiss(PointerRoutedEventArgs e)
         {
-            if (!_isSwipeDismissTracking || e.Pointer.PointerId != _swipeDismissPointerId)
+            var island = _swipeDismissIsland;
+            if (!_isSwipeDismissTracking || island is null || e.Pointer.PointerId != _swipeDismissPointerId)
                 return false;
 
-            var shouldDismiss = _isSwipeDismissDragging && GetSwipeDismissDistance() >= GetResolvedSwipeDismissThreshold();
+            var shouldDismiss = _isSwipeDismissDragging && GetSwipeDismissDistance(island) >= GetResolvedSwipeDismissThreshold();
             var shouldRestore = _isSwipeDismissDragging && !shouldDismiss;
             ResetSwipeDismissTracking();
 
             if (shouldDismiss)
             {
-                ResetPressedScale();
+                ResetPressedScale(island);
                 Hide(true);
                 return true;
             }
 
             if (shouldRestore)
-                AnimateSwipeDismissRestore();
+                AnimateSwipeDismissRestore(island);
 
             return false;
         }
 
         private void CancelSwipeDismiss()
         {
+            var island = _swipeDismissIsland;
             var shouldRestore = _isSwipeDismissDragging;
             ResetSwipeDismissTracking();
 
-            if (shouldRestore)
-                AnimateSwipeDismissRestore();
+            if (shouldRestore && island is not null)
+                AnimateSwipeDismissRestore(island);
         }
 
         private void ResetSwipeDismissTracking()
         {
             _isSwipeDismissTracking = false;
             _isSwipeDismissDragging = false;
+            _swipeDismissIsland = null;
             _swipeDismissPointerId = 0;
+        }
+
+        private static FoundationPoint GetSwipeDismissPointerPosition(PointerRoutedEventArgs e)
+        {
+            return e.GetCurrentPoint(null).Position;
         }
 
         private bool TryGetSwipeDismissTranslation(double deltaX, double deltaY, out double translateX, out double translateY)
@@ -1172,11 +1194,9 @@ namespace DesktopFlyouts
             return primaryDistance >= secondaryDistance * SwipeDismissAxisDominanceRatio;
         }
 
-        private double GetSwipeDismissDistance()
+        private double GetSwipeDismissDistance(DesktopFlyoutIsland island)
         {
-            var transform = GetFirstIslandTransform();
-            if (transform is null)
-                return 0;
+            var transform = EnsureIslandTransform(island);
 
             var closedX = GetClosedXOffset(_activePopupDirection);
             if (closedX != 0)
@@ -1205,25 +1225,19 @@ namespace DesktopFlyouts
             return Clamp(SwipeDismissThreshold, 1.0D, Math.Max(1.0D, GetSwipeDismissMaxDistance()));
         }
 
-        private void AnimateSwipeDismissRestore()
+        private void AnimateSwipeDismissRestore(DesktopFlyoutIsland island)
         {
             StopSwipeDismissRestoreStoryboard();
 
             if (!IsTransitionAnimationEnabled)
             {
-                SetOpenTransform();
+                SetIslandTransformTranslation(island, 0, 0);
                 RestartAutoCloseTimer();
                 return;
             }
 
-            var transform = GetFirstIslandTransform();
-            if (transform is null)
-            {
-                SetOpenTransform();
-                RestartAutoCloseTimer();
-                return;
-            }
-
+            var transform = EnsureIslandTransform(island);
+            _swipeDismissRestoreIsland = island;
             _swipeDismissRestoreStoryboard = GetOpenStoryboard(transform, _activePopupDirection, true);
             _swipeDismissRestoreStoryboard.Completed += SwipeDismissRestoreStoryboard_Completed;
             _swipeDismissRestoreStoryboard.Begin();
@@ -1234,9 +1248,14 @@ namespace DesktopFlyouts
             if (_swipeDismissRestoreStoryboard is null)
                 return;
 
+            var island = _swipeDismissRestoreIsland;
             _swipeDismissRestoreStoryboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
             _swipeDismissRestoreStoryboard.Stop();
             _swipeDismissRestoreStoryboard = null;
+            _swipeDismissRestoreIsland = null;
+
+            if (island is not null)
+                SetIslandTransformTranslation(island, 0, 0);
         }
 
         private void SwipeDismissRestoreStoryboard_Completed(object? sender, object e)
@@ -1247,10 +1266,16 @@ namespace DesktopFlyouts
             storyboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
             storyboard.Stop();
 
+            var island = _swipeDismissRestoreIsland;
             if (ReferenceEquals(_swipeDismissRestoreStoryboard, storyboard))
+            {
                 _swipeDismissRestoreStoryboard = null;
+                _swipeDismissRestoreIsland = null;
+            }
 
-            SetOpenTransform();
+            if (island is not null)
+                SetIslandTransformTranslation(island, 0, 0);
+
             RestartAutoCloseTimer();
         }
 
@@ -1314,60 +1339,103 @@ namespace DesktopFlyouts
             _pendingTransitionStoryboardCount = 0;
         }
 
+        private void StartPressedScale(DesktopFlyoutIsland island)
+        {
+            _pressedScaleIslands.Add(island);
+            AnimatePressedScale(island, GetResolvedPressedScale(), TimeSpan.FromMilliseconds(110));
+        }
+
         private void RestorePressedScale()
         {
-            if (!_isPressAnimationActive)
+            List<DesktopFlyoutIsland> islands = [.. _pressedScaleIslands];
+            foreach (var island in islands)
+                RestorePressedScale(island);
+        }
+
+        private void RestorePressedScale(DesktopFlyoutIsland island)
+        {
+            if (!_pressedScaleIslands.Remove(island))
                 return;
 
-            _isPressAnimationActive = false;
-            AnimatePressedScale(1.0D, TimeSpan.FromMilliseconds(240));
+            AnimatePressedScale(island, 1.0D, TimeSpan.FromMilliseconds(240));
         }
 
         private void ResetPressedScale()
         {
-            _isPressAnimationActive = false;
-            _pressScaleTargetScale = 1.0D;
+            StopPressedScaleStoryboards();
+            _pressedScaleIslands.Clear();
 
             foreach (var island in Islands)
-            {
-                var transform = EnsureIslandTransform(island);
-                transform.ScaleX = 1.0D;
-                transform.ScaleY = 1.0D;
-            }
+                SetIslandScale(island, 1.0D);
         }
 
-        private void AnimatePressedScale(double scale, TimeSpan duration)
+        private void ResetPressedScale(DesktopFlyoutIsland island)
         {
-            _pressScaleTargetScale = scale;
+            StopPressedScaleStoryboard(island);
+            _pressedScaleIslands.Remove(island);
+            SetIslandScale(island, 1.0D);
+        }
 
-            foreach (var island in Islands)
+        private void AnimatePressedScale(DesktopFlyoutIsland island, double scale, TimeSpan duration)
+        {
+            StopPressedScaleStoryboard(island);
+
+            var transform = EnsureIslandTransform(island);
+            var storyboard = TransitionHelpers.GetPressedScaleTransitionStoryboard(
+                transform,
+                transform.ScaleX,
+                transform.ScaleY,
+                scale,
+                duration);
+            _pressedScaleStoryboards[island] = storyboard;
+            _pressedScaleStoryboardStates[storyboard] = (island, scale);
+            storyboard.Completed += PressScaleStoryboard_Completed;
+            storyboard.Begin();
+        }
+
+        private void StopPressedScaleStoryboard(DesktopFlyoutIsland island)
+        {
+            if (!_pressedScaleStoryboards.Remove(island, out var storyboard))
+                return;
+
+            _pressedScaleStoryboardStates.Remove(storyboard);
+            storyboard.Completed -= PressScaleStoryboard_Completed;
+            storyboard.Stop();
+        }
+
+        private void StopPressedScaleStoryboards()
+        {
+            List<Storyboard> storyboards = [.. _pressedScaleStoryboards.Values];
+            _pressedScaleStoryboards.Clear();
+            _pressedScaleStoryboardStates.Clear();
+
+            foreach (var storyboard in storyboards)
             {
-                var transform = EnsureIslandTransform(island);
-                var storyboard = TransitionHelpers.GetPressedScaleTransitionStoryboard(
-                    transform,
-                    transform.ScaleX,
-                    transform.ScaleY,
-                    scale,
-                    duration);
-                storyboard.Completed += PressScaleStoryboard_Completed;
-                storyboard.Begin();
+                storyboard.Completed -= PressScaleStoryboard_Completed;
+                storyboard.Stop();
             }
         }
 
         private void PressScaleStoryboard_Completed(object? sender, object e)
         {
-            if (sender is Storyboard storyboard)
+            if (sender is not Storyboard storyboard)
+                return;
+
+            storyboard.Completed -= PressScaleStoryboard_Completed;
+            storyboard.Stop();
+
+            if (!_pressedScaleStoryboardStates.Remove(storyboard, out var state))
+                return;
+
+            if (_pressedScaleStoryboards.TryGetValue(state.Island, out var currentStoryboard) &&
+                ReferenceEquals(currentStoryboard, storyboard))
             {
-                storyboard.Completed -= PressScaleStoryboard_Completed;
-                storyboard.Stop();
+                _pressedScaleStoryboards.Remove(state.Island);
             }
 
-            foreach (var island in Islands)
-            {
-                var transform = EnsureIslandTransform(island);
-                transform.ScaleX = _pressScaleTargetScale;
-                transform.ScaleY = _pressScaleTargetScale;
-            }
+            SetIslandScale(state.Island, state.TargetScale);
+            if (Math.Abs(state.TargetScale - 1.0D) <= 0.001D)
+                _pressedScaleIslands.Remove(state.Island);
         }
 
         private bool IsPressedScaleEnabled()
@@ -1457,25 +1525,30 @@ namespace DesktopFlyouts
         private void SetTransformTranslation(double translateX, double translateY)
         {
             foreach (var island in Islands)
-            {
-                var transform = EnsureIslandTransform(island);
-                transform.TranslateX = translateX;
-                transform.TranslateY = translateY;
-            }
+                SetIslandTransformTranslation(island, translateX, translateY);
         }
 
-        private CompositeTransform? GetFirstIslandTransform()
+        private static void SetIslandTransformTranslation(DesktopFlyoutIsland island, double translateX, double translateY)
         {
-            foreach (var island in Islands)
-                return EnsureIslandTransform(island);
+            var transform = EnsureIslandTransform(island);
+            transform.TranslateX = translateX;
+            transform.TranslateY = translateY;
+        }
 
-            return null;
+        private static void SetIslandScale(DesktopFlyoutIsland island, double scale)
+        {
+            var transform = EnsureIslandTransform(island);
+            transform.ScaleX = scale;
+            transform.ScaleY = scale;
         }
 
         private static CompositeTransform EnsureIslandTransform(DesktopFlyoutIsland island)
         {
             if (island.RenderTransform is CompositeTransform compositeTransform)
+            {
+                UpdateIslandTransformCenter(island, compositeTransform);
                 return compositeTransform;
+            }
 
             var transform = new CompositeTransform()
             {
@@ -1490,7 +1563,30 @@ namespace DesktopFlyouts
             }
 
             island.RenderTransform = transform;
+            UpdateIslandTransformCenter(island, transform);
             return transform;
+        }
+
+        private static void UpdateIslandTransformCenter(DesktopFlyoutIsland island, CompositeTransform transform)
+        {
+            var width = GetActualOrExplicitLength(island.ActualWidth, island.Width);
+            var height = GetActualOrExplicitLength(island.ActualHeight, island.Height);
+            if (width > 0)
+                transform.CenterX = width / 2.0D;
+
+            if (height > 0)
+                transform.CenterY = height / 2.0D;
+        }
+
+        private static double GetActualOrExplicitLength(double actualLength, double explicitLength)
+        {
+            if (actualLength > 0 && !double.IsNaN(actualLength) && !double.IsInfinity(actualLength))
+                return actualLength;
+
+            if (explicitLength > 0 && !double.IsNaN(explicitLength) && !double.IsInfinity(explicitLength))
+                return explicitLength;
+
+            return 0;
         }
 
         private int GetClosedXOffset(DesktopFlyoutPopupDirection popupDirection)
@@ -1837,6 +1933,7 @@ namespace DesktopFlyouts
             StopRestoreActivationTimer();
             StopLostFocusCloseTimer();
             StopTransitionStoryboards();
+            StopPressedScaleStoryboards();
             StopSwipeDismissRestoreStoryboard();
             ReleaseCapturedPointers();
             RestoreFocusSuppression();
