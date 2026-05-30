@@ -14,7 +14,7 @@ namespace DesktopFlyouts
         Stack,
 
         /// <summary>
-        /// Arrange islands on a freeform canvas using each island's canvas position.
+        /// Arrange islands on a monitor-sized freeform canvas using each island's canvas position.
         /// </summary>
         Freeform,
     }

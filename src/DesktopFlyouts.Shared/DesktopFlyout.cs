@@ -590,8 +590,6 @@ namespace DesktopFlyouts
         private void UpdateFreeformIslandLayoutRects((double Width, double Height) availableSize)
         {
             var desiredSizes = GetIslandDesiredSizes(availableSize);
-            var right = 0.0D;
-            var bottom = 0.0D;
 
             foreach (var island in Islands)
             {
@@ -603,12 +601,10 @@ namespace DesktopFlyouts
                 var rect = new FoundationRect(left, top, Math.Max(1, width), Math.Max(1, height));
 
                 SetIslandLayoutRect(island, rect);
-                right = Math.Max(right, rect.X + rect.Width);
-                bottom = Math.Max(bottom, rect.Y + rect.Height);
             }
 
-            _currentFlyoutWidth = ResolveFlyoutLength(FlyoutWidth, availableSize.Width, false, Math.Max(1, right));
-            _currentFlyoutHeight = ResolveFlyoutLength(FlyoutHeight, availableSize.Height, false, Math.Max(1, bottom));
+            _currentFlyoutWidth = Math.Max(1, availableSize.Width);
+            _currentFlyoutHeight = Math.Max(1, availableSize.Height);
         }
 
         private Dictionary<DesktopFlyoutIsland, FoundationSize> GetIslandDesiredSizes((double Width, double Height) availableSize)

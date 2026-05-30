@@ -231,8 +231,9 @@
                         SelectedIndex="{x:Bind ViewModel.SelectedDraggablePopupPositionIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard
-                    Description="Sets FlyoutWidth. Use 0 for Auto."
-                    Header="Flyout width">
+                    Description="Sets FlyoutWidth for stack layout. Freeform uses the monitor width."
+                    Header="Flyout width"
+                    IsEnabled="{x:Bind ViewModel.IsDraggableFlyoutSizeEnabled, Mode=OneWay}">
                     <NumberBox
                         x:Name="DraggableFlyoutWidthNumberBox"
                         Width="150"
@@ -243,8 +244,9 @@
                         Value="{x:Bind ViewModel.DraggableFlyoutWidthValue, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard
-                    Description="Sets FlyoutHeight. Use 0 for Auto."
-                    Header="Flyout height">
+                    Description="Sets FlyoutHeight for stack layout. Freeform uses the monitor height."
+                    Header="Flyout height"
+                    IsEnabled="{x:Bind ViewModel.IsDraggableFlyoutSizeEnabled, Mode=OneWay}">
                     <NumberBox
                         x:Name="DraggableFlyoutHeightNumberBox"
                         Width="150"

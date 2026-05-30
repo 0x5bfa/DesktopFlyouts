@@ -71,7 +71,9 @@ namespace DesktopFlyouts
         /// <value>The desired flyout width. The default is <see cref="GridLength.Auto"/>.</value>
         /// <remarks>
         /// Use pixel, auto, or star sizing. Star sizing stretches to the available work-area width
-        /// after subtracting <see cref="FrameworkElement.Margin"/>.
+        /// after subtracting <see cref="FrameworkElement.Margin"/>. This value is ignored when
+        /// <see cref="IslandLayoutMode"/> is <see cref="DesktopFlyoutIslandLayoutMode.Freeform"/>;
+        /// freeform layout uses the monitor work-area width.
         /// </remarks>
         public GridLength FlyoutWidth
         {
@@ -91,7 +93,9 @@ namespace DesktopFlyouts
         /// <value>The desired flyout height. The default is <see cref="GridLength.Auto"/>.</value>
         /// <remarks>
         /// Use pixel, auto, or star sizing. Star sizing stretches to the available work-area height
-        /// after subtracting <see cref="FrameworkElement.Margin"/>.
+        /// after subtracting <see cref="FrameworkElement.Margin"/>. This value is ignored when
+        /// <see cref="IslandLayoutMode"/> is <see cref="DesktopFlyoutIslandLayoutMode.Freeform"/>;
+        /// freeform layout uses the monitor work-area height.
         /// </remarks>
         public GridLength FlyoutHeight
         {
@@ -114,6 +118,10 @@ namespace DesktopFlyouts
         /// Gets or sets how islands are arranged.
         /// </summary>
         /// <value>The orientation used to arrange <see cref="Islands"/> when <see cref="IslandLayoutMode"/> is <see cref="DesktopFlyoutIslandLayoutMode.Stack"/>. The default is <see cref="Orientation.Vertical"/>.</value>
+        /// <remarks>
+        /// This value is ignored when <see cref="IslandLayoutMode"/> is
+        /// <see cref="DesktopFlyoutIslandLayoutMode.Freeform"/>.
+        /// </remarks>
         [GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
         public partial Orientation IslandsOrientation { get; set; }
 
@@ -124,7 +132,7 @@ namespace DesktopFlyouts
         /// <remarks>
         /// <see cref="DesktopFlyoutIslandLayoutMode.Stack"/> arranges islands in a grid using
         /// <see cref="IslandsOrientation"/>. <see cref="DesktopFlyoutIslandLayoutMode.Freeform"/>
-        /// arranges islands on a canvas using each island's canvas position.
+        /// arranges islands on a monitor-sized canvas using each island's canvas position.
         /// </remarks>
         [GeneratedDependencyProperty(DefaultValue = DesktopFlyoutIslandLayoutMode.Stack)]
         public partial DesktopFlyoutIslandLayoutMode IslandLayoutMode { get; set; }
@@ -249,7 +257,12 @@ namespace DesktopFlyouts
         private static void OnFlyoutSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
         {
             if (dependencyObject is DesktopFlyout flyout)
+            {
+                if (flyout.IslandLayoutMode is DesktopFlyoutIslandLayoutMode.Freeform)
+                    return;
+
                 flyout.UpdateOpenFlyoutLayout();
+            }
         }
 
         private static void OnAutoCloseDelayPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
@@ -274,6 +287,9 @@ namespace DesktopFlyouts
         partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
             if (ReferenceEquals(e.NewValue, e.OldValue))
+                return;
+
+            if (IslandLayoutMode is DesktopFlyoutIslandLayoutMode.Freeform)
                 return;
 
             UpdateIslands();

@@ -62,6 +62,9 @@ namespace DesktopFlyouts
         internal partial int SelectedDraggableIslandLayoutModeIndex { get; set; } = 1;
 
         [ObservableProperty]
+        internal partial bool IsDraggableFlyoutSizeEnabled { get; set; }
+
+        [ObservableProperty]
         internal partial int SelectedDraggableDragModeIndex { get; set; } = 2;
 
         [ObservableProperty]
@@ -260,8 +263,15 @@ namespace DesktopFlyouts
 
         partial void OnSelectedDraggableIslandLayoutModeIndexChanged(int value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is DraggableFlyout flyout && TryGetValue(IslandLayoutModes, value, out var layoutMode))
+            if (!TryGetValue(IslandLayoutModes, value, out var layoutMode))
+                return;
+
+            IsDraggableFlyoutSizeEnabled = layoutMode is DesktopFlyoutIslandLayoutMode.Stack;
+            if (TrayIconManager.Default.DesktopFlyout is DraggableFlyout flyout)
+            {
                 flyout.IslandLayoutMode = layoutMode;
+                ApplyDraggableFlyoutSize(flyout);
+            }
         }
 
         partial void OnSelectedDraggableDragModeIndexChanged(int value)
@@ -279,13 +289,13 @@ namespace DesktopFlyouts
         partial void OnDraggableFlyoutWidthValueChanged(double value)
         {
             if (TrayIconManager.Default.DesktopFlyout is DraggableFlyout flyout)
-                flyout.FlyoutWidth = ToGridLength(value);
+                ApplyDraggableFlyoutSize(flyout);
         }
 
         partial void OnDraggableFlyoutHeightValueChanged(double value)
         {
             if (TrayIconManager.Default.DesktopFlyout is DraggableFlyout flyout)
-                flyout.FlyoutHeight = ToGridLength(value);
+                ApplyDraggableFlyoutSize(flyout);
         }
 
         partial void OnSelectedSeverityPopupPositionIndexChanged(int value)
@@ -377,11 +387,23 @@ namespace DesktopFlyouts
         private void ApplyDraggableFlyoutSettings(DraggableFlyout flyout)
         {
             ApplyPlacement(flyout, SelectedDraggablePopupPositionIndex);
-            ApplyFlyoutSize(flyout, DraggableFlyoutWidthValue, DraggableFlyoutHeightValue);
             if (TryGetValue(IslandLayoutModes, SelectedDraggableIslandLayoutModeIndex, out var layoutMode))
+            {
+                IsDraggableFlyoutSizeEnabled = layoutMode is DesktopFlyoutIslandLayoutMode.Stack;
                 flyout.IslandLayoutMode = layoutMode;
+            }
+
+            ApplyDraggableFlyoutSize(flyout);
             if (TryGetValue(DragModes, SelectedDraggableDragModeIndex, out var dragMode))
                 flyout.DragMode = dragMode;
+        }
+
+        private void ApplyDraggableFlyoutSize(DraggableFlyout flyout)
+        {
+            if (flyout.IslandLayoutMode is DesktopFlyoutIslandLayoutMode.Freeform)
+                return;
+
+            ApplyFlyoutSize(flyout, DraggableFlyoutWidthValue, DraggableFlyoutHeightValue);
         }
 
         private void ApplySeverityFlyoutSettings(SeverityFlyout flyout)
