@@ -1,0 +1,85 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DesktopFlyouts">
+
+    <Style BasedOn="{StaticResource DefaultWindows11DesktopFlyoutStyle}" TargetType="local:DesktopFlyout" />
+    <Style BasedOn="{StaticResource DefaultDesktopFlyoutIslandStyle}" TargetType="local:DesktopFlyoutIsland" />
+    <Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
+
+    <Style x:Key="DefaultWindows11DesktopFlyoutStyle" TargetType="local:DesktopFlyout">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="Margin" Value="12" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:DesktopFlyout">
+                    <Grid
+                        x:Name="PART_RootGrid"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        RenderTransformOrigin="0.5,0.5"
+                        TabFocusNavigation="Cycle">
+                        <Grid.RenderTransform>
+                            <CompositeTransform ScaleX="1" ScaleY="1" />
+                        </Grid.RenderTransform>
+                        <Grid
+                            x:Name="PART_IslandsGrid"
+                            ColumnSpacing="12"
+                            RowSpacing="12" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DefaultDesktopFlyoutIslandStyle" TargetType="local:DesktopFlyoutIsland">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:DesktopFlyoutIsland">
+                    <Grid
+                        Background="Transparent"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Translation="0,0,36">
+                        <Grid.Shadow>
+                            <ThemeShadow />
+                        </Grid.Shadow>
+                        <SystemBackdropElement CornerRadius="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.BackdropCornerRadius}" SystemBackdrop="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.SystemBackdrop}" />
+                        <Border Background="{TemplateBinding Background}" />
+                        <ContentPresenter
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DefaultWindows11DesktopMenuFlyoutStyle" TargetType="local:DesktopMenuFlyout">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:DesktopMenuFlyout">
+                    <Grid Background="Transparent">
+                        <Border x:Name="PART_MenuFlyoutTargetControl" Background="Transparent" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
