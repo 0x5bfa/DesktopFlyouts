@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 
@@ -33,8 +34,9 @@ namespace DesktopFlyouts
 
         private bool _created;
         private HICON _currentHIcon = default;
+        private bool _iconFromFile;
 
-        private string _IconPath;
+        private string? _IconPath;
 
         /// <summary>
         /// Gets or sets the path to the icon file.
@@ -42,13 +44,39 @@ namespace DesktopFlyouts
         /// <value>The path to an icon file loaded with the Win32 <c>LoadImage</c> API.</value>
         /// <remarks>
         /// Setting this property updates the existing tray icon immediately.
+        /// Setting this property clears <see cref="Icon"/>.
         /// </remarks>
-        public string IconPath
+        public string? IconPath
         {
             get => _IconPath;
             set
             {
                 _IconPath = value;
+                _Icon = default;
+                _iconFromFile = true;
+                Show();
+            }
+        }
+
+        private nint _Icon;
+
+        /// <summary>
+        /// Gets or sets the native icon handle.
+        /// </summary>
+        /// <value>A caller-owned icon handle. The handle is not destroyed by <see cref="SystemTrayIcon"/>.</value>
+        /// <remarks>
+        /// Setting this property updates the existing tray icon immediately.
+        /// Setting this property clears <see cref="IconPath"/>.
+        /// The caller must ensure the handle remains valid for the lifetime of the tray icon.
+        /// </remarks>
+        public nint Icon
+        {
+            get => _Icon;
+            set
+            {
+                _Icon = value;
+                _IconPath = null;
+                _iconFromFile = false;
                 Show();
             }
         }
@@ -155,6 +183,42 @@ namespace DesktopFlyouts
             _wndProc = new(WndProc);
 
             _IconPath = iconPath;
+            _iconFromFile = true;
+            _Tooltip = tooltip;
+            Id = id;
+            _IsVisible = isVisible;
+
+            WNDCLASSW wndClass = default;
+            wndClass.style = WNDCLASS_STYLES.CS_DBLCLKS;
+            wndClass.lpfnWndProc = (delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)Marshal.GetFunctionPointerForDelegate(_wndProc);
+            wndClass.hInstance = PInvoke.GetModuleHandle(null);
+            wndClass.lpszClassName = (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in TrayIconWindowClassName.GetPinnableReference()));
+            PInvoke.RegisterClass(&wndClass);
+
+            _hWnd = PInvoke.CreateWindowEx(
+                WINDOW_EX_STYLE.WS_EX_LEFT, (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in TrayIconWindowClassName.GetPinnableReference())),
+                null, WINDOW_STYLE.WS_OVERLAPPED, X: 0, Y: 0, nWidth: 1, nHeight: 1, HWND.Null, HMENU.Null, HINSTANCE.Null, null);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="SystemTrayIcon"/> with a native icon handle.
+        /// </summary>
+        /// <param name="hIcon">A caller-owned icon handle. The handle is not destroyed by <see cref="SystemTrayIcon"/>.</param>
+        /// <param name="tooltip">The tooltip text.</param>
+        /// <param name="id">The stable identifier for the tray icon.</param>
+        /// <param name="isVisible">Whether the tray icon is initially visible.</param>
+        /// <remarks>
+        /// Construction creates the hidden window that receives notification icon callbacks. Call
+        /// <see cref="Show"/> to add the icon to the shell notification area.
+        /// The caller must ensure the handle remains valid for the lifetime of the tray icon.
+        /// </remarks>
+        public SystemTrayIcon(nint hIcon, string tooltip, Guid id, bool isVisible = true)
+        {
+            _taskbarRestartMessageId = PInvoke.RegisterWindowMessage((PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in "TaskbarCreated".GetPinnableReference())));
+            _wndProc = new(WndProc);
+
+            _Icon = hIcon;
+            _iconFromFile = false;
             _Tooltip = tooltip;
             Id = id;
             _IsVisible = isVisible;
@@ -175,18 +239,37 @@ namespace DesktopFlyouts
         /// Displays the notification icon in the system tray, creating it if necessary or updating its appearance and tooltip if it already exists.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when <see cref="IconPath"/> cannot be loaded as an icon file.
+        /// Thrown when the icon cannot be loaded from <see cref="IconPath"/> or <see cref="Icon"/> is not a valid icon handle.
         /// </exception>
         public void Show()
         {
-            HICON hIcon = (HICON)(void*)PInvoke.LoadImage(
-                HINSTANCE.Null,
-                (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in IconPath.GetPinnableReference())),
-                GDI_IMAGE_TYPE.IMAGE_ICON,
-                cx: 0, cy: 0,
-                IMAGE_FLAGS.LR_LOADFROMFILE | IMAGE_FLAGS.LR_DEFAULTSIZE);
-            if (hIcon.IsNull)
-                throw new ArgumentOutOfRangeException(nameof(IconPath), $"LoadImage failed with 0x{Marshal.GetLastWin32Error():X8}");
+            HICON hIcon;
+            if (_iconFromFile)
+            {
+                hIcon = (HICON)(void*)PInvoke.LoadImage(
+                    HINSTANCE.Null,
+                    (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in IconPath!.GetPinnableReference())),
+                    GDI_IMAGE_TYPE.IMAGE_ICON,
+                    cx: 0, cy: 0,
+                    IMAGE_FLAGS.LR_LOADFROMFILE | IMAGE_FLAGS.LR_DEFAULTSIZE);
+                if (hIcon.IsNull)
+                    throw new ArgumentOutOfRangeException(nameof(IconPath), $"LoadImage failed with 0x{Marshal.GetLastWin32Error():X8}");
+            }
+            else
+            {
+                hIcon = (HICON)(void*)Icon;
+                if (hIcon.IsNull)
+                    throw new ArgumentOutOfRangeException(nameof(Icon), "Icon handle is null.");
+
+                ICONINFO iconInfo = default;
+                if (!PInvoke.GetIconInfo(hIcon, &iconInfo))
+                    throw new ArgumentOutOfRangeException(nameof(Icon), $"GetIconInfo failed with 0x{Marshal.GetLastWin32Error():X8}");
+
+                if ((nint)iconInfo.hbmColor != HBITMAP.Null)
+                    PInvoke.DeleteObject(iconInfo.hbmColor);
+                if ((nint)iconInfo.hbmMask != HBITMAP.Null)
+                    PInvoke.DeleteObject(iconInfo.hbmMask);
+            }
 
             NOTIFYICONDATAW data = default;
             data.cbSize = (uint)sizeof(NOTIFYICONDATAW);
@@ -237,7 +320,7 @@ namespace DesktopFlyouts
                 DestroyCurrentIcon();
                 _currentHIcon = hIcon;
             }
-            else
+            else if (_iconFromFile)
             {
                 PInvoke.DestroyIcon(hIcon);
             }
@@ -269,7 +352,7 @@ namespace DesktopFlyouts
 
         private void DestroyCurrentIcon()
         {
-            if (_currentHIcon.IsNull)
+            if (_currentHIcon.IsNull || !_iconFromFile)
                 return;
 
             PInvoke.DestroyIcon(_currentHIcon);

@@ -4,7 +4,7 @@
 
 The flyout controls do not require a tray icon. Use this type only when your app needs tray integration.
 
-## Basic usage
+## Basic usage (file path)
 
 ```csharp
 var trayIcon = new SystemTrayIcon(
@@ -16,6 +16,24 @@ trayIcon.LeftClicked += TrayIcon_LeftClicked;
 trayIcon.RightClicked += TrayIcon_RightClicked;
 trayIcon.Show();
 ```
+
+## Basic usage (native icon handle)
+
+Use the `nint` constructor overload to pass a caller-owned icon handle directly. This avoids shipping a separate `.ico` file when the icon is already embedded in the process executable.
+
+```csharp
+HINSTANCE hInstance = PInvoke.GetModuleHandle(null);
+nint hIcon = PInvoke.LoadIcon(hInstance, MAKEINTRESOURCE(32512)); // IDI_APPLICATION
+
+var trayIcon = new SystemTrayIcon(
+    hIcon: hIcon,
+    tooltip: "My app",
+    id: new Guid("00000000-0000-0000-0000-000000000000"));
+
+trayIcon.Show();
+```
+
+The caller must ensure the handle remains valid for the lifetime of the tray icon. `SystemTrayIcon` does not destroy borrowed handles.
 
 ## Click points
 
@@ -35,15 +53,23 @@ private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e
 
 ## Updating the icon
 
-Setting `IconPath`, `Tooltip`, or `IsVisible` updates the existing shell icon immediately.
+Setting `IconPath`, `Icon`, `Tooltip`, or `IsVisible` updates the existing shell icon immediately.
+
+`IconPath` loads from file and `Icon` accepts a native handle directly. The two properties are mutually exclusive — setting one clears the other.
 
 ```csharp
+// Switch to a file-based icon
+trayIcon.IconPath = "Assets/NewIcon.ico";
+
+// Switch to a native handle
+trayIcon.Icon = hIcon;
+
 trayIcon.Tooltip = "New tooltip";
 trayIcon.IsVisible = false;
 trayIcon.IsVisible = true;
 ```
 
-`IconPath` must point to an icon file that can be loaded by the Win32 `LoadImage` API. `Show()` throws `ArgumentOutOfRangeException` when the icon cannot be loaded.
+`IconPath` must point to an icon file that can be loaded by the Win32 `LoadImage` API. `Icon` must be a valid icon handle verified by `GetIconInfo`. `Show()` throws `ArgumentOutOfRangeException` when the icon is invalid.
 
 ## Cleanup
 

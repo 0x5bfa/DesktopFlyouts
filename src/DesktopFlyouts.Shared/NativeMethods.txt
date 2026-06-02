@@ -66,6 +66,7 @@ DeleteObject
 GetWindowLongPtr
 SetWindowLongPtr
 GetCursorPos
+GetIconInfo
 Shell_NotifyIconGetRect
 SHAppBarMessage
 MonitorFromRect
