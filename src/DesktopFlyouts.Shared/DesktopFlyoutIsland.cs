@@ -44,6 +44,7 @@ namespace DesktopFlyouts
         public DesktopFlyoutIsland()
         {
             DefaultStyleKey = typeof(DesktopFlyoutIsland);
+            RegisterPropertyChangedCallback(VisibilityProperty, (s, e) => ((DesktopFlyoutIsland)s).OnIslandVisibilityChanged());
             UpdateTemplateSettings();
         }
 
@@ -80,6 +81,12 @@ namespace DesktopFlyouts
         private void OnCornerRadiusChanged()
         {
             UpdateTemplateSettings();
+        }
+
+        private void OnIslandVisibilityChanged()
+        {
+            if (_owner is not null && _owner.TryGetTarget(out var owner))
+                owner.OnIslandVisibilityChanged();
         }
 
         private void UpdateTemplateSettings()

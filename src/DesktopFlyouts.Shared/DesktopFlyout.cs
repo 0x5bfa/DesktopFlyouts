@@ -329,32 +329,61 @@ namespace DesktopFlyouts
 
             if (IslandsOrientation is Orientation.Vertical)
             {
-                for (int index = 0; index < Islands.Count; index++)
+                var visibleIndex = 0;
+
+                for (var index = 0; index < Islands.Count; index++)
                 {
                     if (Islands[index] is not DesktopFlyoutIsland island)
                         continue;
 
-                    IslandsGrid.RowDefinitions.Add(new() { Height = island.IslandHeight });
-                    Grid.SetRow(island, index);
-                    Grid.SetColumn(island, 0);
                     island.SetOwner(this);
+
+                    if (IsIslandVisible(island))
+                    {
+                        IslandsGrid.RowDefinitions.Add(new() { Height = island.IslandHeight });
+                        Grid.SetRow(island, visibleIndex);
+                        visibleIndex++;
+                    }
+                    else
+                    {
+                        Grid.SetRow(island, 0);
+                    }
+
+                    Grid.SetColumn(island, 0);
                     IslandsGrid.Children.Add(island);
                 }
+
+                if (visibleIndex == 0 && IslandsGrid.Children.Count > 0)
+                    IslandsGrid.RowDefinitions.Add(new() { Height = new GridLength(0) });
             }
             else
             {
-                for (int index = 0; index < Islands.Count; index++)
-                {
+                var visibleIndex = 0;
 
+                for (var index = 0; index < Islands.Count; index++)
+                {
                     if (Islands[index] is not DesktopFlyoutIsland island)
                         continue;
 
-                    IslandsGrid.ColumnDefinitions.Add(new() { Width = island.IslandWidth });
-                    Grid.SetRow(island, 0);
-                    Grid.SetColumn(island, index);
                     island.SetOwner(this);
+
+                    if (IsIslandVisible(island))
+                    {
+                        IslandsGrid.ColumnDefinitions.Add(new() { Width = island.IslandWidth });
+                        Grid.SetColumn(island, visibleIndex);
+                        visibleIndex++;
+                    }
+                    else
+                    {
+                        Grid.SetColumn(island, 0);
+                    }
+
+                    Grid.SetRow(island, 0);
                     IslandsGrid.Children.Add(island);
                 }
+
+                if (visibleIndex == 0 && IslandsGrid.Children.Count > 0)
+                    IslandsGrid.ColumnDefinitions.Add(new() { Width = new GridLength(0) });
             }
         }
 
@@ -418,6 +447,12 @@ namespace DesktopFlyouts
             UpdateOpenFlyoutLayout();
         }
 
+        internal void OnIslandVisibilityChanged()
+        {
+            UpdateIslands();
+            UpdateOpenFlyoutLayout();
+        }
+
         private void UpdateOpenFlyoutLayout()
         {
             if (!IsOpen || _isPopupAnimationPlaying || RootGrid is null || _host?.DesktopWindowXamlSource is null)
@@ -467,7 +502,7 @@ namespace DesktopFlyouts
         {
             foreach (var item in Islands)
             {
-                if (item is DesktopFlyoutIsland island && island.IslandWidth.IsStar)
+                if (item is DesktopFlyoutIsland island && IsIslandVisible(island) && island.IslandWidth.IsStar)
                     return true;
             }
 
@@ -478,11 +513,16 @@ namespace DesktopFlyouts
         {
             foreach (var item in Islands)
             {
-                if (item is DesktopFlyoutIsland island && island.IslandHeight.IsStar)
+                if (item is DesktopFlyoutIsland island && IsIslandVisible(island) && island.IslandHeight.IsStar)
                     return true;
             }
 
             return false;
+        }
+
+        private static bool IsIslandVisible(DesktopFlyoutIsland island)
+        {
+            return island.Visibility is Visibility.Visible;
         }
 
         private void OpenAnimationStoryboard_Completed(object? sender, object e)
