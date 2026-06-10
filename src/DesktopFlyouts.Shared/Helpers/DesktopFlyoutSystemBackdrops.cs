@@ -55,45 +55,40 @@ namespace DesktopFlyouts
             if (!_targets.TryGetValue(target, out var state))
                 return;
 
-            ApplyConfiguration(state.Configuration, target, xamlRoot);
+            ApplyConfiguration(state.Configuration);
             state.Controller.SetSystemBackdropConfiguration(state.Configuration);
         }
 
         private SystemBackdropConfiguration CreateConfiguration(ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
         {
             var configuration = new SystemBackdropConfiguration();
-            ApplyConfiguration(configuration, target, xamlRoot);
+            ApplyConfiguration(configuration);
 
             return configuration;
         }
 
-        private void ApplyConfiguration(SystemBackdropConfiguration configuration, ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
+        private static void ApplyConfiguration(SystemBackdropConfiguration configuration)
         {
-            var defaultConfiguration = GetDefaultSystemBackdropConfiguration(target, xamlRoot);
-
-            configuration.Theme = defaultConfiguration.Theme;
             configuration.IsInputActive = true;
         }
 
         private sealed record TargetState(ISystemBackdropControllerWithTargets Controller, SystemBackdropConfiguration Configuration);
     }
 
-    internal sealed partial class DesktopFlyoutAcrylicBackdrop : DesktopFlyoutSystemBackdrop
+    internal sealed partial class DesktopFlyoutAcrylicBackdrop(bool useLightTheme) : DesktopFlyoutSystemBackdrop
     {
         protected override ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration)
         {
-            return BackdropControllerHelpers.GetAcrylicController(configuration.Theme);
+            return BackdropControllerHelpers.GetAcrylicController(useLightTheme);
         }
     }
 
-    internal sealed partial class DesktopFlyoutMicaBackdrop : DesktopFlyoutSystemBackdrop
+    internal sealed partial class DesktopFlyoutMicaBackdrop(bool useLightTheme) : DesktopFlyoutSystemBackdrop
     {
         protected override ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration)
         {
-            var controller = BackdropControllerHelpers.GetMicaController(configuration.Theme);
-            if (controller is not null)
-                controller.Kind = MicaKind.Base;
-
+            var controller = BackdropControllerHelpers.GetMicaController(useLightTheme);
+            controller?.Kind = MicaKind.Base;
             return controller;
         }
     }

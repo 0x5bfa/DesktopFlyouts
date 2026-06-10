@@ -123,7 +123,7 @@ namespace DesktopFlyouts
         internal void UpdateOwnerBackdrop()
         {
             TemplateSettings.SystemBackdrop = Owner is DesktopFlyout owner
-                ? owner.CreateIslandSystemBackdrop()
+                ? owner.CreateIslandSystemBackdrop(RequestedTheme)
                 : null;
         }
 
