@@ -175,7 +175,7 @@ namespace DesktopFlyouts
 
         partial void OnIconPathChanged(string? value)
         {
-            TrayIconManager.Default.SystemTrayIcon?.IconPath = value ?? string.Empty;
+            TrayIconManager.Default.SystemTrayIcon?.SetIcon(value ?? string.Empty);
         }
 
         partial void OnTooltipTextChanged(string? value)

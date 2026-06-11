@@ -108,7 +108,7 @@ namespace DesktopFlyouts
 
             SystemTrayIcon?.LeftClicked -= SystemTrayIcon_LeftClicked;
             SystemTrayIcon?.RightClicked -= SystemTrayIcon_RightClicked;
-            SystemTrayIcon?.Destroy();
+            SystemTrayIcon?.Dispose();
             DesktopFlyout?.Dispose();
             DesktopMenuFlyout?.Dispose();
 

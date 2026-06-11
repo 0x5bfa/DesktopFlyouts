@@ -47,6 +47,7 @@ Shell_NotifyIcon
 RegisterWindowMessage
 SetForegroundWindow
 LoadImage
+CopyIcon
 DestroyIcon
 GetDesktopWindow
 GetDpiForWindow
