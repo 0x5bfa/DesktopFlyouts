@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -183,7 +184,7 @@ namespace DesktopFlyouts
             _hIcon = PInvoke.CopyIcon((HICON)hIcon);
             if (_hIcon.IsNull)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetLastWin32Error());
+                throw new Win32Exception(Marshal.GetHRForLastWin32Error(), "Failed to copy icon.");
             }
 
             WNDCLASSW wndClass = default;
@@ -245,14 +246,14 @@ namespace DesktopFlyouts
         public void SetIcon(nint hIcon)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            HICON hICON = PInvoke.CopyIcon((HICON)hIcon);
-            if (hICON.IsNull)
+            HICON newIcon = PInvoke.CopyIcon((HICON)hIcon);
+            if (newIcon.IsNull)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetLastWin32Error());
+                throw new Win32Exception(Marshal.GetHRForLastWin32Error(), "Failed to copy icon.");
             }
             DeleteCurrentIcon();
             IconPath = null;
-            _hIcon = hICON;
+            _hIcon = newIcon;
             Update();
         }
 
@@ -457,11 +458,6 @@ namespace DesktopFlyouts
         {
             if (!_disposed)
             {
-                if (disposing)
-                {
-
-                }
-
                 Destroy();
                 DeleteCurrentIcon();
                 if (!_hWnd.IsNull)
