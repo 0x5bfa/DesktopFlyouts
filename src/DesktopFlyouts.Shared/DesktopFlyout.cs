@@ -155,15 +155,27 @@ namespace DesktopFlyouts
         }
 
 #if WASDK
-        internal SystemBackdrop? CreateIslandSystemBackdrop()
+        internal SystemBackdrop? CreateIslandSystemBackdrop(ElementTheme islandTheme)
         {
             if (!IsBackdropEnabled)
                 return null;
 
+            var useLightTheme = IsLightTheme(islandTheme);
+
             return BackdropKind switch
             {
-                DesktopFlyoutBackdropKind.Mica => new DesktopFlyoutMicaBackdrop(),
-                _ => new DesktopFlyoutAcrylicBackdrop(),
+                DesktopFlyoutBackdropKind.Mica => new DesktopFlyoutMicaBackdrop(useLightTheme),
+                _ => new DesktopFlyoutAcrylicBackdrop(useLightTheme),
+            };
+        }
+
+        private static bool IsLightTheme(ElementTheme theme)
+        {
+            return theme switch
+            {
+                ElementTheme.Light => true,
+                ElementTheme.Dark => false,
+                _ => GeneralHelpers.IsTaskbarLight(),
             };
         }
 #endif
@@ -814,6 +826,8 @@ namespace DesktopFlyouts
                 foreach (var island in Islands)
                     island.RequestedTheme = ElementTheme.Dark;
             }
+
+            UpdateIslandBackdrops();
         }
 
         private void UpdateIslandBackdrops()
