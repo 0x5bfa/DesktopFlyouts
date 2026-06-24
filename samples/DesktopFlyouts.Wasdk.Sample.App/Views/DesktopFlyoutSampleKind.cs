@@ -5,11 +5,14 @@ namespace DesktopFlyouts
 {
     internal enum DesktopFlyoutSampleKind
     {
+        /// <summary>
+        /// The customizable flyout. When selected, the flyout will be shown with all the features enabled and being customizable.
+        /// </summary>
+        Customizable,
+
         Button,
 
         IndicatorStyle,
-
-        Draggable,
 
         NotificationCenterStyle,
 

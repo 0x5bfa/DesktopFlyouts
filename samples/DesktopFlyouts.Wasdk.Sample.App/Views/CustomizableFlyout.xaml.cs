@@ -3,9 +3,9 @@
 
 namespace DesktopFlyouts
 {
-    public sealed partial class DraggableFlyout : DesktopFlyout
+    public sealed partial class CustomizableFlyout : DesktopFlyout
     {
-        public DraggableFlyout()
+        public CustomizableFlyout()
         {
             InitializeComponent();
         }

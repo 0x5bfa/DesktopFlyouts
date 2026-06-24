@@ -14,97 +14,52 @@ namespace DesktopFlyouts
     internal partial class RootViewModel : ObservableObject
     {
         [ObservableProperty]
+        internal partial bool IsModifiable { get; set; } = true;
+
+        [ObservableProperty]
         internal partial string? IconPath { get; set; }
 
         [ObservableProperty]
         internal partial string? TooltipText { get; set; }
 
         [ObservableProperty]
-        internal partial int SelectedPopupDirectionIndex { get; set; } = 5;
+        internal partial bool IsBackdropEnabled { get; set; }
 
         [ObservableProperty]
-        internal partial int SelectedButtonPopupPositionIndex { get; set; } = 5;
+        internal partial bool HideOnLostFocus { get; set; }
 
         [ObservableProperty]
-        internal partial double ButtonFlyoutWidthValue { get; set; } = 360D;
+        internal partial bool IsSwipeToDismissEnabled { get; set; }
 
         [ObservableProperty]
-        internal partial double ButtonFlyoutHeightValue { get; set; } = double.NaN;
-
-        [ObservableProperty]
-        internal partial bool IsSwipeToDismissEnabled { get; set; } = true;
+        internal partial bool IsDragMoveEnabled { get; set; }
 
         [ObservableProperty]
         internal partial double SwipeDismissThresholdValue { get; set; } = 80D;
 
         [ObservableProperty]
-        internal partial double PressedScaleValue { get; set; } = 0.9D;
+        internal partial int SelectedActivationModeIndex { get; set; }
 
         [ObservableProperty]
-        internal partial int SelectedActivationModeIndex { get; set; } = 2;
+        internal partial double AutoCloseDelaySecondsValue { get; set; }
 
         [ObservableProperty]
-        internal partial int SelectedIndicatorPopupPositionIndex { get; set; } = 4;
+        internal partial int SelectedPopupDirectionIndex { get; set; }
 
         [ObservableProperty]
-        internal partial double IndicatorFlyoutWidthValue { get; set; } = double.NaN;
-
-        [ObservableProperty]
-        internal partial double IndicatorFlyoutHeightValue { get; set; } = double.NaN;
-
-        [ObservableProperty]
-        internal partial double AutoCloseDelaySecondsValue { get; set; } = 1.5D;
-
-        [ObservableProperty]
-        internal partial bool HideOnLostFocus { get; set; } = true;
-
-        [ObservableProperty]
-        internal partial bool IsDragMoveEnabled { get; set; } = true;
-
-        [ObservableProperty]
-        internal partial int SelectedDraggablePopupPositionIndex { get; set; } = 4;
-
-        [ObservableProperty]
-        internal partial double DraggableFlyoutWidthValue { get; set; } = 360D;
-
-        [ObservableProperty]
-        internal partial double DraggableFlyoutHeightValue { get; set; } = double.NaN;
-
-        [ObservableProperty]
-        internal partial int SelectedSeverityPopupPositionIndex { get; set; } = 5;
-
-        [ObservableProperty]
-        internal partial double SeverityFlyoutWidthValue { get; set; } = 360D;
-
-        [ObservableProperty]
-        internal partial double SeverityFlyoutHeightValue { get; set; } = double.NaN;
-
-        [ObservableProperty]
-        internal partial bool IsBackdropEnabled { get; set; } = true;
-
-        [ObservableProperty]
-        internal partial int SelectedSystemBackdropIndex { get; set; } = 1;
+        internal partial int SelectedFlyoutPlacementIndex { get; set; }
 
         [ObservableProperty]
         internal partial int SelectedFlyoutExampleIndex { get; set; }
 
         [ObservableProperty]
-        internal partial string SelectedFlyoutDescription { get; set; } = string.Empty;
+        internal partial double FlyoutWidthValue { get; set; } = 360D;
 
         [ObservableProperty]
-        internal partial Visibility ButtonSettingsVisibility { get; set; } = Visibility.Visible;
+        internal partial double FlyoutHeightValue { get; set; } = double.NaN;
 
         [ObservableProperty]
-        internal partial Visibility IndicatorSettingsVisibility { get; set; } = Visibility.Collapsed;
-
-        [ObservableProperty]
-        internal partial Visibility DragMoveSettingsVisibility { get; set; } = Visibility.Collapsed;
-
-        [ObservableProperty]
-        internal partial Visibility SeveritySettingsVisibility { get; set; } = Visibility.Collapsed;
-
-        [ObservableProperty]
-        internal partial Visibility BackdropSettingsVisibility { get; set; } = Visibility.Collapsed;
+        internal partial int SelectedSystemBackdropIndex { get; set; }
 
         public Dictionary<DesktopFlyoutPopupDirection, string> PopupDirections { get; private set; } = [];
         public Dictionary<DesktopFlyoutPlacementMode, string> FlyoutPlacements { get; private set; } = [];
@@ -119,18 +74,23 @@ namespace DesktopFlyouts
             IconPath = TrayIconManager.Default.SystemTrayIcon?.IconPath;
             TooltipText = TrayIconManager.Default.SystemTrayIcon?.Tooltip;
 
+            IsBackdropEnabled = true;
+            HideOnLostFocus = true;
+
             ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
             ActivationModes.Add(DesktopFlyoutActivationMode.NoActivateOnOpen, "No activate on open");
             ActivationModes.Add(DesktopFlyoutActivationMode.NeverActivate, "Never activate");
+            SelectedActivationModeIndex = 0;
 
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.Customizable, "Default");
             FlyoutExamples.Add(DesktopFlyoutSampleKind.Button, "Button");
             FlyoutExamples.Add(DesktopFlyoutSampleKind.IndicatorStyle, "Indicator");
-            FlyoutExamples.Add(DesktopFlyoutSampleKind.Draggable, "Draggable");
             FlyoutExamples.Add(DesktopFlyoutSampleKind.NotificationCenterStyle, "Notification Center");
             FlyoutExamples.Add(DesktopFlyoutSampleKind.StartMenuStyle, "Start Menu");
-            FlyoutExamples.Add(DesktopFlyoutSampleKind.StickySmallStyle, "Sticky Small");
+            FlyoutExamples.Add(DesktopFlyoutSampleKind.StickySmallStyle, "Sticky small");
             FlyoutExamples.Add(DesktopFlyoutSampleKind.WidgetStyle, "Widget");
             FlyoutExamples.Add(DesktopFlyoutSampleKind.Severity, "Severity");
+            SelectedFlyoutExampleIndex = 0;
 
             PopupDirections.Add(DesktopFlyoutPopupDirection.Vertical, "Vertical");
             PopupDirections.Add(DesktopFlyoutPopupDirection.BottomToTop, "Bottom to top");
@@ -138,6 +98,7 @@ namespace DesktopFlyouts
             PopupDirections.Add(DesktopFlyoutPopupDirection.Horizontal, "Horizontal");
             PopupDirections.Add(DesktopFlyoutPopupDirection.LeftToRight, "Left to right");
             PopupDirections.Add(DesktopFlyoutPopupDirection.RightToLeft, "Right to left");
+            SelectedPopupDirectionIndex = 0;
 
             FlyoutPlacements.Add(DesktopFlyoutPlacementMode.TopLeft, "Top left");
             FlyoutPlacements.Add(DesktopFlyoutPlacementMode.TopCenter, "Top center");
@@ -147,20 +108,18 @@ namespace DesktopFlyouts
             FlyoutPlacements.Add(DesktopFlyoutPlacementMode.BottomRight, "Bottom right");
             FlyoutPlacements.Add(DesktopFlyoutPlacementMode.LeftCenter, "Left center");
             FlyoutPlacements.Add(DesktopFlyoutPlacementMode.RightCenter, "Right center");
+            SelectedFlyoutPlacementIndex = 5;
 
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica");
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.DesktopAcrylic, "Desktop Acrylic");
+            SelectedSystemBackdropIndex = 0;
 
             ToggleFlyoutOpenCommand = new RelayCommand(ExecuteToggleFlyoutOpenCommand);
-
-            UpdateSettingsVisibility(DesktopFlyoutSampleKind.Button);
-            UpdateSelectedFlyoutDescription(DesktopFlyoutSampleKind.Button);
-            ApplySelectedFlyoutSettings();
         }
 
         partial void OnIconPathChanged(string? value)
         {
-            TrayIconManager.Default.SystemTrayIcon?.SetIcon(value ?? string.Empty);
+            TrayIconManager.Default.SystemTrayIcon?.IconPath = value ?? string.Empty;
         }
 
         partial void OnTooltipTextChanged(string? value)
@@ -168,273 +127,117 @@ namespace DesktopFlyouts
             TrayIconManager.Default.SystemTrayIcon?.Tooltip = value ?? string.Empty;
         }
 
-        partial void OnSelectedPopupDirectionIndexChanged(int value)
+        partial void OnIsBackdropEnabledChanged(bool value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is ButtonFlyout flyout && TryGetValue(PopupDirections, value, out var popupDirection))
-                flyout.PopupDirection = popupDirection;
-        }
-
-        partial void OnSelectedButtonPopupPositionIndexChanged(int value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is ButtonFlyout flyout)
-                ApplyPlacement(flyout, value);
-        }
-
-        partial void OnButtonFlyoutWidthValueChanged(double value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is ButtonFlyout flyout)
-                flyout.FlyoutWidth = ToGridLength(value);
-        }
-
-        partial void OnButtonFlyoutHeightValueChanged(double value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is ButtonFlyout flyout)
-                flyout.FlyoutHeight = ToGridLength(value);
-        }
-
-        partial void OnIsSwipeToDismissEnabledChanged(bool value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is ButtonFlyout flyout)
-                flyout.IsSwipeToDismissEnabled = value;
-        }
-
-        partial void OnSwipeDismissThresholdValueChanged(double value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is ButtonFlyout flyout)
-                flyout.SwipeDismissThreshold = value;
-        }
-
-        partial void OnPressedScaleValueChanged(double value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is ButtonFlyout flyout)
-                flyout.PressedScale = value;
-        }
-
-        partial void OnSelectedActivationModeIndexChanged(int value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is IndicatorStyleFlyout flyout && TryGetValue(ActivationModes, value, out var activationMode))
-                flyout.ActivationMode = activationMode;
-        }
-
-        partial void OnSelectedIndicatorPopupPositionIndexChanged(int value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is IndicatorStyleFlyout flyout)
-                ApplyPlacement(flyout, value);
-        }
-
-        partial void OnIndicatorFlyoutWidthValueChanged(double value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is IndicatorStyleFlyout flyout)
-                flyout.FlyoutWidth = ToGridLength(value);
-        }
-
-        partial void OnIndicatorFlyoutHeightValueChanged(double value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is IndicatorStyleFlyout flyout)
-                flyout.FlyoutHeight = ToGridLength(value);
-        }
-
-        partial void OnAutoCloseDelaySecondsValueChanged(double value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is IndicatorStyleFlyout flyout)
-                flyout.AutoCloseDelay = ToAutoCloseDelay(value);
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout?.IsBackdropEnabled = value;
         }
 
         partial void OnHideOnLostFocusChanged(bool value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is IndicatorStyleFlyout flyout)
-                flyout.HideOnLostFocus = value;
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout?.HideOnLostFocus = value;
+        }
+
+        partial void OnIsSwipeToDismissEnabledChanged(bool value)
+        {
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout!.IsSwipeToDismissEnabled = value;
         }
 
         partial void OnIsDragMoveEnabledChanged(bool value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is DraggableFlyout flyout)
-                flyout.IsDragMoveEnabled = value;
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout!.IsDragMoveEnabled = value;
         }
 
-        partial void OnSelectedDraggablePopupPositionIndexChanged(int value)
+        partial void OnSwipeDismissThresholdValueChanged(double value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is DraggableFlyout flyout)
-                ApplyPlacement(flyout, value);
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout!.SwipeDismissThreshold = value;
         }
 
-        partial void OnDraggableFlyoutWidthValueChanged(double value)
+        partial void OnAutoCloseDelaySecondsValueChanged(double value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is DraggableFlyout flyout)
-                flyout.FlyoutWidth = ToGridLength(value);
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout!.AutoCloseDelay = ToAutoCloseDelay(value);
         }
 
-        partial void OnDraggableFlyoutHeightValueChanged(double value)
+        partial void OnSelectedActivationModeIndexChanged(int value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is DraggableFlyout flyout)
-                flyout.FlyoutHeight = ToGridLength(value);
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout!.ActivationMode = ActivationModes.ElementAt(value).Key;
         }
 
-        partial void OnSelectedSeverityPopupPositionIndexChanged(int value)
+        partial void OnSelectedPopupDirectionIndexChanged(int value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is SeverityFlyout flyout)
-                ApplyPlacement(flyout, value);
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout?.PopupDirection = PopupDirections.ElementAt(value).Key;
         }
 
-        partial void OnSeverityFlyoutWidthValueChanged(double value)
+        partial void OnSelectedFlyoutPlacementIndexChanged(int value)
         {
-            if (TrayIconManager.Default.DesktopFlyout is SeverityFlyout flyout)
-                flyout.FlyoutWidth = ToGridLength(value);
-        }
-
-        partial void OnSeverityFlyoutHeightValueChanged(double value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is SeverityFlyout flyout)
-                flyout.FlyoutHeight = ToGridLength(value);
-        }
-
-        partial void OnIsBackdropEnabledChanged(bool value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is WidgetStyleFlyout flyout)
-                flyout.IsBackdropEnabled = value;
-        }
-
-        partial void OnSelectedSystemBackdropIndexChanged(int value)
-        {
-            if (TrayIconManager.Default.DesktopFlyout is WidgetStyleFlyout flyout && TryGetValue(SystemBackdrops, value, out var backdropKind))
-                flyout.BackdropKind = backdropKind;
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout?.Placement = FlyoutPlacements.ElementAt(value).Key;
         }
 
         partial void OnSelectedFlyoutExampleIndexChanged(int value)
         {
-            if (!TryGetValue(FlyoutExamples, value, out var flyoutKind))
-                return;
+            var flyoutKind = FlyoutExamples.ElementAt(value).Key;
 
             TrayIconManager.Default.SwitchFlyout(flyoutKind);
-            UpdateSettingsVisibility(flyoutKind);
-            UpdateSelectedFlyoutDescription(flyoutKind);
-            ApplySelectedFlyoutSettings();
-        }
-
-        private void ApplySelectedFlyoutSettings()
-        {
-            switch (TrayIconManager.Default.DesktopFlyout)
+            if (flyoutKind is DesktopFlyoutSampleKind.Customizable)
             {
-                case ButtonFlyout flyout:
-                    ApplyButtonFlyoutSettings(flyout);
-                    break;
-                case IndicatorStyleFlyout flyout:
-                    ApplyIndicatorFlyoutSettings(flyout);
-                    break;
-                case DraggableFlyout flyout:
-                    ApplyDraggableFlyoutSettings(flyout);
-                    break;
-                case SeverityFlyout flyout:
-                    ApplySeverityFlyoutSettings(flyout);
-                    break;
-                case WidgetStyleFlyout flyout:
-                    ApplyWidgetFlyoutSettings(flyout);
-                    break;
+                IsModifiable = true;
+                ApplyDefaultFlyoutSettings();
+            }
+            else
+            {
+                IsModifiable = false;
             }
         }
 
-        private void ApplyButtonFlyoutSettings(ButtonFlyout flyout)
+        partial void OnSelectedSystemBackdropIndexChanged(int value)
         {
-            if (TryGetValue(PopupDirections, SelectedPopupDirectionIndex, out var popupDirection))
-                flyout.PopupDirection = popupDirection;
-
-            ApplyPlacement(flyout, SelectedButtonPopupPositionIndex);
-            ApplyFlyoutSize(flyout, ButtonFlyoutWidthValue, ButtonFlyoutHeightValue);
-            flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
-            flyout.SwipeDismissThreshold = SwipeDismissThresholdValue;
-            flyout.PressedScale = PressedScaleValue;
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout!.BackdropKind = SystemBackdrops.ElementAt(value).Key;
         }
 
-        private void ApplyIndicatorFlyoutSettings(IndicatorStyleFlyout flyout)
+        partial void OnFlyoutWidthValueChanged(double value)
         {
-            if (TryGetValue(ActivationModes, SelectedActivationModeIndex, out var activationMode))
-                flyout.ActivationMode = activationMode;
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout!.FlyoutWidth = ToGridLength(value);
+        }
 
-            ApplyPlacement(flyout, SelectedIndicatorPopupPositionIndex);
-            ApplyFlyoutSize(flyout, IndicatorFlyoutWidthValue, IndicatorFlyoutHeightValue);
+        partial void OnFlyoutHeightValueChanged(double value)
+        {
+            if (IsDefaultFlyoutSelected())
+                TrayIconManager.Default.DesktopFlyout!.FlyoutHeight = ToGridLength(value);
+        }
+
+        private void ApplyDefaultFlyoutSettings()
+        {
+            if (!IsDefaultFlyoutSelected())
+                return;
+
+            var flyout = TrayIconManager.Default.DesktopFlyout!;
+            flyout.BackdropKind = SystemBackdrops.ElementAt(SelectedSystemBackdropIndex).Key;
+            flyout.FlyoutHeight = ToGridLength(FlyoutHeightValue);
+            flyout.FlyoutWidth = ToGridLength(FlyoutWidthValue);
             flyout.AutoCloseDelay = ToAutoCloseDelay(AutoCloseDelaySecondsValue);
+            flyout.ActivationMode = ActivationModes.ElementAt(SelectedActivationModeIndex).Key;
             flyout.HideOnLostFocus = HideOnLostFocus;
-        }
-
-        private void ApplyDraggableFlyoutSettings(DraggableFlyout flyout)
-        {
-            ApplyPlacement(flyout, SelectedDraggablePopupPositionIndex);
-            ApplyFlyoutSize(flyout, DraggableFlyoutWidthValue, DraggableFlyoutHeightValue);
+            flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
             flyout.IsDragMoveEnabled = IsDragMoveEnabled;
-        }
-
-        private void ApplySeverityFlyoutSettings(SeverityFlyout flyout)
-        {
-            ApplyPlacement(flyout, SelectedSeverityPopupPositionIndex);
-            ApplyFlyoutSize(flyout, SeverityFlyoutWidthValue, SeverityFlyoutHeightValue);
-        }
-
-        private void ApplyWidgetFlyoutSettings(WidgetStyleFlyout flyout)
-        {
-            if (TryGetValue(SystemBackdrops, SelectedSystemBackdropIndex, out var backdropKind))
-                flyout.BackdropKind = backdropKind;
-
+            flyout.SwipeDismissThreshold = SwipeDismissThresholdValue;
             flyout.IsBackdropEnabled = IsBackdropEnabled;
+            flyout.Placement = FlyoutPlacements.ElementAt(SelectedFlyoutPlacementIndex).Key;
+            flyout.PopupDirection = PopupDirections.ElementAt(SelectedPopupDirectionIndex).Key;
         }
 
-        private void ApplyPlacement(DesktopFlyout flyout, int placementIndex)
+        private static bool IsDefaultFlyoutSelected()
         {
-            if (TryGetValue(FlyoutPlacements, placementIndex, out var placement))
-                flyout.Placement = placement;
-        }
-
-        private static void ApplyFlyoutSize(DesktopFlyout flyout, double width, double height)
-        {
-            flyout.FlyoutWidth = ToGridLength(width);
-            flyout.FlyoutHeight = ToGridLength(height);
-        }
-
-        private void UpdateSettingsVisibility(DesktopFlyoutSampleKind flyoutKind)
-        {
-            ButtonSettingsVisibility = flyoutKind is DesktopFlyoutSampleKind.Button
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            IndicatorSettingsVisibility = flyoutKind is DesktopFlyoutSampleKind.IndicatorStyle
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            DragMoveSettingsVisibility = flyoutKind is DesktopFlyoutSampleKind.Draggable
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            SeveritySettingsVisibility = flyoutKind is DesktopFlyoutSampleKind.Severity
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            BackdropSettingsVisibility = flyoutKind is DesktopFlyoutSampleKind.WidgetStyle
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-        }
-
-        private void UpdateSelectedFlyoutDescription(DesktopFlyoutSampleKind flyoutKind)
-        {
-            SelectedFlyoutDescription = flyoutKind switch
-            {
-                DesktopFlyoutSampleKind.Button => "Demonstrates swipe-to-dismiss, swipe threshold, pressed scale, popup direction, position, and size.",
-                DesktopFlyoutSampleKind.IndicatorStyle => "Demonstrates activation behavior, hide-on-focus-loss behavior, auto close, position, and size.",
-                DesktopFlyoutSampleKind.Draggable => "Demonstrates moving an open flyout by dragging its desktop host window.",
-                DesktopFlyoutSampleKind.NotificationCenterStyle => "Shows a full-height notification-center style layout.",
-                DesktopFlyoutSampleKind.StartMenuStyle => "Shows a multi-island Start menu style layout.",
-                DesktopFlyoutSampleKind.StickySmallStyle => "Shows a compact flyout opened near the tray icon point.",
-                DesktopFlyoutSampleKind.WidgetStyle => "Demonstrates island backdrop enablement and backdrop material selection.",
-                DesktopFlyoutSampleKind.Severity => "Shows semantic island styling with configurable position and size.",
-                _ => string.Empty,
-            };
-        }
-
-        private static bool TryGetValue<TKey>(Dictionary<TKey, string> items, int index, out TKey key)
-            where TKey : notnull
-        {
-            if (index < 0 || index >= items.Count)
-            {
-                key = default!;
-                return false;
-            }
-
-            key = items.ElementAt(index).Key;
-            return true;
+            return TrayIconManager.Default.DesktopFlyout is CustomizableFlyout;
         }
 
         private static GridLength ToGridLength(double value)

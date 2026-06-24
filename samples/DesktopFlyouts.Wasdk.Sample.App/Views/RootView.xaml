@@ -21,17 +21,13 @@
                     Margin="4,0"
                     Style="{StaticResource BodyStrongTextBlockStyle}"
                     Text="Tray settings" />
-                <wctcontrols:SettingsCard
-                    Description="Sets the tray icon image path."
-                    Header="Icon path">
+                <wctcontrols:SettingsCard Header="Icon path">
                     <TextBox
                         Width="300"
                         PlaceholderText="Enter path to the icon"
                         Text="{x:Bind ViewModel.IconPath, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets the tray icon tooltip text."
-                    Header="Tooltip">
+                <wctcontrols:SettingsCard Header="Tooltip">
                     <TextBox
                         Width="300"
                         PlaceholderText="Enter the tooltip text"
@@ -43,262 +39,99 @@
                 <TextBlock
                     Margin="4,0"
                     Style="{StaticResource BodyStrongTextBlockStyle}"
-                    Text="Flyout examples" />
-                <wctcontrols:SettingsCard
-                    Description="{x:Bind ViewModel.SelectedFlyoutDescription, Mode=OneWay}"
-                    Header="Flyout example">
+                    Text="Flyout settings" />
+                <wctcontrols:SettingsCard Header="Flyout example">
                     <ComboBox
                         Width="150"
                         ItemsSource="{x:Bind ViewModel.FlyoutExamples.Values}"
                         SelectedIndex="{x:Bind ViewModel.SelectedFlyoutExampleIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Opens or closes the selected flyout."
-                    Header="Flyout state">
+                <wctcontrols:SettingsCard Header="Flyout state">
                     <Button
                         Width="150"
                         Command="{x:Bind ViewModel.ToggleFlyoutOpenCommand}"
                         Content="Toggle open" />
                 </wctcontrols:SettingsCard>
-            </StackPanel>
-
-            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.ButtonSettingsVisibility, Mode=OneWay}">
-                <TextBlock
-                    Margin="4,0"
-                    Style="{StaticResource BodyStrongTextBlockStyle}"
-                    Text="Button settings" />
-                <wctcontrols:SettingsCard
-                    Description="Controls the transition direction."
-                    Header="Popup direction">
+                <wctcontrols:SettingsCard Header="Popup direction">
                     <ComboBox
                         Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         ItemsSource="{x:Bind ViewModel.PopupDirections.Values}"
                         SelectedIndex="{x:Bind ViewModel.SelectedPopupDirectionIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Controls where Show places the flyout."
-                    Header="Popup position">
+                <wctcontrols:SettingsCard Header="Enable backdrop">
+                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Placement">
                     <ComboBox
                         Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedButtonPopupPositionIndex, Mode=TwoWay}" />
+                        SelectedIndex="{x:Bind ViewModel.SelectedFlyoutPlacementIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets FlyoutWidth. Use 0 for Auto."
-                    Header="Flyout width">
+                <wctcontrols:SettingsCard Header="Flyout width">
                     <NumberBox
-                        x:Name="ButtonFlyoutWidthNumberBox"
+                        x:Name="FlyoutWidthNumberBox"
                         Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         Minimum="0"
                         PlaceholderText="Auto"
                         SmallChange="16"
                         SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.ButtonFlyoutWidthValue, Mode=TwoWay}" />
+                        Value="{x:Bind ViewModel.FlyoutWidthValue, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets FlyoutHeight. Use 0 for Auto."
-                    Header="Flyout height">
+                <wctcontrols:SettingsCard Header="Flyout height">
                     <NumberBox
-                        x:Name="ButtonFlyoutHeightNumberBox"
+                        x:Name="FlyoutHeightNumberBox"
                         Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         Minimum="0"
                         PlaceholderText="Auto"
                         SmallChange="16"
                         SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.ButtonFlyoutHeightValue, Mode=TwoWay}" />
+                        Value="{x:Bind ViewModel.FlyoutHeightValue, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Enables drag gestures that dismiss the flyout."
-                    Header="Swipe to dismiss">
-                    <ToggleSwitch IsOn="{x:Bind ViewModel.IsSwipeToDismissEnabled, Mode=TwoWay}" />
+                <wctcontrols:SettingsCard Header="Hide on losing focus">
+                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets the swipe distance needed to dismiss."
-                    Header="Swipe dismiss threshold">
+                <wctcontrols:SettingsCard Header="Swipe to dismiss">
+                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsSwipeToDismissEnabled, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Drag move">
+                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsDragMoveEnabled, Mode=TwoWay}" />
+                </wctcontrols:SettingsCard>
+                <wctcontrols:SettingsCard Header="Swipe dismiss threshold">
                     <NumberBox
                         x:Name="SwipeDismissThresholdNumberBox"
                         Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         Minimum="1"
                         SmallChange="8"
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModel.SwipeDismissThresholdValue, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Scales the flyout while it is pressed."
-                    Header="Pressed scale">
-                    <NumberBox
-                        x:Name="PressedScaleNumberBox"
-                        Width="150"
-                        Maximum="2"
-                        Minimum="0.1"
-                        SmallChange="0.05"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.PressedScaleValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-            </StackPanel>
-
-            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IndicatorSettingsVisibility, Mode=OneWay}">
-                <TextBlock
-                    Margin="4,0"
-                    Style="{StaticResource BodyStrongTextBlockStyle}"
-                    Text="Indicator settings" />
-                <wctcontrols:SettingsCard
-                    Description="Controls how the flyout participates in activation."
-                    Header="Activation mode">
+                <wctcontrols:SettingsCard Header="Activation mode">
                     <ComboBox
-                        Width="180"
+                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         ItemsSource="{x:Bind ViewModel.ActivationModes.Values}"
                         SelectedIndex="{x:Bind ViewModel.SelectedActivationModeIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Controls where Show places the flyout."
-                    Header="Popup position">
-                    <ComboBox
-                        Width="150"
-                        ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedIndicatorPopupPositionIndex, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets FlyoutWidth. Use 0 for Auto."
-                    Header="Flyout width">
-                    <NumberBox
-                        x:Name="IndicatorFlyoutWidthNumberBox"
-                        Width="150"
-                        Minimum="0"
-                        PlaceholderText="Auto"
-                        SmallChange="16"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.IndicatorFlyoutWidthValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets FlyoutHeight. Use 0 for Auto."
-                    Header="Flyout height">
-                    <NumberBox
-                        x:Name="IndicatorFlyoutHeightNumberBox"
-                        Width="150"
-                        Minimum="0"
-                        PlaceholderText="Auto"
-                        SmallChange="16"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.IndicatorFlyoutHeightValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Closes the flyout after the selected delay."
-                    Header="Auto close delay">
+                <wctcontrols:SettingsCard Header="Auto close delay">
                     <NumberBox
                         x:Name="AutoCloseDelayNumberBox"
                         Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         Minimum="0"
                         PlaceholderText="Off"
                         SmallChange="0.5"
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModel.AutoCloseDelaySecondsValue, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Closes when another window receives focus."
-                    Header="Hide on losing focus">
-                    <ToggleSwitch IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-            </StackPanel>
-
-            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.DragMoveSettingsVisibility, Mode=OneWay}">
-                <TextBlock
-                    Margin="4,0"
-                    Style="{StaticResource BodyStrongTextBlockStyle}"
-                    Text="Draggable settings" />
-                <wctcontrols:SettingsCard
-                    Description="Lets the cursor drag the flyout window."
-                    Header="Drag move">
-                    <ToggleSwitch IsOn="{x:Bind ViewModel.IsDragMoveEnabled, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Controls where Show places the flyout."
-                    Header="Popup position">
+                <wctcontrols:SettingsCard Header="System backdrop">
                     <ComboBox
                         Width="150"
-                        ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedDraggablePopupPositionIndex, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets FlyoutWidth. Use 0 for Auto."
-                    Header="Flyout width">
-                    <NumberBox
-                        x:Name="DraggableFlyoutWidthNumberBox"
-                        Width="150"
-                        Minimum="0"
-                        PlaceholderText="Auto"
-                        SmallChange="16"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.DraggableFlyoutWidthValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets FlyoutHeight. Use 0 for Auto."
-                    Header="Flyout height">
-                    <NumberBox
-                        x:Name="DraggableFlyoutHeightNumberBox"
-                        Width="150"
-                        Minimum="0"
-                        PlaceholderText="Auto"
-                        SmallChange="16"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.DraggableFlyoutHeightValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-            </StackPanel>
-
-            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.SeveritySettingsVisibility, Mode=OneWay}">
-                <TextBlock
-                    Margin="4,0"
-                    Style="{StaticResource BodyStrongTextBlockStyle}"
-                    Text="Severity settings" />
-                <wctcontrols:SettingsCard
-                    Description="Controls where Show places the flyout."
-                    Header="Popup position">
-                    <ComboBox
-                        Width="150"
-                        ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedSeverityPopupPositionIndex, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets FlyoutWidth. Use 0 for Auto."
-                    Header="Flyout width">
-                    <NumberBox
-                        x:Name="SeverityFlyoutWidthNumberBox"
-                        Width="150"
-                        Minimum="0"
-                        PlaceholderText="Auto"
-                        SmallChange="16"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.SeverityFlyoutWidthValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Sets FlyoutHeight. Use 0 for Auto."
-                    Header="Flyout height">
-                    <NumberBox
-                        x:Name="SeverityFlyoutHeightNumberBox"
-                        Width="150"
-                        Minimum="0"
-                        PlaceholderText="Auto"
-                        SmallChange="16"
-                        SpinButtonPlacementMode="Inline"
-                        Value="{x:Bind ViewModel.SeverityFlyoutHeightValue, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-            </StackPanel>
-
-            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.BackdropSettingsVisibility, Mode=OneWay}">
-                <TextBlock
-                    Margin="4,0"
-                    Style="{StaticResource BodyStrongTextBlockStyle}"
-                    Text="Widget settings" />
-                <wctcontrols:SettingsCard
-                    Description="Turns island backdrops on or off."
-                    Header="Enable backdrop">
-                    <ToggleSwitch IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard
-                    Description="Chooses the backdrop material."
-                    Header="System backdrop">
-                    <ComboBox
-                        Width="150"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         ItemsSource="{x:Bind ViewModel.SystemBackdrops.Values}"
                         SelectedIndex="{x:Bind ViewModel.SelectedSystemBackdropIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
