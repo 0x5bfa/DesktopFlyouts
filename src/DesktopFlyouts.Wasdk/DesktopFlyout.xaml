@@ -35,10 +35,15 @@
                                 TranslateY="0" />
                         </Grid.RenderTransform>
 
-                        <Grid
-                            x:Name="PART_IslandsGrid"
-                            ColumnSpacing="12"
-                            RowSpacing="12" />
+                        <ItemsControl
+                            x:Name="PART_IslandsItemsControl"
+                            IsTabStop="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <local:DesktopFlyoutIslandsPanel Spacing="12" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

@@ -45,7 +45,7 @@ namespace DesktopFlyouts
     public partial class DesktopFlyout : Control, IDisposable
     {
         private const string PART_RootGrid = "PART_RootGrid";
-        private const string PART_IslandsGrid = "PART_IslandsGrid";
+        private const string PART_IslandsItemsControl = "PART_IslandsItemsControl";
         private const double SwipeDismissDragStartThreshold = 4.0D;
         private const double SwipeDismissAxisDominanceRatio = 1.2D;
 
@@ -70,7 +70,7 @@ namespace DesktopFlyouts
         private bool _disposed;
 
         private Grid? RootGrid;
-        private Grid? IslandsGrid;
+        private ItemsControl? IslandsItemsControl;
 
         /// <summary>
         /// Initializes a new instance of <see cref="DesktopFlyout"/>.
@@ -101,11 +101,14 @@ namespace DesktopFlyouts
             RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
             RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
             RootGrid?.PointerExited -= RootGrid_PointerExited;
+            if (IslandsItemsControl is not null)
+                IslandsItemsControl.ItemsSource = null;
 
             RootGrid = GetTemplateChild(PART_RootGrid) as Grid
                 ?? throw new MissingFieldException($"Could not find {PART_RootGrid} in the given {nameof(DesktopFlyout)}'s style.");
-            IslandsGrid = GetTemplateChild(PART_IslandsGrid) as Grid
-                ?? throw new MissingFieldException($"Could not find {PART_IslandsGrid} in the given {nameof(DesktopFlyout)}'s style.");
+            IslandsItemsControl = GetTemplateChild(PART_IslandsItemsControl) as ItemsControl
+                ?? throw new MissingFieldException($"Could not find {PART_IslandsItemsControl} in the given {nameof(DesktopFlyout)}'s style.");
+            IslandsItemsControl.ItemsSource = Islands;
 
             EnsureRootTransform();
 
@@ -320,76 +323,21 @@ namespace DesktopFlyouts
 
         private void UpdateIslands()
         {
-            if (IslandsGrid is null)
+            if (IslandsItemsControl is null)
                 return;
 
-            IslandsGrid.Children.Clear();
-            IslandsGrid.RowDefinitions.Clear();
-            IslandsGrid.ColumnDefinitions.Clear();
-
-            if (IslandsOrientation is Orientation.Vertical)
+            for (var index = 0; index < Islands.Count; index++)
             {
-                var visibleIndex = 0;
-
-                for (var index = 0; index < Islands.Count; index++)
-                {
-                    if (Islands[index] is not DesktopFlyoutIsland island)
-                        continue;
-
+                if (Islands[index] is DesktopFlyoutIsland island)
                     island.SetOwner(this);
-
-                    if (IsIslandVisible(island))
-                    {
-                        IslandsGrid.RowDefinitions.Add(new() { Height = island.IslandHeight });
-                        Grid.SetRow(island, visibleIndex);
-                        visibleIndex++;
-                    }
-                    else
-                    {
-                        Grid.SetRow(island, 0);
-                    }
-
-                    Grid.SetColumn(island, 0);
-                    IslandsGrid.Children.Add(island);
-                }
-
-                if (visibleIndex == 0 && IslandsGrid.Children.Count > 0)
-                    IslandsGrid.RowDefinitions.Add(new() { Height = new GridLength(0) });
             }
-            else
-            {
-                var visibleIndex = 0;
 
-                for (var index = 0; index < Islands.Count; index++)
-                {
-                    if (Islands[index] is not DesktopFlyoutIsland island)
-                        continue;
-
-                    island.SetOwner(this);
-
-                    if (IsIslandVisible(island))
-                    {
-                        IslandsGrid.ColumnDefinitions.Add(new() { Width = island.IslandWidth });
-                        Grid.SetColumn(island, visibleIndex);
-                        visibleIndex++;
-                    }
-                    else
-                    {
-                        Grid.SetColumn(island, 0);
-                    }
-
-                    Grid.SetRow(island, 0);
-                    IslandsGrid.Children.Add(island);
-                }
-
-                if (visibleIndex == 0 && IslandsGrid.Children.Count > 0)
-                    IslandsGrid.ColumnDefinitions.Add(new() { Width = new GridLength(0) });
-            }
+            IslandsItemsControl.InvalidateMeasure();
         }
 
         private DesktopFlyoutPopupDirection UpdateFlyoutRegion()
         {
-            if (_host?.DesktopWindowXamlSource is null || IslandsGrid is null)
+            if (_host?.DesktopWindowXamlSource is null || IslandsItemsControl is null)
                 return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint));
 
             var customBottomCenterPoint = _customPlacementBottomCenterPoint;
@@ -1314,6 +1262,8 @@ namespace DesktopFlyouts
             RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
             RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
             RootGrid?.PointerExited -= RootGrid_PointerExited;
+            if (IslandsItemsControl is not null)
+                IslandsItemsControl.ItemsSource = null;
 
             if (_isFocusManagerGettingFocusSubscribed)
             {

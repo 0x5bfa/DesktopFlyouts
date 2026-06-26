@@ -10,27 +10,43 @@
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland IslandHeight="*">
-            <Button
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Content="Button">
-                <Button.Flyout>
-                    <MenuFlyout>
-                        <MenuFlyoutItem Text="A" />
-                        <MenuFlyoutItem Text="A" />
-                        <MenuFlyoutItem Text="A" />
-                    </MenuFlyout>
-                </Button.Flyout>
-            </Button>
+        <local:DesktopFlyoutIsland x:Name="FirstIsland" IslandHeight="*">
+            <Grid>
+                <Button
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Content="Button">
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Text="A" />
+                            <MenuFlyoutItem Text="A" />
+                            <MenuFlyoutItem Text="A" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+                <Button
+                    Margin="12"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Click="CollapseFirstIslandButton_Click"
+                    Content="Collapse" />
+            </Grid>
         </local:DesktopFlyoutIsland>
-        <local:DesktopFlyoutIsland IslandHeight="300">
-            <TextBlock
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Text="Island 2" />
+        <local:DesktopFlyoutIsland x:Name="SecondIsland" IslandHeight="300">
+            <Grid>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Text="Island 2" />
+                <Button
+                    Margin="12"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Click="CollapseSecondIslandButton_Click"
+                    Content="Collapse" />
+            </Grid>
         </local:DesktopFlyoutIsland>
-        <local:DesktopFlyoutIsland IslandHeight="300">
+        <local:DesktopFlyoutIsland x:Name="ThirdIsland" IslandHeight="300">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -71,6 +87,14 @@
                         Content="Learn more" />
                     <CalendarDatePicker />
                 </StackPanel>
+
+                <Button
+                    Grid.Row="4"
+                    Margin="6,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Click="CollapseThirdIslandButton_Click"
+                    Content="Collapse" />
 
                 <Button
                     Grid.Row="4"

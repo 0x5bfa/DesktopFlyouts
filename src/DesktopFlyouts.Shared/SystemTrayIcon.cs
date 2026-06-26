@@ -24,7 +24,7 @@ namespace DesktopFlyouts
     /// <see cref="Destroy"/> to remove it. Call <see cref="Dispose()"/> explicitly when the object
     /// is no longer needed to release its owned resources.
     /// </remarks>
-    public partial class SystemTrayIcon : IDisposable
+    public unsafe partial class SystemTrayIcon : IDisposable
     {
         private const uint WM_UNIQUE_MESSAGE = 2048U;
 
