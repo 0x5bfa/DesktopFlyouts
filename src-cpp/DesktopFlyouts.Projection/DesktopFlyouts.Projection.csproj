@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net9.0-windows$(TargetWindowsVersion);net10.0-windows$(TargetWindowsVersion)</TargetFrameworks>
+		<NoWarn>$(NoWarn);NU5104</NoWarn>
+		<!--<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>-->
+		<CsWinRTIncludes>DesktopFlyouts</CsWinRTIncludes>
+
+        <Deterministic>true</Deterministic>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <DebugType>portable</DebugType>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <PackageId>DesktopFlyouts.WinUI</PackageId>
+        <Title>DesktopFlyouts.WinUI</Title>
+        <Authors>0x5BFA</Authors>
+        <Version>1.3.0</Version>
+        <Description>WinUI library for showing desktop flyouts from tray icons or programmatically.</Description>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/0x5bfa/DesktopFlyouts</RepositoryUrl>
+        <PackageTags>Shell System TrayIcon DesktopFlyouts DesktopFlyout UWP WinUI MUX WASDK WindowsAppSDK Windows</PackageTags>
+        <PackageIcon>icon-128.png</PackageIcon>
+
+        <!--<NativePackageAssetsRoot Condition="'$(NativePackageAssetsRoot)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'obj', '$(Platform)', '$(Configuration)', 'native-assets'))</NativePackageAssetsRoot>
+		<NativePackageAssetsRoot>$([MSBuild]::NormalizeDirectory('$(NativePackageAssetsRoot)'))</NativePackageAssetsRoot>
+		<NativeX86PackageOutDir>$([MSBuild]::NormalizeDirectory('$(NativePackageAssetsRoot)', 'win-x86'))</NativeX86PackageOutDir>
+		<NativeX64PackageOutDir>$([MSBuild]::NormalizeDirectory('$(NativePackageAssetsRoot)', 'win-x64'))</NativeX64PackageOutDir>
+		<NativeArm64PackageOutDir>$([MSBuild]::NormalizeDirectory('$(NativePackageAssetsRoot)', 'win-arm64'))</NativeArm64PackageOutDir>
+
+		<NativeDevelopmentPlatform Condition="'$(Platform)' == 'x86'">Win32</NativeDevelopmentPlatform>
+		<NativeDevelopmentPlatform Condition="'$(NativeDevelopmentPlatform)' == ''">$(Platform)</NativeDevelopmentPlatform>
+		<NativeDevelopmentOutputDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'DesktopFlyouts.Wasdk', '$(NativeDevelopmentPlatform)', '$(Configuration)', 'DesktopFlyouts.Wasdk'))</NativeDevelopmentOutputDir>-->
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Windows.CsWinRT" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" />
+		<ProjectReference Include="..\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.vcxproj" />
+	</ItemGroup>
+
+    <ItemGroup>
+		<!--  C#/WinRT registration-free activation resolves DesktopFlyouts.* from DesktopFlyouts.dll.  -->
+		<!--<Content Include="$(NativeDevelopmentOutputDir)DesktopFlyouts.Wasdk.dll" Link="DesktopFlyouts.dll" TargetPath="DesktopFlyouts.dll" CopyToOutputDirectory="PreserveNewest" Pack="false" Visible="false" />
+		<Content Include="$(NativeDevelopmentOutputDir)DesktopFlyouts.Wasdk.pri" Link="DesktopFlyouts.Wasdk.pri" CopyToOutputDirectory="PreserveNewest" Pack="false" Visible="false" />-->
+
+		<None Include="..\..\.nuget\README.md" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+		<None Include="..\..\.nuget\icon-128.png" Pack="true" PackagePath="" />
+
+		<!--<None Include="$(NativeX86PackageOutDir)DesktopFlyouts.Wasdk.dll" Pack="true" PackagePath="runtimes\win-x86\native\DesktopFlyouts.dll" />
+		<None Include="$(NativeX86PackageOutDir)DesktopFlyouts.Wasdk.pri" Pack="true" PackagePath="runtimes\win-x86\native\" />
+		<None Include="$(NativeX64PackageOutDir)DesktopFlyouts.Wasdk.dll" Pack="true" PackagePath="runtimes\win-x64\native\DesktopFlyouts.dll" />
+		<None Include="$(NativeX64PackageOutDir)DesktopFlyouts.Wasdk.pri" Pack="true" PackagePath="runtimes\win-x64\native\" />
+		<None Include="$(NativeArm64PackageOutDir)DesktopFlyouts.Wasdk.dll" Pack="true" PackagePath="runtimes\win-arm64\native\DesktopFlyouts.dll" />
+		<None Include="$(NativeArm64PackageOutDir)DesktopFlyouts.Wasdk.pri" Pack="true" PackagePath="runtimes\win-arm64\native\" />-->
+	</ItemGroup>
+
+	<!--<Target Name="BuildNativePackageAssets" BeforeTargets="GenerateNuspec" Condition="'$(NoBuild)' != 'true'">
+		<MSBuild Projects="..\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.vcxproj" Targets="Build" Properties="Configuration=$(Configuration);Platform=Win32;OutDir=$(NativeX86PackageOutDir);IntDir=$(NativePackageAssetsRoot)obj\win-x86\;GeneratedFilesDir=$(NativePackageAssetsRoot)generated\win-x86\" />
+		<MSBuild Projects="..\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.vcxproj" Targets="Build" Properties="Configuration=$(Configuration);Platform=x64;OutDir=$(NativeX64PackageOutDir);IntDir=$(NativePackageAssetsRoot)obj\win-x64\;GeneratedFilesDir=$(NativePackageAssetsRoot)generated\win-x64\" />
+		<MSBuild Projects="..\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.vcxproj" Targets="Build" Properties="Configuration=$(Configuration);Platform=ARM64;OutDir=$(NativeArm64PackageOutDir);IntDir=$(NativePackageAssetsRoot)obj\win-arm64\;GeneratedFilesDir=$(NativePackageAssetsRoot)generated\win-arm64\" />
+	</Target>-->
+
+</Project>
