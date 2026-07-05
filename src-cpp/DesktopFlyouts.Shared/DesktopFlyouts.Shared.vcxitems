@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{812b3310-7cdc-4d34-96a1-9ff0f7214a4b}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)DesktopFlyout.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandTemplateSettings.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)FlyoutHelpers.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MouseEventReceivedEventArgs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)SystemTrayIcon.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)DesktopFlyout.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandTemplateSettings.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)FlyoutHelpers.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)MouseEventReceivedEventArgs.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="$(MSBuildThisFileDirectory)DesktopFlyouts.idl" />
+  </ItemGroup>
+</Project>

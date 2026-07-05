@@ -1,0 +1,150 @@
+namespace DesktopFlyouts
+{
+    enum DesktopFlyoutActivationMode
+    {
+        Activate,
+        NoActivateOnOpen,
+        NeverActivate
+    };
+
+    enum DesktopFlyoutBackdropKind
+    {
+        DesktopAcrylic,
+        Mica
+    };
+
+    enum DesktopFlyoutPlacementMode
+    {
+        TopCenter,
+        TopLeft,
+        TopRight,
+        BottomCenter,
+        BottomLeft,
+        BottomRight,
+        LeftCenter,
+        RightCenter
+    };
+
+    enum DesktopFlyoutPopupDirection
+    {
+        BottomToTop,
+        TopToBottom,
+        Vertical,
+        LeftToRight,
+        RightToLeft,
+        Horizontal
+    };
+
+    [default_interface]
+    runtimeclass MouseEventReceivedEventArgs
+    {
+        MouseEventReceivedEventArgs(Windows.Foundation.Point point);
+        Windows.Foundation.Point Point { get; };
+    }
+
+    [default_interface]
+    runtimeclass SystemTrayIcon
+    {
+        SystemTrayIcon(String iconPath, String tooltip, Guid id);
+        SystemTrayIcon(String iconPath, String tooltip, Guid id, Boolean isVisible);
+
+        String IconPath;
+        String Tooltip;
+        Boolean IsVisible;
+        Guid Id { get; };
+
+        void Show();
+        void Destroy();
+
+        event Windows.Foundation.TypedEventHandler<SystemTrayIcon, Object> IconDestroyed;
+        event Windows.Foundation.TypedEventHandler<SystemTrayIcon, MouseEventReceivedEventArgs> LeftClicked;
+        event Windows.Foundation.TypedEventHandler<SystemTrayIcon, MouseEventReceivedEventArgs> RightClicked;
+    }
+
+    [Microsoft.UI.Xaml.Data.Bindable]
+    unsealed runtimeclass DesktopFlyoutIslandTemplateSettings : Microsoft.UI.Xaml.DependencyObject
+    {
+        DesktopFlyoutIslandTemplateSettings();
+
+        Microsoft.UI.Xaml.CornerRadius BackdropCornerRadius { get; };
+        Microsoft.UI.Xaml.Media.SystemBackdrop SystemBackdrop { get; };
+
+        static Microsoft.UI.Xaml.DependencyProperty BackdropCornerRadiusProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty SystemBackdropProperty { get; };
+    }
+
+    [Microsoft.UI.Xaml.Data.Bindable]
+    [contentproperty("Content")]
+    unsealed runtimeclass DesktopFlyoutIsland : Microsoft.UI.Xaml.Controls.ContentControl
+    {
+        DesktopFlyoutIsland();
+
+        Microsoft.UI.Xaml.GridLength IslandWidth;
+        Microsoft.UI.Xaml.GridLength IslandHeight;
+        DesktopFlyoutIslandTemplateSettings TemplateSettings { get; };
+
+        static Microsoft.UI.Xaml.DependencyProperty IslandWidthProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty IslandHeightProperty { get; };
+    }
+
+    [contentproperty("Islands")]
+    unsealed runtimeclass DesktopFlyout : Microsoft.UI.Xaml.Controls.Control, Windows.Foundation.IClosable
+    {
+        DesktopFlyout();
+
+        Windows.Foundation.Collections.IVector<DesktopFlyoutIsland> Islands { get; };
+        Object IslandsSource;
+        Boolean IsBackdropEnabled;
+        Boolean IsOpen { get; };
+        Microsoft.UI.Xaml.GridLength FlyoutWidth;
+        Microsoft.UI.Xaml.GridLength FlyoutHeight;
+        DesktopFlyoutPopupDirection PopupDirection;
+        Microsoft.UI.Xaml.Controls.Orientation IslandsOrientation;
+        DesktopFlyoutPlacementMode Placement;
+        Microsoft.UI.Xaml.Controls.MenuFlyout MenuFlyout;
+        Boolean IsTransitionAnimationEnabled;
+        Double PressedScale;
+        Boolean IsSwipeToDismissEnabled;
+        Double SwipeDismissThreshold;
+        Boolean HideOnLostFocus;
+        DesktopFlyoutActivationMode ActivationMode;
+        Windows.Foundation.TimeSpan AutoCloseDelay;
+        DesktopFlyoutBackdropKind BackdropKind;
+
+        static Microsoft.UI.Xaml.DependencyProperty IslandsProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty IslandsSourceProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty IsBackdropEnabledProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty IsOpenProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty FlyoutWidthProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty FlyoutHeightProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty PopupDirectionProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty IslandsOrientationProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty PlacementProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty MenuFlyoutProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty IsTransitionAnimationEnabledProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty PressedScaleProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty IsSwipeToDismissEnabledProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty SwipeDismissThresholdProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty HideOnLostFocusProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty ActivationModeProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty AutoCloseDelayProperty { get; };
+        static Microsoft.UI.Xaml.DependencyProperty BackdropKindProperty { get; };
+
+        [default_overload] void Show();
+        void Show(Windows.Foundation.Point bottomCenterPoint);
+        void Hide();
+        void NavigateFocus(Microsoft.UI.Xaml.Hosting.XamlSourceFocusNavigationReason reason);
+    }
+
+    [contentproperty("Items")]
+    unsealed runtimeclass DesktopMenuFlyout : Microsoft.UI.Xaml.Controls.ItemsControl, Windows.Foundation.IClosable
+    {
+        DesktopMenuFlyout();
+
+        Boolean IsOpen { get; };
+        static Microsoft.UI.Xaml.DependencyProperty IsOpenProperty { get; };
+
+        void Show(Windows.Foundation.Point point);
+        void Hide();
+    }
+}
