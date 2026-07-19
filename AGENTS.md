@@ -1,6 +1,6 @@
 # AGENTS.md
 
-DesktopFlyouts is a WinUI library for showing lightweight desktop flyouts, menu flyouts, and tray-icon driven UI from desktop apps. It ships two public library flavors:
+DesktopFlyouts is a WinUI library for showing lightweight desktop flyouts, menu flyouts, and tray-icon driven UI from desktop apps. It ships three public library flavors:
 
 ## Code Structure
 
@@ -12,8 +12,10 @@ DesktopFlyouts is a WinUI library for showing lightweight desktop flyouts, menu 
 │   │   └───DesktopFlyouts.Shared.shproj
 │   ├───DesktopFlyouts.Wasdk
 │   │   └───DesktopFlyouts.Wasdk.csproj
-│   └───DesktopFlyouts.Uwp
-│       └───DesktopFlyouts.Uwp.csproj
+│   ├───DesktopFlyouts.Uwp
+│   │   └───DesktopFlyouts.Uwp.csproj
+│   └───DesktopFlyouts.Uno
+│       └───DesktopFlyouts.Uno.csproj
 └───samples
     ├───DesktopFlyouts.Wasdk.Sample.App
     │   └───DesktopFlyouts.Wasdk.Sample.App.csproj
@@ -25,7 +27,9 @@ DesktopFlyouts is a WinUI library for showing lightweight desktop flyouts, menu 
         └───DesktopFlyouts.Uwp.Sample.TrayHost.csproj
 ```
 
-Most runtime behavior lives in `src/DesktopFlyouts.Shared` behind `#if WASDK` and `#if UWP`. Keep both branches building when changing shared files.
+Most runtime behavior lives in `src/DesktopFlyouts.Shared` behind `#if WASDK`, `#if UWP`, and `#if HAS_UNO`. Keep all branches building when changing shared files.
+
+Keep in mind that for Uno Platform, `WASDK` and `HAS_UNO` will both be true.
 
 ## Formatting And Editing Rules
 
@@ -37,21 +41,27 @@ Most runtime behavior lives in `src/DesktopFlyouts.Shared` behind `#if WASDK` an
 
 ## Build Commands
 
-Run validation one command at a time and inspect each result before moving on.
+Run validation one command at a time and inspect each result before moving on. WASDK and UWP builds require Windows; skip them on other platforms.
 
-1. Build the WinUI 3 sample and library:
+1. Build the Uno library (cross-platform):
+
+```powershell
+dotnet msbuild /restore:false src\DesktopFlyouts.Uno\DesktopFlyouts.Uno.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
+```
+
+2. Build the WinUI 3 sample and library (Windows only):
 
 ```powershell
 dotnet msbuild /restore:false samples\DesktopFlyouts.Wasdk.Sample.App\DesktopFlyouts.Wasdk.Sample.App.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
 ```
 
-2. Build the UWP library:
+3. Build the UWP library (Windows only):
 
 ```powershell
 dotnet msbuild /restore:false src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
 ```
 
-3. Check whitespace and line endings:
+4. Check whitespace and line endings:
 
 ```powershell
 git diff --check
@@ -106,11 +116,12 @@ Get-Process -Name DesktopFlyouts.Wasdk.Sample.App -ErrorAction SilentlyContinue 
 Validate one item at a time:
 
 1. `git status --short --branch` to understand the current branch and dirty files.
-2. Build the WASDK sample.
-3. Build the UWP library when shared code changed.
-4. Launch the WASDK sample as packaged, never by direct `.exe`.
-5. Confirm the app has a responsive process and real window handle.
-6. Run `git diff --check`.
-7. Confirm changed text files remain CRLF.
-8. Summarize what was changed, what was validated, and any remaining risk.
+2. Build the Uno library.
+3. Build the WASDK sample (Windows only).
+4. Build the UWP library when shared code changed (Windows only).
+5. Launch the WASDK sample as packaged, never by direct `.exe` (Windows only).
+6. Confirm the app has a responsive process and real window handle (Windows only).
+7. Run `git diff --check`.
+8. Confirm changed text files remain CRLF.
+9. Summarize what was changed, what was validated, and any remaining risk.
 
