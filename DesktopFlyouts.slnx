@@ -44,7 +44,7 @@
   </Folder>
   <Folder Name="/samples-uno/">
     <Project Path="samples/DesktopFlyouts.Uno.Sample.App/DesktopFlyouts.Uno.Sample.App.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|ARM64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
       <Deploy />
