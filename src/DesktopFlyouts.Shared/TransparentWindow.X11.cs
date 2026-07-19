@@ -21,6 +21,11 @@ namespace DesktopFlyouts
                 {
                     root.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
                 };
+
+                CompositionTarget.Rendering += delegate {
+                    if (root.Background is not SolidColorBrush s || s.Color != Microsoft.UI.Colors.Transparent)
+                        root.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+                };
             }
         }
     }
