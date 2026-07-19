@@ -28,12 +28,16 @@ namespace DesktopFlyouts
 
         internal static Point GetBottomRightCornerPoint()
         {
+            ThrowHelper.ThrowIfNotLinux();
+
             var rect = GetFlyoutWorkAreaRect();
             return new(rect.Right, rect.Bottom);
         }
 
         internal static Rectangle GetFlyoutWorkAreaRect(Point? anchorPoint = null)
         {
+            ThrowHelper.ThrowIfNotLinux();
+
             var display = OpenDisplay();
             if (display == IntPtr.Zero)
             {
@@ -71,6 +75,8 @@ namespace DesktopFlyouts
 
         internal static bool TryGetTaskbarInfoForPoint(Point point, out Rectangle rect, out TaskbarEdge edge)
         {
+            ThrowHelper.ThrowIfNotLinux();
+
             rect = default;
             edge = TaskbarEdge.Bottom;
 

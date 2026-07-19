@@ -20,6 +20,8 @@ namespace DesktopFlyouts
 
         internal static bool IsTaskbarLight()
         {
+            ThrowHelper.ThrowIfNotLinux();
+
             if (!_initialized)
             {
                 _ = InitAsync().ConfigureAwait(false);

@@ -56,6 +56,8 @@ internal partial class XamlIslandHostWindow : IDisposable
 
     internal XamlIslandHostWindow()
     {
+        ThrowHelper.ThrowIfNotLinux();
+
         _window = new TransparentWindow();
         _window.Title = "DesktopFlyoutHost";
 

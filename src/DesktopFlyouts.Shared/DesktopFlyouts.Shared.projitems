@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ManualDefinitions.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\MouseEventReceivedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPopupDirection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThrowHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TransparentWindow.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)X11PInvoke.cs" />
