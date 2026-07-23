@@ -66,11 +66,8 @@ namespace DesktopFlyouts
                     _initialized = true;
                 }
 
-                _ = settings.WatchSettingChangedAsync((exception, tuple) =>
+                _ = settings.WatchSettingChangedAsync(tuple =>
                 {
-                    if (exception is not null)
-                        return;
-
                     if (tuple is { Namespace: "org.freedesktop.appearance", Key: "color-scheme" })
                     {
                         lock (_lock)
