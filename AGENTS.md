@@ -46,7 +46,7 @@ Run validation one command at a time and inspect each result before moving on. W
 1. Build the Uno library (cross-platform):
 
 ```powershell
-dotnet msbuild /restore:false src\DesktopFlyouts.Uno\DesktopFlyouts.Uno.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
+dotnet msbuild /restore:false src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
 ```
 
 2. Build the WinUI 3 sample and library (Windows only):
