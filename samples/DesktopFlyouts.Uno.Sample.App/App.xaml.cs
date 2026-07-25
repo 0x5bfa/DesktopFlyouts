@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using Microsoft.UI.Xaml;
 using Windows.ApplicationModel;
 
@@ -17,13 +19,19 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        TrayIconManager.Default.Initialize();
+        // Resolve the icon path relative to the executable.
+        var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
+        var iconPath = Path.Combine(exeDir, "Assets", "Tray.ico");
+
+        TrayIconManager.Default.Initialize(new(
+            iconPath,
+            "DesktopFlyouts sample app (Uno)",
+            "28DE460A-8BD6-4539-A406-5F685584FD4D"));
 
         _window = new Window();
         _window.Content = new RootView();
         _window.Closed += (_, _) => TrayIconManager.Default.Dispose();
         _window.Activate();
-        Debug.WriteLine("[App] Main window activated.");
     }
 
     private void AppDomain_ProcessExit(object? sender, EventArgs e)

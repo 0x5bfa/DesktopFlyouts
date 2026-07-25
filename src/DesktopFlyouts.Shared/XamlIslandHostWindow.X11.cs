@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -27,6 +26,9 @@ internal partial class XamlIslandHostWindow : IDisposable
         _netWmWindowTypeDockAtom, _motifWmHintsAtom, _netActiveWindowAtom,
         _netWmOpacityAtom;
     private bool _disposed;
+    private bool _focused;
+    private bool _focusMonitoring;
+    private readonly DispatcherTimer _focusTimer;
     private DesktopFlyoutActivationMode _activationMode = DesktopFlyoutActivationMode.Activate;
 
     internal object? DesktopWindowXamlSource { get; private set; }
@@ -49,7 +51,24 @@ internal partial class XamlIslandHostWindow : IDisposable
         get => 1.0D;
     }
 
-    internal event EventHandler? WindowInactivated;
+    private EventHandler? _windowInactivated;
+    private bool _windowVisible;
+
+    internal event EventHandler? WindowInactivated
+    {
+        add
+        {
+            _windowInactivated += value;
+            if (_windowVisible)
+                StartFocusMonitoring();
+        }
+        remove
+        {
+            _windowInactivated -= value;
+            if (_windowInactivated is null)
+                StopFocusMonitoring();
+        }
+    }
     internal event EventHandler? SystemSettingsChanged;
 
     private readonly List<nint> managedWindows;
@@ -92,6 +111,9 @@ internal partial class XamlIslandHostWindow : IDisposable
         // Subscribe to window events.
         _window.Closed += OnWindowClosed;
         _window.Activated += OnWindowActivated;
+
+        _focusTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+        _focusTimer.Tick += FocusTimer_Tick;
 
         // Listen for property changes on the root window (theme changes, etc.).
         var rootWindow = XDefaultRootWindow(_display);
@@ -179,8 +201,12 @@ internal partial class XamlIslandHostWindow : IDisposable
         if (_display is 0 || _x11Window is 0)
             return;
 
+        // Ensure the window has a minimum size of 1x1 — X11 rejects 0-dimension windows with BadValue.
+        var safeWidth = Math.Max(1, rect.Width);
+        var safeHeight = Math.Max(1, rect.Height);
+
         // Use AppWindow.Resize to notify the Skia rendering pipeline of the new size.
-        _window.AppWindow.Resize(new SizeInt32 { Width = rect.Width, Height = rect.Height });
+        _window.AppWindow.Resize(new SizeInt32 { Width = safeWidth, Height = safeHeight });
 
         // Use raw X11 for positioning to avoid Uno's pipeline re-reading the WM-overridden position.
         XMoveWindow(_display, _x11Window, rect.X, rect.Y);
@@ -286,6 +312,8 @@ internal partial class XamlIslandHostWindow : IDisposable
             return default;
         }
 
+        _windowVisible = isVisible;
+
         if (isVisible)
         {
             // Set _NET_WM_WINDOW_OPACITY = 0 BEFORE mapping so the compositor
@@ -332,10 +360,17 @@ internal partial class XamlIslandHostWindow : IDisposable
             // Task.Delay avoids needing CompositionTarget.Rendering (which has thread issues).
             var opacityTask = RestoreOpacityAfterDelay();
             XFlush(_display);
+
+            // Start monitoring focus changes on our X11 window.
+            StartFocusMonitoring();
+
             return opacityTask;
         }
         else
         {
+            // Stop monitoring focus changes when hiding.
+            StopFocusMonitoring();
+
             foreach (var wnd in managedWindows)
             {
                 XUnmapWindow(_display, wnd);
@@ -435,6 +470,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 
         _disposed = true;
 
+        StopFocusMonitoring();
+        _focusTimer.Stop();
+
         _window.Closed -= OnWindowClosed;
         _window.Activated -= OnWindowActivated;
 
@@ -462,16 +500,123 @@ internal partial class XamlIslandHostWindow : IDisposable
         XChangeWindowAttributes(_display, window, CWOverrideRedirect, ref attrs);
     }
 
+    internal void StartFocusMonitoring()
+    {
+        if (_focusMonitoring || _disposed || _display is 0 || _x11Window is 0 || _windowInactivated is null)
+            return;
+
+        _focusMonitoring = true;
+
+        // Read the actual active window from X11 instead of assuming focused.
+        // For NoActivateOnOpen / NeverActivate flyouts the host never becomes
+        // the active window, so assuming true would cause a spurious
+        // WindowInactivated on the first timer tick.
+        _focused = IsOurWindowActive();
+        _focusTimer.Start();
+    }
+
+    private bool IsOurWindowActive()
+    {
+        var rootWindow = XDefaultRootWindow(_display);
+        if (rootWindow is 0)
+            return false;
+
+        var status = XGetWindowProperty(
+            _display,
+            (nuint)rootWindow,
+            (nuint)_netActiveWindowAtom,
+            0, 1, false,
+            0 /* AnyPropertyType */,
+            out var actualType, out _,
+            out var nItems, out _,
+            out var prop);
+
+        if (status != 0 || actualType is not 33 /* XA_WINDOW */ || nItems < 1 || prop is 0)
+            return false;
+
+        try
+        {
+            var activeWindow = Marshal.ReadIntPtr(prop);
+            return activeWindow == _x11Window;
+        }
+        finally
+        {
+            XFree(prop);
+        }
+    }
+
+    internal void StopFocusMonitoring()
+    {
+        if (!_focusMonitoring)
+            return;
+
+        _focusMonitoring = false;
+        try { _focusTimer.Stop(); } catch { }
+    }
+
+    private void FocusTimer_Tick(object? sender, object e)
+    {
+        if (_disposed || _display is 0)
+        {
+            StopFocusMonitoring();
+            return;
+        }
+
+        try
+        {
+            var rootWindow = XDefaultRootWindow(_display);
+            if (rootWindow is 0)
+                return;
+
+            // Read _NET_ACTIVE_WINDOW from the root window (type WINDOW, 32-bit).
+            // AnyPropertyType (0) = return data regardless of the property's actual type.
+            var status = XGetWindowProperty(
+                _display,
+                (nuint)rootWindow,
+                (nuint)_netActiveWindowAtom,
+                0, 1, false,
+                0 /* AnyPropertyType */,
+                out var actualType, out _,
+                out var nItems, out _,
+                out var prop);
+
+            if (status != 0 || actualType is not 33 /* XA_WINDOW */ || nItems < 1 || prop is 0)
+                return;
+
+            try
+            {
+                var activeWindow = Marshal.ReadIntPtr(prop);
+                var wasFocused = _focused;
+                _focused = activeWindow == _x11Window;
+
+                if (wasFocused && !_focused)
+                    _windowInactivated?.Invoke(this, EventArgs.Empty);
+            }
+            finally
+            {
+                XFree(prop);
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            StopFocusMonitoring();
+        }
+        catch
+        {
+            StopFocusMonitoring();
+        }
+    }
+
     private void OnWindowClosed(object? sender, WindowEventArgs args)
     {
-        WindowInactivated?.Invoke(this, EventArgs.Empty);
+        _windowInactivated?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnWindowActivated(object? sender, WindowActivatedEventArgs args)
     {
         if (args.WindowActivationState is Windows.UI.Core.CoreWindowActivationState.Deactivated)
         {
-            WindowInactivated?.Invoke(this, EventArgs.Empty);
+            _windowInactivated?.Invoke(this, EventArgs.Empty);
         }
     }
 }

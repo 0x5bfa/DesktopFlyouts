@@ -87,7 +87,12 @@ namespace DesktopFlyouts
             _host = new XamlIslandHostWindow();
             _host.SetContent(this);
             _ = _host.UpdateWindowVisibility(false);
+#if HAS_UNO
+            if (HideOnLostFocus)
+                _host.WindowInactivated += HostWindow_Inactivated;
+#else
             _host.WindowInactivated += HostWindow_Inactivated;
+#endif
             _host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
         }
 

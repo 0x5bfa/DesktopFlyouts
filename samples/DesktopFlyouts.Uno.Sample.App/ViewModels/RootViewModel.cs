@@ -182,6 +182,9 @@ internal partial class RootViewModel : ObservableObject
 
     internal RootViewModel()
     {
+        IconPath = TrayIconManager.Default.SystemTrayIcon?.IconPath;
+        TooltipText = TrayIconManager.Default.SystemTrayIcon?.Tooltip;
+
         IsBackdropEnabled = true;
         HideOnLostFocus = true;
 
@@ -227,12 +230,13 @@ internal partial class RootViewModel : ObservableObject
 
     private void OnIconPathChanged(string? value)
     {
-        // SystemTrayIcon not available on Uno/X11
+        if (!string.IsNullOrEmpty(value) && System.IO.File.Exists(value))
+            TrayIconManager.Default.SystemTrayIcon?.SetIcon(value);
     }
 
     private void OnTooltipTextChanged(string? value)
     {
-        // SystemTrayIcon not available on Uno/X11
+        TrayIconManager.Default.SystemTrayIcon?.Tooltip = value ?? string.Empty;
     }
 
     private void OnIsBackdropEnabledChanged(bool value)

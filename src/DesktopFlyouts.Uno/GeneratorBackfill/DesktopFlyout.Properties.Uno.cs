@@ -14,6 +14,7 @@ namespace DesktopFlyouts
         partial void OnIsBackdropEnabledPropertyChanged(DependencyPropertyChangedEventArgs e);
         partial void OnBackdropKindPropertyChanged(DependencyPropertyChangedEventArgs e);
         partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e);
+        partial void OnHideOnLostFocusPropertyChanged(DependencyPropertyChangedEventArgs e);
 
         public partial object? IslandsSource
         {
@@ -109,7 +110,7 @@ namespace DesktopFlyouts
             set => SetValue(HideOnLostFocusProperty, value);
         }
         public static readonly DependencyProperty HideOnLostFocusProperty =
-            DependencyProperty.Register(nameof(HideOnLostFocus), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(HideOnLostFocus), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(true, (d, e) => ((DesktopFlyout)d).OnHideOnLostFocusPropertyChanged(e)));
 
         public partial DesktopFlyoutActivationMode ActivationMode
         {

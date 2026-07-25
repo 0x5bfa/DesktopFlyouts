@@ -42,7 +42,7 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/0x5bfa/DesktopFlyouts</RepositoryUrl>
-		<PackageTags>Shell System DesktopFlyouts DesktopFlyout UWP WinUI MUX WASDK WindowsAppSDK Uno Paltform Windows</PackageTags>
+		<PackageTags>Shell System TrayIcon DesktopFlyouts DesktopFlyout UWP WinUI MUX WASDK WindowsAppSDK Uno Platform Windows</PackageTags>
 		<PackageIcon>icon-128.png</PackageIcon>
   </PropertyGroup>
   
@@ -56,6 +56,7 @@
 		<!-- <PackageReference Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" PrivateAssets="all" /> -->
 		<PackageReference Include="Tmds.DBus.Protocol" />
 		<PackageReference Include="Tmds.DBus.Generator" />
+    	<PackageReference Include="Svg.Skia" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -63,6 +64,9 @@
 			Namespace="DesktopFlyouts.DBus" GenerateDBusTypes="true" />
 		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.portal.Settings.xml"
 			Namespace="DesktopFlyouts.DBus" GenerateDBusTypes="true" />
+		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.DBus.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
+		<AdditionalFiles Include="dbus-interfaces\org.kde.StatusNotifierWatcher.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
+		<AdditionalFiles Include="dbus-interfaces\org.kde.StatusNotifierItem.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Handler" />
 	</ItemGroup>
 
 	<Import Project="..\DesktopFlyouts.Shared\DesktopFlyouts.Shared.projitems" Label="Shared" />

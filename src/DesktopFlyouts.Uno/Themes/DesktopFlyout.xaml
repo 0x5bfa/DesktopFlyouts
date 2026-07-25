@@ -106,7 +106,7 @@
                         Background="Transparent"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}">
-                        <Border x:Name="PART_MenuFlyoutTargetControl" Background="Transparent" />
+                        <Grid x:Name="PART_MenuFlyoutTargetControl" Background="Transparent" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

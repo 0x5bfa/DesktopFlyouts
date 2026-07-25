@@ -1,6 +1,6 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
-
+#if WINDOWS
 using System;
 using System.Drawing;
 using CommunityToolkit.WinUI;
@@ -194,3 +194,5 @@ namespace DesktopFlyouts
         }
     }
 }
+
+#endif

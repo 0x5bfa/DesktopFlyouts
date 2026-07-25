@@ -280,5 +280,17 @@ namespace DesktopFlyouts
             _host?.SetActivationMode((DesktopFlyoutActivationMode)e.NewValue);
             UpdateFocusSuppression();
         }
+#if HAS_UNO
+        partial void OnHideOnLostFocusPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            if (_host is null || _disposed)
+                return;
+
+            if ((bool)e.NewValue)
+                _host.WindowInactivated += HostWindow_Inactivated;
+            else
+                _host.WindowInactivated -= HostWindow_Inactivated;
+        }
+#endif
     }
 }

@@ -24,8 +24,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPopupDirection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThrowHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TransparentWindow.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)X11PInvoke.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)X11StatusNotifierItemHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\TransitionHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Properties.cs" />
@@ -33,6 +35,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandTemplateSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.Uno.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MouseScrollEventReceivedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandApplication.cs" />

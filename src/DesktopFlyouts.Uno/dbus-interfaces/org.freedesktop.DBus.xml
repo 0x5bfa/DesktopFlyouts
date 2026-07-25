@@ -5,5 +5,14 @@
       <arg direction="in"  type="s" name="name" />
       <arg direction="out" type="b" name="has_owner" />
     </method>
+		<method name="GetNameOwner">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="out"></arg>
+		</method>
+		<signal name="NameOwnerChanged">
+			<arg type="s"></arg>
+			<arg type="s"></arg>
+			<arg type="s"></arg>
+		</signal>
   </interface>
 </node>

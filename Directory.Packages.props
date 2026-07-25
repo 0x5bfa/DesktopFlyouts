@@ -22,6 +22,7 @@
 		<PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" Condition="'$(MSBuildProjectName)' == 'DesktopFlyouts.Wasdk' Or '$(MSBuildProjectName)' == 'DesktopFlyouts.Wasdk.Sample.App'" />
 		<PackageVersion Include="Tmds.DBus.Protocol" Version="0.94.2" />
 		<PackageVersion Include="Tmds.DBus.Generator" Version="0.94.2" />
+		<PackageVersion Include="Svg.Skia" Version="3.2.1" />
 	</ItemGroup>
 
 </Project>
