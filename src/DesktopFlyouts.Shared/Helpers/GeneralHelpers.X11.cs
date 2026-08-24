@@ -1,91 +1,139 @@
 #if HAS_UNO
-// Real implementation: detects system theme via D-Bus org.freedesktop.portal.Settings.
+// Detects the system theme via D-Bus org.freedesktop.portal.Settings.
 // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Settings.html
 
-using System;
-using System.Threading.Tasks;
-using Tmds.DBus.Protocol;
 using DesktopFlyouts.DBus;
+using Tmds.DBus.Protocol;
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+internal static class GeneralHelpers
 {
-    internal static class GeneralHelpers
+    private const string Service = "org.freedesktop.portal.Desktop";
+    private const string ObjectPath = "/org/freedesktop/portal/desktop";
+
+    private static readonly object SyncRoot = new();
+    private static bool _isTaskbarLight;
+    private static Task? _initializationTask;
+    private static DBusConnection? _connection;
+    private static IDisposable? _settingsWatch;
+
+    static GeneralHelpers()
     {
-        private const string Service = "org.freedesktop.portal.Desktop";
-        private const string ObjectPath = "/org/freedesktop/portal/desktop";
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => DisposeResources();
+    }
 
-        private static bool? _isTaskbarLight;
-        private static readonly object _lock = new();
-        private static bool _initialized;
+    internal static event EventHandler? SystemSettingsChanged;
 
-        internal static bool IsTaskbarLight()
+    internal static bool IsTaskbarLight()
+    {
+        ThrowHelper.ThrowIfNotLinux();
+
+        lock (SyncRoot)
         {
-            ThrowHelper.ThrowIfNotLinux();
+            _initializationTask ??= InitializeAsync();
+            return _isTaskbarLight;
+        }
+    }
 
-            if (!_initialized)
+    internal static bool IsTaskbarColorPrevalenceEnabled()
+    {
+        // Linux desktop environments do not have a Windows-style "accent color on taskbar" setting.
+        return false;
+    }
+
+    private static async Task InitializeAsync()
+    {
+        DBusConnection? connection = null;
+        IDisposable? settingsWatch = null;
+        try
+        {
+            var sessionAddress = DBusAddress.Session;
+            if (sessionAddress is null)
+                return;
+
+            connection = new DBusConnection(sessionAddress);
+            await connection.ConnectAsync();
+
+            var desktopService = new DBusService(connection, Service);
+            var settings = desktopService.CreateSettings(ObjectPath);
+            if (await settings.GetVersionAsync() < 2)
+                return;
+
+            var result = await settings.ReadOneAsync(
+                "org.freedesktop.appearance",
+                "color-scheme");
+            UpdateTheme(result.GetUInt32());
+
+            settingsWatch = await settings.WatchSettingChangedAsync(tuple =>
             {
-                _ = InitAsync().ConfigureAwait(false);
+                if (tuple is { Namespace: "org.freedesktop.appearance", Key: "color-scheme" })
+                    UpdateTheme(tuple.Value.GetUInt32());
+            });
+
+            lock (SyncRoot)
+            {
+                _connection = connection;
+                _settingsWatch = settingsWatch;
+                connection = null;
+                settingsWatch = null;
             }
+        }
+        catch
+        {
+            // D-Bus or the portal is unavailable. Keep the dark fallback for this process.
+        }
+        finally
+        {
+            settingsWatch?.Dispose();
+            connection?.Dispose();
+        }
+    }
 
-            lock (_lock)
+    private static void UpdateTheme(uint colorScheme)
+    {
+        // 0 = no preference, 1 = dark, 2 = light.
+        var isLight = colorScheme != 1;
+        var changed = false;
+        lock (SyncRoot)
+        {
+            if (_isTaskbarLight != isLight)
             {
-                return _isTaskbarLight ?? false;
+                _isTaskbarLight = isLight;
+                changed = true;
             }
         }
 
-        internal static bool IsTaskbarColorPrevalenceEnabled()
+        if (changed)
+            SystemSettingsChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    private static void DisposeResources()
+    {
+        IDisposable? settingsWatch;
+        DBusConnection? connection;
+        lock (SyncRoot)
         {
-            // Linux desktop environments do not have a Windows-style "accent color on taskbar" setting.
-            return false;
+            settingsWatch = _settingsWatch;
+            connection = _connection;
+            _settingsWatch = null;
+            _connection = null;
         }
 
-        private static async Task InitAsync()
+        try
         {
-            try
-            {
-                var sessionAddress = DBusAddress.Session;
-                if (sessionAddress is null)
-                    return;
+            settingsWatch?.Dispose();
+        }
+        catch
+        {
+        }
 
-                var connection = new DBusConnection(sessionAddress);
-                await connection.ConnectAsync();
-
-                var desktopService = new DBusService(connection, Service);
-                var settings = desktopService.CreateSettings(ObjectPath);
-
-                var version = await settings.GetVersionAsync();
-                if (version < 2)
-                    return;
-
-                var result = await settings.ReadOneAsync("org.freedesktop.appearance", "color-scheme");
-                var colorScheme = result.GetUInt32();
-                // 0 = no preference, 1 = dark, 2 = light
-                lock (_lock)
-                {
-                    _isTaskbarLight = colorScheme != 1;
-                    _initialized = true;
-                }
-
-                _ = settings.WatchSettingChangedAsync(tuple =>
-                {
-                    if (tuple is { Namespace: "org.freedesktop.appearance", Key: "color-scheme" })
-                    {
-                        lock (_lock)
-                        {
-                            _isTaskbarLight = tuple.Value.GetUInt32() != 1;
-                        }
-                    }
-                });
-            }
-            catch
-            {
-                // D-Bus not available or portal not present; fall back to default (dark).
-                lock (_lock)
-                {
-                    _isTaskbarLight = false;
-                    _initialized = true;
-                }
-            }
+        try
+        {
+            connection?.Dispose();
+        }
+        catch
+        {
         }
     }
 }
