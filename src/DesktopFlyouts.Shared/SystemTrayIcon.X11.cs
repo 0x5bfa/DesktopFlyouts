@@ -19,14 +19,19 @@ namespace DesktopFlyouts;
 public class SystemTrayIcon : IDisposable
 {
     readonly string _id;
+    readonly object _lifecycleLock = new();
+    readonly SynchronizationContext? _eventContext;
     DBusConnection? _connection;
     DBus.DBus? _dBus;
     StatusNotifierWatcher? _statusNotifierWatcher;
     X11StatusNotifierItemHandler? _sniHandler;
     IDisposable? _serviceWatchDisposable;
-    string? _sysTrayServiceName;
+    CancellationTokenSource? _connectionCancellation;
+    int _connectionGeneration;
     bool _isDisposed;
     bool _serviceConnected;
+    bool _isRegistered;
+    bool _registrationPending;
     bool _isVisible;
 
     (int, int, byte[]) _currentIcon = (1, 1, new byte[] { 255, 0, 0, 0 });
@@ -48,8 +53,8 @@ public class SystemTrayIcon : IDisposable
     /// <param name="tooltip">The tooltip text.</param>
     /// <param name="id">The stable identifier for the tray icon.</param>
     /// <remarks>
-    /// Construction prepares the icon resources and begins D-Bus initialization. The
-    /// icon is not registered with the StatusNotifierWatcher until <see cref="Show"/> is called.
+    /// Construction prepares the icon resources. D-Bus initialization and registration
+    /// begin when <see cref="Show"/> is called.
     /// </remarks>
     public SystemTrayIcon(string iconPath, string tooltip, string id)
     {
@@ -57,44 +62,37 @@ public class SystemTrayIcon : IDisposable
         _id = id;
         _iconPath = iconPath;
         _tooltip = tooltip;
+        _eventContext = SynchronizationContext.Current;
 
-        // Render the initial icon synchronously so that any SetIcon() call
-        // during async initialization is not overwritten by the captured path.
         _currentIcon = RenderIcon(iconPath);
-
-        _ = InitAsync();
-
-        async Task InitAsync()
-        {
-            await InitializeAsync();
-            _sniHandler!.ActivationDelegate += OnActivation;
-            _sniHandler!.ContextMenuDelegate += OnContextMenu;
-            _sniHandler!.SecondaryActivateDelegate += OnSecondaryActivate;
-            _sniHandler!.ScrollDelegate += OnScroll;
-        }
     }
 
     void OnActivation(int x, int y)
     {
-        LeftClicked?.Invoke(this, new MouseEventReceivedEventArgs(new(x, y)));
+        RaiseOnCapturedContext(() =>
+            LeftClicked?.Invoke(this, new MouseEventReceivedEventArgs(new(x, y))));
     }
 
     void OnContextMenu(int x, int y)
     {
-        RightClicked?.Invoke(this, new MouseEventReceivedEventArgs(new(x, y)));
+        RaiseOnCapturedContext(() =>
+            RightClicked?.Invoke(this, new MouseEventReceivedEventArgs(new(x, y))));
     }
 
     void OnSecondaryActivate(int x, int y)
     {
-        MiddleClicked?.Invoke(this, new MouseEventReceivedEventArgs(new(x, y)));
+        RaiseOnCapturedContext(() =>
+            MiddleClicked?.Invoke(this, new MouseEventReceivedEventArgs(new(x, y))));
     }
 
     void OnScroll(int delta, string orientation)
     {
-        Scrolled?.Invoke(this, new MouseScrollEventReceivedEventArgs(
-            delta,
-            orientation == "horizontal" ? MouseScrollOrientation.Horizontal : MouseScrollOrientation.Vertical
-        ));
+        RaiseOnCapturedContext(() =>
+            Scrolled?.Invoke(this, new MouseScrollEventReceivedEventArgs(
+                delta,
+                orientation == "horizontal"
+                    ? MouseScrollOrientation.Horizontal
+                    : MouseScrollOrientation.Vertical)));
     }
 
     // ─── Public API ────────────────────────────────────────────────
@@ -109,15 +107,24 @@ public class SystemTrayIcon : IDisposable
     /// </remarks>
     public string Tooltip
     {
-        get => _tooltip;
+        get
+        {
+            lock (_lifecycleLock)
+                return _tooltip;
+        }
         set
         {
-            if (_isDisposed)
-                throw new ObjectDisposedException(nameof(SystemTrayIcon));
+            X11StatusNotifierItemHandler? handler;
+            lock (_lifecycleLock)
+            {
+                if (_isDisposed)
+                    throw new ObjectDisposedException(nameof(SystemTrayIcon));
 
-            _tooltip = value;
-            if (_sniHandler?.Connection is not null)
-                _sniHandler.SetTitleAndTooltip(value ?? "");
+                _tooltip = value;
+                handler = _isRegistered ? _sniHandler : null;
+            }
+
+            handler?.SetTitleAndTooltip(value);
         }
     }
 
@@ -136,8 +143,25 @@ public class SystemTrayIcon : IDisposable
     /// </exception>
     public void SetIcon(string iconPath)
     {
-        _iconPath = iconPath;
-        UpdateIcon(iconPath);
+        lock (_lifecycleLock)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(SystemTrayIcon));
+        }
+
+        var icon = RenderIcon(iconPath);
+        X11StatusNotifierItemHandler? handler;
+        lock (_lifecycleLock)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(SystemTrayIcon));
+
+            _iconPath = iconPath;
+            _currentIcon = icon;
+            handler = _isRegistered ? _sniHandler : null;
+        }
+
+        handler?.SetIcon(icon);
     }
 
     /// <summary>
@@ -149,12 +173,35 @@ public class SystemTrayIcon : IDisposable
     /// </remarks>
     public void Show()
     {
-        if (_isDisposed)
-            throw new ObjectDisposedException(nameof(SystemTrayIcon));
+        int generation;
+        bool initialize;
+        bool register;
+        CancellationToken initializationToken = default;
+        lock (_lifecycleLock)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(SystemTrayIcon));
 
-        _isVisible = true;
-        if (_serviceConnected)
-            _ = CreateTrayIconAsync();
+            _isVisible = true;
+            initialize = _connection is null && _connectionCancellation is null;
+            if (initialize)
+            {
+                _connectionCancellation = new CancellationTokenSource();
+                generation = ++_connectionGeneration;
+                initializationToken = _connectionCancellation.Token;
+            }
+            else
+            {
+                generation = _connectionGeneration;
+            }
+
+            register = _serviceConnected && !_isRegistered && !_registrationPending;
+        }
+
+        if (initialize)
+            _ = InitializeAsync(generation, initializationToken);
+        else if (register)
+            _ = CreateTrayIconAsync(generation);
     }
 
     /// <summary>
@@ -166,11 +213,7 @@ public class SystemTrayIcon : IDisposable
     /// </remarks>
     public void Destroy()
     {
-        if (_isDisposed)
-            throw new ObjectDisposedException(nameof(SystemTrayIcon));
-
-        _isVisible = false;
-        DestroyTrayIcon();
+        CloseConnection(disposeObject: false);
     }
 
     /// <summary>
@@ -183,32 +226,15 @@ public class SystemTrayIcon : IDisposable
     /// </remarks>
     public void Dispose()
     {
-        if (_isDisposed)
-            return;
-
-        _isDisposed = true;
-        _isVisible = false;
-
-        DestroyTrayIcon();
-
-        _serviceWatchDisposable?.Dispose();
-        _serviceWatchDisposable = null;
-        _connection?.Dispose();
-        _connection = null;
-        _dBus = null;
-        _statusNotifierWatcher = null;
-        _serviceConnected = false;
-
+        CloseConnection(disposeObject: true);
         GC.SuppressFinalize(this);
     }
-
-    ~SystemTrayIcon() => Dispose();
 
     /// <summary>
     /// Gets or sets whether the tray icon is visible.
     /// </summary>
     /// <value><see langword="true"/> if the tray icon is visible; otherwise,
-    /// <see langword="false"/>. The default is <see langword="true"/>.</value>
+    /// <see langword="false"/>. The default is <see langword="false"/>.</value>
     /// <remarks>
     /// If the tray icon is already registered with the StatusNotifierWatcher, setting this property
     /// updates the icon state immediately. Otherwise, the value is recorded and applied when
@@ -216,7 +242,11 @@ public class SystemTrayIcon : IDisposable
     /// </remarks>
     public bool IsVisible
     {
-        get => _isVisible;
+        get
+        {
+            lock (_lifecycleLock)
+                return _isVisible;
+        }
         set
         {
             if (value) Show();
@@ -267,147 +297,355 @@ public class SystemTrayIcon : IDisposable
 
     // ─── D-Bus Initialization ─────────────────────────────────────
 
-    async Task InitializeAsync(CancellationToken cancellationToken = default)
+    async Task InitializeAsync(int generation, CancellationToken cancellationToken)
     {
-        if (_isDisposed)
-            throw new ObjectDisposedException(nameof(SystemTrayIcon));
-
-        _connection = new DBusConnection(DBusAddress.Session!);
-        await _connection.ConnectAsync();
-
-        _dBus = new(_connection, "org.freedesktop.DBus", "/org/freedesktop/DBus");
-
-        _sniHandler = new X11StatusNotifierItemHandler(_connection, _id, _id);
-
-        await WatchAsync(cancellationToken);
-    }
-
-    async Task WatchAsync(CancellationToken cancellationToken)
-    {
+        DBusConnection? connection = null;
+        X11StatusNotifierItemHandler? handler = null;
+        var attached = false;
         try
         {
-            _serviceWatchDisposable = await _dBus!.WatchNameOwnerChangedAsync(
+            var sessionAddress = DBusAddress.Session;
+            if (sessionAddress is null)
+                return;
+
+            connection = new DBusConnection(sessionAddress);
+            await connection.ConnectAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var dBus = new DBus.DBus(connection, "org.freedesktop.DBus", "/org/freedesktop/DBus");
+            handler = new X11StatusNotifierItemHandler(connection, _id, _id);
+            handler.ActivationDelegate += OnActivation;
+            handler.ContextMenuDelegate += OnContextMenu;
+            handler.SecondaryActivateDelegate += OnSecondaryActivate;
+            handler.ScrollDelegate += OnScroll;
+            connection.AddMethodHandler(handler);
+
+            lock (_lifecycleLock)
+            {
+                if (_isDisposed || !_isVisible || generation != _connectionGeneration)
+                    return;
+
+                _connection = connection;
+                _dBus = dBus;
+                _sniHandler = handler;
+                attached = true;
+            }
+
+            connection = null;
+            handler = null;
+            await WatchAsync(generation, dBus, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch
+        {
+        }
+        finally
+        {
+            if (!attached)
+            {
+                DetachHandler(handler);
+                try
+                {
+                    if (connection is not null && handler is not null)
+                        connection.RemoveMethodHandler(handler.Path);
+                }
+                catch
+                {
+                }
+
+                connection?.Dispose();
+                lock (_lifecycleLock)
+                {
+                    if (generation == _connectionGeneration && _connection is null)
+                    {
+                        _connectionCancellation?.Dispose();
+                        _connectionCancellation = null;
+                    }
+                }
+            }
+        }
+    }
+
+    async Task WatchAsync(
+        int generation,
+        DBus.DBus dBus,
+        CancellationToken cancellationToken)
+    {
+        IDisposable? watch = null;
+        try
+        {
+            watch = await dBus.WatchNameOwnerChangedAsync(
                 change =>
                 {
                     if (change.A0 == "org.kde.StatusNotifierWatcher")
-                        OnNameChange(change.A0, change.A2);
+                        OnNameChange(generation, change.A0, change.A2);
                 },
                 emitOnCapturedContext: false);
+            cancellationToken.ThrowIfCancellationRequested();
 
-            var nameOwner = await _dBus.GetNameOwnerAsync("org.kde.StatusNotifierWatcher");
-            OnNameChange("org.kde.StatusNotifierWatcher", nameOwner);
+            lock (_lifecycleLock)
+            {
+                if (_isDisposed || generation != _connectionGeneration)
+                    return;
+
+                _serviceWatchDisposable = watch;
+                watch = null;
+            }
+
+            try
+            {
+                var nameOwner = await dBus.GetNameOwnerAsync("org.kde.StatusNotifierWatcher");
+                OnNameChange(generation, "org.kde.StatusNotifierWatcher", nameOwner);
+            }
+            catch (DBusErrorReplyException ex) when (
+                ex.ErrorName == "org.freedesktop.DBus.Error.NameHasNoOwner")
+            {
+            }
         }
-        catch (DBusErrorReplyException ex) when (ex.ErrorName == "org.freedesktop.DBus.Error.NameHasNoOwner")
+        catch (OperationCanceledException)
         {
         }
         catch
         {
+        }
+        finally
+        {
+            watch?.Dispose();
+        }
+    }
+
+    void OnNameChange(int generation, string name, string? newOwner)
+    {
+        var register = false;
+        lock (_lifecycleLock)
+        {
+            if (_isDisposed || generation != _connectionGeneration || _connection is null ||
+                name != "org.kde.StatusNotifierWatcher")
+                return;
+
+            if (!string.IsNullOrEmpty(newOwner))
+            {
+                _serviceConnected = true;
+                _isRegistered = false;
+                _registrationPending = false;
+                _statusNotifierWatcher = new StatusNotifierWatcher(
+                    _connection,
+                    "org.kde.StatusNotifierWatcher",
+                    "/StatusNotifierWatcher");
+                register = _isVisible;
+            }
+            else
+            {
+                _serviceConnected = false;
+                _isRegistered = false;
+                _registrationPending = false;
+                _statusNotifierWatcher = null;
+            }
+        }
+
+        if (register)
+            _ = CreateTrayIconAsync(generation);
+    }
+
+    async Task CreateTrayIconAsync(int generation)
+    {
+        DBusConnection connection;
+        StatusNotifierWatcher watcher;
+        X11StatusNotifierItemHandler handler;
+        lock (_lifecycleLock)
+        {
+            if (_isDisposed || !_isVisible || !_serviceConnected || _isRegistered ||
+                _registrationPending ||
+                generation != _connectionGeneration || _connection is null ||
+                _statusNotifierWatcher is null || _sniHandler is null)
+                return;
+
+            _registrationPending = true;
+            connection = _connection;
+            watcher = _statusNotifierWatcher;
+            handler = _sniHandler;
+        }
+
+        try
+        {
+            await watcher.RegisterStatusNotifierItemAsync(connection.UniqueName!);
+
+            string tooltip;
+            (int, int, byte[]) icon;
+            CancellationToken cancellationToken;
+            lock (_lifecycleLock)
+            {
+                if (_isDisposed || !_isVisible || !_serviceConnected ||
+                    generation != _connectionGeneration ||
+                    !ReferenceEquals(connection, _connection) ||
+                    !ReferenceEquals(watcher, _statusNotifierWatcher))
+                    return;
+
+                _registrationPending = false;
+                _isRegistered = true;
+                tooltip = _tooltip;
+                icon = _currentIcon;
+                cancellationToken = _connectionCancellation?.Token ?? default;
+            }
+
+            handler.SetTitleAndTooltip(tooltip);
+            handler.SetIcon(icon);
+            _ = ReEmitSignalsForGnomeShellAsync(generation, cancellationToken);
+        }
+        catch
+        {
+            lock (_lifecycleLock)
+            {
+                if (generation == _connectionGeneration)
+                    _registrationPending = false;
+            }
+        }
+    }
+
+    async Task ReEmitSignalsForGnomeShellAsync(
+        int generation,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(GnomeShellInitialDelayMs, cancellationToken);
+            ReEmitIconIfCurrent(generation);
+
+            await Task.Delay(GnomeShellSecondDelayMs, cancellationToken);
+            ReEmitIconIfCurrent(generation);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch
+        {
+        }
+    }
+
+    void ReEmitIconIfCurrent(int generation)
+    {
+        X11StatusNotifierItemHandler? handler;
+        (int, int, byte[]) icon;
+        lock (_lifecycleLock)
+        {
+            if (_isDisposed || !_isVisible || !_isRegistered ||
+                generation != _connectionGeneration)
+                return;
+
+            handler = _sniHandler;
+            icon = _currentIcon;
+        }
+
+        handler?.SetIcon(icon);
+    }
+
+    void CloseConnection(bool disposeObject)
+    {
+        CancellationTokenSource? cancellation;
+        IDisposable? watch;
+        DBusConnection? connection;
+        X11StatusNotifierItemHandler? handler;
+        lock (_lifecycleLock)
+        {
+            if (_isDisposed)
+            {
+                if (disposeObject)
+                    return;
+                throw new ObjectDisposedException(nameof(SystemTrayIcon));
+            }
+
+            if (disposeObject)
+                _isDisposed = true;
+
+            _isVisible = false;
+            _connectionGeneration++;
+            cancellation = _connectionCancellation;
+            watch = _serviceWatchDisposable;
+            connection = _connection;
+            handler = _sniHandler;
+            _connectionCancellation = null;
             _serviceWatchDisposable = null;
-        }
-    }
-
-    void OnNameChange(string name, string? newOwner)
-    {
-        if (_isDisposed || _connection is null || name != "org.kde.StatusNotifierWatcher")
-            return;
-
-        if (!_serviceConnected && !string.IsNullOrEmpty(newOwner))
-        {
-            _serviceConnected = true;
-            _statusNotifierWatcher = new StatusNotifierWatcher(_connection, "org.kde.StatusNotifierWatcher", "/StatusNotifierWatcher");
-
-            // Re-register the handler on the existing connection.
-            // No need to DestroyTrayIcon() here — the handler was already
-            // removed when the watcher went away, and DestroyTrayIcon()
-            // would dispose the connection we still need.
-            _connection.RemoveMethodHandler(_sniHandler!.Path);
-            _connection.AddMethodHandler(_sniHandler);
-
-            if (_isVisible)
-                _ = CreateTrayIconAsync();
-        }
-        else if (_serviceConnected && string.IsNullOrEmpty(newOwner))
-        {
-            DestroyTrayIcon();
+            _connection = null;
+            _dBus = null;
+            _statusNotifierWatcher = null;
+            _sniHandler = null;
             _serviceConnected = false;
+            _isRegistered = false;
+            _registrationPending = false;
+        }
+
+        try
+        {
+            cancellation?.Cancel();
+        }
+        catch
+        {
+        }
+        cancellation?.Dispose();
+
+        DetachHandler(handler);
+        try
+        {
+            if (connection is not null && handler is not null)
+                connection.RemoveMethodHandler(handler.Path);
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            watch?.Dispose();
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            // Closing the unique D-Bus name is the StatusNotifierItem protocol's
+            // unregister operation. The watcher removes the item automatically.
+            connection?.Dispose();
+        }
+        catch
+        {
         }
     }
 
-    async Task CreateTrayIconAsync()
+    void DetachHandler(X11StatusNotifierItemHandler? handler)
     {
-        if (_connection is null || !_serviceConnected || _isDisposed || _statusNotifierWatcher is null)
+        if (handler is null)
             return;
 
-        try
-        {
-            _connection.RemoveMethodHandler(_sniHandler!.Path);
-            _connection.AddMethodHandler(_sniHandler);
-
-            await RegisterWithStatusNotifierWatcherAsync();
-
-            ReEmitSignalsForGnomeShellAsync();
-        }
-        catch
-        {
-        }
+        handler.ActivationDelegate -= OnActivation;
+        handler.ContextMenuDelegate -= OnContextMenu;
+        handler.SecondaryActivateDelegate -= OnSecondaryActivate;
+        handler.ScrollDelegate -= OnScroll;
     }
 
-    async Task RegisterWithStatusNotifierWatcherAsync()
+    void RaiseOnCapturedContext(Action action)
     {
-        _sysTrayServiceName = _connection!.UniqueName!;
-
-        try
+        if (_eventContext is null || ReferenceEquals(SynchronizationContext.Current, _eventContext))
         {
-            await _statusNotifierWatcher!.RegisterStatusNotifierItemAsync(_sysTrayServiceName);
+            bool invoke;
+            lock (_lifecycleLock)
+                invoke = !_isDisposed;
+            if (invoke)
+                action();
         }
-        catch
+        else
         {
-            throw;
+            _eventContext.Post(_ =>
+            {
+                bool invoke;
+                lock (_lifecycleLock)
+                    invoke = !_isDisposed;
+                if (invoke)
+                    action();
+            }, null);
         }
-
-        _sniHandler!.SetTitleAndTooltip(_tooltip);
-        _sniHandler.SetIcon(_currentIcon);
-    }
-
-    void ReEmitSignalsForGnomeShellAsync()
-    {
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(GnomeShellInitialDelayMs);
-            if (!_isDisposed && _sniHandler?.Connection is not null)
-                _sniHandler.SetIcon(_currentIcon);
-
-            await Task.Delay(GnomeShellSecondDelayMs);
-            if (!_isDisposed && _sniHandler?.Connection is not null)
-                _sniHandler.SetIcon(_currentIcon);
-        });
-    }
-
-    void DestroyTrayIcon()
-    {
-        if (_sniHandler is null)
-            return;
-
-        try
-        {
-            _connection?.RemoveMethodHandler(_sniHandler.Path);
-        }
-        catch
-        {
-        }
-    }
-
-    // ─── Icon Management ──────────────────────────────────────────
-
-    void UpdateIcon(string iconPath)
-    {
-        if (_isDisposed)
-            throw new ObjectDisposedException(nameof(SystemTrayIcon));
-
-        _currentIcon = RenderIcon(iconPath);
-
-        if (_sniHandler?.Connection is not null)
-            _sniHandler.SetIcon(_currentIcon);
     }
 
     // ─── Icon Rendering ───────────────────────────────────────────

@@ -12,7 +12,7 @@
       UnoFeatures let's you quickly add and manage implicit package references based on the features you want to use.
       https://aka.platform.uno/singleproject-features
     -->
-    
+
     <UnoFeatures>
       SkiaRenderer;
     </UnoFeatures>
@@ -45,29 +45,25 @@
 		<PackageTags>Shell System TrayIcon DesktopFlyouts DesktopFlyout UWP WinUI MUX WASDK WindowsAppSDK Uno Platform Windows</PackageTags>
 		<PackageIcon>icon-128.png</PackageIcon>
   </PropertyGroup>
-  
-	<ItemGroup>
-		<None Include="..\..\.nuget\README.md" Pack="true" PackagePath="" />
-		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-		<None Include="..\..\.nuget\icon-128.png" Pack="true" PackagePath="" />
-	</ItemGroup>
-  
-	<ItemGroup>
-		<!-- <PackageReference Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" PrivateAssets="all" /> -->
-		<PackageReference Include="Tmds.DBus.Protocol" />
-		<PackageReference Include="Tmds.DBus.Generator" />
-    	<PackageReference Include="Svg.Skia" />
-	</ItemGroup>
 
-	<ItemGroup>
-		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.DBus.xml"
-			Namespace="DesktopFlyouts.DBus" GenerateDBusTypes="true" />
-		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.portal.Settings.xml"
-			Namespace="DesktopFlyouts.DBus" GenerateDBusTypes="true" />
-		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.DBus.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
-		<AdditionalFiles Include="dbus-interfaces\org.kde.StatusNotifierWatcher.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
-		<AdditionalFiles Include="dbus-interfaces\org.kde.StatusNotifierItem.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Handler" />
-	</ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\.nuget\README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\..\.nuget\icon-128.png" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Tmds.DBus.Protocol" />
+    <PackageReference Include="Tmds.DBus.Generator" PrivateAssets="all" />
+    <PackageReference Include="Svg.Skia" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="dbus-interfaces\org.freedesktop.DBus.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
+    <AdditionalFiles Include="dbus-interfaces\org.freedesktop.portal.Settings.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
+    <AdditionalFiles Include="dbus-interfaces\org.kde.StatusNotifierWatcher.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
+    <AdditionalFiles Include="dbus-interfaces\org.kde.StatusNotifierItem.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Handler" />
+  </ItemGroup>
 
 	<Import Project="..\DesktopFlyouts.Shared\DesktopFlyouts.Shared.projitems" Label="Shared" />
 	<ItemGroup>

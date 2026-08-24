@@ -7,6 +7,7 @@ partial class X11PInvoke
 {
     private const string LibX11 = "libX11.so.6";
     private const string LibXext = "libXext.so.6";
+    private const string LibXrandr = "libXrandr.so.2";
 
     [LibraryImport(LibX11)]
     public static partial nint XOpenDisplay(nint display);
@@ -20,10 +21,32 @@ partial class X11PInvoke
     [LibraryImport(LibX11, StringMarshalling = StringMarshalling.Utf8)]
     public static partial nint XInternAtom(nint display, string atomName, [MarshalAs(UnmanagedType.Bool)] bool onlyIfExists);
 
-    [LibraryImport(LibX11)]
-    public static partial int XChangeProperty(
+    [LibraryImport(LibX11, EntryPoint = "XChangeProperty")]
+    private static partial int XChangePropertyNative(
         nint display, nint window, nint property, nint type,
-        int format, PropertyMode mode, byte[] data, int nelements);
+        int format, PropertyMode mode, nint data, int nelements);
+
+    public static unsafe int XChangeProperty32(
+        nint display,
+        nint window,
+        nint property,
+        nint type,
+        PropertyMode mode,
+        ReadOnlySpan<nuint> data)
+    {
+        fixed (nuint* dataPointer = data)
+        {
+            return XChangePropertyNative(
+                display,
+                window,
+                property,
+                type,
+                32,
+                mode,
+                (nint)dataPointer,
+                data.Length);
+        }
+    }
 
     [LibraryImport(LibX11)]
     public static partial int XMapWindow(nint display, nint window);
@@ -75,8 +98,8 @@ partial class X11PInvoke
     [LibraryImport(LibXext)]
     public static partial int XShapeCombineRegion(nint display, nint window, int destKind,
         int xOff, int yOff, nint srcRegion, int op);
-        
-    
+
+
     [LibraryImport(LibX11)]
     public static partial nint XCreateRegion();
 
@@ -88,6 +111,19 @@ partial class X11PInvoke
 
     [LibraryImport(LibX11)]
     public static partial int XSetInputFocus(nint display, nint focus, int revertTo, nint time);
+
+    [LibraryImport(LibX11)]
+    public static partial int XGetInputFocus(nint display, out nint focusReturn, out int revertToReturn);
+
+    [LibraryImport(LibXrandr)]
+    public static partial nint XRRGetMonitors(
+        nint display,
+        nint window,
+        [MarshalAs(UnmanagedType.Bool)] bool getActive,
+        out int monitorCount);
+
+    [LibraryImport(LibXrandr)]
+    public static partial void XRRFreeMonitors(nint monitors);
 
     [LibraryImport(LibX11)]
     public static partial int XGetWindowProperty(
@@ -126,11 +162,23 @@ partial class X11PInvoke
     {
         public nint background_pixmap, background_pixel, border_pixmap, border_pixel;
         public int bit_gravity, win_gravity, backing_store;
-        public uint backing_planes, backing_pixel;
+        public nuint backing_planes, backing_pixel;
         public int save_under;
         public nint event_mask, do_not_propagate_mask;
         public int override_redirect;
         public nint colormap, cursor;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct XRRMonitorInfo
+    {
+        public nuint name;
+        public int primary;
+        public int automatic;
+        public int noutput;
+        public int x, y, width, height;
+        public int mwidth, mheight;
+        public nint outputs;
     }
 
     [StructLayout(LayoutKind.Explicit)]
@@ -144,7 +192,7 @@ partial class X11PInvoke
     public struct XClientMessageEvent
     {
         public int type;
-        public long serial;
+        public nuint serial;
         public int send_event;
         public nint display;
         public nint window;
@@ -152,7 +200,7 @@ partial class X11PInvoke
         public int format;
         public nint ptr1, ptr2, ptr3, ptr4, ptr5;
     }
-        
+
     [StructLayout(LayoutKind.Sequential)]
     public struct XRegionRectangle
     {
@@ -162,12 +210,16 @@ partial class X11PInvoke
 
     public const int ClientMessage = 33;
     public const long StructureNotifyMask = 1L << 17;
+    public const long SubstructureNotifyMask = 1L << 19;
+    public const long SubstructureRedirectMask = 1L << 20;
     public const long FocusChangeMask = 1L << 21;
     public const long PropertyChangeMask = 1L << 22;
     public const nint CWBackPixmap = 1 << 0;
     public const nint CWOverrideRedirect = 1 << 9;
     // Predefined X11 atom ID for type ATOM.
     public const nint XA_ATOM = 4;
+    public const nuint XA_CARDINAL = 6;
+    public const nuint XA_WINDOW = 33;
 
     // background_pixmap values
     public const nint None = 0;            // no background — transparent under compositors
