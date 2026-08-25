@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics;
@@ -27,6 +28,37 @@ using XamlHostingKit;
 
 namespace DesktopFlyouts
 {
+    internal sealed class CoreDispatcherSynchronizationContext : SynchronizationContext
+    {
+        private readonly CoreDispatcher _dispatcher;
+
+        internal CoreDispatcherSynchronizationContext(CoreDispatcher dispatcher)
+        {
+            _dispatcher = dispatcher;
+        }
+
+        public override void Post(SendOrPostCallback callback, object? state)
+        {
+            ArgumentNullException.ThrowIfNull(callback);
+            _ = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => callback(state));
+        }
+
+        public override void Send(SendOrPostCallback callback, object? state)
+        {
+            ArgumentNullException.ThrowIfNull(callback);
+
+            if (!_dispatcher.HasThreadAccess)
+                throw new NotSupportedException("Cross-thread synchronous dispatch is not supported.");
+
+            callback(state);
+        }
+
+        public override SynchronizationContext CreateCopy()
+        {
+            return new CoreDispatcherSynchronizationContext(_dispatcher);
+        }
+    }
+
     internal unsafe partial class XamlIslandHostWindow : IDisposable
     {
         private static readonly object s_cbtHookTargetsLock = new();
@@ -125,6 +157,8 @@ namespace DesktopFlyouts
             try
             {
                 _coreWindow = _xamlWindow.CoreWindow;
+                SynchronizationContext.SetSynchronizationContext(
+                    new CoreDispatcherSynchronizationContext(_coreWindow.Dispatcher));
                 InitializeCoreWindowHandle();
 
                 _coreWindow.Activated += CoreWindow_Activated;
@@ -159,6 +193,19 @@ namespace DesktopFlyouts
                 if (!_disposed && _xamlWindow is not null && ReferenceEquals(_content, content))
                 {
                     _contentRoot = new Grid();
+                    var desktopFlyoutsResources = new DesktopFlyoutResources();
+                    _contentRoot.Resources.MergedDictionaries.Add(desktopFlyoutsResources);
+
+                    if (content is Control control)
+                    {
+                        control.Style = content switch
+                        {
+                            DesktopFlyout => desktopFlyoutsResources.FlyoutStyle,
+                            DesktopMenuFlyout => desktopFlyoutsResources.MenuFlyoutStyle,
+                            _ => throw new InvalidOperationException($"Unsupported flyout type: {content.GetType().Name}."),
+                        };
+                    }
+
                     _contentRoot.Children.Add(content);
                     _xamlWindow.Content = _contentRoot;
 
@@ -176,10 +223,10 @@ namespace DesktopFlyouts
                         PInvoke.ShowWindow(HWnd, SHOW_WINDOW_CMD.SW_SHOWNOACTIVATE);
                     }
 
-                    if (content is Control control)
+                    if (content is Control templatedControl)
                     {
-                        control.ApplyTemplate();
-                        control.UpdateLayout();
+                        templatedControl.ApplyTemplate();
+                        templatedControl.UpdateLayout();
                     }
 
                     if (!wasVisible)

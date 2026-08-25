@@ -19,6 +19,11 @@ namespace DesktopFlyouts
         private static DesktopFlyout? _desktopFlyout;
         private static volatile DesktopMenuFlyout? _desktopMenuFlyout;
 
+        public App()
+        {
+            InitializeComponent();
+        }
+
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
             _systemTrayIcon = new(
@@ -45,6 +50,7 @@ namespace DesktopFlyouts
         {
             var flyout = new DesktopFlyout
             {
+                HideOnLostFocus = false,
                 Width = 360,
             };
 
@@ -131,13 +137,17 @@ namespace DesktopFlyouts
 
         private static void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
         {
-            if (_desktopFlyout is null)
+            var flyout = _desktopFlyout;
+            if (flyout is null)
                 return;
 
-            if (_desktopFlyout.IsOpen)
-                _desktopFlyout.Hide();
-            else
-                _desktopFlyout.Show();
+            _ = flyout.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                if (flyout.IsOpen)
+                    flyout.Hide();
+                else
+                    flyout.Show();
+            });
         }
 
         private static void SystemTrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)

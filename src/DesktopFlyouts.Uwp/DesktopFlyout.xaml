@@ -3,10 +3,22 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:DesktopFlyouts">
 
-    <Style BasedOn="{StaticResource DefaultWindows11DesktopFlyoutStyle}" TargetType="local:DesktopFlyout" />
-    <Style BasedOn="{StaticResource DefaultDesktopFlyoutIslandStyle}" TargetType="local:DesktopFlyoutIsland" />
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#26FFFFFF" />
+            <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="#12FFFFFF" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#14000000" />
+            <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="#0F000000" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="HighContrast">
+            <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="White" />
+            <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="White" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
 
-    <Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
+    <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
 
     <Style x:Key="DefaultWindows11DesktopFlyoutStyle" TargetType="local:DesktopFlyout">
         <Setter Property="HorizontalAlignment" Value="Right" />
@@ -103,5 +115,9 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style BasedOn="{StaticResource DefaultWindows11DesktopFlyoutStyle}" TargetType="local:DesktopFlyout" />
+    <Style BasedOn="{StaticResource DefaultDesktopFlyoutIslandStyle}" TargetType="local:DesktopFlyoutIsland" />
+    <Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
 
 </ResourceDictionary>
