@@ -77,7 +77,7 @@ namespace DesktopFlyouts
             ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
             ActivationModes.Add(DesktopFlyoutActivationMode.NoActivateOnOpen, "No activate on open");
             ActivationModes.Add(DesktopFlyoutActivationMode.NeverActivate, "Never activate");
-            SelectedActivationModeIndex = 0;
+            SelectedActivationModeIndex = 2;
 
             FlyoutExamples.Add(DesktopFlyoutSampleKind.Customizable, "Default");
             FlyoutExamples.Add(DesktopFlyoutSampleKind.Button, "Button");

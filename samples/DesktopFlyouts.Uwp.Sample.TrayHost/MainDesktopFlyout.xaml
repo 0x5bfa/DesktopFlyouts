@@ -8,6 +8,7 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
 	Width="360"
+	ActivationMode="NeverActivate"
 	mc:Ignorable="d">
 
 	<local:DesktopFlyout.Resources>

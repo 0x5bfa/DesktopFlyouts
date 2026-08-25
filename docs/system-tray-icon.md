@@ -53,6 +53,23 @@ private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e
 }
 ```
 
+## Keeping shell flyouts open
+
+On Windows, `SystemTrayIcon` activates its hidden callback window before raising a click event by default. This supports conventional native context menus, but it also causes shell-owned surfaces such as the notification area overflow to lose foreground activation.
+
+Disable that behavior when the click handler opens a non-activating `DesktopFlyout`:
+
+```csharp
+trayIcon.ActivateOnClick = false;
+flyout.ActivationMode = DesktopFlyoutActivationMode.NeverActivate;
+
+trayIcon.LeftClicked += (_, e) => flyout.Show(e.Point);
+```
+
+`NeverActivate` prevents later pointer interaction with the desktop flyout from activating it, allowing the shell overflow and an auto-hidden taskbar to remain open. `NoActivateOnOpen` can preserve the shell surface initially, but interacting with the desktop flyout can still activate it and dismiss the shell surface.
+
+Leave `ActivateOnClick` enabled when the click handler opens a conventional native context menu that requires its owner window to be in the foreground.
+
 ## Visibility and updates
 
 `IsVisible` defaults to `false`.

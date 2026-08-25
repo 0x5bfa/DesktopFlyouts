@@ -26,7 +26,10 @@ namespace DesktopFlyouts
 			_systemTrayIcon = new(
 				"Tray.ico",
 				"DesktopFlyouts sample app (UWP)",
-				new("022F5158-F05A-4FE1-B356-34F14B363625"));
+				new("022F5158-F05A-4FE1-B356-34F14B363625"))
+			{
+				ActivateOnClick = false,
+			};
 
 			_systemTrayIcon.LeftClicked += SystemTrayIcon_LeftClicked;
 			_systemTrayIcon.RightClicked += SystemTrayIcon_RightClicked;
