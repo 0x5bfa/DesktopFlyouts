@@ -3,10 +3,8 @@
 
 using System;
 using System.IO;
-using System.Threading;
 using DesktopFlyouts.Shared;
 using Windows.ApplicationModel.Activation;
-using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -23,9 +21,6 @@ namespace DesktopFlyouts
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            SynchronizationContext.SetSynchronizationContext(
-                new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
-
             _systemTrayIcon = new(
                 Path.Combine(AppContext.BaseDirectory, "Tray.ico"),
                 "DesktopFlyouts sample app (UWP)",
@@ -42,8 +37,6 @@ namespace DesktopFlyouts
             // another XamlHostingKit window and is constructed on that window's XAML thread.
             XamlIslandApplication.CreateWindow(_ =>
             {
-                SynchronizationContext.SetSynchronizationContext(
-                    new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
                 _desktopMenuFlyout = CreateDesktopMenuFlyout();
             });
         }
@@ -118,13 +111,6 @@ namespace DesktopFlyouts
             settings.Items.Add(new MenuFlyoutItem { Text = "Language" });
             settings.Items.Add(new MenuFlyoutItem { Text = "Privacy" });
 
-            var devices = new MenuFlyoutItem
-            {
-                Text = "Devices",
-                Icon = new FontIcon { Glyph = "\uE975" },
-            };
-            devices.Click += async (_, _) => await Launcher.LaunchUriAsync(new Uri("tif-secondaryapp:"));
-
             var exit = new MenuFlyoutItem
             {
                 Text = "Exit",
@@ -138,7 +124,6 @@ namespace DesktopFlyouts
             };
 
             menu.Items.Add(settings);
-            menu.Items.Add(devices);
             menu.Items.Add(new MenuFlyoutSeparator());
             menu.Items.Add(exit);
             return menu;

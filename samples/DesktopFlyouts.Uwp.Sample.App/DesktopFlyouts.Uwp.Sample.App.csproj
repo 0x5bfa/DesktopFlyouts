@@ -1,30 +1,50 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-	
-	<PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
 
-		<OutputType>WinExe</OutputType>
-		<TargetFramework>net10.0-windows$(TargetWindowsVersion)</TargetFramework>
-		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
-		<ApplicationManifest>app.manifest</ApplicationManifest>
-		<EnableMsixTooling>true</EnableMsixTooling>
+    <PropertyGroup>
 
-		<UseUwp>true</UseUwp>
-		<DisableEmbeddedXbf>false</DisableEmbeddedXbf>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows$(TargetWindowsVersion)</TargetFramework>
+        <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+        <PublishProfile>win-$(Platform).pubxml</PublishProfile>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <EnableMsixTooling>true</EnableMsixTooling>
 
-	</PropertyGroup>
+        <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
 
-	<ItemGroup>
-		<Manifest Include="$(ApplicationManifest)" />
-		<Page Remove="App2.xaml" />
-		<ApplicationDefinition Include="App2.xaml" />
-	</ItemGroup>
+        <UseUwp>true</UseUwp>
+        <UseUwpTools>true</UseUwpTools>
+        <DisableEmbeddedXbf>false</DisableEmbeddedXbf>
+        <ProjectPriFileName>resources.pri</ProjectPriFileName>
+        <_SupportEmbedFileResources>true</_SupportEmbedFileResources>
 
-	<ItemGroup>
-		<PackageReference Include="Microsoft.Windows.CsWinRT" />
-		<PackageReference Include="Microsoft.UI.Xaml" />
-		<PackageReference Include="CommunityToolkit.Mvvm" />
-		<PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls" />
-	</ItemGroup>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <WindowsKitsPath Condition="'$(WindowsKitsPath)' == '' and '$(TargetPlatformSdkRootOverride)' != ''">$(TargetPlatformSdkRootOverride)\</WindowsKitsPath>
+        <WindowsKitsPath Condition="'$(WindowsKitsPath)' == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot10', null, RegistryView.Registry32, RegistryView.Default))</WindowsKitsPath>
+        <WindowsKitsXamlCompilerTargetsPath>$(WindowsKitsPath)bin\$(TargetWindowsVersion)\XamlCompiler\Microsoft.Windows.UI.Xaml.Common.targets</WindowsKitsXamlCompilerTargetsPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AppxTargetDeviceFamilyItem Include="Windows.Desktop" />
+        <Manifest Include="$(ApplicationManifest)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="Assets\**" />
+        <Content Include="Tray.ico">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Windows.CsWinRT" />
+        <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.csproj" />
+    </ItemGroup>
 
 </Project>
