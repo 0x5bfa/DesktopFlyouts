@@ -92,6 +92,20 @@ namespace DesktopFlyouts
         }
 
         /// <summary>
+        /// Gets or sets whether the hidden callback window is activated before a click event is raised.
+        /// </summary>
+        /// <value><see langword="true"/> to activate the callback window before raising click and
+        /// double-click events; otherwise, <see langword="false"/>. The default is
+        /// <see langword="true"/>.</value>
+        /// <remarks>
+        /// Set this property to <see langword="false"/> when opening a non-activating desktop flyout
+        /// from a tray icon. This allows shell-owned surfaces, such as the notification area overflow,
+        /// to retain foreground activation. Conventional native context menus may require this property
+        /// to remain <see langword="true"/>.
+        /// </remarks>
+        public bool ActivateOnClick { get; set; } = true;
+
+        /// <summary>
         /// Gets the stable identifier used for the tray icon.
         /// </summary>
         /// <value>The GUID used by the shell to identify this notification icon.</value>
@@ -390,7 +404,9 @@ namespace DesktopFlyouts
                         {
                             case PInvoke.WM_LBUTTONUP:
                                 {
-                                    PInvoke.SetForegroundWindow(hWnd);
+                                    if (ActivateOnClick)
+                                        PInvoke.SetForegroundWindow(hWnd);
+
                                     var point = GetCenterPointOfTrayIcon(hWnd);
                                     if (!point.IsEmpty)
                                     {
@@ -401,7 +417,9 @@ namespace DesktopFlyouts
                                 }
                             case PInvoke.WM_RBUTTONUP:
                                 {
-                                    PInvoke.SetForegroundWindow(hWnd);
+                                    if (ActivateOnClick)
+                                        PInvoke.SetForegroundWindow(hWnd);
+
                                     var point = GetCenterPointOfTrayIcon(hWnd);
                                     if (!point.IsEmpty)
                                     {
@@ -412,7 +430,9 @@ namespace DesktopFlyouts
                                 }
                             case PInvoke.WM_LBUTTONDBLCLK:
                                 {
-                                    PInvoke.SetForegroundWindow(hWnd);
+                                    if (ActivateOnClick)
+                                        PInvoke.SetForegroundWindow(hWnd);
+
                                     var point = GetCenterPointOfTrayIcon(hWnd);
                                     if (!point.IsEmpty)
                                     {
@@ -423,7 +443,9 @@ namespace DesktopFlyouts
                                 }
                             case PInvoke.WM_RBUTTONDBLCLK:
                                 {
-                                    PInvoke.SetForegroundWindow(hWnd);
+                                    if (ActivateOnClick)
+                                        PInvoke.SetForegroundWindow(hWnd);
+
                                     var point = GetCenterPointOfTrayIcon(hWnd);
                                     if (!point.IsEmpty)
                                     {
