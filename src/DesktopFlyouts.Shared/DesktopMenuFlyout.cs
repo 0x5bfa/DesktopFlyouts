@@ -37,6 +37,9 @@ namespace DesktopFlyouts
         private readonly XamlIslandHostWindow? _host;
         private MenuFlyout? _menuFlyout;
         private bool _disposed;
+#if UWP
+        private Point? _pendingShowPoint;
+#endif
 
         private Border? MenuFlyoutTargetControl;
 
@@ -58,6 +61,9 @@ namespace DesktopFlyouts
             DefaultStyleKey = typeof(DesktopMenuFlyout);
 
             _host = new XamlIslandHostWindow();
+#if UWP
+            _host.ContentAttached += Host_ContentAttached;
+#endif
             _host.SetContent(this);
             _ = _host.UpdateWindowVisibility(false);
             _host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
@@ -102,6 +108,13 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Show(Point point)
         {
+#if UWP
+            if (!_disposed && _host is not null && !_host.IsContentReady)
+            {
+                _pendingShowPoint = point;
+                return;
+            }
+#endif
             if (_disposed || _host?.IsInitialized is not true || _menuFlyout is null)
                 return;
 
@@ -113,7 +126,7 @@ namespace DesktopFlyouts
 
             ApplyTemplate();
             UpdateLayout();
-            if (MenuFlyoutTargetControl is null)
+            if (MenuFlyoutTargetControl?.XamlRoot is null)
             {
                 _ = _host?.UpdateWindowVisibility(false);
                 return;
@@ -132,6 +145,9 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Hide()
         {
+#if UWP
+            _pendingShowPoint = null;
+#endif
             if (_disposed)
                 return;
 
@@ -155,6 +171,17 @@ namespace DesktopFlyouts
 
             UpdateFlyoutTheme();
         }
+
+#if UWP
+        private void Host_ContentAttached(object? sender, EventArgs e)
+        {
+            if (_disposed || _pendingShowPoint is not Point point)
+                return;
+
+            _pendingShowPoint = null;
+            Show(point);
+        }
+#endif
 
 #if UWP
         /// <summary>
@@ -196,6 +223,10 @@ namespace DesktopFlyouts
             }
 
             _host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
+#if UWP
+            _host?.ContentAttached -= Host_ContentAttached;
+            _pendingShowPoint = null;
+#endif
             _host?.Dispose();
             IsOpen = false;
 

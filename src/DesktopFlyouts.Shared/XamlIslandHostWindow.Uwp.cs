@@ -17,6 +17,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
+using Windows.UI.Xaml.Input;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -80,12 +81,17 @@ namespace DesktopFlyouts
         private HWND _preservedForegroundHWnd = default;
         private HWND _preservedActiveHWnd = default;
         private HWND _preservedFocusHWnd = default;
+        private DispatcherTimer? _contentReadyFallbackTimer;
+        private bool _isContentReady;
+        private bool _isContentReadyQueued;
+        private bool _hasSeenInitialDeactivation;
         private bool _disposed;
         private DesktopFlyoutActivationMode _activationMode = DesktopFlyoutActivationMode.Activate;
 
         internal HWND HWnd { get; private set; }
 
         internal bool IsInitialized => _xamlWindow is not null;
+        internal bool IsContentReady => !_disposed && _isContentReady;
 
         internal Rect WindowSize
         {
@@ -114,6 +120,7 @@ namespace DesktopFlyouts
 
         internal event EventHandler? WindowInactivated;
         internal event EventHandler? SystemSettingsChanged;
+        internal event EventHandler? ContentAttached;
 
         internal XamlIslandHostWindow()
         {
@@ -180,6 +187,9 @@ namespace DesktopFlyouts
             if (_disposed || _xamlWindow is null)
                 return;
 
+            _isContentReady = false;
+            _isContentReadyQueued = false;
+            StopContentReadyFallbackTimer();
             _content = content;
             var dispatcher = _coreWindow?.Dispatcher;
             if (dispatcher is null)
@@ -233,7 +243,59 @@ namespace DesktopFlyouts
                         PInvoke.ShowWindow(HWnd, SHOW_WINDOW_CMD.SW_HIDE);
 
                     ApplyActivationModeToWindows();
+                    if (wasVisible || _hasSeenInitialDeactivation)
+                        QueueContentReady();
+                    else
+                        StartContentReadyFallbackTimer();
                 }
+            });
+        }
+
+        private void StartContentReadyFallbackTimer()
+        {
+            StopContentReadyFallbackTimer();
+
+            _contentReadyFallbackTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(100),
+            };
+            _contentReadyFallbackTimer.Tick += ContentReadyFallbackTimer_Tick;
+            _contentReadyFallbackTimer.Start();
+        }
+
+        private void ContentReadyFallbackTimer_Tick(object? sender, object e)
+        {
+            StopContentReadyFallbackTimer();
+            QueueContentReady();
+        }
+
+        private void StopContentReadyFallbackTimer()
+        {
+            if (_contentReadyFallbackTimer is null)
+                return;
+
+            _contentReadyFallbackTimer.Stop();
+            _contentReadyFallbackTimer.Tick -= ContentReadyFallbackTimer_Tick;
+            _contentReadyFallbackTimer = null;
+        }
+
+        private void QueueContentReady()
+        {
+            var dispatcher = _coreWindow?.Dispatcher;
+            if (_disposed || dispatcher is null || _isContentReady || _isContentReadyQueued)
+                return;
+
+            StopContentReadyFallbackTimer();
+            _isContentReadyQueued = true;
+            _ = dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+            {
+                _isContentReadyQueued = false;
+                if (_disposed || _xamlWindow is null || _content is null)
+                    return;
+
+                _isContentReady = _contentRoot is not null && _content.XamlRoot is not null;
+                if (_isContentReady)
+                    ContentAttached?.Invoke(this, EventArgs.Empty);
             });
         }
 
@@ -330,11 +392,36 @@ namespace DesktopFlyouts
 
         internal bool NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
         {
-            if (_disposed || _xamlHwnd.IsNull || _activationMode is DesktopFlyoutActivationMode.NeverActivate)
+            if (_disposed || !_isContentReady || _xamlHwnd.IsNull || _content is null || _activationMode is DesktopFlyoutActivationMode.NeverActivate)
                 return false;
 
             PInvoke.SetFocus(_xamlHwnd);
-            return _content is Control control && control.Focus(FocusState.Programmatic);
+
+            var direction = reason switch
+            {
+                XamlSourceFocusNavigationReason.Left => FocusNavigationDirection.Left,
+                XamlSourceFocusNavigationReason.Up => FocusNavigationDirection.Up,
+                XamlSourceFocusNavigationReason.Right => FocusNavigationDirection.Right,
+                XamlSourceFocusNavigationReason.Down => FocusNavigationDirection.Down,
+                _ => FocusNavigationDirection.None,
+            };
+
+            if (direction is not FocusNavigationDirection.None && FocusManager.TryMoveFocus(direction))
+                return true;
+
+            var focusTarget = reason switch
+            {
+                XamlSourceFocusNavigationReason.Last or
+                XamlSourceFocusNavigationReason.Left or
+                XamlSourceFocusNavigationReason.Up => FocusManager.FindLastFocusableElement(_content),
+                _ => FocusManager.FindFirstFocusableElement(_content),
+            };
+
+            var focusState = reason is XamlSourceFocusNavigationReason.Programmatic or XamlSourceFocusNavigationReason.Restore
+                ? FocusState.Programmatic
+                : FocusState.Keyboard;
+
+            return focusTarget is Control control && control.Focus(focusState);
         }
 
         public bool TryPreTranslateMessage(MSG* msg)
@@ -608,8 +695,19 @@ namespace DesktopFlyouts
 
         private void CoreWindow_Activated(CoreWindow sender, WindowActivatedEventArgs args)
         {
-            if (!_disposed && args.WindowActivationState is CoreWindowActivationState.Deactivated)
-                WindowInactivated?.Invoke(this, EventArgs.Empty);
+            if (_disposed || args.WindowActivationState is not CoreWindowActivationState.Deactivated)
+                return;
+
+            if (!_isContentReady)
+            {
+                _hasSeenInitialDeactivation = true;
+                if (_contentRoot is not null)
+                    QueueContentReady();
+
+                return;
+            }
+
+            WindowInactivated?.Invoke(this, EventArgs.Empty);
         }
 
         private void UISettings_ColorValuesChanged(UISettings sender, object args)
@@ -629,6 +727,7 @@ namespace DesktopFlyouts
                 return;
 
             _disposed = true;
+            StopContentReadyFallbackTimer();
             RemoveCbtHook();
             UnsubclassXamlWindows();
 
@@ -642,6 +741,9 @@ namespace DesktopFlyouts
             _contentRoot?.Children.Clear();
             _contentRoot = null;
             _content = null;
+            _isContentReady = false;
+            _isContentReadyQueued = false;
+            _hasSeenInitialDeactivation = false;
 
             lock (s_claimedWindowsLock)
                 s_claimedWindows.Remove((nint)HWnd.Value);
