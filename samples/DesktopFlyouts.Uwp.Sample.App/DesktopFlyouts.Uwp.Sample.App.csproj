@@ -40,7 +40,6 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Windows.CsWinRT" />
-        <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>
