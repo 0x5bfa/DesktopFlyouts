@@ -14,15 +14,7 @@
         <UseUwp>true</UseUwp>
         <UseUwpTools>true</UseUwpTools>
         <DisableEmbeddedXbf>false</DisableEmbeddedXbf>
-        <ProjectPriFileName>resources.pri</ProjectPriFileName>
-        <_SupportEmbedFileResources>true</_SupportEmbedFileResources>
 
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <WindowsKitsPath Condition="'$(WindowsKitsPath)' == '' and '$(TargetPlatformSdkRootOverride)' != ''">$(TargetPlatformSdkRootOverride)\</WindowsKitsPath>
-        <WindowsKitsPath Condition="'$(WindowsKitsPath)' == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot10', null, RegistryView.Registry32, RegistryView.Default))</WindowsKitsPath>
-        <WindowsKitsXamlCompilerTargetsPath>$(WindowsKitsPath)bin\$(TargetWindowsVersion)\XamlCompiler\Microsoft.Windows.UI.Xaml.Common.targets</WindowsKitsXamlCompilerTargetsPath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,10 +24,7 @@
 
     <ItemGroup>
         <Content Include="Assets\**" />
-        <Content Include="Tray.ico">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-        </Content>
+        <Content Include="Tray.ico" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

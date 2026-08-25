@@ -5,7 +5,7 @@
     xmlns:local="using:DesktopFlyouts">
 
     <Application.Resources>
-        <!-- Ensure the app metadata provider includes the library types used by hosted XAML views. -->
+        <!--  Ensure the app metadata provider includes the library types used by hosted XAML views.  -->
         <DataTemplate x:Key="DesktopFlyoutsMetadataTemplate">
             <local:DesktopFlyout />
         </DataTemplate>

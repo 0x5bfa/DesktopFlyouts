@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "DesktopFlyouts.Uwp.Sample.App": {
+    "Run": {
       "commandName": "MsixPackage"
     }
   }
