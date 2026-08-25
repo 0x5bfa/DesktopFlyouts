@@ -1,5 +1,12 @@
 DesktopFlyouts is a WinUI library for showing desktop flyouts from tray icons or programmatically.
 
+## UWP desktop host
+
+The UWP package uses XamlHostingKit for System XAML initialization and message dispatch. Start the
+application with `XamlIslandApplication.Start`, and create every additional flyout on its own XAML
+thread with `XamlIslandApplication.CreateWindow`. See the getting-started guide below for the full
+entry-point example.
+
 ## Usage
 
 ### DesktopFlyout

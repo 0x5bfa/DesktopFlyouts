@@ -19,12 +19,8 @@ DesktopFlyouts is a WinUI library for showing lightweight desktop flyouts, menu 
 └───samples
     ├───DesktopFlyouts.Wasdk.Sample.App
     │   └───DesktopFlyouts.Wasdk.Sample.App.csproj
-    ├───DesktopFlyouts.Uwp.Sample.App
+    └───DesktopFlyouts.Uwp.Sample.App
     │   └───DesktopFlyouts.Uwp.Sample.App.csproj
-    ├───DesktopFlyouts.Uwp.Sample.Packaging
-    │   └───DesktopFlyouts.Uwp.Sample.Packaging.wapproj
-    └───DesktopFlyouts.Uwp.Sample.TrayHost
-        └───DesktopFlyouts.Uwp.Sample.TrayHost.csproj
 ```
 
 Most runtime behavior lives in `src/DesktopFlyouts.Shared` behind `#if WASDK`, `#if UWP`, and `#if HAS_UNO`. Keep all branches building when changing shared files.
@@ -55,10 +51,10 @@ dotnet msbuild /restore:false src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj /
 dotnet msbuild /restore:false samples\DesktopFlyouts.Wasdk.Sample.App\DesktopFlyouts.Wasdk.Sample.App.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
 ```
 
-3. Build the UWP library (Windows only):
+3. Build the UWP sample and library (Windows only):
 
 ```powershell
-dotnet msbuild /restore:false src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
+dotnet msbuild /restore:false samples\DesktopFlyouts.Uwp.Sample.App\DesktopFlyouts.Uwp.Sample.App.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
 ```
 
 4. Check whitespace and line endings:
@@ -118,7 +114,7 @@ Validate one item at a time:
 1. `git status --short --branch` to understand the current branch and dirty files.
 2. Build the Uno library.
 3. Build the WASDK sample (Windows only).
-4. Build the UWP library when shared code changed (Windows only).
+4. Build the UWP sample and library (Windows only).
 5. Launch the WASDK sample as packaged, never by direct `.exe` (Windows only).
 6. Confirm the app has a responsive process and real window handle (Windows only).
 7. Run `git diff --check`.

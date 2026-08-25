@@ -7,6 +7,7 @@ using CommunityToolkit.WinUI;
 
 
 #if UWP
+using Windows.Graphics;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Markup;
@@ -36,6 +37,9 @@ namespace DesktopFlyouts
         private readonly XamlIslandHostWindow? _host;
         private MenuFlyout? _menuFlyout;
         private bool _disposed;
+#if UWP
+        private Point? _pendingShowPoint;
+#endif
 
         private Border? MenuFlyoutTargetControl;
 
@@ -57,6 +61,9 @@ namespace DesktopFlyouts
             DefaultStyleKey = typeof(DesktopMenuFlyout);
 
             _host = new XamlIslandHostWindow();
+#if UWP
+            _host.ContentAttached += Host_ContentAttached;
+#endif
             _host.SetContent(this);
             _ = _host.UpdateWindowVisibility(false);
             _host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
@@ -101,7 +108,14 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Show(Point point)
         {
-            if (_disposed || _menuFlyout is null)
+#if UWP
+            if (!_disposed && _host is not null && !_host.IsContentReady)
+            {
+                _pendingShowPoint = point;
+                return;
+            }
+#endif
+            if (_disposed || _host?.IsInitialized is not true || _menuFlyout is null)
                 return;
 
             UpdateFlyoutTheme();
@@ -109,6 +123,14 @@ namespace DesktopFlyouts
             _host?.MoveAndResize(new RectInt32() { X = point.X, Y = point.Y });
             _host?.SetHWndRectRegion(new RectInt32() { Width = 1, Height = 1 });
             _ = _host?.UpdateWindowVisibility(true);
+
+            ApplyTemplate();
+            UpdateLayout();
+            if (MenuFlyoutTargetControl?.XamlRoot is null)
+            {
+                _ = _host?.UpdateWindowVisibility(false);
+                return;
+            }
 
             _menuFlyout.ShowAt(MenuFlyoutTargetControl);
 
@@ -123,6 +145,9 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Hide()
         {
+#if UWP
+            _pendingShowPoint = null;
+#endif
             if (_disposed)
                 return;
 
@@ -148,14 +173,25 @@ namespace DesktopFlyouts
         }
 
 #if UWP
+        private void Host_ContentAttached(object? sender, EventArgs e)
+        {
+            if (_disposed || _pendingShowPoint is not Point point)
+                return;
+
+            _pendingShowPoint = null;
+            Show(point);
+        }
+#endif
+
+#if UWP
         /// <summary>
         /// Lets the XAML island process a native keyboard message before dispatch.
         /// </summary>
         /// <param name="msg">The native message to process.</param>
         /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
         /// <remarks>
-        /// UWP desktop-host scenarios should call this from their native message loop so keyboard
-        /// navigation and accelerator processing can reach the hosted XAML island.
+        /// XamlHostingKit owns the UWP desktop message loop and performs XAML message translation.
+        /// This method remains available for source compatibility and returns <see langword="false"/>.
         /// </remarks>
         public unsafe bool TryPreTranslateMessage(MSG* msg)
         {
@@ -187,6 +223,10 @@ namespace DesktopFlyouts
             }
 
             _host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
+#if UWP
+            _host?.ContentAttached -= Host_ContentAttached;
+            _pendingShowPoint = null;
+#endif
             _host?.Dispose();
             IsOpen = false;
 

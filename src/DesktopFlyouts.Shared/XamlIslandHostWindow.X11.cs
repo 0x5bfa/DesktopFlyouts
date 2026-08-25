@@ -33,6 +33,8 @@ internal partial class XamlIslandHostWindow : IDisposable
 
     internal object? DesktopWindowXamlSource { get; private set; }
 
+    internal bool IsInitialized => DesktopWindowXamlSource is not null;
+
     internal Rect WindowSize
     {
         get

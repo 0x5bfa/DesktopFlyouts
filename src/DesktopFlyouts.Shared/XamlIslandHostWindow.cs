@@ -1,4 +1,4 @@
-#if !HAS_UNO
+#if WASDK && !HAS_UNO
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
@@ -74,6 +74,8 @@ namespace DesktopFlyouts
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private set;
         }
+
+        internal bool IsInitialized => DesktopWindowXamlSource is not null;
 
         internal Rect WindowSize
         {

@@ -70,6 +70,9 @@ namespace DesktopFlyouts
         private bool _isFocusManagerGettingFocusSubscribed;
         private bool _isUpdatingOpenFlyoutLayout;
         private bool _disposed;
+#if UWP
+        private bool _showPending;
+#endif
 
         private Grid? RootGrid;
         private ItemsControl? IslandsItemsControl;
@@ -85,6 +88,9 @@ namespace DesktopFlyouts
             DefaultStyleKey = typeof(DesktopFlyout);
 
             _host = new XamlIslandHostWindow();
+#if UWP
+            _host.ContentAttached += Host_ContentAttached;
+#endif
             _host.SetContent(this);
             _ = _host.UpdateWindowVisibility(false);
 #if HAS_UNO
@@ -147,7 +153,22 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Show()
         {
-            if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null || _isPopupAnimationPlaying)
+            Show(false);
+        }
+
+        private void Show(bool preserveCustomPlacementWhilePending)
+        {
+#if UWP
+            if (!_disposed && _host is not null && !_host.IsContentReady)
+            {
+                _showPending = true;
+                if (!preserveCustomPlacementWhilePending)
+                    _customPlacementBottomCenterPoint = null;
+
+                return;
+            }
+#endif
+            if (_disposed || _host?.IsInitialized is not true || RootGrid is null || _isPopupAnimationPlaying)
             {
                 _customPlacementBottomCenterPoint = null;
                 return;
@@ -222,7 +243,7 @@ namespace DesktopFlyouts
                 return;
 
             _customPlacementBottomCenterPoint = bottomCenterPoint;
-            Show();
+            Show(true);
         }
 
         /// <summary>
@@ -234,6 +255,13 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Hide()
         {
+#if UWP
+            if (_showPending)
+            {
+                _showPending = false;
+                _customPlacementBottomCenterPoint = null;
+            }
+#endif
             Hide(false);
         }
 
@@ -297,8 +325,8 @@ namespace DesktopFlyouts
         /// <param name="msg">The native message to process.</param>
         /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
         /// <remarks>
-        /// UWP desktop-host scenarios should call this from their native message loop so keyboard
-        /// navigation and accelerator processing can reach the hosted XAML island.
+        /// XamlHostingKit owns the UWP desktop message loop and performs XAML message translation.
+        /// This method remains available for source compatibility and returns <see langword="false"/>.
         /// </remarks>
         public unsafe bool TryPreTranslateMessage(MSG* msg)
         {
@@ -346,7 +374,7 @@ namespace DesktopFlyouts
             FoundationRect? resizeAnchorRegion = null,
             DesktopFlyoutPopupDirection resizePopupDirection = DesktopFlyoutPopupDirection.Vertical)
         {
-            if (_host?.DesktopWindowXamlSource is null || IslandsItemsControl is null)
+            if (_host?.IsInitialized is not true || IslandsItemsControl is null)
                 return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint));
 
             var customBottomCenterPoint = _customPlacementBottomCenterPoint;
@@ -419,7 +447,7 @@ namespace DesktopFlyouts
                 _isPopupAnimationPlaying ||
                 _isUpdatingOpenFlyoutLayout ||
                 RootGrid is null ||
-                _host?.DesktopWindowXamlSource is null)
+                _host?.IsInitialized is not true)
             {
                 return;
             }
@@ -1318,6 +1346,17 @@ namespace DesktopFlyouts
             UpdateIslandBackdrops();
         }
 
+#if UWP
+        private void Host_ContentAttached(object? sender, EventArgs e)
+        {
+            if (_disposed || !_showPending)
+                return;
+
+            _showPending = false;
+            Show(true);
+        }
+#endif
+
         /// <inheritdoc/>
         public void Dispose()
         {
@@ -1331,6 +1370,9 @@ namespace DesktopFlyouts
 
             _host?.WindowInactivated -= HostWindow_Inactivated;
             _host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
+#if UWP
+            _host?.ContentAttached -= Host_ContentAttached;
+#endif
             RootGrid?.GettingFocus -= RootGrid_GettingFocus;
             RootGrid?.PointerPressed -= RootGrid_PointerPressed;
             RootGrid?.PointerMoved -= RootGrid_PointerMoved;

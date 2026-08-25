@@ -17,6 +17,10 @@ The UWP version of sample app is currently under development. Recommend to use W
 > dotnet add package DesktopFlyouts.Uwp
 ```
 
+UWP desktop hosts initialize System XAML and its message loop through XamlHostingKit. See the
+[UWP startup instructions](docs/getting-started.md#start-a-uwp-desktop-host); each additional
+flyout is created on its own XAML thread with `XamlIslandApplication.CreateWindow`.
+
 ### WinUI (WinAppSDK/WinUI3)
 
 <a style="text-decoration:none" href="https://www.nuget.org/packages/DesktopFlyouts.WinUI"><img src="https://img.shields.io/nuget/v/DesktopFlyouts.WinUI" alt="NuGet badge" /></a>

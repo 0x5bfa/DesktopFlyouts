@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using System;
+using DesktopFlyouts.Shared;
 
 namespace DesktopFlyouts
 {
@@ -10,7 +11,7 @@ namespace DesktopFlyouts
 		[STAThread]
 		static void Main()
 		{
-			_ = new App();
+			XamlIslandApplication.Start(_ => new App());
 		}
 	}
 }

@@ -41,6 +41,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.Uwp.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.X11.cs" />
   </ItemGroup>
   <ItemGroup>

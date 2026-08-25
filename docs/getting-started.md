@@ -10,6 +10,46 @@ dotnet add package 0x5BFA.DesktopFlyouts.WinUI --prerelease
 dotnet add package 0x5BFA.DesktopFlyouts.Uwp --prerelease
 ```
 
+### Start a UWP desktop host
+
+The UWP package uses XamlHostingKit to own System XAML initialization and the desktop message loop.
+Disable the generated XAML entry point and start the application through `XamlIslandApplication`:
+
+```xml
+<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+```
+
+```csharp
+using DesktopFlyouts.Shared;
+
+[STAThread]
+static void Main()
+{
+    XamlIslandApplication.Start(_ => new App());
+}
+```
+
+Create the first `DesktopFlyout` or `DesktopMenuFlyout` on the main XAML thread. System XAML
+allows one top-level window per thread, so create every additional flyout in its own callback:
+
+```csharp
+private DesktopFlyout? _flyout;
+private DesktopMenuFlyout? _menu;
+
+protected override void OnLaunched(LaunchActivatedEventArgs args)
+{
+    _flyout = new MainDesktopFlyout();
+
+    XamlIslandApplication.CreateWindow(_ =>
+    {
+        _menu = new MainDesktopMenuFlyout();
+    });
+}
+```
+
+XamlHostingKit dispatches each callback on the matching XAML thread. Dispatch later menu or
+flyout operations back to the instance's `Dispatcher` when the caller runs on another thread.
+
 Add the DesktopFlyouts namespace to XAML.
 
 ```xml
