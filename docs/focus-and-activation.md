@@ -48,4 +48,7 @@ Set it to `False` for sticky flyouts.
 
 ## UWP message loop integration
 
-UWP desktop-host scenarios expose `TryPreTranslateMessage` on `DesktopFlyout` and `DesktopMenuFlyout`. Call it from the native message loop so keyboard navigation and accelerators can reach the hosted XAML island.
+Start UWP desktop hosts with `XamlIslandApplication.Start`. XamlHostingKit owns the CoreWindow
+message loop and performs XAML message translation, so application code must not run a second
+native message loop. `TryPreTranslateMessage` remains available for source compatibility and
+returns `False` with the XamlHostingKit host.

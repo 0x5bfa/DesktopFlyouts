@@ -147,7 +147,7 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Show()
         {
-            if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null || _isPopupAnimationPlaying)
+            if (_disposed || _host?.IsInitialized is not true || RootGrid is null || _isPopupAnimationPlaying)
             {
                 _customPlacementBottomCenterPoint = null;
                 return;
@@ -297,8 +297,8 @@ namespace DesktopFlyouts
         /// <param name="msg">The native message to process.</param>
         /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
         /// <remarks>
-        /// UWP desktop-host scenarios should call this from their native message loop so keyboard
-        /// navigation and accelerator processing can reach the hosted XAML island.
+        /// XamlHostingKit owns the UWP desktop message loop and performs XAML message translation.
+        /// This method remains available for source compatibility and returns <see langword="false"/>.
         /// </remarks>
         public unsafe bool TryPreTranslateMessage(MSG* msg)
         {
@@ -346,7 +346,7 @@ namespace DesktopFlyouts
             FoundationRect? resizeAnchorRegion = null,
             DesktopFlyoutPopupDirection resizePopupDirection = DesktopFlyoutPopupDirection.Vertical)
         {
-            if (_host?.DesktopWindowXamlSource is null || IslandsItemsControl is null)
+            if (_host?.IsInitialized is not true || IslandsItemsControl is null)
                 return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint));
 
             var customBottomCenterPoint = _customPlacementBottomCenterPoint;
@@ -419,7 +419,7 @@ namespace DesktopFlyouts
                 _isPopupAnimationPlaying ||
                 _isUpdatingOpenFlyoutLayout ||
                 RootGrid is null ||
-                _host?.DesktopWindowXamlSource is null)
+                _host?.IsInitialized is not true)
             {
                 return;
             }

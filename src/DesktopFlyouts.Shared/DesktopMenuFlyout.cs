@@ -7,6 +7,7 @@ using CommunityToolkit.WinUI;
 
 
 #if UWP
+using Windows.Graphics;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Markup;
@@ -101,7 +102,7 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Show(Point point)
         {
-            if (_disposed || _menuFlyout is null)
+            if (_disposed || _host?.IsInitialized is not true || _menuFlyout is null)
                 return;
 
             UpdateFlyoutTheme();
@@ -109,6 +110,14 @@ namespace DesktopFlyouts
             _host?.MoveAndResize(new RectInt32() { X = point.X, Y = point.Y });
             _host?.SetHWndRectRegion(new RectInt32() { Width = 1, Height = 1 });
             _ = _host?.UpdateWindowVisibility(true);
+
+            ApplyTemplate();
+            UpdateLayout();
+            if (MenuFlyoutTargetControl is null)
+            {
+                _ = _host?.UpdateWindowVisibility(false);
+                return;
+            }
 
             _menuFlyout.ShowAt(MenuFlyoutTargetControl);
 
@@ -154,8 +163,8 @@ namespace DesktopFlyouts
         /// <param name="msg">The native message to process.</param>
         /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
         /// <remarks>
-        /// UWP desktop-host scenarios should call this from their native message loop so keyboard
-        /// navigation and accelerator processing can reach the hosted XAML island.
+        /// XamlHostingKit owns the UWP desktop message loop and performs XAML message translation.
+        /// This method remains available for source compatibility and returns <see langword="false"/>.
         /// </remarks>
         public unsafe bool TryPreTranslateMessage(MSG* msg)
         {
