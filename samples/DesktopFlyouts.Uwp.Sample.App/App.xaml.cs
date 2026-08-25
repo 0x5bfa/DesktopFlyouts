@@ -5,11 +5,8 @@ using System;
 using System.IO;
 using DesktopFlyouts.Shared;
 using Windows.ApplicationModel.Activation;
-using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
 
 namespace DesktopFlyouts
 {
@@ -36,103 +33,25 @@ namespace DesktopFlyouts
             _systemTrayIcon.Show();
 
             // The first flyout uses XamlHostingKit's main XamlWindow.
-            _desktopFlyout = CreateDesktopFlyout();
+            _desktopFlyout = new CustomizableFlyout
+            {
+                // XamlHostingKit deactivates its CoreWindow during the first host activation.
+                HideOnLostFocus = false,
+            };
 
             // System XAML permits one top-level window per thread. The menu therefore uses
             // another XamlHostingKit window and is constructed on that window's XAML thread.
             XamlIslandApplication.CreateWindow(_ =>
             {
-                _desktopMenuFlyout = CreateDesktopMenuFlyout();
+                _desktopMenuFlyout = new MainDesktopMenuFlyout();
             });
         }
 
-        private static DesktopFlyout CreateDesktopFlyout()
+        internal static void ExitApplication()
         {
-            var flyout = new DesktopFlyout
-            {
-                HideOnLostFocus = false,
-                Width = 360,
-            };
-
-            flyout.Islands.Add(CreateIsland(new Button
-            {
-                Content = "A",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-            }));
-
-            flyout.Islands.Add(CreateIsland(new TextBlock
-            {
-                Text = "Island 2",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-            }));
-
-            var options = new ComboBox
-            {
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-            };
-            options.Items.Add("Option 1");
-            options.Items.Add("Option 2");
-            options.Items.Add("Option 3");
-
-            var panel = new StackPanel
-            {
-                Padding = new Thickness(16),
-                Spacing = 8,
-            };
-            panel.Children.Add(new TextBlock
-            {
-                Text = "Island 3",
-                FontSize = 20,
-                FontWeight = Windows.UI.Text.FontWeights.SemiBold,
-            });
-            panel.Children.Add(new TextBlock { Text = "Select option" });
-            panel.Children.Add(options);
-            panel.Children.Add(new CalendarDatePicker());
-            flyout.Islands.Add(CreateIsland(panel));
-
-            return flyout;
-        }
-
-        private static DesktopFlyoutIsland CreateIsland(UIElement content)
-        {
-            return new()
-            {
-                Height = 180,
-                Background = new SolidColorBrush(Color.FromArgb(245, 32, 32, 32)),
-                Content = content,
-            };
-        }
-
-        private static DesktopMenuFlyout CreateDesktopMenuFlyout()
-        {
-            var menu = new DesktopMenuFlyout();
-            var settings = new MenuFlyoutSubItem
-            {
-                Text = "Settings",
-                Icon = new FontIcon { Glyph = "\uE115" },
-            };
-            settings.Items.Add(new MenuFlyoutItem { Text = "Theme" });
-            settings.Items.Add(new MenuFlyoutItem { Text = "Language" });
-            settings.Items.Add(new MenuFlyoutItem { Text = "Privacy" });
-
-            var exit = new MenuFlyoutItem
-            {
-                Text = "Exit",
-                Icon = new FontIcon { Glyph = "\uE8BB" },
-            };
-            exit.Click += (_, _) =>
-            {
-                var dispatcher = _desktopFlyout?.Dispatcher;
-                if (dispatcher is not null)
-                    _ = dispatcher.RunAsync(CoreDispatcherPriority.Normal, Current.Exit);
-            };
-
-            menu.Items.Add(settings);
-            menu.Items.Add(new MenuFlyoutSeparator());
-            menu.Items.Add(exit);
-            return menu;
+            var dispatcher = _desktopFlyout?.Dispatcher;
+            if (dispatcher is not null)
+                _ = dispatcher.RunAsync(CoreDispatcherPriority.Normal, Current.Exit);
         }
 
         private static void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
