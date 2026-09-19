@@ -1,0 +1,249 @@
+<Window
+    x:Class="DesktopFlyoutsSample.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DesktopFlyoutsSample.WinUI"
+    Title="DesktopFlyoutsSample.WinUI">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <ScrollViewer>
+        <StackPanel
+            MaxWidth="680"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="12">
+            <TextBlock HorizontalAlignment="Center" Text="DesktopFlyoutsSample.WinUI" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Opacity="0.8"
+                Text="WASDK / WinUI 3 native vertical slice" />
+            <ComboBox
+                x:Name="FlyoutExampleComboBox"
+                AutomationProperties.AutomationId="FlyoutExampleComboBox"
+                Header="Flyout example"
+                SelectedIndex="0"
+                SelectionChanged="FlyoutExample_SelectionChanged">
+                <ComboBoxItem Content="Default" />
+                <ComboBoxItem Content="Button" />
+                <ComboBoxItem Content="Indicator" />
+                <ComboBoxItem Content="Notification Center" />
+                <ComboBoxItem Content="Start Menu" />
+                <ComboBoxItem Content="Sticky small" />
+                <ComboBoxItem Content="Widget" />
+                <ComboBoxItem Content="Severity" />
+            </ComboBox>
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ComboBox
+                    x:Name="FlyoutPlacementComboBox"
+                    Grid.Column="0"
+                    AutomationProperties.AutomationId="FlyoutPlacementComboBox"
+                    AutomationProperties.Name="Flyout placement"
+                    Header="Placement"
+                    SelectedIndex="5"
+                    SelectionChanged="FlyoutPlacement_SelectionChanged">
+                    <ComboBoxItem Content="Top left" />
+                    <ComboBoxItem Content="Top center" />
+                    <ComboBoxItem Content="Top right" />
+                    <ComboBoxItem Content="Bottom left" />
+                    <ComboBoxItem Content="Bottom center" />
+                    <ComboBoxItem Content="Bottom right" />
+                    <ComboBoxItem Content="Left center" />
+                    <ComboBoxItem Content="Right center" />
+                </ComboBox>
+                <ComboBox
+                    x:Name="PopupDirectionComboBox"
+                    Grid.Column="1"
+                    AutomationProperties.AutomationId="PopupDirectionComboBox"
+                    AutomationProperties.Name="Popup direction"
+                    Header="Popup direction"
+                    SelectedIndex="0"
+                    SelectionChanged="PopupDirection_SelectionChanged">
+                    <ComboBoxItem Content="Vertical" />
+                    <ComboBoxItem Content="Bottom to top" />
+                    <ComboBoxItem Content="Top to bottom" />
+                    <ComboBoxItem Content="Horizontal" />
+                    <ComboBoxItem Content="Left to right" />
+                    <ComboBoxItem Content="Right to left" />
+                </ComboBox>
+            </Grid>
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ComboBox
+                    x:Name="ActivationModeComboBox"
+                    Grid.Column="0"
+                    AutomationProperties.AutomationId="ActivationModeComboBox"
+                    AutomationProperties.Name="Activation mode"
+                    Header="Activation"
+                    SelectedIndex="0"
+                    SelectionChanged="ActivationMode_SelectionChanged">
+                    <ComboBoxItem Content="Activate" />
+                    <ComboBoxItem Content="No activate on open" />
+                    <ComboBoxItem Content="Never activate" />
+                </ComboBox>
+                <ComboBox
+                    x:Name="BackdropKindComboBox"
+                    Grid.Column="1"
+                    AutomationProperties.AutomationId="BackdropKindComboBox"
+                    AutomationProperties.Name="System backdrop"
+                    Header="System backdrop"
+                    SelectedIndex="0"
+                    SelectionChanged="BackdropKind_SelectionChanged">
+                    <ComboBoxItem Content="Mica" />
+                    <ComboBoxItem Content="Desktop Acrylic" />
+                </ComboBox>
+            </Grid>
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <NumberBox
+                    x:Name="FlyoutWidthNumberBox"
+                    Grid.Column="0"
+                    AutomationProperties.AutomationId="FlyoutWidthNumberBox"
+                    AutomationProperties.Name="Flyout width in DIPs"
+                    Header="Flyout width (DIP)"
+                    Maximum="1400"
+                    Minimum="0"
+                    ValueChanged="FlyoutSize_ValueChanged"
+                    Value="360" />
+                <NumberBox
+                    x:Name="FlyoutHeightNumberBox"
+                    Grid.Column="1"
+                    AutomationProperties.AutomationId="FlyoutHeightNumberBox"
+                    AutomationProperties.Name="Flyout height in DIPs"
+                    Header="Flyout height (DIP; 0 = Auto)"
+                    Maximum="1000"
+                    Minimum="0"
+                    PlaceholderText="Auto"
+                    ValueChanged="FlyoutSize_ValueChanged" />
+            </Grid>
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <NumberBox
+                    x:Name="SwipeDismissThresholdNumberBox"
+                    Grid.Column="0"
+                    AutomationProperties.AutomationId="SwipeDismissThresholdNumberBox"
+                    AutomationProperties.Name="Swipe dismiss threshold"
+                    Header="Swipe dismiss threshold"
+                    Maximum="2000"
+                    Minimum="1"
+                    SmallChange="8"
+                    ValueChanged="FlyoutSize_ValueChanged"
+                    Value="80" />
+                <NumberBox
+                    x:Name="AutoCloseDelayNumberBox"
+                    Grid.Column="1"
+                    AutomationProperties.AutomationId="AutoCloseDelayNumberBox"
+                    AutomationProperties.Name="Auto close delay in seconds"
+                    Header="Auto close delay (seconds)"
+                    Maximum="60"
+                    Minimum="0"
+                    PlaceholderText="Off"
+                    SmallChange="0.5"
+                    ValueChanged="FlyoutSize_ValueChanged"
+                    Value="0" />
+            </Grid>
+            <StackPanel
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="16">
+                <CheckBox
+                    x:Name="BackdropCheckBox"
+                    AutomationProperties.AutomationId="BackdropCheckBox"
+                    AutomationProperties.Name="Backdrop"
+                    Click="Settings_Click"
+                    Content="Backdrop"
+                    IsChecked="True" />
+                <CheckBox
+                    x:Name="HideOnLostFocusCheckBox"
+                    AutomationProperties.AutomationId="HideOnLostFocusCheckBox"
+                    AutomationProperties.Name="Hide on lost focus"
+                    Click="Settings_Click"
+                    Content="Hide on lost focus"
+                    IsChecked="True" />
+                <CheckBox
+                    x:Name="SwipeCheckBox"
+                    AutomationProperties.AutomationId="SwipeCheckBox"
+                    AutomationProperties.Name="Swipe to dismiss"
+                    Click="Settings_Click"
+                    Content="Swipe to dismiss" />
+                <CheckBox
+                    x:Name="TransitionCheckBox"
+                    AutomationProperties.AutomationId="TransitionCheckBox"
+                    AutomationProperties.Name="Transition animation"
+                    Click="Settings_Click"
+                    Content="Transition"
+                    IsChecked="True" />
+            </StackPanel>
+            <StackPanel
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="12">
+                <Button
+                    x:Name="ShowFlyoutButton"
+                    AutomationProperties.AutomationId="ShowFlyoutButton"
+                    Click="ShowFlyout_Click"
+                    Content="Show flyout" />
+                <Button
+                    x:Name="HideFlyoutButton"
+                    AutomationProperties.AutomationId="HideFlyoutButton"
+                    Click="HideFlyout_Click"
+                    Content="Hide flyout" />
+            </StackPanel>
+            <StackPanel
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="12">
+                <Button
+                    x:Name="ShowIslandsButton"
+                    AutomationProperties.AutomationId="ShowIslandsButton"
+                    Click="ShowIslands_Click"
+                    Content="Show islands" />
+                <Button
+                    x:Name="ShowAutoCloseButton"
+                    AutomationProperties.AutomationId="ShowAutoCloseButton"
+                    Click="ShowAutoClose_Click"
+                    Content="Auto-close" />
+            </StackPanel>
+            <StackPanel
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="12">
+                <Button
+                    x:Name="ShowMenuButton"
+                    AutomationProperties.AutomationId="ShowMenuButton"
+                    Click="ShowMenu_Click"
+                    Content="Show menu" />
+                <Button
+                    x:Name="ShowTrayButton"
+                    AutomationProperties.AutomationId="ShowTrayButton"
+                    Click="ShowTray_Click"
+                    Content="Toggle tray icon" />
+                <Button
+                    x:Name="NavigateFocusButton"
+                    AutomationProperties.AutomationId="NavigateFocusButton"
+                    Click="NavigateFocus_Click"
+                    Content="Navigate focus" />
+            </StackPanel>
+            <TextBlock
+                x:Name="StatusText"
+                HorizontalAlignment="Center"
+                AutomationProperties.AutomationId="FlyoutStatus"
+                Text="Flyout is closed" />
+        </StackPanel>
+    </ScrollViewer>
+
+</Window>

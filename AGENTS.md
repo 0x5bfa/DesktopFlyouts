@@ -1,127 +1,92 @@
 # AGENTS.md
 
-DesktopFlyouts is a WinUI library for showing lightweight desktop flyouts, menu flyouts, and tray-icon driven UI from desktop apps. It ships three public library flavors:
+DesktopFlyouts is a Windows App SDK / WinUI 3 library implemented in C++/WinRT. It exposes lightweight
+desktop flyouts, menu flyouts, and tray-icon-driven UI from a native WinRT component.
 
-## Code Structure
+## Code structure
 
 ```text
 .
-├───DesktopFlyouts.slnx
-├───src
-│   ├───DesktopFlyouts.Shared
-│   │   └───DesktopFlyouts.Shared.shproj
-│   ├───DesktopFlyouts.Wasdk
-│   │   └───DesktopFlyouts.Wasdk.csproj
-│   ├───DesktopFlyouts.Uwp
-│   │   └───DesktopFlyouts.Uwp.csproj
-│   └───DesktopFlyouts.Uno
-│       └───DesktopFlyouts.Uno.csproj
-└───samples
-    ├───DesktopFlyouts.Wasdk.Sample.App
-    │   └───DesktopFlyouts.Wasdk.Sample.App.csproj
-    ├───DesktopFlyouts.Uwp.Sample.App
-    │   └───DesktopFlyouts.Uwp.Sample.App.csproj
-    ├───DesktopFlyouts.Uwp.Sample.Packaging
-    │   └───DesktopFlyouts.Uwp.Sample.Packaging.wapproj
-    └───DesktopFlyouts.Uwp.Sample.TrayHost
-        └───DesktopFlyouts.Uwp.Sample.TrayHost.csproj
+├── DesktopFlyouts.slnx
+├── src
+│   ├── DesktopFlyouts.Core       # WinRT/WinUI-independent geometry and state logic
+│   └── DesktopFlyouts.WinUI      # IdlGen 2.0 component, HWND/XAML host, visuals, and tray support
+├── samples
+│   └── DesktopFlyoutsSample.WinUI
+└── tests
+    ├── DesktopFlyouts.Core.Tests
+    ├── Run-DesktopFlyoutsSampleUiTests.ps1
+    └── Test-NativeWinRTContract.ps1
 ```
 
-Most runtime behavior lives in `src/DesktopFlyouts.Shared` behind `#if WASDK`, `#if UWP`, and `#if HAS_UNO`. Keep all branches building when changing shared files.
+`DesktopFlyouts.Core` must stay independent of WinUI, Windows Runtime, and HWND types. Keep WinRT ABI,
+XAML, activation, backdrop, and host-window concerns in `DesktopFlyouts.WinUI`. The public IdlGen source
+of truth is under `src/DesktopFlyouts.WinUI/author`; do not edit generated IDL, implementation headers,
+projection headers, `Generated Files`, `bin`, or `obj` output.
 
-Keep in mind that for Uno Platform, `WASDK` and `HAS_UNO` will both be true.
+## Formatting and editing rules
 
-## Formatting And Editing Rules
+- This repository uses UTF-8 with CRLF line endings and a final newline.
+- `.editorconfig` and `.gitattributes` define the repository-wide line-ending rules.
+- Use `apply_patch` for source edits and preserve existing style.
+- Keep public ABI changes in the authored IdlGen headers and update the WinRT contract test with them.
+- Avoid unrelated refactors while changing focused behavior.
 
-- This repo uses CRLF. Preserve CRLF for every changed text file.
-- `.editorconfig` sets UTF-8, CRLF, final newline, spaces, and 4-space indentation.
-- `.gitattributes` enforces `text=auto eol=crlf`.
-- Use existing patterns and dependency property generation style. Avoid broad refactors while fixing focused behavior.
-- Do not edit generated `bin`, `obj`, or `Generated Files` output.
+## Build commands
 
-## Build Commands
-
-Run validation one command at a time and inspect each result before moving on. WASDK and UWP builds require Windows; skip them on other platforms.
-
-1. Build the Uno library (cross-platform):
+Run validation one command at a time and inspect each result before moving on. Native builds require
+Windows, Visual Studio, the Windows SDK, and NuGet restore. vcpkg is not required; IdlGen 2.0 is restored
+from the native NuGet package `IdlGen.IdlGen.Cpp`.
 
 ```powershell
-dotnet msbuild /restore:false src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
+$msbuild = 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe'
+& $msbuild DesktopFlyouts.slnx /restore /t:Build /p:Configuration=Debug /p:Platform=x64 /m
 ```
 
-2. Build the WinUI 3 sample and library (Windows only):
+The solution builds the Core library, WinUI component, packaged native sample, and Core tests. For a
+focused component build:
 
 ```powershell
-dotnet msbuild /restore:false samples\DesktopFlyouts.Wasdk.Sample.App\DesktopFlyouts.Wasdk.Sample.App.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
+& $msbuild src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.vcxproj /restore /t:Build /p:Configuration=Debug /p:Platform=x64
 ```
 
-3. Build the UWP library (Windows only):
+## Packaged sample launch
+
+The sample is packaged and must be launched through the package-aware script. Do not validate it by
+starting the generated `.exe` directly.
 
 ```powershell
-dotnet msbuild /restore:false src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
+& .\samples\DesktopFlyoutsSample.WinUI\Run-DesktopFlyoutsSample.ps1 -Configuration Debug
 ```
 
-4. Check whitespace and line endings:
+The script stages the package layout and starts it through `winapp run`. A successful launch has a live
+`DesktopFlyoutsSample.WinUI` process with `Responding = True` and a non-zero `MainWindowHandle`.
+Stop the process before rebuilding if Visual Studio reports locked output files:
 
 ```powershell
-git diff --check
-git ls-files --eol
+Get-Process -Name DesktopFlyoutsSample.WinUI -ErrorAction SilentlyContinue | Stop-Process -Force
 ```
 
-`NETSDK1057` preview SDK messages can appear on this machine. Treat them as environment notices unless accompanied by a build failure.
+## Testing
 
-## Packaged App Debugging And Launch
-
-The WASDK sample is a packaged app. Do not validate launch by running the built `.exe` directly with `Start-Process` or `dotnet run`. That path can fail with `REGDB_E_CLASSNOTREG`. Use a package-aware launch path.
-
-After building the WASDK sample, register the generated package manifest and launch through `shell:AppsFolder`.
+Run the deterministic Core tests and the generated metadata contract separately from the packaged UI
+interaction tests. The UI script uses Windows UI Automation and requires a running sample process.
 
 ```powershell
-$manifest = Join-Path (Get-Location) 'samples\DesktopFlyouts.Wasdk.Sample.App\bin\x64\Debug\net10.0-windows10.0.26100.0\AppxManifest.xml'
-Add-AppxPackage -Register $manifest -DisableDevelopmentMode
-
-$package = Get-AppxPackage -Name 'd6120692-1c26-4251-b686-e2321694e3b0'
-Start-Process "shell:AppsFolder\$($package.PackageFamilyName)!App"
-
-Start-Sleep -Seconds 5
-Get-Process -Name DesktopFlyouts.Wasdk.Sample.App -ErrorAction SilentlyContinue |
-    Select-Object Id, ProcessName, MainWindowHandle, Responding, HasExited
+& .\tests\Test-NativeWinRTContract.ps1
+& .\tests\Run-DesktopFlyoutsSampleUiTests.ps1 -AppPid $app.Id
 ```
 
-A successful launch should show a live `DesktopFlyouts.Wasdk.Sample.App` process with `Responding = True` and a non-zero `MainWindowHandle`.
+For accessibility, use the UI Automation assertions as the automated desktop contract and validate the
+visual tree with Accessibility Insights for Windows. `axe-core` targets web DOM and is not the primary
+validator for WinUI desktop UI.
 
-## Debugging
+## Validation checklist
 
-Use Event Viewer for startup and packaged-launch failures. Check `Windows Logs > Application` first, especially `.NET Runtime` event `1026`, `Application Error` event `1000`, and `Windows Error Reporting` event `1001`.
-
-From PowerShell, read the same Application log with:
-
-```powershell
-Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=(Get-Date).AddMinutes(-10)} |
-    Where-Object { $_.Message -match 'DesktopFlyouts.Wasdk.Sample.App|DesktopFlyouts' } |
-    Select-Object -First 10 TimeCreated, ProviderName, Id, LevelDisplayName, Message |
-    Format-List
-```
-
-If the log shows `0x80040154 REGDB_E_CLASSNOTREG` from `WindowsAppRuntime.DeploymentInitializeOptions`, treat it as an invalid unpackaged/direct `.exe` launch path before blaming app code. Re-run the packaged launch steps above.
-
-Stop running samples before rebuilding if output files are locked:
-
-```powershell
-Get-Process -Name DesktopFlyouts.Wasdk.Sample.App -ErrorAction SilentlyContinue | Stop-Process -Force
-```
-
-## Validation Checklist
-
-Validate one item at a time:
-
-1. `git status --short --branch` to understand the current branch and dirty files.
-2. Build the Uno library.
-3. Build the WASDK sample (Windows only).
-4. Build the UWP library when shared code changed (Windows only).
-5. Launch the WASDK sample as packaged, never by direct `.exe` (Windows only).
-6. Confirm the app has a responsive process and real window handle (Windows only).
-7. Run `git diff --check`.
-8. Confirm changed text files remain CRLF.
-9. Summarize what was changed, what was validated, and any remaining risk.
-
+1. Run `git status --short --branch` and preserve unrelated working-tree changes.
+2. Build `DesktopFlyouts.slnx` for `Debug|x64`.
+3. Run the native sample through `Run-DesktopFlyoutsSample.ps1` and verify a responsive process/window.
+4. Run the WinRT metadata and UI Automation checks that are applicable to the change.
+5. Run `git diff --check`.
+6. Verify all changed text files are CRLF with a final newline.
+7. Summarize what changed, what was validated, and any remaining runtime risk.
