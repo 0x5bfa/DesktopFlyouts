@@ -27,8 +27,6 @@
     <ApplicationType>Windows Store</ApplicationType>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
     <IdlGenCppInclude>author\*.author.h</IdlGenCppInclude>
-    <IdlGenCppExclude>pch.h</IdlGenCppExclude>
-    <IdlGenCppPch>pch.h</IdlGenCppPch>
     <UseWinUI>true</UseWinUI>
     <WinUIVersion Condition="'$(WinUIVersion)' == ''">2.0.12</WinUIVersion>
     <FoundationPackageVersion Condition="'$(FoundationPackageVersion)' == ''">2.0.20</FoundationPackageVersion>
@@ -73,8 +71,8 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup>
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -109,7 +107,6 @@
     <ClInclude Include="author\SystemTrayIcon.author.h" />
     <ClInclude Include="DesktopFlyoutHost.h" />
     <ClInclude Include="DesktopFlyoutVisual.h" />
-    <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DesktopFlyout.cpp" />
@@ -117,9 +114,6 @@
     <ClCompile Include="SystemTrayIcon.cpp" />
     <ClCompile Include="DesktopFlyoutHost.cpp" />
     <ClCompile Include="DesktopFlyoutVisual.cpp" />
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

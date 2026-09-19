@@ -1,4 +1,5 @@
-#include "pch.h"
+#include <windows.h>
+#undef GetCurrentTime
 
 #include "author/DesktopFlyout.author.h"
 #include "DesktopFlyoutHost.h"

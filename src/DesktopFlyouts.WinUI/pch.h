@@ -1,19 +1,6 @@
 #pragma once
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-
-#include <windows.h>
-#include <unknwn.h>
-
-#undef GetCurrentTime
-
-#include <algorithm>
-#include <cstdint>
-#include <mutex>
-
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.Foundation.Collections.h>
-#include <winrt/Microsoft.UI.Xaml.Controls.Primitives.h>
-#include <winrt/author/base.h>
+// IdlGen 2.0 currently emits an unconditional include of "pch.h" in its
+// generated implementation translation unit. This intentionally remains a
+// normal, empty compatibility header; the project does not compile or use a
+// precompiled header (/Yc or /Yu).

@@ -1,4 +1,5 @@
-#include "pch.h"
+#include <windows.h>
+#undef GetCurrentTime
 
 #include "author/SystemTrayIcon.author.h"
 #include "author/SystemTrayIcon.author.impl.h"
