@@ -1,4 +1,8 @@
-#include "pch.h"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#undef GetCurrentTime
 
 #include "DesktopFlyoutHost.h"
 

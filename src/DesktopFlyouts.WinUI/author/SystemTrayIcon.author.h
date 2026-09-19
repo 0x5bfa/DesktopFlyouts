@@ -1,10 +1,16 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windef.h>
+
 #include <cstdint>
 #include <memory>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/author/base.h>
+#undef GetCurrentTime
 
 namespace winrt::DesktopFlyouts::author
 {

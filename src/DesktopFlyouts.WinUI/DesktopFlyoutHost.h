@@ -1,5 +1,10 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windef.h>
+
 #include "author/DesktopFlyout.author.h"
 
 #include <functional>
