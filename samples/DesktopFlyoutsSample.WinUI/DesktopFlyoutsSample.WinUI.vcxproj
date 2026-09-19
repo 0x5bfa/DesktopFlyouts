@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
+    <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
+    <MinimalCoreWin>true</MinimalCoreWin>
+    <ProjectGuid>{bb7b0d92-7b4b-4f4b-9ea2-f3a0cf2d1d4c}</ProjectGuid>
+    <ProjectName>DesktopFlyoutsSample.WinUI</ProjectName>
+    <RootNamespace>DesktopFlyoutsSample.WinUI</RootNamespace>
+    <TargetName>DesktopFlyoutsSample.WinUI</TargetName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>18.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>false</AppContainerApplication>
+    <AppxPackage>true</AppxPackage>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
+    <ApplicationType>Windows Store</ApplicationType>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <UseWinUI>true</UseWinUI>
+    <DesktopCompatible>true</DesktopCompatible>
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <!-- The native MSIX deployment target uses this relative path when registering the F5 layout. -->
+    <AppxManifestTargetPath>AppxManifest.xml</AppxManifestTargetPath>
+    <WindowsTargetPlatformVersion Condition="'$(WindowsTargetPlatformVersion)' == ''">10.0.26100.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+    <WinUIVersion Condition="'$(WinUIVersion)' == ''">2.0.12</WinUIVersion>
+    <FoundationPackageVersion Condition="'$(FoundationPackageVersion)' == ''">2.0.20</FoundationPackageVersion>
+    <IXPPackageVersion Condition="'$(IXPPackageVersion)' == ''">2.0.12</IXPPackageVersion>
+    <BasePackageVersion Condition="'$(BasePackageVersion)' == ''">2.0.3</BasePackageVersion>
+    <WindowsAppSDKRuntimeVersion Condition="'$(WindowsAppSDKRuntimeVersion)' == ''">2.0.1</WindowsAppSDKRuntimeVersion>
+    <MicrosoftWindowsSDKBuildToolsNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)' == ''">10.0.28000.1839</MicrosoftWindowsSDKBuildToolsNugetPackageVersion>
+    <WebView2Version Condition="'$(WebView2Version)' == ''">1.0.3719.77</WebView2Version>
+    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">2.0.250303.1</CppWinRTVersion>
+    <MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion)' == ''">1.7.251221100</MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion>
+    <MicrosoftWindowsSDKBuildToolsNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)' == ''">10.0.28000.1839</MicrosoftWindowsSDKBuildToolsNugetPackageVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(WinUIVersion)\build\native\Microsoft.WindowsAppSDK.WinUI.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.windows.sdk.buildtools.msix\$(MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion)\build\Microsoft.Windows.SDK.BuildTools.MSIX.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.windows.sdk.buildtools\$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)\build\Microsoft.Windows.SDK.BuildTools.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.foundation\$(FoundationPackageVersion)\build\native\Microsoft.WindowsAppSDK.Foundation.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.interactiveexperiences\$(IXPPackageVersion)\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.base\$(BasePackageVersion)\build\native\Microsoft.WindowsAppSDK.Base.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)\build\native\Microsoft.Windows.CppWinRT.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.runtime\$(WindowsAppSDKRuntimeVersion)\build\native\Microsoft.WindowsAppSDK.Runtime.props" />
+
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' &gt;= '18.0'">v145</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' &lt; '18.0'">v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <RootNamespace>DesktopFlyoutsSample.WinUI</RootNamespace>
+  </PropertyGroup>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros">
+    <!-- Keep Visual Studio's F5 deployment layout separate from the linker output directory. -->
+    <LayoutDir>$(OutDir)AppX</LayoutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>user32.lib;WindowsApp.lib;RuntimeObject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup Condition="'$(WindowsPackageType)'!='None' and Exists('Package.appxmanifest')">
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="app.manifest" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="App.xaml.h">
+      <DependentUpon>App.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MainWindow.xaml.h">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+    <Page Include="MainWindow.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="App.xaml.cpp">
+      <DependentUpon>App.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindow.xaml.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MainWindow.idl">
+      <SubType>Code</SubType>
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\LockScreenLogo.scale-200.png" />
+    <Image Include="Assets\SplashScreen.scale-200.png" />
+    <Image Include="Assets\Square150x150Logo.scale-200.png" />
+    <Image Include="Assets\Square44x44Logo.scale-200.png" />
+    <Image Include="Assets\StoreLogo.png" />
+    <Image Include="Assets\Wide310x150Logo.scale-200.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="DesktopFlyoutsSample.WinUI.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(ProjectDir)..\..\src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.vcxproj">
+      <Project>{5b85dfce-775c-4509-a35a-63a116ec98b3}</Project>
+      <Name>DesktopFlyouts.WinUI</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(WinUIVersion)\build\native\Microsoft.WindowsAppSDK.WinUI.targets" />
+    <Import Project="$(NuGetPackageRoot)microsoft.windows.sdk.buildtools.msix\$(MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion)\build\Microsoft.Windows.SDK.BuildTools.MSIX.targets" />
+    <Import Project="$(NuGetPackageRoot)microsoft.windows.sdk.buildtools\$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)\build\Microsoft.Windows.SDK.BuildTools.targets" />
+    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.foundation\$(FoundationPackageVersion)\build\native\Microsoft.WindowsAppSDK.Foundation.targets" />
+    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.interactiveexperiences\$(IXPPackageVersion)\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets" />
+    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.base\$(BasePackageVersion)\build\native\Microsoft.WindowsAppSDK.Base.targets" />
+    <Import Project="$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2Version)\build\native\Microsoft.Web.WebView2.targets" />
+    <Import Project="$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)\build\native\Microsoft.Windows.CppWinRT.targets" />
+    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.runtime\$(WindowsAppSDKRuntimeVersion)\build\native\Microsoft.WindowsAppSDK.Runtime.targets" />
+  </ImportGroup>
+
+</Project>

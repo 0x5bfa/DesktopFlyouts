@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
+    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">2.0.250303.1</CppWinRTVersion>
+    <CppWinRTPackageRoot Condition="'$(CppWinRTPackageRoot)' == ''">$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)</CppWinRTPackageRoot>
+  </PropertyGroup>
+</Project>

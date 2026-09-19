@@ -1,96 +1,64 @@
 # Getting started
 
-Install the package that matches your XAML stack.
+DesktopFlyouts is consumed as a C++/WinRT Windows App SDK component. Build the solution first so
+IdlGen 2.0 generates the WinRT metadata and projection headers:
 
-```console
-dotnet add package 0x5BFA.DesktopFlyouts.WinUI --prerelease
+```powershell
+$msbuild = 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe'
+& $msbuild DesktopFlyouts.slnx /restore /t:Build /p:Configuration=Debug /p:Platform=x64 /m
 ```
 
-```console
-dotnet add package 0x5BFA.DesktopFlyouts.Uwp --prerelease
+Include the generated projection in a C++/WinRT consumer:
+
+```cpp
+#include <winrt/DesktopFlyouts.h>
 ```
 
-Add the DesktopFlyouts namespace to XAML.
+Create a flyout on the UI thread and assign the owner window handle before showing it:
 
-```xml
-xmlns:desktop="using:U5BFA.Libraries"
+```cpp
+auto flyout = winrt::DesktopFlyouts::DesktopFlyout{};
+flyout.OwnerWindowHandle(reinterpret_cast<std::int64_t>(windowHandle));
+flyout.FlyoutWidth({ 360.0, Microsoft::UI::Xaml::GridUnitType::Pixel });
+flyout.FlyoutHeight({ 280.0, Microsoft::UI::Xaml::GridUnitType::Pixel });
+flyout.ActivationMode(winrt::DesktopFlyouts::DesktopFlyoutActivationMode::no_activate_on_open);
+flyout.Content(contentElement);
+flyout.Show();
 ```
 
-## Create a flyout
-
-Define a `DesktopFlyout` with one or more `DesktopFlyoutIsland` sections.
-
-```xml
-<desktop:DesktopFlyout
-    x:Class="MyApp.MainDesktopFlyout"
-    FlyoutWidth="360"
-    ActivationMode="NoActivateOnOpen"
-    HideOnLostFocus="False"
-    Placement="BottomRight"
-    PopupDirection="Vertical">
-
-    <desktop:DesktopFlyoutIsland IslandHeight="300">
-        <Grid Padding="16">
-            <TextBlock Text="Hello from a desktop flyout" />
-        </Grid>
-    </desktop:DesktopFlyoutIsland>
-
-</desktop:DesktopFlyout>
-```
-
-Create the flyout once and keep it alive while the app needs it.
-
-```csharp
-private readonly MainDesktopFlyout _flyout = new();
-
-private void ToggleFlyout()
-{
-    if (_flyout.IsOpen)
-        _flyout.Hide();
-    else
-        _flyout.Show();
-}
-```
-
-Call `Dispose` when the flyout is no longer needed.
-
-```csharp
-_flyout.Dispose();
-```
+Use `Hide()` to close it. Keep the object on the creating UI thread because the component owns WinUI
+and XAML-island objects and is intentionally non-agile.
 
 ## Show from a screen point
 
-Use `Show(Point)` when you already have a physical screen coordinate, such as the center of a tray icon.
+Use `ShowAt(x, y)` when the caller already has a physical screen coordinate, such as the center of a
+tray icon:
 
-```csharp
-private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
-{
-    _flyout.Show(e.Point);
-}
+```cpp
+flyout.ShowAt(screenPoint.X, screenPoint.Y);
 ```
 
-`Show(Point)` treats the point as the desired bottom-center point of the flyout for that open operation only. Later calls to `Show()` use the configured `Placement`.
+## Add independent islands
 
-## Add a tray menu
+`Islands()` is an observable vector of `Microsoft::UI::Xaml::UIElement`. Each element becomes an
+independent floating surface:
 
-Use `DesktopMenuFlyout` for context-menu behavior.
-
-```xml
-<desktop:DesktopMenuFlyout x:Class="MyApp.MainDesktopMenuFlyout">
-    <MenuFlyoutItem Text="Settings" />
-    <MenuFlyoutSeparator />
-    <MenuFlyoutItem Text="Exit" />
-</desktop:DesktopMenuFlyout>
+```cpp
+flyout.Islands().Append(firstElement);
+flyout.Islands().Append(secondElement);
+flyout.IslandSpacing(8);
+flyout.IslandsOrientation(winrt::DesktopFlyouts::DesktopFlyoutOrientation::vertical);
+flyout.Show();
 ```
 
-```csharp
-private readonly MainDesktopMenuFlyout _menu = new();
+## Run the sample
 
-private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)
-{
-    if (_menu.IsOpen)
-        _menu.Hide();
+The sample is packaged. Use the package-aware launcher rather than starting the generated executable:
 
-    _menu.Show(e.Point);
-}
+```powershell
+& .\samples\DesktopFlyoutsSample.WinUI\Run-DesktopFlyoutsSample.ps1 -Configuration Debug
 ```
+
+The sample includes flyout, menu, tray, backdrop, animation, auto-close, swipe, focus, sizing, and
+multiple-island scenarios. UI Automation checks can be run against its process with
+`tests/Run-DesktopFlyoutsSampleUiTests.ps1`.

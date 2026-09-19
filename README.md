@@ -1,94 +1,60 @@
-<h1 align="center">Desktop Flyouts</h1>
-<p align="center">WinUI library for showing desktop flyouts from tray icons or programmatically.</p>
+# DesktopFlyouts
 
-https://github.com/user-attachments/assets/52f15ecf-6a91-491b-bf62-25294afc85d7
+DesktopFlyouts is a Windows App SDK / WinUI 3 library for lightweight desktop flyouts, menu flyouts,
+and tray-icon-driven UI. The implementation in this repository is C++/WinRT native and uses IdlGen 2.0
+for its public WinRT ABI.
 
-## Installing the package
+## Project layout
 
-You can consume this project via NuGet. Use NuGet Package Manager or run the following command in the Package Manager Console:
+- `src/DesktopFlyouts.Core`: platform-independent placement, sizing, lifecycle, and interaction logic.
+- `src/DesktopFlyouts.WinUI`: the IdlGen 2.0 WinRT component, HWND/XAML host, visuals, backdrops, and
+  tray integration.
+- `samples/DesktopFlyoutsSample.WinUI`: packaged Windows App SDK sample covering the supported
+  scenarios.
+- `tests`: Core unit tests, WinRT metadata contract checks, and UI Automation interaction checks.
 
-### WinUI for UWP (UWP/WinUI2)
+The authored public ABI is under `src/DesktopFlyouts.WinUI/author`. Generated IDL, implementation
+headers, projections, and build output are not source files and must not be edited or committed.
 
-The UWP version of sample app is currently under development. Recommend to use WinUI 3
+## Prerequisites
 
-<a style="text-decoration:none" href="https://www.nuget.org/packages/DesktopFlyouts.Uwp"><img src="https://img.shields.io/nuget/v/DesktopFlyouts.Uwp" alt="NuGet badge" /></a>
+- Windows 10 19041 or later (Windows 11 recommended)
+- Visual Studio 2026 with Desktop C++ and Windows App SDK tooling
+- Windows SDK 10.0.26100.0 or later
+- NuGet restore access
 
-```console
-> dotnet add package DesktopFlyouts.Uwp
+vcpkg is not required. IdlGen 2.0 and the Windows App SDK native dependencies are restored through the
+MSBuild/NuGet project configuration.
+
+## Build
+
+```powershell
+$msbuild = 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe'
+& $msbuild DesktopFlyouts.slnx /restore /t:Build /p:Configuration=Debug /p:Platform=x64 /m
 ```
 
-### WinUI (WinAppSDK/WinUI3)
+## Run the packaged sample
 
-<a style="text-decoration:none" href="https://www.nuget.org/packages/DesktopFlyouts.WinUI"><img src="https://img.shields.io/nuget/v/DesktopFlyouts.WinUI" alt="NuGet badge" /></a>
+Do not start the generated executable directly. Use the package-aware launcher:
 
-```console
-> dotnet add package DesktopFlyouts.WinUI
+```powershell
+& .\samples\DesktopFlyoutsSample.WinUI\Run-DesktopFlyoutsSample.ps1 -Configuration Debug
 ```
+
+The launcher stages the package layout and starts the sample with `winapp run`.
+
+## Test
+
+```powershell
+& .\tests\Test-NativeWinRTContract.ps1
+$app = Get-Process -Name DesktopFlyoutsSample.WinUI | Select-Object -First 1
+& .\tests\Run-DesktopFlyoutsSampleUiTests.ps1 -AppPid $app.Id
+```
+
+The UI tests use Windows UI Automation. For visual and accessibility review, use Accessibility Insights
+for Windows; `axe-core` is a web-DOM tool and is not the primary validator for WinUI desktop UI.
 
 ## Documentation
 
-- [Getting started](docs/getting-started.md)
-- [DesktopFlyout](docs/desktop-flyout.md)
-- [DesktopMenuFlyout](docs/desktop-menu-flyout.md)
-- [SystemTrayIcon](docs/system-tray-icon.md)
-- [Focus and activation](docs/focus-and-activation.md)
-
-## Usage
-
-This project provides `DesktopFlyout` for lightweight desktop panels and `DesktopMenuFlyout` for context menu behavior.
-
-### DesktopFlyout
-
-```xml
-<me:DesktopFlyout
-    x:Class="..."
-    xmlns:me="using:DesktopFlyouts"
-    FlyoutWidth="360">
-
-    <me:DesktopFlyoutIsland IslandHeight="300">
-        <!-- Put elements here -->
-    </me:DesktopFlyoutIsland>
-    <me:DesktopFlyoutIsland IslandHeight="300">
-        <!-- Put elements here -->
-    </me:DesktopFlyoutIsland>
-
-</me:DesktopFlyout>
-```
-
-```cs
-if (_desktopFlyout.IsOpen)
-    _desktopFlyout.Hide();
-else
-    _desktopFlyout.Show();
-```
-
-### DesktopMenuFlyout
-
-```xml
-<me:DesktopMenuFlyout
-    x:Class="..."
-    xmlns:me="using:DesktopFlyouts">
-
-    <MenuFlyoutItem Text="Theme" />
-    <MenuFlyoutItem Text="Language" />
-    <MenuFlyoutItem Text="Settings" />
-
-</me:DesktopMenuFlyout>
-```
-
-```cs
-if (_desktopMenuFlyout.IsOpen)
-    _desktopMenuFlyout.Hide();
-
-_desktopMenuFlyout.Show(e.Point);
-```
-
-## Building from the source
-
-1. Prerequisites
-    - Windows 10 (Build 10.0.17763.0) onwards and Windows 11
-    - Visual Studio 2022
-    - .NET 9/10 SDK
-2. Clone the repo
-3. Open the solution
-4. Build the solution
+- [C++/WinRT architecture and migration notes](docs/cppwinrt-migration.md)
+- [Documentation index](docs/README.md)
