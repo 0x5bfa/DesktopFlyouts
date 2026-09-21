@@ -2,7 +2,7 @@
 <Project>
   <PropertyGroup>
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
-    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">2.0.250303.1</CppWinRTVersion>
+    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">3.0.260818.1</CppWinRTVersion>
     <CppWinRTPackageRoot Condition="'$(CppWinRTPackageRoot)' == ''">$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)</CppWinRTPackageRoot>
   </PropertyGroup>
 </Project>

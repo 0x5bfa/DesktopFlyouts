@@ -3,6 +3,8 @@
   <PropertyGroup Label="Globals">
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
     <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTBuildModule>true</CppWinRTBuildModule>
+    <CppWinRTModuleInclude>Windows;Microsoft;DesktopFlyouts;DesktopFlyoutsSample.WinUI</CppWinRTModuleInclude>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{bb7b0d92-7b4b-4f4b-9ea2-f3a0cf2d1d4c}</ProjectGuid>
@@ -31,7 +33,7 @@
     <WindowsAppSDKRuntimeVersion Condition="'$(WindowsAppSDKRuntimeVersion)' == ''">2.0.1</WindowsAppSDKRuntimeVersion>
     <MicrosoftWindowsSDKBuildToolsNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)' == ''">10.0.28000.1839</MicrosoftWindowsSDKBuildToolsNugetPackageVersion>
     <WebView2Version Condition="'$(WebView2Version)' == ''">1.0.3719.77</WebView2Version>
-    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">2.0.250303.1</CppWinRTVersion>
+    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">3.0.260818.1</CppWinRTVersion>
     <MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion)' == ''">1.7.251221100</MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion>
     <MicrosoftWindowsSDKBuildToolsNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)' == ''">10.0.28000.1839</MicrosoftWindowsSDKBuildToolsNugetPackageVersion>
   </PropertyGroup>
@@ -92,8 +94,9 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <BuildStlModules>true</BuildStlModules>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;WINRT_ENABLE_LEGACY_COM;_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -129,6 +132,7 @@
     <ClInclude Include="MainWindow.xaml.h">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClInclude>
+    <ClInclude Include="ModulePreamble.h" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
@@ -178,5 +182,46 @@
     <Import Project="$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)\build\native\Microsoft.Windows.CppWinRT.targets" />
     <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.runtime\$(WindowsAppSDKRuntimeVersion)\build\native\Microsoft.WindowsAppSDK.Runtime.targets" />
   </ImportGroup>
+
+  <Target Name="InjectModuleImportsIntoXamlGenerated"
+          AfterTargets="ComputeXamlGeneratedCompileInputs"
+          BeforeTargets="ClCompile">
+    <ItemGroup>
+      <ClCompile Update="@(ClCompile)"
+                 Condition="'%(Filename)' == 'XamlTypeInfo.g'
+                         or '%(Filename)' == 'XamlTypeInfo.Impl.g'
+                         or '%(Filename)' == 'XamlMetaDataProvider'
+                         or '%(Filename)' == 'XamlLibMetadataProvider.g'">
+        <PrecompiledHeader>NotUsing</PrecompiledHeader>
+        <ForcedIncludeFiles>windows.h;$(MSBuildProjectDirectory)\ModulePreamble.h</ForcedIncludeFiles>
+      </ClCompile>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="InjectModuleImportsIntoXamlGeneratedPass2"
+          AfterTargets="ComputeXamlGeneratedCompileInputs"
+          BeforeTargets="CompileXamlGeneratedFiles">
+    <ItemGroup>
+      <ClCompile Update="@(ClCompile)"
+                 Condition="'%(Filename)' == 'XamlTypeInfo.g'
+                         or '%(Filename)' == 'XamlTypeInfo.Impl.g'
+                         or '%(Filename)' == 'XamlMetaDataProvider'
+                         or '%(Filename)' == 'XamlLibMetadataProvider.g'">
+        <PrecompiledHeader>NotUsing</PrecompiledHeader>
+        <ForcedIncludeFiles>windows.h;$(MSBuildProjectDirectory)\ModulePreamble.h</ForcedIncludeFiles>
+      </ClCompile>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="InjectModulePreambleIntoNonModuleSources"
+          AfterTargets="GenerateDeploymentManagerCpp;ComputeXamlGeneratedCompileInputs"
+          BeforeTargets="ClCompile;CompileXamlGeneratedFiles">
+    <ItemGroup>
+      <ClCompile Update="@(ClCompile)"
+                 Condition="'%(Extension)' != '.ixx' and '%(ForcedIncludeFiles)' == ''">
+        <ForcedIncludeFiles>$(MSBuildProjectDirectory)\ModulePreamble.h</ForcedIncludeFiles>
+      </ClCompile>
+    </ItemGroup>
+  </Target>
 
 </Project>

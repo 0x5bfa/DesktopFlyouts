@@ -4,6 +4,7 @@
 #include <windows.h>
 #undef GetCurrentTime
 
+#include "ModulePreamble.h"
 #include "DesktopFlyoutHost.h"
 
 #include <winrt/Microsoft.UI.Content.h>

@@ -1,6 +1,7 @@
 #include <windows.h>
 #undef GetCurrentTime
 
+#include "ModulePreamble.h"
 #include "author/DesktopMenuFlyout.author.h"
 
 #include <winrt/DesktopFlyouts.h>
