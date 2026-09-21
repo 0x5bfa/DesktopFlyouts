@@ -10,7 +10,6 @@ Its public ABI is authored for IdlGen 2.0 and projected through the generated `w
 - [DesktopMenuFlyout](desktop-menu-flyout.md): context menus hosted at screen coordinates.
 - [SystemTrayIcon](system-tray-icon.md): optional native tray icon helper.
 - [Focus and activation](focus-and-activation.md): choosing activation behavior.
-- [C++/WinRT architecture](cppwinrt-migration.md): project boundaries, IdlGen, and test strategy.
 
 ## Repository targets
 
