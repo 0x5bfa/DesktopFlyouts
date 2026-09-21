@@ -1,7 +1,6 @@
 #include <windows.h>
 #undef GetCurrentTime
 
-#include "ModulePreamble.h"
 #include "DesktopFlyoutVisual.h"
 
 #include <winrt/Microsoft.UI.Input.h>
