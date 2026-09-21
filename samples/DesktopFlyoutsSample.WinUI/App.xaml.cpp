@@ -1,7 +1,5 @@
 #include <windows.h>
 #undef GetCurrentTime
-
-#include "ModulePreamble.h"
 #include "App.xaml.h"
 #include "MainWindow.xaml.h"
 

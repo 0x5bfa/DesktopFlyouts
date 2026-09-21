@@ -1,7 +1,6 @@
 #include <windows.h>
 #undef GetCurrentTime
 
-#include "ModulePreamble.h"
 #include "author/SystemTrayIcon.author.h"
 #include "author/SystemTrayIcon.author.impl.h"
 

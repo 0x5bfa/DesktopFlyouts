@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- C++ projects import Directory.Build.props after the early C++/WinRT package imports. -->
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
-    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">3.0.260818.1</CppWinRTVersion>
+    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">2.0.250303.1</CppWinRTVersion>
     <CppWinRTPackageRoot Condition="'$(CppWinRTPackageRoot)' == ''">$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)</CppWinRTPackageRoot>
     <!-- Native C++ restore in Visual Studio is more reliable with an explicit package version. -->
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
@@ -19,8 +19,6 @@
     <WindowsTargetPlatformVersion Condition="'$(WindowsTargetPlatformVersion)' == ''">10.0.26100.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
     <CppWinRTOptimized>true</CppWinRTOptimized>
-    <CppWinRTBuildModule>true</CppWinRTBuildModule>
-    <CppWinRTModuleInclude>Windows;Microsoft;DesktopFlyouts</CppWinRTModuleInclude>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
     <DesktopCompatible>true</DesktopCompatible>
@@ -78,10 +76,9 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <BuildStlModules>true</BuildStlModules>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\DesktopFlyouts.Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_WINRT_DLL;WIN32_LEAN_AND_MEAN;NOMINMAX;WINRT_ENABLE_LEGACY_COM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINRT_DLL;WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +107,6 @@
     <ClInclude Include="author\SystemTrayIcon.author.h" />
     <ClInclude Include="DesktopFlyoutHost.h" />
     <ClInclude Include="DesktopFlyoutVisual.h" />
-    <ClInclude Include="ModulePreamble.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DesktopFlyout.cpp" />
@@ -141,14 +137,4 @@
     <Import Project="$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2Version)\build\native\Microsoft.Web.WebView2.targets" />
     <Import Project="$(CppWinRTPackageRoot)\build\native\Microsoft.Windows.CppWinRT.targets" />
   </ImportGroup>
-  <Target Name="InjectModulePreambleIntoNonModuleSources"
-          AfterTargets="IdlGenCppGenerateOutputImplCpp"
-          BeforeTargets="ClCompile">
-    <ItemGroup>
-      <ClCompile Update="@(ClCompile)"
-                 Condition="'%(Extension)' != '.ixx' and '%(ForcedIncludeFiles)' == ''">
-        <ForcedIncludeFiles>$(ProjectDir)ModulePreamble.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
-      </ClCompile>
-    </ItemGroup>
-  </Target>
 </Project>
