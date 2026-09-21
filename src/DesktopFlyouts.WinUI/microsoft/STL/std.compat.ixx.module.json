@@ -1,0 +1,26 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "microsoft/STL\\std.compat.ixx.obj",
+            "outputs": [
+                "D:\\source\\DesktopFlyouts\\src\\DesktopFlyouts.WinUI\\x64\\Debug\\vc145.pdb",
+                "microsoft/STL\\",
+                "D:\\source\\DesktopFlyouts\\src\\DesktopFlyouts.WinUI\\microsoft\\STL\\std.compat.ixx.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "std.compat",
+                    "source-path": "c:\\program files\\microsoft visual studio\\18\\enterprise\\vc\\tools\\msvc\\14.51.36231\\modules\\std.compat.ixx",
+                    "is-interface": true
+                }
+            ],
+            "requires": [
+                {
+                    "logical-name": "std"
+                }
+            ]
+        }
+    ]
+}
