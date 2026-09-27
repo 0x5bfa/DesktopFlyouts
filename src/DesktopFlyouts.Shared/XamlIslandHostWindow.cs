@@ -333,11 +333,11 @@ namespace DesktopFlyouts
         }
 
 #if UWP
-        public bool TryPreTranslateMessage(MSG* msg)
+        public bool TryPreTranslateMessage(nint message)
         {
             BOOL result = false;
 
-            _pdwxsn2.PreTranslateMessage(msg, &result);
+            _pdwxsn2.PreTranslateMessage((MSG*)message, &result);
 
             return result;
         }

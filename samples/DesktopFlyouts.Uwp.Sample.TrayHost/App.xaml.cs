@@ -43,7 +43,7 @@ namespace DesktopFlyouts
 			MSG msg;
 			while (PInvoke.GetMessage(&msg, HWND.Null, 0U, 0U))
 			{
-				if (!TryPreTranslateMessage(&msg))
+				if (!TryPreTranslateMessage((nint)(&msg)))
 				{
 					PInvoke.TranslateMessage(&msg);
 					PInvoke.DispatchMessage(&msg);
@@ -51,10 +51,10 @@ namespace DesktopFlyouts
 			}
 		}
 
-		private static unsafe bool TryPreTranslateMessage(MSG* msg)
+		private static bool TryPreTranslateMessage(nint message)
 		{
-			return (_desktopFlyout?.TryPreTranslateMessage(msg) ?? false) ||
-				(_desktopMenuFlyout?.TryPreTranslateMessage(msg) ?? false);
+			return (_desktopFlyout?.TryPreTranslateMessage(message) ?? false) ||
+				(_desktopMenuFlyout?.TryPreTranslateMessage(message) ?? false);
 		}
 
 		private static void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)

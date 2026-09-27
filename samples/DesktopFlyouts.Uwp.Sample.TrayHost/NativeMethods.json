@@ -4,11 +4,5 @@
 	"public": false,
 	"friendlyOverloads": {
 		"enabled": false
-	},
-	"comInterop": {
-		"useComSourceGenerators": true,
-		"preserveSigMethods": [
-			"*"
-		]
 	}
 }

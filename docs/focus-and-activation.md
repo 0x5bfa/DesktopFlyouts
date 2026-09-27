@@ -48,4 +48,4 @@ Set it to `False` for sticky flyouts.
 
 ## UWP message loop integration
 
-UWP desktop-host scenarios expose `TryPreTranslateMessage` on `DesktopFlyout` and `DesktopMenuFlyout`. Call it from the native message loop so keyboard navigation and accelerators can reach the hosted XAML island.
+UWP desktop-host scenarios expose `TryPreTranslateMessage` on `DesktopFlyout` and `DesktopMenuFlyout`. Pass the address of the native `MSG` structure as an `nint` from the native message loop so keyboard navigation and accelerators can reach the hosted XAML island.

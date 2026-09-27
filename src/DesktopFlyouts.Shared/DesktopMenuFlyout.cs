@@ -11,7 +11,6 @@ using Windows.Graphics;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Markup;
-using Windows.Win32.UI.WindowsAndMessaging;
 #elif WASDK
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -151,15 +150,15 @@ namespace DesktopFlyouts
         /// <summary>
         /// Lets the XAML island process a native keyboard message before dispatch.
         /// </summary>
-        /// <param name="msg">The native message to process.</param>
+        /// <param name="message">A pointer to the native MSG structure.</param>
         /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
         /// <remarks>
         /// UWP desktop-host scenarios should call this from their native message loop so keyboard
         /// navigation and accelerator processing can reach the hosted XAML island.
         /// </remarks>
-        public unsafe bool TryPreTranslateMessage(MSG* msg)
+        public bool TryPreTranslateMessage(nint message)
         {
-            return _host?.TryPreTranslateMessage(msg) ?? false;
+            return _host?.TryPreTranslateMessage(message) ?? false;
         }
 #endif
 
