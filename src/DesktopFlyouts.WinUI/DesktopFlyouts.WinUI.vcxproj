@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <!-- C++ projects import Directory.Build.props after the early C++/WinRT package imports. -->
-    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
     <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">2.0.250303.1</CppWinRTVersion>
-    <CppWinRTPackageRoot Condition="'$(CppWinRTPackageRoot)' == ''">$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)</CppWinRTPackageRoot>
     <!-- Native C++ restore in Visual Studio is more reliable with an explicit package version. -->
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <IdlGenCppPackageVersion Condition="'$(IdlGenCppPackageVersion)' == ''">0.2.18</IdlGenCppPackageVersion>
   </PropertyGroup>
-  <Import Project="$(CppWinRTPackageRoot)\build\native\Microsoft.Windows.CppWinRT.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5b85dfce-775c-4509-a35a-63a116ec98b3}</ProjectGuid>
     <ProjectName>DesktopFlyouts.WinUI</ProjectName>
@@ -29,17 +25,8 @@
     <IdlGenCppInclude>author\*.author.h</IdlGenCppInclude>
     <UseWinUI>true</UseWinUI>
     <WinUIVersion Condition="'$(WinUIVersion)' == ''">2.0.12</WinUIVersion>
-    <FoundationPackageVersion Condition="'$(FoundationPackageVersion)' == ''">2.0.20</FoundationPackageVersion>
-    <IXPPackageVersion Condition="'$(IXPPackageVersion)' == ''">2.0.12</IXPPackageVersion>
-    <BasePackageVersion Condition="'$(BasePackageVersion)' == ''">2.0.3</BasePackageVersion>
-    <MicrosoftWindowsSDKBuildToolsNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)' == ''">10.0.28000.1839</MicrosoftWindowsSDKBuildToolsNugetPackageVersion>
-    <WebView2Version Condition="'$(WebView2Version)' == ''">1.0.3719.77</WebView2Version>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(WinUIVersion)\build\native\Microsoft.WindowsAppSDK.WinUI.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.foundation\$(FoundationPackageVersion)\build\native\Microsoft.WindowsAppSDK.Foundation.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.interactiveexperiences\$(IXPPackageVersion)\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.base\$(BasePackageVersion)\build\native\Microsoft.WindowsAppSDK.Base.props" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -126,15 +113,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CppWinRT" Version="$(CppWinRTVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="$(WinUIVersion)" />
     <PackageReference Include="IdlGen.IdlGen.Cpp" Version="$(IdlGenCppPackageVersion)" PrivateAssets="all" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(WinUIVersion)\build\native\Microsoft.WindowsAppSDK.WinUI.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.foundation\$(FoundationPackageVersion)\build\native\Microsoft.WindowsAppSDK.Foundation.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.interactiveexperiences\$(IXPPackageVersion)\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.base\$(BasePackageVersion)\build\native\Microsoft.WindowsAppSDK.Base.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2Version)\build\native\Microsoft.Web.WebView2.targets" />
-    <Import Project="$(CppWinRTPackageRoot)\build\native\Microsoft.Windows.CppWinRT.targets" />
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

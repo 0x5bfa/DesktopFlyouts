@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
-    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <MinimalCoreWin>true</MinimalCoreWin>
@@ -19,32 +18,20 @@
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
     <UseWinUI>true</UseWinUI>
     <DesktopCompatible>true</DesktopCompatible>
+    <EnableNativePackageReferenceSupport>true</EnableNativePackageReferenceSupport>
     <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
     <!-- The native MSIX deployment target uses this relative path when registering the F5 layout. -->
     <AppxManifestTargetPath>AppxManifest.xml</AppxManifestTargetPath>
     <WindowsTargetPlatformVersion Condition="'$(WindowsTargetPlatformVersion)' == ''">10.0.26100.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
     <WinUIVersion Condition="'$(WinUIVersion)' == ''">2.0.12</WinUIVersion>
-    <FoundationPackageVersion Condition="'$(FoundationPackageVersion)' == ''">2.0.20</FoundationPackageVersion>
-    <IXPPackageVersion Condition="'$(IXPPackageVersion)' == ''">2.0.12</IXPPackageVersion>
-    <BasePackageVersion Condition="'$(BasePackageVersion)' == ''">2.0.3</BasePackageVersion>
     <WindowsAppSDKRuntimeVersion Condition="'$(WindowsAppSDKRuntimeVersion)' == ''">2.0.1</WindowsAppSDKRuntimeVersion>
     <MicrosoftWindowsSDKBuildToolsNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)' == ''">10.0.28000.1839</MicrosoftWindowsSDKBuildToolsNugetPackageVersion>
-    <WebView2Version Condition="'$(WebView2Version)' == ''">1.0.3719.77</WebView2Version>
     <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">2.0.250303.1</CppWinRTVersion>
     <MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion)' == ''">1.7.251221100</MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion>
-    <MicrosoftWindowsSDKBuildToolsNugetPackageVersion Condition="'$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)' == ''">10.0.28000.1839</MicrosoftWindowsSDKBuildToolsNugetPackageVersion>
   </PropertyGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(WinUIVersion)\build\native\Microsoft.WindowsAppSDK.WinUI.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windows.sdk.buildtools.msix\$(MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion)\build\Microsoft.Windows.SDK.BuildTools.MSIX.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windows.sdk.buildtools\$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)\build\Microsoft.Windows.SDK.BuildTools.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.foundation\$(FoundationPackageVersion)\build\native\Microsoft.WindowsAppSDK.Foundation.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.interactiveexperiences\$(IXPPackageVersion)\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.base\$(BasePackageVersion)\build\native\Microsoft.WindowsAppSDK.Base.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)\build\native\Microsoft.Windows.CppWinRT.props" />
-  <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.runtime\$(WindowsAppSDKRuntimeVersion)\build\native\Microsoft.WindowsAppSDK.Runtime.props" />
 
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -166,17 +153,14 @@
       <Name>DesktopFlyouts.WinUI</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CppWinRT" Version="$(CppWinRTVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX" Version="$(MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="$(WindowsAppSDKRuntimeVersion)" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="$(WinUIVersion)" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(WinUIVersion)\build\native\Microsoft.WindowsAppSDK.WinUI.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windows.sdk.buildtools.msix\$(MicrosoftWindowsSDKBuildToolsMsixNugetPackageVersion)\build\Microsoft.Windows.SDK.BuildTools.MSIX.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windows.sdk.buildtools\$(MicrosoftWindowsSDKBuildToolsNugetPackageVersion)\build\Microsoft.Windows.SDK.BuildTools.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.foundation\$(FoundationPackageVersion)\build\native\Microsoft.WindowsAppSDK.Foundation.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.interactiveexperiences\$(IXPPackageVersion)\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.base\$(BasePackageVersion)\build\native\Microsoft.WindowsAppSDK.Base.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2Version)\build\native\Microsoft.Web.WebView2.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windows.cppwinrt\$(CppWinRTVersion)\build\native\Microsoft.Windows.CppWinRT.targets" />
-    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk.runtime\$(WindowsAppSDKRuntimeVersion)\build\native\Microsoft.WindowsAppSDK.Runtime.targets" />
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 
 </Project>
