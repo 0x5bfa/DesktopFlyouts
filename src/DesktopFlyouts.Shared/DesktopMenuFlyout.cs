@@ -4,6 +4,7 @@
 using System;
 using System.Drawing;
 using CommunityToolkit.WinUI;
+using Windows.Graphics;
 
 
 #if UWP
@@ -15,7 +16,6 @@ using Windows.Win32.UI.WindowsAndMessaging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Markup;
-using Windows.Graphics;
 #endif
 
 namespace DesktopFlyouts
