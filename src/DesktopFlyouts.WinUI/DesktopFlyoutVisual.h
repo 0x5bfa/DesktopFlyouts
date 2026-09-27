@@ -33,8 +33,8 @@ namespace winrt::DesktopFlyouts::detail
 
         void RefreshContent(
             Microsoft::UI::Xaml::Hosting::DesktopWindowXamlSource const& xamlSource,
-            Windows::Foundation::Collections::IObservableVector<Microsoft::UI::Xaml::UIElement> const& islands,
-            author::DesktopFlyoutOrientation orientation,
+            Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> const& islands,
+            Microsoft::UI::Xaml::Controls::Orientation orientation,
             std::int32_t spacing);
         void ApplySystemBackdrop(
             Microsoft::UI::Xaml::Hosting::DesktopWindowXamlSource const& xamlSource,

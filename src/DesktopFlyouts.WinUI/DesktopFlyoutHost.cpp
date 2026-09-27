@@ -386,6 +386,17 @@ namespace winrt::DesktopFlyouts::detail
 
     void DesktopFlyoutHost::Hide() noexcept
     {
+        if (m_xamlSource)
+        {
+            try
+            {
+                m_xamlSource.SiteBridge().Hide();
+            }
+            catch (...)
+            {
+            }
+        }
+
         if (m_window != nullptr)
         {
             ShowWindow(m_window, SW_HIDE);
@@ -438,11 +449,25 @@ namespace winrt::DesktopFlyouts::detail
         if (activationMode == author::DesktopFlyoutActivationMode::activate)
         {
             ShowWindow(m_window, SW_SHOW);
+            if (m_xamlSource)
+            {
+                try
+                {
+                    m_xamlSource.SiteBridge().Show();
+                }
+                catch (...)
+                {
+                }
+            }
             SetForegroundWindow(m_window);
         }
         else
         {
             ShowWindow(m_window, SW_SHOWNOACTIVATE);
+            if (m_islandWindow != nullptr)
+            {
+                ShowWindow(m_islandWindow, SW_SHOWNOACTIVATE);
+            }
         }
     }
 
@@ -498,7 +523,8 @@ namespace winrt::DesktopFlyouts::detail
         }
     }
 
-    bool DesktopFlyoutHost::NavigateFocus() noexcept
+    bool DesktopFlyoutHost::NavigateFocus(
+        Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason) noexcept
     {
         if (!m_xamlSource || m_islandWindow == nullptr ||
             m_activationMode == author::DesktopFlyoutActivationMode::never_activate)
@@ -510,10 +536,29 @@ namespace winrt::DesktopFlyouts::detail
 
         try
         {
-            auto request = Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationRequest{
-                Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationReason::Programmatic };
+            auto request = Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationRequest{ reason };
             auto result = m_xamlSource.NavigateFocus(request);
             return result && result.WasFocusMoved();
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    bool DesktopFlyoutHost::TryPreTranslateMessage(MSG const* message) noexcept
+    {
+        if (!m_xamlSource || message == nullptr)
+        {
+            return false;
+        }
+
+        try
+        {
+            auto native = m_xamlSource.as<IDesktopWindowXamlSourceNative2>();
+            BOOL handled = FALSE;
+            winrt::check_hresult(native->PreTranslateMessage(message, &handled));
+            return handled != FALSE;
         }
         catch (...)
         {

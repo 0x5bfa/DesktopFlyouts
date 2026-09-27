@@ -32,20 +32,14 @@ namespace winrt::DesktopFlyouts::author
     struct SystemTrayIcon : winrt::author::runtimeclass<winrt::author::internal<winrt::non_agile>>
     {
         SystemTrayIcon();
-        SystemTrayIcon(
-            winrt::hstring iconPath,
-            winrt::hstring tooltip,
-            winrt::guid id);
+        SystemTrayIcon(winrt::hstring iconPath, winrt::hstring tooltip, winrt::guid id);
         static
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
             SystemTrayIcon
 #else
             winrt::DesktopFlyouts::SystemTrayIcon
 #endif
-            CreateFromIconHandle(
-                std::int64_t iconHandle,
-                winrt::hstring tooltip,
-                winrt::guid id);
+            CreateFromIconHandle(std::int64_t iconHandle, winrt::hstring tooltip, winrt::guid id);
         ~SystemTrayIcon();
 
         winrt::hstring IconPath(winrt::author::getter = {});
@@ -55,41 +49,37 @@ namespace winrt::DesktopFlyouts::author
         winrt::author::setter IsVisible(bool value);
         winrt::guid Id(winrt::author::getter = {});
 
-        winrt::event_token LeftClicked(
-            winrt::Windows::Foundation::EventHandler<
+        winrt::event_token LeftClicked(winrt::Windows::Foundation::EventHandler<
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
-                SystemTrayIconEventArgs
+            SystemTrayIconEventArgs
 #else
-                winrt::DesktopFlyouts::SystemTrayIconEventArgs
+            winrt::DesktopFlyouts::SystemTrayIconEventArgs
 #endif
-            > const& handler);
+        > const& handler);
         void LeftClicked(winrt::event_token token);
-        winrt::event_token RightClicked(
-            winrt::Windows::Foundation::EventHandler<
+        winrt::event_token RightClicked(winrt::Windows::Foundation::EventHandler<
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
-                SystemTrayIconEventArgs
+            SystemTrayIconEventArgs
 #else
-                winrt::DesktopFlyouts::SystemTrayIconEventArgs
+            winrt::DesktopFlyouts::SystemTrayIconEventArgs
 #endif
-            > const& handler);
+        > const& handler);
         void RightClicked(winrt::event_token token);
-        winrt::event_token LeftDoubleClicked(
-            winrt::Windows::Foundation::EventHandler<
+        winrt::event_token LeftDoubleClicked(winrt::Windows::Foundation::EventHandler<
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
-                SystemTrayIconEventArgs
+            SystemTrayIconEventArgs
 #else
-                winrt::DesktopFlyouts::SystemTrayIconEventArgs
+            winrt::DesktopFlyouts::SystemTrayIconEventArgs
 #endif
-            > const& handler);
+        > const& handler);
         void LeftDoubleClicked(winrt::event_token token);
-        winrt::event_token RightDoubleClicked(
-            winrt::Windows::Foundation::EventHandler<
+        winrt::event_token RightDoubleClicked(winrt::Windows::Foundation::EventHandler<
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
-                SystemTrayIconEventArgs
+            SystemTrayIconEventArgs
 #else
-                winrt::DesktopFlyouts::SystemTrayIconEventArgs
+            winrt::DesktopFlyouts::SystemTrayIconEventArgs
 #endif
-            > const& handler);
+        > const& handler);
         void RightDoubleClicked(winrt::event_token token);
 
         void RaiseLeftClicked(
@@ -138,33 +128,33 @@ namespace winrt::DesktopFlyouts::author
         bool m_isVisible{};
         std::unique_ptr<SystemTrayIconNativeState> m_native;
         winrt::event<winrt::Windows::Foundation::EventHandler<
- #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
+#ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
             SystemTrayIconEventArgs
- #else
+#else
             winrt::DesktopFlyouts::SystemTrayIconEventArgs
- #endif
-            >> m_leftClicked;
+#endif
+        >> m_leftClicked;
         winrt::event<winrt::Windows::Foundation::EventHandler<
- #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
+#ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
             SystemTrayIconEventArgs
- #else
+#else
             winrt::DesktopFlyouts::SystemTrayIconEventArgs
- #endif
-            >> m_rightClicked;
+#endif
+        >> m_rightClicked;
         winrt::event<winrt::Windows::Foundation::EventHandler<
- #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
+#ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
             SystemTrayIconEventArgs
- #else
+#else
             winrt::DesktopFlyouts::SystemTrayIconEventArgs
- #endif
-            >> m_leftDoubleClicked;
+#endif
+        >> m_leftDoubleClicked;
         winrt::event<winrt::Windows::Foundation::EventHandler<
- #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
+#ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
             SystemTrayIconEventArgs
- #else
+#else
             winrt::DesktopFlyouts::SystemTrayIconEventArgs
- #endif
-            >> m_rightDoubleClicked;
+#endif
+        >> m_rightDoubleClicked;
 
         winrt::Windows::Foundation::Point TrayIconPoint() const noexcept;
         void RestoreAfterTaskbarRestart() noexcept;

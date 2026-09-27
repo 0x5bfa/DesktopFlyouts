@@ -10,7 +10,7 @@
 
 #include <functional>
 
-#include <winrt/Microsoft.UI.Xaml.Hosting.h>
+#include <winrt/Windows.UI.Xaml.Hosting.h>
 
 namespace winrt::DesktopFlyouts::detail
 {
@@ -30,6 +30,7 @@ namespace winrt::DesktopFlyouts::detail
         void HideOnLostFocus(bool value) noexcept;
         void IsOpen(bool value) noexcept;
 
+        void Content(Windows::UI::Xaml::UIElement const& content);
         void Hide() noexcept;
         void MoveAndResize(int x, int y, int width, int height);
         void Show(author::DesktopFlyoutActivationMode activationMode) noexcept;
@@ -39,34 +40,26 @@ namespace winrt::DesktopFlyouts::detail
 
         void PreserveActivationState() noexcept;
         void RestoreActivationState() noexcept;
-        bool NavigateFocus(
-            Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason) noexcept;
+        bool NavigateFocus(Windows::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason) noexcept;
         bool TryPreTranslateMessage(MSG const* message) noexcept;
 
         void HideCallback(std::function<void()> callback);
-        void SystemSettingsCallback(std::function<void()> callback);
 
         HWND Window() const noexcept;
         HWND IslandWindow() const noexcept;
         double RasterizationScale() const noexcept;
-        Microsoft::UI::Xaml::Hosting::DesktopWindowXamlSource XamlSource() const noexcept;
+        Windows::UI::Xaml::Hosting::DesktopWindowXamlSource XamlSource() const noexcept;
 
     private:
         static void RegisterWindowClass();
         static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
-        static LRESULT CALLBACK IslandWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
-        void SubclassIslandWindow() noexcept;
-        void UnsubclassIslandWindow() noexcept;
+        static void EnsureXamlManager();
 
         HWND m_ownerWindow{};
         HWND m_window{};
         HWND m_islandWindow{};
-        HWND m_inputWindow{};
-        LONG_PTR m_previousIslandWindowProc{};
-        LONG_PTR m_previousInputWindowProc{};
-        Microsoft::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
+        Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
         std::function<void()> m_hideCallback;
-        std::function<void()> m_systemSettingsCallback;
         author::DesktopFlyoutActivationMode m_activationMode{ author::DesktopFlyoutActivationMode::activate };
         bool m_hideOnLostFocus{ true };
         bool m_isOpen{};
@@ -76,3 +69,4 @@ namespace winrt::DesktopFlyouts::detail
         HWND m_preservedFocusWindow{};
     };
 }
+

@@ -556,7 +556,7 @@ namespace winrt::DesktopFlyoutsSample::WinUI::implementation
         ApplySettings();
         m_flyout.FlyoutWidth({ 420.0, Microsoft::UI::Xaml::GridUnitType::Pixel });
         m_flyout.FlyoutHeight({ 300.0, Microsoft::UI::Xaml::GridUnitType::Pixel });
-        m_flyout.IslandsOrientation(winrt::DesktopFlyouts::DesktopFlyoutOrientation::vertical);
+        m_flyout.IslandsOrientation(Microsoft::UI::Xaml::Controls::Orientation::Vertical);
         m_flyout.IslandSpacing(8);
         m_flyout.PressedScale(0.96);
         m_flyout.IsSwipeToDismissEnabled(true);
@@ -588,8 +588,12 @@ namespace winrt::DesktopFlyoutsSample::WinUI::implementation
         second.Background(ResourceBrush(L"ControlFillColorSecondaryBrush"));
         second.Child(secondStack);
 
-        m_flyout.Islands().Append(first);
-        m_flyout.Islands().Append(second);
+        auto firstIsland = winrt::DesktopFlyouts::DesktopFlyoutIsland{};
+        firstIsland.Content(first);
+        auto secondIsland = winrt::DesktopFlyouts::DesktopFlyoutIsland{};
+        secondIsland.Content(second);
+        m_flyout.Islands().Append(firstIsland);
+        m_flyout.Islands().Append(secondIsland);
         m_flyout.IsTransitionAnimationEnabled(false);
         m_flyout.Show();
         StatusText().Text(L"Flyout islands requested");

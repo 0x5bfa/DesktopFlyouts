@@ -46,6 +46,9 @@
             <InProcessServer>
                 <Path>DesktopFlyouts.WinUI.dll</Path>
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyout" ThreadingModel="both" />
+                <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIsland" ThreadingModel="both" />
+                <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIslandTemplateSettings" ThreadingModel="both" />
+                <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIslandsPanel" ThreadingModel="both" />
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopMenuFlyout" ThreadingModel="both" />
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.SystemTrayIcon" ThreadingModel="both" />
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.SystemTrayIconEventArgs" ThreadingModel="both" />

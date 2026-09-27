@@ -371,8 +371,8 @@ namespace winrt::DesktopFlyouts::detail
 
     void DesktopFlyoutVisual::RefreshContent(
         Microsoft::UI::Xaml::Hosting::DesktopWindowXamlSource const& xamlSource,
-        Windows::Foundation::Collections::IObservableVector<Microsoft::UI::Xaml::UIElement> const& islands,
-        author::DesktopFlyoutOrientation orientation,
+        Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> const& islands,
+        Microsoft::UI::Xaml::Controls::Orientation orientation,
         std::int32_t spacing)
     {
         if (!xamlSource)
@@ -399,9 +399,7 @@ namespace winrt::DesktopFlyouts::detail
         else if (islands && islands.Size() > 0)
         {
             auto stack = Microsoft::UI::Xaml::Controls::StackPanel{};
-            stack.Orientation(orientation == author::DesktopFlyoutOrientation::horizontal
-                ? Microsoft::UI::Xaml::Controls::Orientation::Horizontal
-                : Microsoft::UI::Xaml::Controls::Orientation::Vertical);
+            stack.Orientation(orientation);
             stack.Spacing(static_cast<double>(spacing));
 
             for (std::uint32_t index = 0; index < islands.Size(); ++index)
@@ -410,7 +408,7 @@ namespace winrt::DesktopFlyouts::detail
                 if (island)
                 {
                     stack.Children().Append(CreateIslandSurface(
-                        island,
+                        island.as<Microsoft::UI::Xaml::UIElement>(),
                         index,
                         m_islandBackdrops));
                 }

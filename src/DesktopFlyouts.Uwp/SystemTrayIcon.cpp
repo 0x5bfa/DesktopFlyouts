@@ -79,8 +79,7 @@ namespace winrt::DesktopFlyouts::author
         if (icon != nullptr && message == WM_APP + 0x5BFA)
         {
             const auto point = icon->TrayIconPoint();
-            auto args = winrt::make<winrt::DesktopFlyouts::implementation::SystemTrayIconEventArgs>(
-                point);
+            auto args = winrt::make<winrt::DesktopFlyouts::implementation::SystemTrayIconEventArgs>(point);
             switch (static_cast<UINT>(lParam))
             {
             case WM_LBUTTONUP:
@@ -121,7 +120,6 @@ namespace winrt::DesktopFlyouts::author
             windowClass.hInstance = GetModuleHandleW(nullptr);
             windowClass.lpfnWndProc = &SystemTrayIcon::WindowProc;
             windowClass.lpszClassName = c_trayClassName;
-            windowClass.hInstance = GetModuleHandleW(nullptr);
             windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
             windowClass.style = CS_DBLCLKS;
             winrt::check_bool(RegisterClassExW(&windowClass) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS);
@@ -274,11 +272,8 @@ namespace winrt::DesktopFlyouts::author
         POINT point{};
         if (GetCursorPos(&point))
         {
-            return Windows::Foundation::Point{
-                static_cast<float>(point.x),
-                static_cast<float>(point.y) };
+            return Windows::Foundation::Point{ static_cast<float>(point.x), static_cast<float>(point.y) };
         }
-
         return {};
     }
 
@@ -296,44 +291,28 @@ namespace winrt::DesktopFlyouts::author
     {
         return m_leftClicked.add(handler);
     }
-
-    void SystemTrayIcon::LeftClicked(winrt::event_token token)
-    {
-        m_leftClicked.remove(token);
-    }
+    void SystemTrayIcon::LeftClicked(winrt::event_token token) { m_leftClicked.remove(token); }
 
     winrt::event_token SystemTrayIcon::RightClicked(
         Windows::Foundation::EventHandler<winrt::DesktopFlyouts::SystemTrayIconEventArgs> const& handler)
     {
         return m_rightClicked.add(handler);
     }
-
-    void SystemTrayIcon::RightClicked(winrt::event_token token)
-    {
-        m_rightClicked.remove(token);
-    }
+    void SystemTrayIcon::RightClicked(winrt::event_token token) { m_rightClicked.remove(token); }
 
     winrt::event_token SystemTrayIcon::LeftDoubleClicked(
         Windows::Foundation::EventHandler<winrt::DesktopFlyouts::SystemTrayIconEventArgs> const& handler)
     {
         return m_leftDoubleClicked.add(handler);
     }
-
-    void SystemTrayIcon::LeftDoubleClicked(winrt::event_token token)
-    {
-        m_leftDoubleClicked.remove(token);
-    }
+    void SystemTrayIcon::LeftDoubleClicked(winrt::event_token token) { m_leftDoubleClicked.remove(token); }
 
     winrt::event_token SystemTrayIcon::RightDoubleClicked(
         Windows::Foundation::EventHandler<winrt::DesktopFlyouts::SystemTrayIconEventArgs> const& handler)
     {
         return m_rightDoubleClicked.add(handler);
     }
-
-    void SystemTrayIcon::RightDoubleClicked(winrt::event_token token)
-    {
-        m_rightDoubleClicked.remove(token);
-    }
+    void SystemTrayIcon::RightDoubleClicked(winrt::event_token token) { m_rightDoubleClicked.remove(token); }
 
     void SystemTrayIcon::RaiseLeftClicked(
         winrt::DesktopFlyouts::SystemTrayIconEventArgs const& args,
@@ -341,21 +320,18 @@ namespace winrt::DesktopFlyouts::author
     {
         m_leftClicked(nullptr, args);
     }
-
     void SystemTrayIcon::RaiseRightClicked(
         winrt::DesktopFlyouts::SystemTrayIconEventArgs const& args,
         winrt::author::ignore)
     {
         m_rightClicked(nullptr, args);
     }
-
     void SystemTrayIcon::RaiseLeftDoubleClicked(
         winrt::DesktopFlyouts::SystemTrayIconEventArgs const& args,
         winrt::author::ignore)
     {
         m_leftDoubleClicked(nullptr, args);
     }
-
     void SystemTrayIcon::RaiseRightDoubleClicked(
         winrt::DesktopFlyouts::SystemTrayIconEventArgs const& args,
         winrt::author::ignore)

@@ -2,18 +2,21 @@
 #undef GetCurrentTime
 
 #include "author/DesktopFlyout.author.h"
+#include "author/DesktopFlyout.author.impl.h"
 #include "DesktopFlyoutHost.h"
 #include "DesktopFlyoutVisual.h"
 #include "FlyoutLayout.h"
 #include "winrt/DesktopFlyouts.h"
 
 #include <winrt/Microsoft.UI.Xaml.Hosting.h>
+#include <winrt/Windows.UI.Xaml.Interop.h>
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace winrt::DesktopFlyouts::author
 {
@@ -138,10 +141,417 @@ namespace
 
 namespace winrt::DesktopFlyouts::author
 {
+    DesktopFlyoutIslandTemplateSettings::DesktopFlyoutIslandTemplateSettings() = default;
+
+    Microsoft::UI::Xaml::DependencyProperty
+        DesktopFlyoutIslandTemplateSettings::BackdropCornerRadiusProperty(winrt::author::getter)
+    {
+        static auto property = Microsoft::UI::Xaml::DependencyProperty::Register(
+            L"BackdropCornerRadius",
+            winrt::xaml_typename<Microsoft::UI::Xaml::CornerRadius>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyoutIslandTemplateSettings>(),
+            Microsoft::UI::Xaml::PropertyMetadata{
+                winrt::box_value(Microsoft::UI::Xaml::CornerRadius{}) });
+        return property;
+    }
+
+    Microsoft::UI::Xaml::DependencyProperty
+        DesktopFlyoutIslandTemplateSettings::SystemBackdropProperty(winrt::author::getter)
+    {
+        static auto property = Microsoft::UI::Xaml::DependencyProperty::Register(
+            L"SystemBackdrop",
+            winrt::xaml_typename<Microsoft::UI::Xaml::Media::SystemBackdrop>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyoutIslandTemplateSettings>(),
+            Microsoft::UI::Xaml::PropertyMetadata{ nullptr });
+        return property;
+    }
+
+    Microsoft::UI::Xaml::CornerRadius
+        DesktopFlyoutIslandTemplateSettings::BackdropCornerRadius(winrt::author::getter)
+    {
+        return winrt::unbox_value<Microsoft::UI::Xaml::CornerRadius>(
+            self(this)->GetValue(BackdropCornerRadiusProperty()));
+    }
+
+    winrt::author::setter DesktopFlyoutIslandTemplateSettings::BackdropCornerRadius(
+        Microsoft::UI::Xaml::CornerRadius value)
+    {
+        self(this)->SetValue(BackdropCornerRadiusProperty(), winrt::box_value(value));
+        return {};
+    }
+
+    Microsoft::UI::Xaml::Media::SystemBackdrop
+        DesktopFlyoutIslandTemplateSettings::SystemBackdrop(winrt::author::getter)
+    {
+        return self(this)->GetValue(SystemBackdropProperty())
+            .try_as<Microsoft::UI::Xaml::Media::SystemBackdrop>();
+    }
+
+    winrt::author::setter DesktopFlyoutIslandTemplateSettings::SystemBackdrop(
+        Microsoft::UI::Xaml::Media::SystemBackdrop const& value)
+    {
+        self(this)->SetValue(SystemBackdropProperty(), value);
+        return {};
+    }
+
+    DesktopFlyoutIsland::DesktopFlyoutIsland()
+        : m_templateSettings(
+            winrt::make<winrt::DesktopFlyouts::implementation::DesktopFlyoutIslandTemplateSettings>())
+    {
+        self(this)->DefaultStyleKey(winrt::box_value(L"DesktopFlyouts.DesktopFlyoutIsland"));
+        m_cornerRadiusToken = self(this)->RegisterPropertyChangedCallback(
+            Microsoft::UI::Xaml::Controls::Control::CornerRadiusProperty(),
+            [this](auto const&, auto const&)
+            {
+                const auto radius = self(this)->CornerRadius();
+                const auto inner = [](double value) noexcept
+                {
+                    return std::max(0.0, value - 1.0);
+                };
+                m_templateSettings.BackdropCornerRadius({
+                    inner(radius.TopLeft),
+                    inner(radius.TopRight),
+                    inner(radius.BottomRight),
+                    inner(radius.BottomLeft) });
+            });
+
+        const auto radius = self(this)->CornerRadius();
+        const auto inner = [](double value) noexcept
+        {
+            return std::max(0.0, value - 1.0);
+        };
+        m_templateSettings.BackdropCornerRadius({
+            inner(radius.TopLeft),
+            inner(radius.TopRight),
+            inner(radius.BottomRight),
+            inner(radius.BottomLeft) });
+    }
+
+    DesktopFlyoutIsland::~DesktopFlyoutIsland()
+    {
+        if (m_cornerRadiusToken != 0)
+        {
+            try
+            {
+                self(this)->UnregisterPropertyChangedCallback(
+                    Microsoft::UI::Xaml::Controls::Control::CornerRadiusProperty(),
+                    m_cornerRadiusToken);
+            }
+            catch (...)
+            {
+            }
+        }
+    }
+
+    Microsoft::UI::Xaml::DependencyProperty DesktopFlyoutIsland::IslandWidthProperty(winrt::author::getter)
+    {
+        static auto property = Microsoft::UI::Xaml::DependencyProperty::Register(
+            L"IslandWidth",
+            winrt::xaml_typename<Microsoft::UI::Xaml::GridLength>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyoutIsland>(),
+            Microsoft::UI::Xaml::PropertyMetadata{
+                winrt::box_value(Microsoft::UI::Xaml::GridLength{
+                    1.0, Microsoft::UI::Xaml::GridUnitType::Auto }) });
+        return property;
+    }
+
+    Microsoft::UI::Xaml::DependencyProperty DesktopFlyoutIsland::IslandHeightProperty(winrt::author::getter)
+    {
+        static auto property = Microsoft::UI::Xaml::DependencyProperty::Register(
+            L"IslandHeight",
+            winrt::xaml_typename<Microsoft::UI::Xaml::GridLength>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyoutIsland>(),
+            Microsoft::UI::Xaml::PropertyMetadata{
+                winrt::box_value(Microsoft::UI::Xaml::GridLength{
+                    1.0, Microsoft::UI::Xaml::GridUnitType::Auto }) });
+        return property;
+    }
+
+    Microsoft::UI::Xaml::GridLength DesktopFlyoutIsland::IslandWidth(winrt::author::getter)
+    {
+        return winrt::unbox_value<Microsoft::UI::Xaml::GridLength>(
+            self(this)->GetValue(IslandWidthProperty()));
+    }
+
+    winrt::author::setter DesktopFlyoutIsland::IslandWidth(Microsoft::UI::Xaml::GridLength value)
+    {
+        self(this)->SetValue(IslandWidthProperty(), winrt::box_value(value));
+        return {};
+    }
+
+    Microsoft::UI::Xaml::GridLength DesktopFlyoutIsland::IslandHeight(winrt::author::getter)
+    {
+        return winrt::unbox_value<Microsoft::UI::Xaml::GridLength>(
+            self(this)->GetValue(IslandHeightProperty()));
+    }
+
+    winrt::author::setter DesktopFlyoutIsland::IslandHeight(Microsoft::UI::Xaml::GridLength value)
+    {
+        self(this)->SetValue(IslandHeightProperty(), winrt::box_value(value));
+        return {};
+    }
+
+    winrt::DesktopFlyouts::DesktopFlyoutIslandTemplateSettings
+        DesktopFlyoutIsland::TemplateSettings(winrt::author::getter)
+    {
+        return m_templateSettings;
+    }
+
+    DesktopFlyoutIslandsPanel::DesktopFlyoutIslandsPanel() = default;
+
+    Microsoft::UI::Xaml::DependencyProperty DesktopFlyoutIslandsPanel::OrientationProperty(
+        winrt::author::getter)
+    {
+        static auto property = Microsoft::UI::Xaml::DependencyProperty::Register(
+            L"Orientation",
+            winrt::xaml_typename<Microsoft::UI::Xaml::Controls::Orientation>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyoutIslandsPanel>(),
+            Microsoft::UI::Xaml::PropertyMetadata{
+                winrt::box_value(Microsoft::UI::Xaml::Controls::Orientation::Vertical) });
+        return property;
+    }
+
+    Microsoft::UI::Xaml::DependencyProperty DesktopFlyoutIslandsPanel::SpacingProperty(
+        winrt::author::getter)
+    {
+        static auto property = Microsoft::UI::Xaml::DependencyProperty::Register(
+            L"Spacing",
+            winrt::xaml_typename<double>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyoutIslandsPanel>(),
+            Microsoft::UI::Xaml::PropertyMetadata{ winrt::box_value(0.0) });
+        return property;
+    }
+
+    Microsoft::UI::Xaml::Controls::Orientation DesktopFlyoutIslandsPanel::Orientation(
+        winrt::author::getter)
+    {
+        return winrt::unbox_value<Microsoft::UI::Xaml::Controls::Orientation>(
+            self(this)->GetValue(OrientationProperty()));
+    }
+
+    winrt::author::setter DesktopFlyoutIslandsPanel::Orientation(
+        Microsoft::UI::Xaml::Controls::Orientation value)
+    {
+        self(this)->SetValue(OrientationProperty(), winrt::box_value(value));
+        self(this)->InvalidateMeasure();
+        return {};
+    }
+
+    double DesktopFlyoutIslandsPanel::Spacing(winrt::author::getter)
+    {
+        return winrt::unbox_value<double>(self(this)->GetValue(SpacingProperty()));
+    }
+
+    winrt::author::setter DesktopFlyoutIslandsPanel::Spacing(double value)
+    {
+        self(this)->SetValue(SpacingProperty(), winrt::box_value(value));
+        self(this)->InvalidateMeasure();
+        return {};
+    }
+
+    Windows::Foundation::Size DesktopFlyoutIslandsPanel::MeasureOverride(
+        Windows::Foundation::Size availableSize,
+        winrt::author::override)
+    {
+        struct LayoutItem
+        {
+            Microsoft::UI::Xaml::UIElement element{ nullptr };
+            Microsoft::UI::Xaml::GridLength length{};
+        };
+
+        const auto orientation = Orientation();
+        const bool vertical = orientation == Microsoft::UI::Xaml::Controls::Orientation::Vertical;
+        const auto spacing = std::isfinite(Spacing()) ? std::max(0.0, Spacing()) : 0.0;
+        std::vector<LayoutItem> items;
+
+        for (auto const& child : self(this)->Children())
+        {
+            auto island = child.try_as<winrt::DesktopFlyouts::DesktopFlyoutIsland>();
+            if (!island)
+            {
+                if (auto presenter = child.try_as<Microsoft::UI::Xaml::Controls::ContentPresenter>())
+                {
+                    island = presenter.Content().try_as<winrt::DesktopFlyouts::DesktopFlyoutIsland>();
+                }
+            }
+
+            if (island && island.Visibility() != Microsoft::UI::Xaml::Visibility::Visible)
+            {
+                child.Measure({ 0.0f, 0.0f });
+                continue;
+            }
+
+            items.push_back({
+                child,
+                island
+                    ? (vertical ? island.IslandHeight() : island.IslandWidth())
+                    : Microsoft::UI::Xaml::GridLength{ 1.0, Microsoft::UI::Xaml::GridUnitType::Auto } });
+        }
+
+        const auto primaryAvailable = vertical ? availableSize.Height : availableSize.Width;
+        const auto crossAvailable = vertical ? availableSize.Width : availableSize.Height;
+        const bool finitePrimary = std::isfinite(primaryAvailable);
+        const auto spacingTotal = items.empty() ? 0.0 : spacing * static_cast<double>(items.size() - 1);
+        double fixedLength{};
+        double autoLength{};
+        double starLength{};
+        double starWeight{};
+        double desiredCross{};
+
+        for (auto const& item : items)
+        {
+            if (item.length.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Star)
+            {
+                starWeight += std::max(0.0, item.length.Value);
+                continue;
+            }
+
+            const double requestedLength = item.length.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Pixel
+                ? std::max(0.0, item.length.Value)
+                : std::numeric_limits<double>::infinity();
+            item.element.Measure(vertical
+                ? Windows::Foundation::Size{ crossAvailable, static_cast<float>(requestedLength) }
+                : Windows::Foundation::Size{ static_cast<float>(requestedLength), crossAvailable });
+            const auto desired = item.element.DesiredSize();
+            if (item.length.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Pixel)
+            {
+                fixedLength += requestedLength;
+            }
+            else
+            {
+                autoLength += vertical ? desired.Height : desired.Width;
+            }
+            desiredCross = std::max<double>(desiredCross, vertical ? desired.Width : desired.Height);
+        }
+
+        const auto remaining = finitePrimary
+            ? std::max(0.0, static_cast<double>(primaryAvailable) - fixedLength - autoLength - spacingTotal)
+            : std::numeric_limits<double>::infinity();
+
+        for (auto const& item : items)
+        {
+            if (item.length.GridUnitType != Microsoft::UI::Xaml::GridUnitType::Star)
+            {
+                continue;
+            }
+
+            const auto allocated = finitePrimary && starWeight > 0.0
+                ? remaining * (std::max(0.0, item.length.Value) / starWeight)
+                : std::numeric_limits<double>::infinity();
+            item.element.Measure(vertical
+                ? Windows::Foundation::Size{ crossAvailable, static_cast<float>(allocated) }
+                : Windows::Foundation::Size{ static_cast<float>(allocated), crossAvailable });
+            const auto desired = item.element.DesiredSize();
+            starLength += finitePrimary ? allocated : (vertical ? desired.Height : desired.Width);
+            desiredCross = std::max<double>(desiredCross, vertical ? desired.Width : desired.Height);
+        }
+
+        const auto desiredPrimary = fixedLength + autoLength + starLength + spacingTotal;
+        return vertical
+            ? Windows::Foundation::Size{ static_cast<float>(desiredCross), static_cast<float>(desiredPrimary) }
+            : Windows::Foundation::Size{ static_cast<float>(desiredPrimary), static_cast<float>(desiredCross) };
+    }
+
+    Windows::Foundation::Size DesktopFlyoutIslandsPanel::ArrangeOverride(
+        Windows::Foundation::Size finalSize,
+        winrt::author::override)
+    {
+        struct LayoutItem
+        {
+            Microsoft::UI::Xaml::UIElement element{ nullptr };
+            Microsoft::UI::Xaml::GridLength length{};
+        };
+
+        const auto orientation = Orientation();
+        const bool vertical = orientation == Microsoft::UI::Xaml::Controls::Orientation::Vertical;
+        const auto spacing = std::isfinite(Spacing()) ? std::max(0.0, Spacing()) : 0.0;
+        std::vector<LayoutItem> items;
+
+        for (auto const& child : self(this)->Children())
+        {
+            auto island = child.try_as<winrt::DesktopFlyouts::DesktopFlyoutIsland>();
+            if (!island)
+            {
+                if (auto presenter = child.try_as<Microsoft::UI::Xaml::Controls::ContentPresenter>())
+                {
+                    island = presenter.Content().try_as<winrt::DesktopFlyouts::DesktopFlyoutIsland>();
+                }
+            }
+
+            if (island && island.Visibility() != Microsoft::UI::Xaml::Visibility::Visible)
+            {
+                child.Arrange({ 0.0f, 0.0f, 0.0f, 0.0f });
+                continue;
+            }
+
+            items.push_back({
+                child,
+                island
+                    ? (vertical ? island.IslandHeight() : island.IslandWidth())
+                    : Microsoft::UI::Xaml::GridLength{ 1.0, Microsoft::UI::Xaml::GridUnitType::Auto } });
+        }
+
+        const auto primaryFinal = vertical ? static_cast<double>(finalSize.Height) : finalSize.Width;
+        const auto crossFinal = vertical ? static_cast<double>(finalSize.Width) : finalSize.Height;
+        const auto spacingTotal = items.empty() ? 0.0 : spacing * static_cast<double>(items.size() - 1);
+        double fixedLength{};
+        double autoLength{};
+        double starWeight{};
+
+        for (auto const& item : items)
+        {
+            if (item.length.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Star)
+            {
+                starWeight += std::max(0.0, item.length.Value);
+            }
+            else if (item.length.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Pixel)
+            {
+                fixedLength += std::max(0.0, item.length.Value);
+            }
+            else
+            {
+                const auto desired = item.element.DesiredSize();
+                autoLength += vertical ? desired.Height : desired.Width;
+            }
+        }
+
+        const auto remaining = std::max(0.0, primaryFinal - fixedLength - autoLength - spacingTotal);
+        double offset{};
+        for (auto const& item : items)
+        {
+            double length{};
+            if (item.length.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Star)
+            {
+                length = starWeight > 0.0
+                    ? remaining * (std::max(0.0, item.length.Value) / starWeight)
+                    : 0.0;
+            }
+            else if (item.length.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Pixel)
+            {
+                length = std::max(0.0, item.length.Value);
+            }
+            else
+            {
+                const auto desired = item.element.DesiredSize();
+                length = vertical ? desired.Height : desired.Width;
+            }
+
+            item.element.Arrange(vertical
+                ? Windows::Foundation::Rect{
+                    0.0f, static_cast<float>(offset), static_cast<float>(crossFinal), static_cast<float>(length) }
+                : Windows::Foundation::Rect{
+                    static_cast<float>(offset), 0.0f, static_cast<float>(length), static_cast<float>(crossFinal) });
+            offset += length + spacing;
+        }
+
+        return finalSize;
+    }
+
     DesktopFlyout::DesktopFlyout()
         : m_native(std::make_unique<DesktopFlyoutNativeState>())
     {
-        m_islands = winrt::single_threaded_observable_vector<Microsoft::UI::Xaml::UIElement>();
+        m_islands = winrt::single_threaded_observable_vector<winrt::DesktopFlyouts::DesktopFlyoutIsland>();
+        self(this)->Margin(m_margin);
         m_islandsChangedToken = m_islands.VectorChanged([this](auto const&, auto const&)
         {
             RefreshContent();
@@ -245,36 +655,6 @@ namespace winrt::DesktopFlyouts::author
         return {};
     }
 
-    std::int32_t DesktopFlyout::Width(winrt::author::getter)
-    {
-        EnsureUiThread(*m_native);
-        return m_width;
-    }
-
-    winrt::author::setter DesktopFlyout::Width(std::int32_t value)
-    {
-        EnsureUiThread(*m_native);
-        m_width = std::clamp(value, 220, 1200);
-        m_legacyWidthExplicit = true;
-        UpdateFlyoutLayout(false);
-        return {};
-    }
-
-    std::int32_t DesktopFlyout::Height(winrt::author::getter)
-    {
-        EnsureUiThread(*m_native);
-        return m_height;
-    }
-
-    winrt::author::setter DesktopFlyout::Height(std::int32_t value)
-    {
-        EnsureUiThread(*m_native);
-        m_height = std::clamp(value, 120, 900);
-        m_legacyHeightExplicit = true;
-        UpdateFlyoutLayout(false);
-        return {};
-    }
-
     Microsoft::UI::Xaml::GridLength DesktopFlyout::FlyoutWidth(winrt::author::getter)
     {
         EnsureUiThread(*m_native);
@@ -285,12 +665,6 @@ namespace winrt::DesktopFlyouts::author
     {
         EnsureUiThread(*m_native);
         m_flyoutWidth = value;
-        m_legacyWidthExplicit = false;
-        if (value.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Pixel &&
-            std::isfinite(value.Value))
-        {
-            m_width = std::clamp(static_cast<std::int32_t>(std::lround(value.Value)), 220, 1200);
-        }
         UpdateFlyoutLayout(false);
         return {};
     }
@@ -305,31 +679,6 @@ namespace winrt::DesktopFlyouts::author
     {
         EnsureUiThread(*m_native);
         m_flyoutHeight = value;
-        m_legacyHeightExplicit = false;
-        if (value.GridUnitType == Microsoft::UI::Xaml::GridUnitType::Pixel &&
-            std::isfinite(value.Value))
-        {
-            m_height = std::clamp(static_cast<std::int32_t>(std::lround(value.Value)), 120, 900);
-        }
-        UpdateFlyoutLayout(false);
-        return {};
-    }
-
-    Microsoft::UI::Xaml::Thickness DesktopFlyout::Margin(winrt::author::getter)
-    {
-        EnsureUiThread(*m_native);
-        return m_margin;
-    }
-
-    winrt::author::setter DesktopFlyout::Margin(Microsoft::UI::Xaml::Thickness value)
-    {
-        EnsureUiThread(*m_native);
-        m_margin = {
-            std::max(0.0, std::isfinite(value.Left) ? value.Left : 0.0),
-            std::max(0.0, std::isfinite(value.Top) ? value.Top : 0.0),
-            std::max(0.0, std::isfinite(value.Right) ? value.Right : 0.0),
-            std::max(0.0, std::isfinite(value.Bottom) ? value.Bottom : 0.0) };
-        m_native->visual.Margin(m_margin);
         UpdateFlyoutLayout(false);
         return {};
     }
@@ -421,24 +770,52 @@ namespace winrt::DesktopFlyouts::author
         return {};
     }
 
-    Windows::Foundation::Collections::IObservableVector<Microsoft::UI::Xaml::UIElement>
+    Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland>
         DesktopFlyout::Islands(winrt::author::getter)
     {
         EnsureUiThread(*m_native);
         if (!m_islands)
         {
-            m_islands = winrt::single_threaded_observable_vector<Microsoft::UI::Xaml::UIElement>();
+            m_islands = winrt::single_threaded_observable_vector<winrt::DesktopFlyouts::DesktopFlyoutIsland>();
         }
         return m_islands;
     }
 
-    DesktopFlyoutOrientation DesktopFlyout::IslandsOrientation(winrt::author::getter)
+    Windows::Foundation::IInspectable DesktopFlyout::IslandsSource(winrt::author::getter)
+    {
+        EnsureUiThread(*m_native);
+        return m_islandsSource;
+    }
+
+    winrt::author::setter DesktopFlyout::IslandsSource(Windows::Foundation::IInspectable const& value)
+    {
+        EnsureUiThread(*m_native);
+        m_islandsSource = value;
+        auto iterable = value.try_as<
+            Windows::Foundation::Collections::IIterable<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
+        if (iterable)
+        {
+            m_islands.Clear();
+            for (auto const& island : iterable)
+            {
+                if (island)
+                {
+                    m_islands.Append(island);
+                }
+            }
+            RefreshContent();
+        }
+        return {};
+    }
+
+    Microsoft::UI::Xaml::Controls::Orientation DesktopFlyout::IslandsOrientation(winrt::author::getter)
     {
         EnsureUiThread(*m_native);
         return m_islandsOrientation;
     }
 
-    winrt::author::setter DesktopFlyout::IslandsOrientation(DesktopFlyoutOrientation value)
+    winrt::author::setter DesktopFlyout::IslandsOrientation(
+        Microsoft::UI::Xaml::Controls::Orientation value)
     {
         EnsureUiThread(*m_native);
         m_islandsOrientation = value;
@@ -581,6 +958,12 @@ namespace winrt::DesktopFlyouts::author
         }
 
         m_native->refreshingContent = true;
+        auto margin = self(this)->Margin();
+        m_margin = {
+            std::max(0.0, std::isfinite(margin.Left) ? margin.Left : 0.0),
+            std::max(0.0, std::isfinite(margin.Top) ? margin.Top : 0.0),
+            std::max(0.0, std::isfinite(margin.Right) ? margin.Right : 0.0),
+            std::max(0.0, std::isfinite(margin.Bottom) ? margin.Bottom : 0.0) };
         m_native->visual.InteractionConfiguration(
             m_isSwipeToDismissEnabled,
             m_pressedScale,
@@ -660,7 +1043,8 @@ namespace winrt::DesktopFlyouts::author
         m_native->host.ConfigureAutoCloseTimer(m_autoCloseDelay);
         if (m_activationMode == DesktopFlyoutActivationMode::activate)
         {
-            (void)m_native->host.NavigateFocus();
+            (void)m_native->host.NavigateFocus(
+                Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationReason::Programmatic);
         }
         else
         {
@@ -710,6 +1094,15 @@ namespace winrt::DesktopFlyouts::author
     {
         EnsureUiThread(*m_native);
         m_native->customPlacementPoint = POINT{ x, y };
+        ShowCore();
+    }
+
+    void DesktopFlyout::Show(Windows::Foundation::Point bottomCenterPoint)
+    {
+        EnsureUiThread(*m_native);
+        m_native->customPlacementPoint = POINT{
+            static_cast<LONG>(std::lround(bottomCenterPoint.X)),
+            static_cast<LONG>(std::lround(bottomCenterPoint.Y)) };
         ShowCore();
     }
 
@@ -768,22 +1161,14 @@ namespace winrt::DesktopFlyouts::author
             const auto autoHeight = std::max(
                 1.0,
                 static_cast<double>(desired.Height) - m_margin.Top - m_margin.Bottom + 16.0);
-            const auto contentWidth = m_legacyWidthExplicit
-                ? std::max(1.0, static_cast<double>(m_width) / scale - m_margin.Left - m_margin.Right)
-                : ResolveFlyoutLength(m_flyoutWidth, availableWidth, autoWidth);
-            const auto contentHeight = m_legacyHeightExplicit
-                ? std::max(1.0, static_cast<double>(m_height) / scale - m_margin.Top - m_margin.Bottom)
-                : ResolveFlyoutLength(m_flyoutHeight, availableHeight, autoHeight);
+            const auto contentWidth = ResolveFlyoutLength(m_flyoutWidth, availableWidth, autoWidth);
+            const auto contentHeight = ResolveFlyoutLength(m_flyoutHeight, availableHeight, autoHeight);
             m_native->visual.SetResolvedSize(contentWidth, contentHeight);
 
-            const auto frameWidth = m_legacyWidthExplicit
-                ? m_width
-                : static_cast<std::int32_t>(std::ceil(
-                    (contentWidth + m_margin.Left + m_margin.Right) * scale));
-            const auto frameHeight = m_legacyHeightExplicit
-                ? m_height
-                : static_cast<std::int32_t>(std::ceil(
-                    (contentHeight + m_margin.Top + m_margin.Bottom) * scale));
+            const auto frameWidth = static_cast<std::int32_t>(std::ceil(
+                (contentWidth + m_margin.Left + m_margin.Right) * scale));
+            const auto frameHeight = static_cast<std::int32_t>(std::ceil(
+                (contentHeight + m_margin.Top + m_margin.Bottom) * scale));
 
             auto request = desktop_flyouts::core::layout_request{
                 { workArea.left, workArea.top, workArea.right, workArea.bottom },
@@ -888,7 +1273,19 @@ namespace winrt::DesktopFlyouts::author
 
     void DesktopFlyout::NavigateFocus()
     {
+        NavigateFocus(Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationReason::Programmatic);
+    }
+
+    void DesktopFlyout::NavigateFocus(
+        Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason)
+    {
         EnsureUiThread(*m_native);
-        (void)m_native->host.NavigateFocus();
+        (void)m_native->host.NavigateFocus(reason);
+    }
+
+    bool DesktopFlyout::TryPreTranslateMessage(std::int64_t message)
+    {
+        EnsureUiThread(*m_native);
+        return m_native->host.TryPreTranslateMessage(reinterpret_cast<MSG const*>(message));
     }
 }

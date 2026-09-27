@@ -159,7 +159,7 @@ $flyout = Wait-ForFlyout
 Invoke-WinApp @('ui', 'send-keys', 'esc', '-w', $flyout.hwnd) | Out-Null
 Wait-ForFlyoutToClose
 
-Invoke-WinApp @('ui', 'invoke', 'ShowIslandsButton', '-w', $mainWindow.hwnd) | Out-Null
+Invoke-WinApp @('ui', 'click', 'ShowIslandsButton', '-w', $mainWindow.hwnd) | Out-Null
 $flyout = Wait-ForFlyout
 Assert-Condition ($flyout.width -eq 444 -and $flyout.height -eq 324) 'the two-island flyout has the configured frame size'
 Wait-ForFlyoutElements -WindowHandle $flyout.hwnd -AutomationIds @(
@@ -175,13 +175,13 @@ Assert-Condition (Test-Path -LiteralPath $islandsScreenshotPath) 'the two-island
 Invoke-WinApp @('ui', 'invoke', 'IslandsCloseButton', '-w', $flyout.hwnd) | Out-Null
 Wait-ForFlyoutToClose
 
-Invoke-WinApp @('ui', 'invoke', 'ShowIslandsButton', '-w', $mainWindow.hwnd) | Out-Null
+Invoke-WinApp @('ui', 'click', 'ShowIslandsButton', '-w', $mainWindow.hwnd) | Out-Null
 $flyout = Wait-ForFlyout
 Wait-ForFlyoutElement -WindowHandle $flyout.hwnd -AutomationId 'IslandsCloseButton' | Out-Null
 Invoke-WinApp @('ui', 'touch', 'DesktopFlyoutRoot', '-w', $flyout.hwnd, '--gesture', 'swipe', '--direction', 'down', '--distance', '120', '--duration-ms', '160') | Out-Null
 Wait-ForFlyoutToClose
 
-Invoke-WinApp @('ui', 'invoke', 'ShowAutoCloseButton', '-w', $mainWindow.hwnd) | Out-Null
+Invoke-WinApp @('ui', 'click', 'ShowAutoCloseButton', '-w', $mainWindow.hwnd) | Out-Null
 $flyout = Wait-ForFlyout -ReadyDelayMilliseconds 100
 Wait-ForFlyoutElements -WindowHandle $flyout.hwnd -AutomationIds @('CloseFlyoutButton', 'FlyoutTitle')
 Start-Sleep -Milliseconds 1200

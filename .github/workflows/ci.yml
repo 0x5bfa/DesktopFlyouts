@@ -40,3 +40,15 @@ jobs:
 
     - name: Build solution
       run: msbuild /restore $env:SOLUTION_PATH /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=x64 /m
+
+    - name: Validate native WinRT contracts
+      shell: pwsh
+      run: |
+        .\tests\Test-NativeWinRTContract.ps1 -WinmdPath @(
+          ".\x64\$env:CONFIGURATION\DesktopFlyouts.WinUI\DesktopFlyouts.winmd",
+          ".\x64\$env:CONFIGURATION\DesktopFlyouts.Uwp\DesktopFlyouts.winmd"
+        )
+
+    - name: Validate C# projection contracts
+      shell: pwsh
+      run: .\tests\Test-CSharpProjectionContract.ps1 -Configuration $env:CONFIGURATION -Platform x64

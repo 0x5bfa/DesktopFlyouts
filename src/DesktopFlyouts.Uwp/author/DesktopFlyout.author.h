@@ -5,11 +5,9 @@
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
-#include <winrt/Microsoft.UI.Xaml.h>
-#include <winrt/Microsoft.UI.Xaml.Controls.Primitives.h>
-#include <winrt/Microsoft.UI.Xaml.Controls.h>
-#include <winrt/Microsoft.UI.Xaml.Hosting.h>
-#include <winrt/Microsoft.UI.Xaml.Media.h>
+#include <winrt/Windows.UI.Xaml.h>
+#include <winrt/Windows.UI.Xaml.Controls.h>
+#include <winrt/Windows.UI.Xaml.Hosting.h>
 #include <winrt/author/base.h>
 #ifndef IDLGEN_CPP_STATIC_REFLECTION_PHASE
 #include <winrt/DesktopFlyouts.h>
@@ -63,42 +61,39 @@ namespace winrt::DesktopFlyouts::author
 
     struct DesktopFlyoutIslandTemplateSettings :
         winrt::author::runtimeclass<
-            winrt::Microsoft::UI::Xaml::DependencyObject,
+            winrt::Windows::UI::Xaml::DependencyObject,
             winrt::author::internal<winrt::non_agile>>,
         winrt::author::unsealed
     {
         DesktopFlyoutIslandTemplateSettings();
 
-        winrt::Microsoft::UI::Xaml::CornerRadius BackdropCornerRadius(winrt::author::getter = {});
-        winrt::author::setter BackdropCornerRadius(winrt::Microsoft::UI::Xaml::CornerRadius value);
-        winrt::Microsoft::UI::Xaml::Media::SystemBackdrop SystemBackdrop(winrt::author::getter = {});
-        winrt::author::setter SystemBackdrop(winrt::Microsoft::UI::Xaml::Media::SystemBackdrop const& value);
+        winrt::Windows::UI::Xaml::CornerRadius BackdropCornerRadius(winrt::author::getter = {});
+        winrt::author::setter BackdropCornerRadius(winrt::Windows::UI::Xaml::CornerRadius value);
 
-        static winrt::Microsoft::UI::Xaml::DependencyProperty BackdropCornerRadiusProperty(winrt::author::getter = {});
-        static winrt::Microsoft::UI::Xaml::DependencyProperty SystemBackdropProperty(winrt::author::getter = {});
+        static winrt::Windows::UI::Xaml::DependencyProperty BackdropCornerRadiusProperty(winrt::author::getter = {});
     };
 
     struct DesktopFlyoutIsland :
         winrt::author::runtimeclass<
-            winrt::Microsoft::UI::Xaml::Controls::ContentControl,
+            winrt::Windows::UI::Xaml::Controls::ContentControl,
             winrt::author::internal<winrt::non_agile>>,
         winrt::author::unsealed
     {
         DesktopFlyoutIsland();
         ~DesktopFlyoutIsland();
 
-        winrt::Microsoft::UI::Xaml::GridLength IslandWidth(winrt::author::getter = {});
-        winrt::author::setter IslandWidth(winrt::Microsoft::UI::Xaml::GridLength value);
-        winrt::Microsoft::UI::Xaml::GridLength IslandHeight(winrt::author::getter = {});
-        winrt::author::setter IslandHeight(winrt::Microsoft::UI::Xaml::GridLength value);
+        winrt::Windows::UI::Xaml::GridLength IslandWidth(winrt::author::getter = {});
+        winrt::author::setter IslandWidth(winrt::Windows::UI::Xaml::GridLength value);
+        winrt::Windows::UI::Xaml::GridLength IslandHeight(winrt::author::getter = {});
+        winrt::author::setter IslandHeight(winrt::Windows::UI::Xaml::GridLength value);
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
         DesktopFlyoutIslandTemplateSettings TemplateSettings(winrt::author::getter = {});
 #else
         winrt::DesktopFlyouts::DesktopFlyoutIslandTemplateSettings TemplateSettings(winrt::author::getter = {});
 #endif
 
-        static winrt::Microsoft::UI::Xaml::DependencyProperty IslandWidthProperty(winrt::author::getter = {});
-        static winrt::Microsoft::UI::Xaml::DependencyProperty IslandHeightProperty(winrt::author::getter = {});
+        static winrt::Windows::UI::Xaml::DependencyProperty IslandWidthProperty(winrt::author::getter = {});
+        static winrt::Windows::UI::Xaml::DependencyProperty IslandHeightProperty(winrt::author::getter = {});
 
     private:
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
@@ -137,21 +132,20 @@ namespace winrt::DesktopFlyouts::author
 
     struct DesktopFlyoutIslandsPanel :
         winrt::author::runtimeclass<
-            winrt::Microsoft::UI::Xaml::Controls::Panel,
+            winrt::Windows::UI::Xaml::Controls::Panel,
             winrt::author::internal<winrt::non_agile>>,
         winrt::author::unsealed
     {
         DesktopFlyoutIslandsPanel();
 
-        winrt::Microsoft::UI::Xaml::Controls::Orientation Orientation(winrt::author::getter = {});
-        winrt::author::setter Orientation(winrt::Microsoft::UI::Xaml::Controls::Orientation value);
+        winrt::Windows::UI::Xaml::Controls::Orientation Orientation(winrt::author::getter = {});
+        winrt::author::setter Orientation(winrt::Windows::UI::Xaml::Controls::Orientation value);
         double Spacing(winrt::author::getter = {});
         winrt::author::setter Spacing(double value);
 
-        static winrt::Microsoft::UI::Xaml::DependencyProperty OrientationProperty(winrt::author::getter = {});
-        static winrt::Microsoft::UI::Xaml::DependencyProperty SpacingProperty(winrt::author::getter = {});
+        static winrt::Windows::UI::Xaml::DependencyProperty OrientationProperty(winrt::author::getter = {});
+        static winrt::Windows::UI::Xaml::DependencyProperty SpacingProperty(winrt::author::getter = {});
 
-    public:
         winrt::Windows::Foundation::Size MeasureOverride(
             winrt::Windows::Foundation::Size availableSize,
             winrt::author::override = {});
@@ -160,12 +154,9 @@ namespace winrt::DesktopFlyouts::author
             winrt::author::override = {});
     };
 
-    // The implementation owns HWND/XAML objects and is bound to the creating UI
-    // thread. IdlGen's internal-base escape hatch keeps this out of the public IDL
-    // while making the generated C++/WinRT implementation non-agile.
     struct DesktopFlyout :
         winrt::author::runtimeclass<
-            winrt::Microsoft::UI::Xaml::Controls::Control,
+            winrt::Windows::UI::Xaml::Controls::Control,
             winrt::author::internal<winrt::non_agile>>,
         winrt::author::unsealed
     {
@@ -175,29 +166,24 @@ namespace winrt::DesktopFlyouts::author
         std::int64_t OwnerWindowHandle(winrt::author::getter = {});
         winrt::author::setter OwnerWindowHandle(std::int64_t value);
 
-        winrt::Microsoft::UI::Xaml::GridLength FlyoutWidth(winrt::author::getter = {});
-        winrt::author::setter FlyoutWidth(winrt::Microsoft::UI::Xaml::GridLength value);
-
-        winrt::Microsoft::UI::Xaml::GridLength FlyoutHeight(winrt::author::getter = {});
-        winrt::author::setter FlyoutHeight(winrt::Microsoft::UI::Xaml::GridLength value);
+        winrt::Windows::UI::Xaml::GridLength FlyoutWidth(winrt::author::getter = {});
+        winrt::author::setter FlyoutWidth(winrt::Windows::UI::Xaml::GridLength value);
+        winrt::Windows::UI::Xaml::GridLength FlyoutHeight(winrt::author::getter = {});
+        winrt::author::setter FlyoutHeight(winrt::Windows::UI::Xaml::GridLength value);
 
         DesktopFlyoutPlacementMode Placement(winrt::author::getter = {});
         winrt::author::setter Placement(DesktopFlyoutPlacementMode value);
-
         DesktopFlyoutPopupDirection PopupDirection(winrt::author::getter = {});
         winrt::author::setter PopupDirection(DesktopFlyoutPopupDirection value);
-
         DesktopFlyoutActivationMode ActivationMode(winrt::author::getter = {});
         winrt::author::setter ActivationMode(DesktopFlyoutActivationMode value);
-
         bool HideOnLostFocus(winrt::author::getter = {});
         winrt::author::setter HideOnLostFocus(bool value);
 
-        winrt::Microsoft::UI::Xaml::UIElement Content(winrt::author::getter = {});
-        winrt::author::setter Content(winrt::Microsoft::UI::Xaml::UIElement const& value);
-
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyout MenuFlyout(winrt::author::getter = {});
-        winrt::author::setter MenuFlyout(winrt::Microsoft::UI::Xaml::Controls::MenuFlyout const& value);
+        winrt::Windows::UI::Xaml::UIElement Content(winrt::author::getter = {});
+        winrt::author::setter Content(winrt::Windows::UI::Xaml::UIElement const& value);
+        winrt::Windows::UI::Xaml::Controls::MenuFlyout MenuFlyout(winrt::author::getter = {});
+        winrt::author::setter MenuFlyout(winrt::Windows::UI::Xaml::Controls::MenuFlyout const& value);
 
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
         winrt::Windows::Foundation::Collections::IObservableVector<DesktopFlyoutIsland> Islands(
@@ -205,34 +191,25 @@ namespace winrt::DesktopFlyouts::author
         winrt::Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> Islands(
 #endif
             winrt::author::getter = {});
-
         winrt::Windows::Foundation::IInspectable IslandsSource(winrt::author::getter = {});
         winrt::author::setter IslandsSource(winrt::Windows::Foundation::IInspectable const& value);
-
-        winrt::Microsoft::UI::Xaml::Controls::Orientation IslandsOrientation(winrt::author::getter = {});
-        winrt::author::setter IslandsOrientation(winrt::Microsoft::UI::Xaml::Controls::Orientation value);
-
+        winrt::Windows::UI::Xaml::Controls::Orientation IslandsOrientation(winrt::author::getter = {});
+        winrt::author::setter IslandsOrientation(winrt::Windows::UI::Xaml::Controls::Orientation value);
         std::int32_t IslandSpacing(winrt::author::getter = {});
         winrt::author::setter IslandSpacing(std::int32_t value);
 
         bool IsBackdropEnabled(winrt::author::getter = {});
         winrt::author::setter IsBackdropEnabled(bool value);
-
         DesktopFlyoutBackdropKind BackdropKind(winrt::author::getter = {});
         winrt::author::setter BackdropKind(DesktopFlyoutBackdropKind value);
-
         bool IsTransitionAnimationEnabled(winrt::author::getter = {});
         winrt::author::setter IsTransitionAnimationEnabled(bool value);
-
         double PressedScale(winrt::author::getter = {});
         winrt::author::setter PressedScale(double value);
-
         bool IsSwipeToDismissEnabled(winrt::author::getter = {});
         winrt::author::setter IsSwipeToDismissEnabled(bool value);
-
         double SwipeDismissThreshold(winrt::author::getter = {});
         winrt::author::setter SwipeDismissThreshold(double value);
-
         winrt::Windows::Foundation::TimeSpan AutoCloseDelay(winrt::author::getter = {});
         winrt::author::setter AutoCloseDelay(winrt::Windows::Foundation::TimeSpan value);
 
@@ -243,22 +220,22 @@ namespace winrt::DesktopFlyouts::author
         void Show(winrt::Windows::Foundation::Point bottomCenterPoint);
         void ShowAt(std::int32_t x, std::int32_t y);
         void NavigateFocus();
-        void NavigateFocus(winrt::Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason);
+        void NavigateFocus(winrt::Windows::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason);
         bool TryPreTranslateMessage(std::int64_t message);
         void Hide();
 
     private:
         std::int64_t m_ownerWindowHandle{};
-        winrt::Microsoft::UI::Xaml::GridLength m_flyoutWidth{ 1.0, winrt::Microsoft::UI::Xaml::GridUnitType::Auto };
-        winrt::Microsoft::UI::Xaml::GridLength m_flyoutHeight{ 1.0, winrt::Microsoft::UI::Xaml::GridUnitType::Auto };
-        winrt::Microsoft::UI::Xaml::Thickness m_margin{ 12.0, 12.0, 12.0, 12.0 };
+        winrt::Windows::UI::Xaml::GridLength m_flyoutWidth{ 1.0, winrt::Windows::UI::Xaml::GridUnitType::Auto };
+        winrt::Windows::UI::Xaml::GridLength m_flyoutHeight{ 1.0, winrt::Windows::UI::Xaml::GridUnitType::Auto };
         DesktopFlyoutPlacementMode m_placement{ DesktopFlyoutPlacementMode::bottom_right };
         DesktopFlyoutPopupDirection m_popupDirection{ DesktopFlyoutPopupDirection::vertical };
         DesktopFlyoutActivationMode m_activationMode{ DesktopFlyoutActivationMode::activate };
         bool m_hideOnLostFocus{ true };
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyout m_menuFlyout{ nullptr };
-        winrt::Microsoft::UI::Xaml::Controls::Orientation m_islandsOrientation{
-            winrt::Microsoft::UI::Xaml::Controls::Orientation::Vertical };
+        winrt::Windows::UI::Xaml::UIElement m_content{ nullptr };
+        winrt::Windows::UI::Xaml::Controls::MenuFlyout m_menuFlyout{ nullptr };
+        winrt::Windows::UI::Xaml::Controls::Orientation m_islandsOrientation{
+            winrt::Windows::UI::Xaml::Controls::Orientation::Vertical };
         std::int32_t m_islandSpacing{ 12 };
         bool m_isBackdropEnabled{ true };
         DesktopFlyoutBackdropKind m_backdropKind{ DesktopFlyoutBackdropKind::desktop_acrylic };
@@ -267,7 +244,6 @@ namespace winrt::DesktopFlyouts::author
         bool m_isSwipeToDismissEnabled{ false };
         double m_swipeDismissThreshold{ 80.0 };
         winrt::Windows::Foundation::TimeSpan m_autoCloseDelay{};
-        DesktopFlyoutState m_state{ DesktopFlyoutState::closed };
 #ifdef IDLGEN_CPP_STATIC_REFLECTION_PHASE
         winrt::Windows::Foundation::Collections::IObservableVector<DesktopFlyoutIsland> m_islands{ nullptr };
 #else
@@ -278,14 +254,7 @@ namespace winrt::DesktopFlyouts::author
         std::unique_ptr<DesktopFlyoutNativeState> m_native;
 
         void RefreshContent();
-        void UpdateFlyoutLayout(bool opening);
+        void UpdateFlyoutLayout();
         void ShowCore();
-        void AttachInteractionHandlers();
-        void DetachInteractionHandlers();
-        void BeginOpenAnimation();
-        void BeginCloseAnimation(bool fromCurrentTransform = false);
-        void TickAnimation();
-        void CompleteOpen();
-        void CompleteClose();
     };
 }

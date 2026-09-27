@@ -6,6 +6,13 @@
 
   <Folder Name="/src/">
     <Project Path="src/DesktopFlyouts.Core/DesktopFlyouts.Core.vcxproj" Id="335dc4a4-f980-48ab-bbde-e216928dffc3" />
+    <Project Path="src/DesktopFlyouts.Uwp.Projection/DesktopFlyouts.Uwp.Projection.csproj">
+      <BuildDependency Project="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" />
+    </Project>
+    <Project Path="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" Id="7f932164-170d-45d2-bec9-633a3fe9284e" />
+    <Project Path="src/DesktopFlyouts.WinUI.Projection/DesktopFlyouts.WinUI.Projection.csproj">
+      <BuildDependency Project="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" />
+    </Project>
     <Project Path="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" Id="5b85dfce-775c-4509-a35a-63a116ec98b3" />
   </Folder>
 
