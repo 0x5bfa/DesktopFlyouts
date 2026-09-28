@@ -117,7 +117,7 @@ namespace DesktopFlyouts
 
         private void UpdateTemplateSettings()
         {
-#if WASDK && !HAS_UNO
+#if WASDK
             TemplateSettings.BackdropCornerRadius = new(
                 GetBackdropCornerRadius(CornerRadius.TopLeft),
                 GetBackdropCornerRadius(CornerRadius.TopRight),
@@ -126,12 +126,13 @@ namespace DesktopFlyouts
 #endif
         }
 
-#if WASDK && !HAS_UNO
+#if WASDK
         private static double GetBackdropCornerRadius(double cornerRadius)
         {
             return Math.Max(0D, cornerRadius > 0D ? cornerRadius - 1D : 0D);
         }
 
+#if !HAS_UNO
         internal void UpdateOwnerBackdrop()
         {
             TemplateSettings.SystemBackdrop = _owner is not null && _owner.TryGetTarget(out var owner)
@@ -143,6 +144,7 @@ namespace DesktopFlyouts
         {
             TemplateSettings.SystemBackdrop = null;
         }
+#endif
 #endif
 
         private static bool AreClose(Size first, Size second)

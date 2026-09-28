@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <PublishAot>false</PublishAot>
+    <AotCompatible>false</AotCompatible>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);HAS_UNO</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutActivationMode.cs" Link="Production\DesktopFlyoutActivationMode.cs" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\X11ScreenGeometry.cs" Link="Production\X11ScreenGeometry.cs" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\X11WindowActivation.cs" Link="Production\X11WindowActivation.cs" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\X11PInvoke.cs" Link="Production\X11PInvoke.cs" />
+  </ItemGroup>
+</Project>

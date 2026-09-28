@@ -309,7 +309,7 @@ namespace DesktopFlyouts
         }
 
         /// <inheritdoc/>
-        public void Dispose()
+        public new void Dispose()
         {
             if (_disposed)
                 return;
@@ -332,6 +332,7 @@ namespace DesktopFlyouts
             _host?.Dispose();
             IsOpen = false;
 
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
     }

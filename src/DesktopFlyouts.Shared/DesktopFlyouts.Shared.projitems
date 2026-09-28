@@ -39,6 +39,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)MouseScrollEventReceivedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.X11.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\X11ScreenGeometry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\X11WindowActivation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.X11.cs" />

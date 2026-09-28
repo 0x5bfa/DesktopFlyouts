@@ -1318,7 +1318,11 @@ namespace DesktopFlyouts
         }
 
         /// <inheritdoc/>
+#if HAS_UNO
+        public new void Dispose()
+#else
         public void Dispose()
+#endif
         {
             if (_disposed)
                 return;
@@ -1348,6 +1352,9 @@ namespace DesktopFlyouts
             _host?.Dispose();
             IsOpen = false;
 
+#if HAS_UNO
+            base.Dispose();
+#endif
             GC.SuppressFinalize(this);
         }
     }

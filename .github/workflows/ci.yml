@@ -25,6 +25,8 @@ env:
   WASDK_APP_PROJ_PATH:   '${{ github.workspace }}\samples\DesktopFlyouts.Wasdk.Sample.App\DesktopFlyouts.Wasdk.Sample.App.csproj'
   UWP_APP_PROJ_PATH:     '${{ github.workspace }}\samples\DesktopFlyouts.Uwp.Sample.App\DesktopFlyouts.Uwp.Sample.App.csproj'
   UNO_APP_PROJ_PATH:     '${{ github.workspace }}\samples\DesktopFlyouts.Uno.Sample.App\DesktopFlyouts.Uno.Sample.App.csproj'
+  UNO_LIB_PROJ_PATH:     '${{ github.workspace }}/src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj'
+  X11_TEST_PROJ_PATH:    '${{ github.workspace }}/tests/DesktopFlyouts.X11.Tests/DesktopFlyouts.X11.Tests.csproj'
 
 jobs:
   build-wasdk:
@@ -109,3 +111,33 @@ jobs:
 
     - name: Build the sample app
       run: dotnet build $env:UNO_APP_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM --no-restore
+
+  build-test-uno-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: |
+          9.0.x
+          10.0.x
+
+    - name: Restore the Uno library
+      run: dotnet restore "$UNO_LIB_PROJ_PATH"
+
+    - name: Build the Uno library on Linux
+      run: dotnet build "$UNO_LIB_PROJ_PATH" -c Release --no-restore
+
+    - name: Run X11 unit tests
+      run: dotnet test "$X11_TEST_PROJ_PATH" -c Release
+
+    - name: Check changed-file whitespace
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: git diff --check "$(git merge-base HEAD "origin/$GITHUB_BASE_REF")"..HEAD
