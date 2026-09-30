@@ -57,21 +57,10 @@ jobs:
     - name: Run C# projection unit tests
       shell: pwsh
       run: |
-        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        $vstest = & $vswhere -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
-        if (-not $vstest) { throw 'vstest.console.exe was not found in the Visual Studio installation.' }
-
-        $testRoot = ".\tests"
-        $testAssemblies = @(
-          Get-ChildItem "$testRoot\DesktopFlyouts.WinUI.Projection.Tests\bin\x64\$env:CONFIGURATION" -Recurse -Filter 'DesktopFlyouts.WinUI.Projection.Tests.dll'
-          Get-ChildItem "$testRoot\DesktopFlyouts.Uwp.Projection.Tests\bin\x64\$env:CONFIGURATION" -Recurse -Filter 'DesktopFlyouts.Uwp.Projection.Tests.dll'
-        )
-        if ($testAssemblies.Count -ne 2) { throw "Expected both C# projection test assemblies; found $($testAssemblies.Count)." }
-
-        foreach ($testAssembly in $testAssemblies) {
-          & $vstest $testAssembly.FullName "/TestAdapterPath:$($testAssembly.DirectoryName)" /Platform:x64
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        }
+        dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   arm64-tests:
     runs-on: windows-11-vs2026-arm
@@ -104,4 +93,12 @@ jobs:
           ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" `
           ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" `
           /Platform:ARM64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Run ARM64 C# projection unit tests
+      shell: pwsh
+      run: |
+        dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -71,7 +71,7 @@
   <Target Name="BuildNativeComponent" BeforeTargets="ClCompile" Condition="'$(DesignTimeBuild)' != 'true' and '$(BuildingSolutionFile)' != 'true'">
     <MSBuild Projects="$(ProjectDir)..\..\src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.vcxproj"
              Targets="Build"
-             Properties="Configuration=$(Configuration);Platform=x64" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
   </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

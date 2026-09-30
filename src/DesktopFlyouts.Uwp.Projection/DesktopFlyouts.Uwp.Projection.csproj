@@ -3,13 +3,14 @@
   <PropertyGroup>
     <WindowsSdkReferenceVersion>10.0.26100.0</WindowsSdkReferenceVersion>
     <TargetFramework>net10.0-windows$(WindowsSdkReferenceVersion)</TargetFramework>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64;arm64</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <CsWinRTIncludes>DesktopFlyouts;Windows.UI.Xaml</CsWinRTIncludes>
     <NoWarn>$(NoWarn);CS0108;CS0436</NoWarn>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <NativePlatform>x64</NativePlatform>
+    <NativePlatform Condition="'$(Platform)' == 'arm64'">ARM64</NativePlatform>
+    <NativePlatform Condition="'$(Platform)' != 'arm64'">x64</NativePlatform>
     <NativeProject>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', 'DesktopFlyouts.Uwp', 'DesktopFlyouts.Uwp.vcxproj'))</NativeProject>
     <NativeOutDir>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', '$(NativePlatform)', '$(Configuration)', 'DesktopFlyouts.Uwp'))\</NativeOutDir>
     <NativeWinMD>$(NativeOutDir)DesktopFlyouts.winmd</NativeWinMD>
