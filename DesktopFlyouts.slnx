@@ -39,6 +39,11 @@
   </Folder>
 
   <Folder Name="/tests/">
+    <Project Path="tests/DesktopFlyouts.Uwp.IntegrationTests/DesktopFlyouts.Uwp.IntegrationTests.csproj">
+      <Platform Solution="*|arm64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" />
+    </Project>
     <Project Path="tests/DesktopFlyouts.Uwp.Tests/DesktopFlyouts.Uwp.Tests.vcxproj" Id="a0918e7f-9704-4ddc-a0a3-a2b62275af1c">
       <Platform Solution="*|arm64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -58,6 +63,11 @@
       <Platform Solution="*|arm64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
       <BuildDependency Project="src/DesktopFlyouts.WinUI.Projection/DesktopFlyouts.WinUI.Projection.csproj" />
+    </Project>
+    <Project Path="tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj">
+      <Platform Solution="*|arm64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" />
     </Project>
   </Folder>
 

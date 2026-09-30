@@ -56,6 +56,18 @@ jobs:
         dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+    - name: Setup WinApp CLI
+      if: matrix.configuration == 'Debug'
+      uses: microsoft/setup-WinAppCli@v0.1
+
+    - name: Run UWP then WinUI runtime integration tests
+      if: matrix.configuration == 'Debug'
+      run: |
+        winapp run tests/DesktopFlyouts.Uwp.IntegrationTests/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64 --manifest tests/DesktopFlyouts.Uwp.IntegrationTests/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64/AppxManifest.xml --exe DesktopFlyouts.Uwp.IntegrationTests.exe --with-alias --unregister-on-exit
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        winapp run tests/DesktopFlyouts.WinUI.IntegrationTests/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64 --manifest tests/DesktopFlyouts.WinUI.IntegrationTests/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64/AppxManifest.xml --exe DesktopFlyouts.WinUI.IntegrationTests.exe --with-alias --unregister-on-exit
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
   arm64:
     runs-on: windows-11-vs2026-arm
     strategy:
@@ -89,4 +101,16 @@ jobs:
         dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Setup WinApp CLI
+      if: matrix.configuration == 'Debug'
+      uses: microsoft/setup-WinAppCli@v0.1
+
+    - name: Run UWP then WinUI runtime integration tests
+      if: matrix.configuration == 'Debug'
+      run: |
+        winapp run tests/DesktopFlyouts.Uwp.IntegrationTests/bin/ARM64/Debug/net10.0-windows10.0.26100.0/win-arm64 --manifest tests/DesktopFlyouts.Uwp.IntegrationTests/bin/ARM64/Debug/net10.0-windows10.0.26100.0/win-arm64/AppxManifest.xml --exe DesktopFlyouts.Uwp.IntegrationTests.exe --with-alias --unregister-on-exit
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        winapp run tests/DesktopFlyouts.WinUI.IntegrationTests/bin/ARM64/Debug/net10.0-windows10.0.26100.0/win-arm64 --manifest tests/DesktopFlyouts.WinUI.IntegrationTests/bin/ARM64/Debug/net10.0-windows10.0.26100.0/win-arm64/AppxManifest.xml --exe DesktopFlyouts.WinUI.IntegrationTests.exe --with-alias --unregister-on-exit
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

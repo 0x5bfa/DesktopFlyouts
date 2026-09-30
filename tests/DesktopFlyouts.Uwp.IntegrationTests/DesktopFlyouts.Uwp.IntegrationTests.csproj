@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <PlatformTarget>$(Platform)</PlatformTarget>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DesktopFlyouts.Uwp.Projection\DesktopFlyouts.Uwp.Projection.csproj" />
+    <Compile Include="..\DesktopFlyouts.WinUI.IntegrationTests\RuntimeScenario.cs" Link="RuntimeScenario.cs" />
+    <Content Include="..\DesktopFlyouts.WinUI.IntegrationTests\Assets\*.png" Link="Assets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\..\$(Platform)\$(Configuration)\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.dll" Link="DesktopFlyouts.Uwp.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+  </ItemGroup>
+
+  <Target Name="StageIntegrationPackageManifest" AfterTargets="Build">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Package.appxmanifest"
+          DestinationFiles="$(OutDir)AppxManifest.xml" />
+  </Target>
+</Project>
