@@ -1,34 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <WindowsSdkReferenceVersion>10.0.26100.0</WindowsSdkReferenceVersion>
-    <TargetFramework>net10.0-windows$(WindowsSdkReferenceVersion)</TargetFramework>
-    <Platforms>x64;arm64</Platforms>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <CsWinRTIncludes>DesktopFlyouts;Windows.UI.Xaml</CsWinRTIncludes>
-    <NoWarn>$(NoWarn);CS0108;CS0436</NoWarn>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <NativePlatform Condition="'$(Platform)' == 'arm64'">ARM64</NativePlatform>
-    <NativePlatform Condition="'$(Platform)' != 'arm64'">x64</NativePlatform>
-    <NativeProject>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', 'DesktopFlyouts.Uwp', 'DesktopFlyouts.Uwp.vcxproj'))</NativeProject>
-    <NativeOutDir>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', '$(NativePlatform)', '$(Configuration)', 'DesktopFlyouts.Uwp'))\</NativeOutDir>
-    <NativeWinMD>$(NativeOutDir)DesktopFlyouts.winmd</NativeWinMD>
-    <UniversalApiContractWinMD>$([MSBuild]::NormalizePath('$(MSBuildProgramFiles32)', 'Windows Kits', '10', 'References', '$(WindowsSdkReferenceVersion)', 'Windows.Foundation.UniversalApiContract', '19.0.0.0', 'Windows.Foundation.UniversalApiContract.winmd'))</UniversalApiContractWinMD>
-    <HostingContractWinMD>$([MSBuild]::NormalizePath('$(MSBuildProgramFiles32)', 'Windows Kits', '10', 'References', '$(WindowsSdkReferenceVersion)', 'Windows.UI.Xaml.Hosting.HostingContract', '5.0.0.0', 'Windows.UI.Xaml.Hosting.HostingContract.winmd'))</HostingContractWinMD>
-  </PropertyGroup>
+	<PropertyGroup>
+		<WindowsSdkReferenceVersion>10.0.26100.0</WindowsSdkReferenceVersion>
+		<TargetFramework>net10.0-windows$(WindowsSdkReferenceVersion)</TargetFramework>
+		<Platforms>x64;arm64</Platforms>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<CsWinRTIncludes>DesktopFlyouts;Windows.UI.Xaml</CsWinRTIncludes>
+		<NoWarn>$(NoWarn);CS0108;CS0436</NoWarn>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
-    <CsWinRTInputs Include="$(NativeWinMD)" />
-    <CsWinRTInputs Include="$(UniversalApiContractWinMD)" />
-    <CsWinRTInputs Include="$(HostingContractWinMD)" />
-  </ItemGroup>
-
-  <Target Name="BuildNativeProjectionInput" BeforeTargets="CsWinRTGenerateProjection" Condition="'$(DesignTimeBuild)' != 'true' and '$(BuildingSolutionFile)' != 'true'">
-    <MSBuild Projects="$(NativeProject)"
-             Targets="Build"
-             Properties="Configuration=$(Configuration);Platform=$(NativePlatform);OutDir=$(NativeOutDir)" />
-  </Target>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
+		<CsWinRTInputs Include="$(MSBuildProjectDirectory)/../../$(Platform)/$(Configuration)/DesktopFlyouts.Uwp/DesktopFlyouts.winmd" />
+		<CsWinRTInputs Include="$(MSBuildProgramFiles32)/Windows Kits/10/References/$(WindowsSdkReferenceVersion)/Windows.Foundation.UniversalApiContract/19.0.0.0/Windows.Foundation.UniversalApiContract.winmd" />
+		<CsWinRTInputs Include="$(MSBuildProgramFiles32)/Windows Kits/10/References/$(WindowsSdkReferenceVersion)/Windows.UI.Xaml.Hosting.HostingContract/5.0.0.0/Windows.UI.Xaml.Hosting.HostingContract.winmd" />
+	</ItemGroup>
 
 </Project>

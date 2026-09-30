@@ -21,7 +21,7 @@ env:
   SOLUTION_PATH: 'DesktopFlyouts.slnx'
 
 jobs:
-  build:
+  x64:
     runs-on: windows-2025-vs2026
     strategy:
       fail-fast: false
@@ -44,14 +44,8 @@ jobs:
     - name: Run C++ unit tests
       shell: pwsh
       run: |
-        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        $vstest = & $vswhere -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
-        if (-not $vstest) { throw 'vstest.console.exe was not found in the Visual Studio installation.' }
-
-        & $vstest `
-          ".\x64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" `
-          ".\x64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" `
-          /Platform:x64
+        $vstest = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
+        & $vstest ".\x64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" ".\x64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" /Platform:x64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Run C# projection unit tests
@@ -62,7 +56,7 @@ jobs:
         dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-  arm64-tests:
+  arm64:
     runs-on: windows-11-vs2026-arm
     strategy:
       fail-fast: false
@@ -79,23 +73,17 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v4
 
-    - name: Build ARM64 solution
+    - name: Build solution
       run: msbuild /restore $env:SOLUTION_PATH /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=arm64 /m
 
-    - name: Run ARM64 C++ unit tests
+    - name: Run C++ unit tests
       shell: pwsh
       run: |
-        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        $vstest = & $vswhere -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
-        if (-not $vstest) { throw 'vstest.console.exe was not found in the Visual Studio installation.' }
-
-        & $vstest `
-          ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" `
-          ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" `
-          /Platform:ARM64
+        $vstest = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
+        & $vstest ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" /Platform:ARM64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-    - name: Run ARM64 C# projection unit tests
+    - name: Run C# projection unit tests
       shell: pwsh
       run: |
         dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
