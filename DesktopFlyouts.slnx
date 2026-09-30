@@ -28,7 +28,26 @@
   </Folder>
 
   <Folder Name="/tests/">
-    <Project Path="tests/DesktopFlyouts.Core.Tests/DesktopFlyouts.Core.Tests.vcxproj" Id="5d482683-b9f0-4100-b68a-6860a0bdd318" />
+    <Project Path="tests/DesktopFlyouts.Uwp.Tests/DesktopFlyouts.Uwp.Tests.vcxproj" Id="a0918e7f-9704-4ddc-a0a3-a2b62275af1c">
+      <Platform Solution="*|arm64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" />
+    </Project>
+    <Project Path="tests/DesktopFlyouts.WinUI.Tests/DesktopFlyouts.WinUI.Tests.vcxproj" Id="84ab5407-9860-4a83-8621-5c2fc4002c87">
+      <Platform Solution="*|arm64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" />
+    </Project>
+    <Project Path="tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj">
+      <Platform Solution="*|arm64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.Uwp.Projection/DesktopFlyouts.Uwp.Projection.csproj" />
+    </Project>
+    <Project Path="tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj">
+      <Platform Solution="*|arm64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.WinUI.Projection/DesktopFlyouts.WinUI.Projection.csproj" />
+    </Project>
   </Folder>
 
 </Solution>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{84ab5407-9860-4a83-8621-5c2fc4002c87}</ProjectGuid>
+    <RootNamespace>DesktopFlyoutsWinUITests</RootNamespace>
+    <ProjectName>DesktopFlyouts.WinUI.Tests</ProjectName>
+    <WindowsTargetPlatformVersion Condition="'$(WindowsTargetPlatformVersion)' == ''">10.0.26100.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+    <AppContainerApplication>false</AppContainerApplication>
+    <EnableNativePackageReferenceSupport>true</EnableNativePackageReferenceSupport>
+    <UseWinUI>true</UseWinUI>
+    <WinUIVersion Condition="'$(WinUIVersion)' == ''">2.0.12</WinUIVersion>
+    <CppWinRTVersion Condition="'$(CppWinRTVersion)' == ''">2.0.250303.1</CppWinRTVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' &gt;= '18.0'">v145</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' &lt; '18.0'">v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(VSInstallDir)VC\Auxiliary\VS\UnitTest\include;$(NuGetPackageRoot)idlgen.idlgen.cpp\0.2.18\include;$(ProjectDir)..\..\src\DesktopFlyouts.WinUI;$(ProjectDir)..\..\src\DesktopFlyouts.WinUI\Generated Files;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_AMD64_;WIN32_LEAN_AND_MEAN;NOMINMAX;_WINRT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(VSInstallDir)VC\Auxiliary\VS\UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>WindowsApp.lib;RuntimeObject.lib;user32.lib;shell32.lib;$(VSInstallDir)VC\Auxiliary\VS\UnitTest\lib\$(Platform)\Microsoft.VisualStudio.TestTools.CppUnitTestFramework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="SystemTrayIconTests.cpp" />
+    <ClCompile Include="..\..\src\DesktopFlyouts.WinUI\SystemTrayIcon.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="$(NuGetPackageRoot)microsoft.web.webview2\1.0.3719.77\lib\Microsoft.Web.WebView2.Core.winmd" />
+    <PackageReference Include="Microsoft.Windows.CppWinRT" Version="$(CppWinRTVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="$(WinUIVersion)" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" />
+  </ItemGroup>
+  <Target Name="BuildNativeComponent" BeforeTargets="ClCompile" Condition="'$(DesignTimeBuild)' != 'true' and '$(BuildingSolutionFile)' != 'true'">
+    <MSBuild Projects="$(ProjectDir)..\..\src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.vcxproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);Platform=x64" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
