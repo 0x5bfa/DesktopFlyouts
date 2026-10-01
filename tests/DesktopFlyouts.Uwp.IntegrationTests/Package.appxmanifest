@@ -1,26 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
-         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-         xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
-         xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
-         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-         IgnorableNamespaces="uap uap3 desktop rescap">
-  <Identity Name="DesktopFlyouts.Uwp.IntegrationTests" Publisher="CN=AppPublisher" Version="1.0.0.0" />
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap3 desktop rescap">
+  <Identity Name="DesktopFlyouts.Uwp.IntegrationTests"
+            Publisher="CN=AppPublisher"
+            Version="1.0.0.0" />
   <Properties>
-    <DisplayName>DesktopFlyouts.Uwp.IntegrationTests</DisplayName>
+    <DisplayName>DesktopFlyouts UWP Projection Integration Tests</DisplayName>
     <PublisherDisplayName>DesktopFlyouts</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+    <TargetDeviceFamily Name="Windows.Universal"
+                        MinVersion="10.0.17763.0"
+                        MaxVersionTested="10.0.26100.0" />
+    <TargetDeviceFamily Name="Windows.Desktop"
+                        MinVersion="10.0.17763.0"
+                        MaxVersionTested="10.0.26100.0" />
   </Dependencies>
   <Resources>
-    <Resource Language="en-US" />
+    <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="DesktopFlyouts.Uwp.IntegrationTests"
-                          Description="DesktopFlyouts UWP runtime integration checks"
+    <Application Id="App"
+                 Executable="$targetnametoken$.exe"
+                 EntryPoint="DesktopFlyouts.Uwp.IntegrationTests.App">
+      <uap:VisualElements DisplayName="DesktopFlyouts UWP Projection Integration Tests"
+                          Description="Runtime tests for the UWP C# projection hosted in a desktop process"
                           BackgroundColor="transparent"
                           Square150x150Logo="Assets\Square150x150Logo.scale-200.png"
                           Square44x44Logo="Assets\Square44x44Logo.scale-200.png">
@@ -36,9 +46,6 @@
       </Extensions>
     </Application>
   </Applications>
-  <Capabilities>
-    <rescap:Capability Name="runFullTrust" />
-  </Capabilities>
   <Extensions>
     <Extension Category="windows.activatableClass.inProcessServer">
       <InProcessServer>
@@ -53,4 +60,7 @@
       </InProcessServer>
     </Extension>
   </Extensions>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
 </Package>

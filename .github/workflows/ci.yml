@@ -38,14 +38,20 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v4
 
+    - name: Add VSTest to PATH
+      shell: pwsh
+      run: |
+        $vstest = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
+        if (-not $vstest) { throw 'VSTest.Console.exe was not found in the Visual Studio installation.' }
+        Split-Path -Parent $vstest | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
     - name: Build solution
       run: msbuild /restore $env:SOLUTION_PATH /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=x64 /m
 
     - name: Run C++ unit tests
       shell: pwsh
       run: |
-        $vstest = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
-        & $vstest ".\x64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" ".\x64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" /Platform:x64
+        vstest.console.exe ".\x64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" ".\x64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" /Platform:x64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Run C# projection unit tests
@@ -56,17 +62,13 @@ jobs:
         dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-    - name: Setup WinApp CLI
+    - name: Run UWP runtime integration tests
       if: matrix.configuration == 'Debug'
-      uses: microsoft/setup-WinAppCli@v0.1
+      run: dotnet test tests/DesktopFlyouts.Uwp.IntegrationTests/DesktopFlyouts.Uwp.IntegrationTests.csproj --no-build --no-restore -p:Platform=x64
 
-    - name: Run UWP then WinUI runtime integration tests
+    - name: Run WinUI runtime integration tests
       if: matrix.configuration == 'Debug'
-      run: |
-        winapp run tests/DesktopFlyouts.Uwp.IntegrationTests/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64 --manifest tests/DesktopFlyouts.Uwp.IntegrationTests/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64/AppxManifest.xml --exe DesktopFlyouts.Uwp.IntegrationTests.exe --with-alias --unregister-on-exit
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        winapp run tests/DesktopFlyouts.WinUI.IntegrationTests/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64 --manifest tests/DesktopFlyouts.WinUI.IntegrationTests/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64/AppxManifest.xml --exe DesktopFlyouts.WinUI.IntegrationTests.exe --with-alias --unregister-on-exit
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      run: dotnet test tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --no-build --no-restore -p:Platform=x64
 
   arm64:
     runs-on: windows-11-vs2026-arm
@@ -85,14 +87,20 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v4
 
+    - name: Add VSTest to PATH
+      shell: pwsh
+      run: |
+        $vstest = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
+        if (-not $vstest) { throw 'VSTest.Console.exe was not found in the Visual Studio installation.' }
+        Split-Path -Parent $vstest | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
     - name: Build solution
       run: msbuild /restore $env:SOLUTION_PATH /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=arm64 /m
 
     - name: Run C++ unit tests
       shell: pwsh
       run: |
-        $vstest = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
-        & $vstest ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" /Platform:ARM64
+        vstest.console.exe ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" /Platform:ARM64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Run C# projection unit tests
@@ -103,14 +111,10 @@ jobs:
         dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-    - name: Setup WinApp CLI
+    - name: Run UWP runtime integration tests
       if: matrix.configuration == 'Debug'
-      uses: microsoft/setup-WinAppCli@v0.1
+      run: dotnet test tests/DesktopFlyouts.Uwp.IntegrationTests/DesktopFlyouts.Uwp.IntegrationTests.csproj --no-build --no-restore -p:Platform=ARM64
 
-    - name: Run UWP then WinUI runtime integration tests
+    - name: Run WinUI runtime integration tests
       if: matrix.configuration == 'Debug'
-      run: |
-        winapp run tests/DesktopFlyouts.Uwp.IntegrationTests/bin/ARM64/Debug/net10.0-windows10.0.26100.0/win-arm64 --manifest tests/DesktopFlyouts.Uwp.IntegrationTests/bin/ARM64/Debug/net10.0-windows10.0.26100.0/win-arm64/AppxManifest.xml --exe DesktopFlyouts.Uwp.IntegrationTests.exe --with-alias --unregister-on-exit
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        winapp run tests/DesktopFlyouts.WinUI.IntegrationTests/bin/ARM64/Debug/net10.0-windows10.0.26100.0/win-arm64 --manifest tests/DesktopFlyouts.WinUI.IntegrationTests/bin/ARM64/Debug/net10.0-windows10.0.26100.0/win-arm64/AppxManifest.xml --exe DesktopFlyouts.WinUI.IntegrationTests.exe --with-alias --unregister-on-exit
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      run: dotnet test tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --no-build --no-restore -p:Platform=ARM64

@@ -1,34 +1,29 @@
-using DesktopFlyouts;
 using System.Runtime.InteropServices;
+using DesktopFlyouts;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
-#if DESKTOPFLYOUTS_WINUI
 using FlyoutGridLength = Microsoft.UI.Xaml.GridLength;
 using FlyoutGridUnitType = Microsoft.UI.Xaml.GridUnitType;
 using FlyoutOrientation = Microsoft.UI.Xaml.Controls.Orientation;
 using FlyoutBorder = Microsoft.UI.Xaml.Controls.Border;
-#else
-using FlyoutGridLength = Windows.UI.Xaml.GridLength;
-using FlyoutGridUnitType = Windows.UI.Xaml.GridUnitType;
-using FlyoutOrientation = Windows.UI.Xaml.Controls.Orientation;
-using FlyoutBorder = Windows.UI.Xaml.Controls.Border;
-#endif
 
-namespace DesktopFlyoutsIntegration;
+namespace DesktopFlyouts.WinUI.IntegrationTests;
 
-public static class RuntimeScenario
+[TestClass]
+public sealed class UnitTests
 {
+    [UITestMethod]
+    public async Task ShowHidePlacementDirectionAndOrientationWorkAtRuntime()
+    {
+        var app = (App)Microsoft.UI.Xaml.Application.Current;
+        await RunBasicChecks(app.TestOwnerWindow);
+    }
+
     private const int MonitorDefaultToNearest = 2;
     private const int PositionTolerancePixels = 4;
-#if !DESKTOPFLYOUTS_WINUI
-    private static Windows.UI.Xaml.Hosting.WindowsXamlManager? s_xamlManager;
-#endif
-
     public static async Task RunBasicChecks(nint ownerWindow)
     {
-#if !DESKTOPFLYOUTS_WINUI
-        s_xamlManager ??= Windows.UI.Xaml.Hosting.WindowsXamlManager.InitializeForCurrentThread();
-#endif
-
         var flyout = new DesktopFlyout
         {
             OwnerWindowHandle = ownerWindow,
@@ -61,15 +56,7 @@ public static class RuntimeScenario
     private static void CheckPlacements(DesktopFlyout flyout, nint ownerWindow)
     {
         var workArea = GetWorkArea(ownerWindow);
-#if DESKTOPFLYOUTS_WINUI
         var margin = 0;
-#else
-        var flyoutMargin = flyout.Margin;
-        var marginDip = Math.Max(
-            Math.Max(flyoutMargin.Left, flyoutMargin.Right),
-            Math.Max(flyoutMargin.Top, flyoutMargin.Bottom));
-        var margin = (int)Math.Ceiling(marginDip * Math.Max(1.0, GetDpiForWindow(ownerWindow) / 96.0));
-#endif
         foreach (var placement in Enum.GetValues<DesktopFlyoutPlacementMode>())
         {
             flyout.Placement = placement;
@@ -233,6 +220,4 @@ public static class RuntimeScenario
     [DllImport("user32.dll", EntryPoint = "GetMonitorInfoW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern bool GetMonitorInfoW(nint monitor, ref MonitorInfo info);
 
-    [DllImport("user32.dll", EntryPoint = "GetDpiForWindow", ExactSpelling = true)]
-    private static extern uint GetDpiForWindow(nint window);
 }
