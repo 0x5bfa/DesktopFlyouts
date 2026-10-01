@@ -1,0 +1,77 @@
+# Copyright (c) 0x5BFA. All rights reserved.
+# Licensed under the MIT license.
+
+name: DesktopFlyouts CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version to publish to NuGet.org (for example, 2.0.0).
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-release:
+    runs-on: windows-2025-vs2026
+    permissions:
+      contents: write
+    env:
+      CONFIGURATION: Release
+      PACKAGE_VERSION: ${{ inputs.version }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v3
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Build Release x64
+      run: msbuild DesktopFlyouts.slnx /restore /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=x64 /m
+
+    - name: Build Release ARM64
+      run: msbuild DesktopFlyouts.slnx /restore /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=arm64 /m
+
+    - name: Pack NuGet packages
+      shell: pwsh
+      run: |
+        $packageOutputPath = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+        dotnet pack src/DesktopFlyouts.Uwp.Projection/DesktopFlyouts.Uwp.Projection.csproj -c $env:CONFIGURATION --no-build --no-restore -p:Platform=x64 -p:Version=$env:PACKAGE_VERSION "-p:PackageOutputPath=$packageOutputPath"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        dotnet pack src/DesktopFlyouts.WinUI.Projection/DesktopFlyouts.WinUI.Projection.csproj -c $env:CONFIGURATION --no-build --no-restore -p:Platform=x64 -p:Version=$env:PACKAGE_VERSION "-p:PackageOutputPath=$packageOutputPath"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Verify package artifacts
+      shell: pwsh
+      run: |
+        $packages = @(Get-ChildItem -Path artifacts -Filter '*.nupkg' -File)
+        if ($packages.Count -ne 2) { throw "Expected two NuGet packages, found $($packages.Count)." }
+        $packages | ForEach-Object { Write-Host $_.Name }
+
+    - name: Upload NuGet artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: NuGet packages ${{ env.PACKAGE_VERSION }}
+        path: artifacts/*.nupkg
+        if-no-files-found: error
+        retention-days: 30
+
+    - name: Publish to NuGet.org
+      shell: pwsh
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      run: |
+        if (-not $env:NUGET_API_KEY) { throw 'Configure the NUGET_API_KEY repository secret before manually publishing.' }
+        Get-ChildItem -Path artifacts -Filter '*.nupkg' -File | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }

@@ -64,11 +64,21 @@ jobs:
 
     - name: Run UWP runtime integration tests
       if: matrix.configuration == 'Debug'
-      run: dotnet test tests/DesktopFlyouts.Uwp.IntegrationTests/DesktopFlyouts.Uwp.IntegrationTests.csproj --no-build --no-restore -p:Platform=x64
+      shell: pwsh
+      run: |
+        $recipe = ".\tests\DesktopFlyouts.Uwp.IntegrationTests\bin\x64\$env:CONFIGURATION\net10.0-windows10.0.26100.0\DesktopFlyouts.Uwp.IntegrationTests.build.appxrecipe"
+        if (-not (Test-Path -LiteralPath $recipe)) { throw "UWP test recipe was not found: $recipe" }
+        & vstest.console.exe $recipe /Platform:x64 /Framework:frameworkuap10
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Run WinUI runtime integration tests
       if: matrix.configuration == 'Debug'
-      run: dotnet test tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --no-build --no-restore -p:Platform=x64
+      shell: pwsh
+      run: |
+        $recipe = ".\tests\DesktopFlyouts.WinUI.IntegrationTests\bin\x64\$env:CONFIGURATION\net10.0-windows10.0.26100.0\DesktopFlyouts.WinUI.IntegrationTests.build.appxrecipe"
+        if (-not (Test-Path -LiteralPath $recipe)) { throw "WinUI test recipe was not found: $recipe" }
+        & vstest.console.exe $recipe /Platform:x64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   arm64:
     runs-on: windows-11-vs2026-arm
@@ -113,8 +123,18 @@ jobs:
 
     - name: Run UWP runtime integration tests
       if: matrix.configuration == 'Debug'
-      run: dotnet test tests/DesktopFlyouts.Uwp.IntegrationTests/DesktopFlyouts.Uwp.IntegrationTests.csproj --no-build --no-restore -p:Platform=ARM64
+      shell: pwsh
+      run: |
+        $recipe = ".\tests\DesktopFlyouts.Uwp.IntegrationTests\bin\arm64\$env:CONFIGURATION\net10.0-windows10.0.26100.0\DesktopFlyouts.Uwp.IntegrationTests.build.appxrecipe"
+        if (-not (Test-Path -LiteralPath $recipe)) { throw "UWP test recipe was not found: $recipe" }
+        & vstest.console.exe $recipe /Platform:ARM64 /Framework:frameworkuap10
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Run WinUI runtime integration tests
       if: matrix.configuration == 'Debug'
-      run: dotnet test tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --no-build --no-restore -p:Platform=ARM64
+      shell: pwsh
+      run: |
+        $recipe = ".\tests\DesktopFlyouts.WinUI.IntegrationTests\bin\arm64\$env:CONFIGURATION\net10.0-windows10.0.26100.0\DesktopFlyouts.WinUI.IntegrationTests.build.appxrecipe"
+        if (-not (Test-Path -LiteralPath $recipe)) { throw "WinUI test recipe was not found: $recipe" }
+        & vstest.console.exe $recipe /Platform:ARM64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

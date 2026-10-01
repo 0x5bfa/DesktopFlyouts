@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
@@ -7,12 +7,29 @@
 		<CsWinRTIncludes>DesktopFlyouts</CsWinRTIncludes>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<PackageId>DesktopFlyouts.WinUI</PackageId>
+		<Authors>0x5BFA</Authors>
+		<Description>WinUI projection and native runtime for DesktopFlyouts.</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/0x5bfa/DesktopFlyouts</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/0x5bfa/DesktopFlyouts</RepositoryUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageTags>WinUI WinRT flyout</PackageTags>
+		<DebugType>embedded</DebugType>
+		<Deterministic>true</Deterministic>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.1" />
 		<CsWinRTInputs Include="$(MSBuildProjectDirectory)/../../$(Platform)/$(Configuration)/DesktopFlyouts.WinUI/DesktopFlyouts.winmd" />
+		<None Include="$(MSBuildProjectDirectory)/../../README.md" Pack="true" PackagePath="/" />
+		<None Include="$(MSBuildProjectDirectory)/../../LICENSE" Pack="true" PackagePath="/" />
+		<None Include="$(MSBuildProjectDirectory)/../../x64/Release/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.dll" Pack="true" PackagePath="runtimes/win-x64/native/" />
+		<None Include="$(MSBuildProjectDirectory)/../../ARM64/Release/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.dll" Pack="true" PackagePath="runtimes/win-arm64/native/" />
 	</ItemGroup>
 
 </Project>
