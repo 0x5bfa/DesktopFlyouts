@@ -1,68 +1,73 @@
 <Solution>
 
   <Configurations>
-    <Platform Name="ARM64" />
+    <Platform Name="arm64" />
     <Platform Name="x64" />
-    <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/.global/">
-    <File Path=".editorconfig" />
-    <File Path="AGENTS.md" />
-    <File Path="Directory.Build.props" />
-    <File Path="Directory.Build.targets" />
-    <File Path="Directory.Packages.props" />
-    <File Path="nuget.config" />
-    <File Path="README.md" />
-  </Folder>
-  <Folder Name="/.nuget/">
-    <File Path=".nuget/README.md" />
-  </Folder>
-  <Folder Name="/samples-uwp/">
-    <Project Path="samples/DesktopFlyouts.Uwp.Sample.App/DesktopFlyouts.Uwp.Sample.App.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
+
+  <Folder Name="/src/">
+    <Project Path="src/DesktopFlyouts.Core/DesktopFlyouts.Core.vcxproj" Id="335dc4a4-f980-48ab-bbde-e216928dffc3">
+      <Platform Solution="*|arm64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Deploy />
     </Project>
-    <Project Path="samples/DesktopFlyouts.Uwp.Sample.Packaging/DesktopFlyouts.Uwp.Sample.Packaging.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="8f9f53a2-0cda-4bb2-b6e9-060ce608dfb2">
-      <Deploy />
-    </Project>
-    <Project Path="samples/DesktopFlyouts.Uwp.Sample.TrayHost/DesktopFlyouts.Uwp.Sample.TrayHost.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
+    <Project Path="src/DesktopFlyouts.Uwp.Projection/DesktopFlyouts.Uwp.Projection.csproj">
+      <BuildDependency Project="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" />
+      <Platform Solution="*|arm64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Deploy />
+    </Project>
+    <Project Path="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" Id="7f932164-170d-45d2-bec9-633a3fe9284e">
+      <Platform Solution="*|arm64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="src/DesktopFlyouts.WinUI.Projection/DesktopFlyouts.WinUI.Projection.csproj">
+      <BuildDependency Project="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" />
+      <Platform Solution="*|arm64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" Id="5b85dfce-775c-4509-a35a-63a116ec98b3">
+      <Platform Solution="*|arm64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
     </Project>
   </Folder>
-  <Folder Name="/samples-wasdk/">
-    <Project Path="samples/DesktopFlyouts.Wasdk.Sample.App/DesktopFlyouts.Wasdk.Sample.App.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
+
+  <Folder Name="/samples/">
+    <Project Path="samples/DesktopFlyoutsSample.WinUI/DesktopFlyoutsSample.WinUI.vcxproj" Id="bb7b0d92-7b4b-4f4b-9ea2-f3a0cf2d1d4c">
+      <Platform Solution="*|arm64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Deploy />
-    </Project>
-  </Folder>
-  <Folder Name="/samples-uno/">
-    <Project Path="samples/DesktopFlyouts.Uno.Sample.App/DesktopFlyouts.Uno.Sample.App.csproj">
-      <Platform Solution="*|ARM64" Project="arm64" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
       <Deploy />
     </Project>
   </Folder>
 
-  <Folder Name="/src/">
-    <Project Path="src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj" />
-    <Project Path="src/DesktopFlyouts.Shared/DesktopFlyouts.Shared.shproj" Id="97b61227-b152-453d-a2d1-f7a98fc83367" />
-    <Project Path="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.csproj" Id="d3ef520c-8296-4e85-aaec-0b184e2be188">
-      <Platform Solution="*|ARM64" Project="ARM64" />
+  <Folder Name="/tests/">
+    <Project Path="tests/DesktopFlyouts.Uwp.IntegrationTests/DesktopFlyouts.Uwp.IntegrationTests.csproj">
+      <Platform Solution="*|arm64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
+      <BuildDependency Project="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" />
     </Project>
-    <Project Path="src/DesktopFlyouts.Wasdk/DesktopFlyouts.Wasdk.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
+    <Project Path="tests/DesktopFlyouts.Uwp.Tests/DesktopFlyouts.Uwp.Tests.vcxproj" Id="a0918e7f-9704-4ddc-a0a3-a2b62275af1c">
+      <Platform Solution="*|arm64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
+      <BuildDependency Project="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" />
+    </Project>
+    <Project Path="tests/DesktopFlyouts.WinUI.Tests/DesktopFlyouts.WinUI.Tests.vcxproj" Id="84ab5407-9860-4a83-8621-5c2fc4002c87">
+      <Platform Solution="*|arm64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" />
+    </Project>
+    <Project Path="tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj">
+      <Platform Solution="*|arm64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.Uwp.Projection/DesktopFlyouts.Uwp.Projection.csproj" />
+    </Project>
+    <Project Path="tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj">
+      <Platform Solution="*|arm64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.WinUI.Projection/DesktopFlyouts.WinUI.Projection.csproj" />
+    </Project>
+    <Project Path="tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj">
+      <Platform Solution="*|arm64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" />
     </Project>
   </Folder>
 

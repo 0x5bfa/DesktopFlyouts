@@ -4,17 +4,9 @@
 
 		<!--  General properties  -->
 		<TargetWindowsVersion>10.0.26100.0</TargetWindowsVersion>
-		<Nullable>enable</Nullable>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<LangVersion>preview</LangVersion>
 		<RootNamespace>DesktopFlyouts</RootNamespace>
-		<DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 		<DefaultLanguage>en-US</DefaultLanguage>
 		<!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
-		<CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
-
-		<PublishAot>true</PublishAot>
-		<AotCompatible>true</AotCompatible>
 
 	</PropertyGroup>
 </Project>

@@ -1,0 +1,20 @@
+﻿<Project Sdk="MSTest.Sdk/4.4.1">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+		<Platforms>x64;arm64</Platforms>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<IsTestProject>true</IsTestProject>
+		<IsPackable>false</IsPackable>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\DesktopFlyouts.Uwp.Projection\DesktopFlyouts.Uwp.Projection.csproj" />
+	</ItemGroup>
+
+</Project>

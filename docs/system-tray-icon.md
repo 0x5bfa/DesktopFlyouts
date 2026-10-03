@@ -21,7 +21,7 @@ trayIcon.Show();
 
 ## Construction
 
-`SystemTrayIcon` currently provides two constructors:
+`SystemTrayIcon` accepts an icon path in its constructor. WinRT cannot expose a native `nint` constructor, so use the C# factory helper for an existing icon handle:
 
 ```csharp
 var trayIconFromPath = new SystemTrayIcon(
@@ -29,8 +29,8 @@ var trayIconFromPath = new SystemTrayIcon(
     tooltip: "My app",
     id: new Guid("00000000-0000-0000-0000-000000000000"));
 
-var trayIconFromHandle = new SystemTrayIcon(
-    hIcon: existingIconHandle,
+var trayIconFromHandle = SystemTrayIconExtensions.CreateFromIconHandle(
+    iconHandle: (nint)existingIconHandle,
     tooltip: "My app",
     id: new Guid("00000000-0000-0000-0000-000000000000"));
 ```
@@ -67,18 +67,18 @@ trayIcon.IsVisible = false;
 trayIcon.IsVisible = true;
 ```
 
-`Destroy()` removes the tray icon from the shell and sets `IsVisible` back to `false`, but it does not dispose the `SystemTrayIcon` object.
+`Destroy()` removes the tray icon from the shell and sets `IsVisible` back to `false`. The callback window remains available, so the same object can be shown again.
 
 ## Changing the icon
 
-`IconPath` is read-only. To replace the icon, use `SetIcon(string)` or `SetIcon(nint)`.
+`IconPath` is read-only. To replace the icon, use `SetIcon(string)` or the C# `SetIcon(nint)` extension.
 
 ```csharp
 trayIcon.SetIcon("Assets/AlternateIcon.ico");
 trayIcon.SetIcon(existingIconHandle);
 ```
 
-When `SetIcon(string)` is used, the path must point to an icon file that can be loaded by the Win32 `LoadImage` API. The method throws `ArgumentOutOfRangeException` when the icon cannot be loaded.
+When `SetIcon(string)` is used, the path must point to an icon file that can be loaded by the Win32 `LoadImage` API. It throws if the icon cannot be loaded.
 
 ## Cleanup
 
@@ -88,7 +88,7 @@ Call `Destroy()` when the tray icon should be removed from the shell but the `Sy
 trayIcon.Destroy();
 ```
 
-Call `Dispose()` explicitly when the instance is no longer needed.
+Call `Dispose()` (provided through WinRT `IClosable`) when the instance is no longer needed. This is the same as calling `Close()`.
 
 ```csharp
 trayIcon.Dispose();
