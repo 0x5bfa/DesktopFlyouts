@@ -30,17 +30,20 @@ namespace DesktopFlyoutsUwpTests
                 winrt::guid{});
             auto* implementation = winrt::get_self<winrt::DesktopFlyouts::implementation::SystemTrayIcon>(icon);
             const winrt::Windows::Foundation::Point expected{ 12.0f, 34.0f };
-            auto args = winrt::make<winrt::DesktopFlyouts::implementation::SystemTrayIconEventArgs>(expected);
+            auto args = winrt::make<winrt::DesktopFlyouts::implementation::MouseEventReceivedEventArgs>(expected);
 
             int leftClicks{};
             winrt::Windows::Foundation::Point actual{};
-            auto leftToken = icon.LeftClicked([&](auto const&, auto const& eventArgs)
+            winrt::Windows::Foundation::IInspectable actualSender{ nullptr };
+            auto leftToken = icon.LeftClicked([&](auto const& sender, auto const& eventArgs)
             {
                 ++leftClicks;
+                actualSender = sender;
                 actual = eventArgs.Point();
             });
             implementation->RaiseLeftClicked(args);
             Assert::AreEqual(1, leftClicks);
+            Assert::IsTrue(actualSender.as<winrt::DesktopFlyouts::SystemTrayIcon>() == icon);
             Assert::AreEqual(expected.X, actual.X);
             Assert::AreEqual(expected.Y, actual.Y);
 

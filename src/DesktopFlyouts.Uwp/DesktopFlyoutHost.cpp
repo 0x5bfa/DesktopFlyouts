@@ -86,12 +86,12 @@ namespace winrt::DesktopFlyouts::detail
 
         if (host != nullptr)
         {
-            if (message == WM_MOUSEACTIVATE && host->m_activationMode == author::DesktopFlyoutActivationMode::never_activate)
+            if (message == WM_MOUSEACTIVATE && host->m_activationMode == author::DesktopFlyoutActivationMode::NeverActivate)
             {
                 host->RestoreActivationState();
                 return MA_NOACTIVATE;
             }
-            if (message == WM_SETFOCUS && host->m_activationMode == author::DesktopFlyoutActivationMode::never_activate)
+            if (message == WM_SETFOCUS && host->m_activationMode == author::DesktopFlyoutActivationMode::NeverActivate)
             {
                 host->RestoreActivationState();
                 return 0;
@@ -150,7 +150,7 @@ namespace winrt::DesktopFlyouts::detail
         RegisterWindowClass();
         m_window = CreateWindowExW(
             WS_EX_NOREDIRECTIONBITMAP | WS_EX_TOOLWINDOW | WS_EX_TOPMOST |
-                (activationMode == author::DesktopFlyoutActivationMode::never_activate ? WS_EX_NOACTIVATE : 0),
+                (activationMode == author::DesktopFlyoutActivationMode::NeverActivate ? WS_EX_NOACTIVATE : 0),
             c_hostWindowClassName,
             L"DesktopFlyout.Uwp",
             WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
@@ -170,7 +170,7 @@ namespace winrt::DesktopFlyouts::detail
         winrt::check_hresult(native->get_WindowHandle(&m_islandWindow));
         winrt::check_bool(m_islandWindow != nullptr);
         SetWindowLongPtrW(m_islandWindow, GWL_STYLE, WS_CHILD | WS_VISIBLE);
-        SetNoActivateStyle(m_islandWindow, activationMode == author::DesktopFlyoutActivationMode::never_activate);
+        SetNoActivateStyle(m_islandWindow, activationMode == author::DesktopFlyoutActivationMode::NeverActivate);
     }
 
     void DesktopFlyoutHost::Destroy() noexcept
@@ -211,7 +211,7 @@ namespace winrt::DesktopFlyouts::detail
     void DesktopFlyoutHost::ActivationMode(author::DesktopFlyoutActivationMode value) noexcept
     {
         m_activationMode = value;
-        const auto noActivate = value == author::DesktopFlyoutActivationMode::never_activate;
+        const auto noActivate = value == author::DesktopFlyoutActivationMode::NeverActivate;
         SetNoActivateStyle(m_window, noActivate);
         SetNoActivateStyle(m_islandWindow, noActivate);
     }
@@ -247,7 +247,7 @@ namespace winrt::DesktopFlyouts::detail
     void DesktopFlyoutHost::MoveAndResize(int x, int y, int width, int height)
     {
         winrt::check_bool(m_window != nullptr);
-        const auto flags = m_activationMode == author::DesktopFlyoutActivationMode::activate ? 0U : SWP_NOACTIVATE;
+        const auto flags = m_activationMode == author::DesktopFlyoutActivationMode::Activate ? 0U : SWP_NOACTIVATE;
         SetWindowPos(m_window, HWND_TOP, x, y, width, height, flags);
         if (m_islandWindow != nullptr)
         {
@@ -268,7 +268,7 @@ namespace winrt::DesktopFlyouts::detail
         {
             return;
         }
-        if (activationMode == author::DesktopFlyoutActivationMode::activate)
+        if (activationMode == author::DesktopFlyoutActivationMode::Activate)
         {
             ShowWindow(m_window, SW_SHOW);
             SetForegroundWindow(m_window);
@@ -279,7 +279,7 @@ namespace winrt::DesktopFlyouts::detail
         }
         if (m_islandWindow != nullptr)
         {
-            ShowWindow(m_islandWindow, activationMode == author::DesktopFlyoutActivationMode::activate ? SW_SHOW : SW_SHOWNOACTIVATE);
+            ShowWindow(m_islandWindow, activationMode == author::DesktopFlyoutActivationMode::Activate ? SW_SHOW : SW_SHOWNOACTIVATE);
         }
     }
 
@@ -331,7 +331,7 @@ namespace winrt::DesktopFlyouts::detail
         Windows::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason) noexcept
     {
         if (!m_xamlSource || m_islandWindow == nullptr ||
-            m_activationMode == author::DesktopFlyoutActivationMode::never_activate)
+            m_activationMode == author::DesktopFlyoutActivationMode::NeverActivate)
         {
             return false;
         }

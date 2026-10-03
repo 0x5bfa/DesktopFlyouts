@@ -19,22 +19,38 @@ public sealed class ProjectionTests
         DesktopFlyout flyout,
         DesktopMenuFlyout menuFlyout)
     {
-        EventHandler<SystemTrayIconEventArgs> handler = OnTrayIconClicked;
+        EventHandler<MouseEventReceivedEventArgs> handler = OnTrayIconClicked;
         trayIcon.LeftClicked += handler;
         trayIcon.SetIcon((nint)0);
         trayIcon.LeftClicked -= handler;
+
+        using (flyout)
+        {
+            flyout.Show(new System.Drawing.Point(10, 20));
+            _ = DesktopFlyout.FlyoutWidthProperty;
+            _ = DesktopFlyout.AutoCloseDelayProperty;
+        }
 
         flyout.HideOnLostFocus = !flyout.HideOnLostFocus;
         flyout.Placement = flyout.Placement;
         _ = flyout.State;
         flyout.Hide();
 
-        menuFlyout.OwnerWindowHandle = menuFlyout.OwnerWindowHandle;
-        _ = menuFlyout.IsOpen;
-        menuFlyout.Hide();
+        using (menuFlyout)
+        {
+            menuFlyout.Show(new System.Drawing.Point(10, 20));
+            menuFlyout.OwnerWindowHandle = menuFlyout.OwnerWindowHandle;
+            _ = menuFlyout.IsOpen;
+            menuFlyout.Hide();
+        }
+
+        using (trayIcon)
+        {
+            trayIcon.SetIcon((nint)0);
+        }
     }
 
-    private static void OnTrayIconClicked(object? sender, SystemTrayIconEventArgs args)
+    private static void OnTrayIconClicked(object? sender, MouseEventReceivedEventArgs args)
     {
         _ = args.Point;
     }

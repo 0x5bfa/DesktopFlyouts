@@ -44,14 +44,14 @@ namespace
         using target = desktop_flyouts::core::placement_mode;
         switch (placement)
         {
-        case source::top_center: return target::top_center;
-        case source::top_left: return target::top_left;
-        case source::top_right: return target::top_right;
-        case source::bottom_center: return target::bottom_center;
-        case source::bottom_left: return target::bottom_left;
-        case source::bottom_right: return target::bottom_right;
-        case source::left_center: return target::left_center;
-        case source::right_center: return target::right_center;
+        case source::TopCenter: return target::top_center;
+        case source::TopLeft: return target::top_left;
+        case source::TopRight: return target::top_right;
+        case source::BottomCenter: return target::bottom_center;
+        case source::BottomLeft: return target::bottom_left;
+        case source::BottomRight: return target::bottom_right;
+        case source::LeftCenter: return target::left_center;
+        case source::RightCenter: return target::right_center;
         default: return target::bottom_right;
         }
     }
@@ -63,12 +63,12 @@ namespace
         using target = desktop_flyouts::core::popup_direction;
         switch (direction)
         {
-        case source::bottom_to_top: return target::bottom_to_top;
-        case source::top_to_bottom: return target::top_to_bottom;
-        case source::vertical: return target::vertical;
-        case source::left_to_right: return target::left_to_right;
-        case source::right_to_left: return target::right_to_left;
-        case source::horizontal: return target::horizontal;
+        case source::BottomToTop: return target::bottom_to_top;
+        case source::TopToBottom: return target::top_to_bottom;
+        case source::Vertical: return target::vertical;
+        case source::LeftToRight: return target::left_to_right;
+        case source::RightToLeft: return target::right_to_left;
+        case source::Horizontal: return target::horizontal;
         default: return target::vertical;
         }
     }
@@ -470,10 +470,139 @@ namespace winrt::DesktopFlyouts::author
         return finalSize;
     }
 
+    template<typename T>
+    Windows::UI::Xaml::DependencyProperty RegisterDesktopFlyoutProperty(
+        wchar_t const* name,
+        T defaultValue)
+    {
+        return Windows::UI::Xaml::DependencyProperty::Register(
+            name,
+            winrt::xaml_typename<T>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyout>(),
+            Windows::UI::Xaml::PropertyMetadata{ winrt::box_value(defaultValue) });
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::FlyoutWidthProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(
+            L"FlyoutWidth",
+            Windows::UI::Xaml::GridLength{ 1.0, Windows::UI::Xaml::GridUnitType::Auto });
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::FlyoutHeightProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(
+            L"FlyoutHeight",
+            Windows::UI::Xaml::GridLength{ 1.0, Windows::UI::Xaml::GridUnitType::Auto });
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::PlacementProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"Placement", DesktopFlyoutPlacementMode::BottomRight);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::PopupDirectionProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"PopupDirection", DesktopFlyoutPopupDirection::Vertical);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::ActivationModeProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"ActivationMode", DesktopFlyoutActivationMode::Activate);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::HideOnLostFocusProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"HideOnLostFocus", true);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::MenuFlyoutProperty(winrt::author::getter)
+    {
+        static auto property = Windows::UI::Xaml::DependencyProperty::Register(
+            L"MenuFlyout",
+            winrt::xaml_typename<Windows::UI::Xaml::Controls::MenuFlyout>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyout>(),
+            Windows::UI::Xaml::PropertyMetadata{ nullptr });
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::IslandsSourceProperty(winrt::author::getter)
+    {
+        static auto property = Windows::UI::Xaml::DependencyProperty::Register(
+            L"IslandsSource",
+            winrt::xaml_typename<Windows::Foundation::IInspectable>(),
+            winrt::xaml_typename<winrt::DesktopFlyouts::DesktopFlyout>(),
+            Windows::UI::Xaml::PropertyMetadata{ nullptr });
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::IslandsOrientationProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(
+            L"IslandsOrientation",
+            Windows::UI::Xaml::Controls::Orientation::Vertical);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::IsBackdropEnabledProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"IsBackdropEnabled", true);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::BackdropKindProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"BackdropKind", DesktopFlyoutBackdropKind::DesktopAcrylic);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::IsTransitionAnimationEnabledProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"IsTransitionAnimationEnabled", true);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::PressedScaleProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"PressedScale", 1.0);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::IsSwipeToDismissEnabledProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"IsSwipeToDismissEnabled", false);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::SwipeDismissThresholdProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"SwipeDismissThreshold", 80.0);
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::AutoCloseDelayProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"AutoCloseDelay", Windows::Foundation::TimeSpan{});
+        return property;
+    }
+
+    Windows::UI::Xaml::DependencyProperty DesktopFlyout::IsOpenProperty(winrt::author::getter)
+    {
+        static auto property = RegisterDesktopFlyoutProperty(L"IsOpen", false);
+        return property;
+    }
+
     DesktopFlyout::DesktopFlyout()
         : m_native(std::make_unique<DesktopFlyoutNativeState>())
     {
         m_islands = winrt::single_threaded_observable_vector<winrt::DesktopFlyouts::DesktopFlyoutIsland>();
+        RegisterDependencyPropertyCallbacks();
         self(this)->DefaultStyleKey(winrt::box_value(L"DesktopFlyouts.DesktopFlyout"));
         self(this)->Margin({ 12.0, 12.0, 12.0, 12.0 });
         m_islandsChangedToken = m_islands.VectorChanged([this](auto const&, auto const&)
@@ -488,8 +617,169 @@ namespace winrt::DesktopFlyouts::author
         m_native->host.HideOnLostFocus(m_hideOnLostFocus);
     }
 
+    void DesktopFlyout::RegisterDependencyPropertyChangedCallback(
+        Windows::UI::Xaml::DependencyProperty const& property,
+        std::function<void()> callback)
+    {
+        const auto token = self(this)->RegisterPropertyChangedCallback(
+            property,
+            [callback = std::move(callback)](auto const&, auto const&)
+            {
+                callback();
+            });
+        m_propertyCallbacks.emplace_back(property, token);
+    }
+
+    void DesktopFlyout::RegisterDependencyPropertyCallbacks()
+    {
+        RegisterDependencyPropertyChangedCallback(FlyoutWidthProperty(), [this]
+        {
+            m_flyoutWidth = winrt::unbox_value<Windows::UI::Xaml::GridLength>(self(this)->GetValue(FlyoutWidthProperty()));
+            UpdateFlyoutLayout();
+        });
+        RegisterDependencyPropertyChangedCallback(FlyoutHeightProperty(), [this]
+        {
+            m_flyoutHeight = winrt::unbox_value<Windows::UI::Xaml::GridLength>(self(this)->GetValue(FlyoutHeightProperty()));
+            UpdateFlyoutLayout();
+        });
+        RegisterDependencyPropertyChangedCallback(PlacementProperty(), [this]
+        {
+            m_placement = winrt::unbox_value<DesktopFlyoutPlacementMode>(self(this)->GetValue(PlacementProperty()));
+            UpdateFlyoutLayout();
+        });
+        RegisterDependencyPropertyChangedCallback(PopupDirectionProperty(), [this]
+        {
+            m_popupDirection = winrt::unbox_value<DesktopFlyoutPopupDirection>(self(this)->GetValue(PopupDirectionProperty()));
+            UpdateFlyoutLayout();
+        });
+        RegisterDependencyPropertyChangedCallback(ActivationModeProperty(), [this]
+        {
+            m_activationMode = winrt::unbox_value<DesktopFlyoutActivationMode>(self(this)->GetValue(ActivationModeProperty()));
+            if (m_native)
+            {
+                m_native->host.ActivationMode(m_activationMode);
+            }
+        });
+        RegisterDependencyPropertyChangedCallback(HideOnLostFocusProperty(), [this]
+        {
+            m_hideOnLostFocus = winrt::unbox_value<bool>(self(this)->GetValue(HideOnLostFocusProperty()));
+            if (m_native)
+            {
+                m_native->host.HideOnLostFocus(m_hideOnLostFocus);
+            }
+        });
+        RegisterDependencyPropertyChangedCallback(MenuFlyoutProperty(), [this]
+        {
+            m_menuFlyout = self(this)->GetValue(MenuFlyoutProperty()).try_as<Windows::UI::Xaml::Controls::MenuFlyout>();
+        });
+        RegisterDependencyPropertyChangedCallback(IslandsSourceProperty(), [this]
+        {
+            m_islandsSource = self(this)->GetValue(IslandsSourceProperty());
+            auto iterable = m_islandsSource.try_as<
+                Windows::Foundation::Collections::IIterable<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
+            if (iterable)
+            {
+                m_islands.Clear();
+                for (auto const& island : iterable)
+                {
+                    if (island)
+                    {
+                        m_islands.Append(island);
+                    }
+                }
+                if (m_native)
+                {
+                    RefreshContent();
+                }
+            }
+        });
+        RegisterDependencyPropertyChangedCallback(IslandsOrientationProperty(), [this]
+        {
+            m_islandsOrientation = winrt::unbox_value<Windows::UI::Xaml::Controls::Orientation>(self(this)->GetValue(IslandsOrientationProperty()));
+            if (m_native)
+            {
+                RefreshContent();
+            }
+        });
+        RegisterDependencyPropertyChangedCallback(IsBackdropEnabledProperty(), [this]
+        {
+            m_isBackdropEnabled = winrt::unbox_value<bool>(self(this)->GetValue(IsBackdropEnabledProperty()));
+        });
+        RegisterDependencyPropertyChangedCallback(BackdropKindProperty(), [this]
+        {
+            m_backdropKind = winrt::unbox_value<DesktopFlyoutBackdropKind>(self(this)->GetValue(BackdropKindProperty()));
+        });
+        RegisterDependencyPropertyChangedCallback(IsTransitionAnimationEnabledProperty(), [this]
+        {
+            m_isTransitionAnimationEnabled = winrt::unbox_value<bool>(self(this)->GetValue(IsTransitionAnimationEnabledProperty()));
+        });
+        RegisterDependencyPropertyChangedCallback(PressedScaleProperty(), [this]
+        {
+            const auto value = winrt::unbox_value<double>(self(this)->GetValue(PressedScaleProperty()));
+            m_pressedScale = std::isfinite(value) ? std::clamp(value, 0.1, 2.0) : 1.0;
+        });
+        RegisterDependencyPropertyChangedCallback(IsSwipeToDismissEnabledProperty(), [this]
+        {
+            m_isSwipeToDismissEnabled = winrt::unbox_value<bool>(self(this)->GetValue(IsSwipeToDismissEnabledProperty()));
+        });
+        RegisterDependencyPropertyChangedCallback(SwipeDismissThresholdProperty(), [this]
+        {
+            const auto value = winrt::unbox_value<double>(self(this)->GetValue(SwipeDismissThresholdProperty()));
+            m_swipeDismissThreshold = std::isfinite(value) ? std::clamp(value, 1.0, 2000.0) : 80.0;
+        });
+        RegisterDependencyPropertyChangedCallback(AutoCloseDelayProperty(), [this]
+        {
+            m_autoCloseDelay = winrt::unbox_value<Windows::Foundation::TimeSpan>(self(this)->GetValue(AutoCloseDelayProperty()));
+            if (m_native && m_native->isOpen)
+            {
+                m_native->host.ConfigureAutoCloseTimer(m_autoCloseDelay);
+            }
+        });
+        RegisterDependencyPropertyChangedCallback(Windows::UI::Xaml::FrameworkElement::DataContextProperty(), [this]
+        {
+            if (m_native && m_native->panel)
+            {
+                m_native->panel.DataContext(self(this)->DataContext());
+            }
+        });
+    }
+
     DesktopFlyout::~DesktopFlyout()
     {
+        try
+        {
+            Close();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void DesktopFlyout::Close(winrt::author::override)
+    {
+        if (m_isClosed)
+        {
+            return;
+        }
+        if (m_native)
+        {
+            EnsureUiThread(*m_native);
+        }
+        SetIsOpen(false);
+        m_isClosed = true;
+
+        for (auto const& [property, token] : m_propertyCallbacks)
+        {
+            try
+            {
+                self(this)->UnregisterPropertyChangedCallback(property, token);
+            }
+            catch (...)
+            {
+            }
+        }
+        m_propertyCallbacks.clear();
+
         if (m_islands && m_islandsChangedToken.value != 0)
         {
             try { m_islands.VectorChanged(m_islandsChangedToken); } catch (...) { }
@@ -504,68 +794,74 @@ namespace winrt::DesktopFlyouts::author
 
     std::int64_t DesktopFlyout::OwnerWindowHandle(winrt::author::getter)
     {
-        EnsureUiThread(*m_native);
+        if (m_native) EnsureUiThread(*m_native);
         return m_ownerWindowHandle;
     }
 
     winrt::author::setter DesktopFlyout::OwnerWindowHandle(std::int64_t value)
     {
-        EnsureUiThread(*m_native);
+        if (m_native) EnsureUiThread(*m_native);
         m_ownerWindowHandle = value;
-        m_native->host.OwnerWindow(reinterpret_cast<HWND>(value));
+        if (m_native) m_native->host.OwnerWindow(reinterpret_cast<HWND>(value));
         return {};
     }
 
     Windows::UI::Xaml::GridLength DesktopFlyout::FlyoutWidth(winrt::author::getter)
     {
-        return m_flyoutWidth;
+        return winrt::unbox_value<Windows::UI::Xaml::GridLength>(self(this)->GetValue(FlyoutWidthProperty()));
     }
 
     winrt::author::setter DesktopFlyout::FlyoutWidth(Windows::UI::Xaml::GridLength value)
     {
-        m_flyoutWidth = value;
-        UpdateFlyoutLayout();
+        self(this)->SetValue(FlyoutWidthProperty(), winrt::box_value(value));
         return {};
     }
 
     Windows::UI::Xaml::GridLength DesktopFlyout::FlyoutHeight(winrt::author::getter)
     {
-        return m_flyoutHeight;
+        return winrt::unbox_value<Windows::UI::Xaml::GridLength>(self(this)->GetValue(FlyoutHeightProperty()));
     }
 
     winrt::author::setter DesktopFlyout::FlyoutHeight(Windows::UI::Xaml::GridLength value)
     {
-        m_flyoutHeight = value;
-        UpdateFlyoutLayout();
+        self(this)->SetValue(FlyoutHeightProperty(), winrt::box_value(value));
         return {};
     }
 
-    DesktopFlyoutPlacementMode DesktopFlyout::Placement(winrt::author::getter) { return m_placement; }
+    DesktopFlyoutPlacementMode DesktopFlyout::Placement(winrt::author::getter)
+    {
+        return winrt::unbox_value<DesktopFlyoutPlacementMode>(self(this)->GetValue(PlacementProperty()));
+    }
     winrt::author::setter DesktopFlyout::Placement(DesktopFlyoutPlacementMode value)
     {
-        m_placement = value;
-        UpdateFlyoutLayout();
+        self(this)->SetValue(PlacementProperty(), winrt::box_value(value));
         return {};
     }
-    DesktopFlyoutPopupDirection DesktopFlyout::PopupDirection(winrt::author::getter) { return m_popupDirection; }
+    DesktopFlyoutPopupDirection DesktopFlyout::PopupDirection(winrt::author::getter)
+    {
+        return winrt::unbox_value<DesktopFlyoutPopupDirection>(self(this)->GetValue(PopupDirectionProperty()));
+    }
     winrt::author::setter DesktopFlyout::PopupDirection(DesktopFlyoutPopupDirection value)
     {
-        m_popupDirection = value;
-        UpdateFlyoutLayout();
+        self(this)->SetValue(PopupDirectionProperty(), winrt::box_value(value));
         return {};
     }
-    DesktopFlyoutActivationMode DesktopFlyout::ActivationMode(winrt::author::getter) { return m_activationMode; }
+    DesktopFlyoutActivationMode DesktopFlyout::ActivationMode(winrt::author::getter)
+    {
+        return winrt::unbox_value<DesktopFlyoutActivationMode>(self(this)->GetValue(ActivationModeProperty()));
+    }
     winrt::author::setter DesktopFlyout::ActivationMode(DesktopFlyoutActivationMode value)
     {
-        m_activationMode = value;
-        m_native->host.ActivationMode(value);
+        self(this)->SetValue(ActivationModeProperty(), winrt::box_value(value));
         return {};
     }
-    bool DesktopFlyout::HideOnLostFocus(winrt::author::getter) { return m_hideOnLostFocus; }
+    bool DesktopFlyout::HideOnLostFocus(winrt::author::getter)
+    {
+        return winrt::unbox_value<bool>(self(this)->GetValue(HideOnLostFocusProperty()));
+    }
     winrt::author::setter DesktopFlyout::HideOnLostFocus(bool value)
     {
-        m_hideOnLostFocus = value;
-        m_native->host.HideOnLostFocus(value);
+        self(this)->SetValue(HideOnLostFocusProperty(), winrt::box_value(value));
         return {};
     }
 
@@ -573,13 +869,16 @@ namespace winrt::DesktopFlyouts::author
     winrt::author::setter DesktopFlyout::Content(Windows::UI::Xaml::UIElement const& value)
     {
         m_content = value;
-        RefreshContent();
+        if (m_native) RefreshContent();
         return {};
     }
-    Windows::UI::Xaml::Controls::MenuFlyout DesktopFlyout::MenuFlyout(winrt::author::getter) { return m_menuFlyout; }
+    Windows::UI::Xaml::Controls::MenuFlyout DesktopFlyout::MenuFlyout(winrt::author::getter)
+    {
+        return self(this)->GetValue(MenuFlyoutProperty()).try_as<Windows::UI::Xaml::Controls::MenuFlyout>();
+    }
     winrt::author::setter DesktopFlyout::MenuFlyout(Windows::UI::Xaml::Controls::MenuFlyout const& value)
     {
-        m_menuFlyout = value;
+        self(this)->SetValue(MenuFlyoutProperty(), value);
         return {};
     }
 
@@ -595,37 +894,22 @@ namespace winrt::DesktopFlyouts::author
 
     Windows::Foundation::IInspectable DesktopFlyout::IslandsSource(winrt::author::getter)
     {
-        return m_islandsSource;
+        return self(this)->GetValue(IslandsSourceProperty());
     }
 
     winrt::author::setter DesktopFlyout::IslandsSource(Windows::Foundation::IInspectable const& value)
     {
-        m_islandsSource = value;
-        auto iterable = value.try_as<
-            Windows::Foundation::Collections::IIterable<winrt::DesktopFlyouts::DesktopFlyoutIsland>>();
-        if (iterable)
-        {
-            m_islands.Clear();
-            for (auto const& island : iterable)
-            {
-                if (island)
-                {
-                    m_islands.Append(island);
-                }
-            }
-            RefreshContent();
-        }
+        self(this)->SetValue(IslandsSourceProperty(), value);
         return {};
     }
 
     Windows::UI::Xaml::Controls::Orientation DesktopFlyout::IslandsOrientation(winrt::author::getter)
     {
-        return m_islandsOrientation;
+        return winrt::unbox_value<Windows::UI::Xaml::Controls::Orientation>(self(this)->GetValue(IslandsOrientationProperty()));
     }
     winrt::author::setter DesktopFlyout::IslandsOrientation(Windows::UI::Xaml::Controls::Orientation value)
     {
-        m_islandsOrientation = value;
-        RefreshContent();
+        self(this)->SetValue(IslandsOrientationProperty(), winrt::box_value(value));
         return {};
     }
     std::int32_t DesktopFlyout::IslandSpacing(winrt::author::getter) { return m_islandSpacing; }
@@ -636,58 +920,83 @@ namespace winrt::DesktopFlyouts::author
         return {};
     }
 
-    bool DesktopFlyout::IsBackdropEnabled(winrt::author::getter) { return m_isBackdropEnabled; }
+    bool DesktopFlyout::IsBackdropEnabled(winrt::author::getter)
+    {
+        return winrt::unbox_value<bool>(self(this)->GetValue(IsBackdropEnabledProperty()));
+    }
     winrt::author::setter DesktopFlyout::IsBackdropEnabled(bool value)
     {
-        m_isBackdropEnabled = value;
+        self(this)->SetValue(IsBackdropEnabledProperty(), winrt::box_value(value));
         return {};
     }
-    DesktopFlyoutBackdropKind DesktopFlyout::BackdropKind(winrt::author::getter) { return m_backdropKind; }
+    DesktopFlyoutBackdropKind DesktopFlyout::BackdropKind(winrt::author::getter)
+    {
+        return winrt::unbox_value<DesktopFlyoutBackdropKind>(self(this)->GetValue(BackdropKindProperty()));
+    }
     winrt::author::setter DesktopFlyout::BackdropKind(DesktopFlyoutBackdropKind value)
     {
-        m_backdropKind = value;
+        self(this)->SetValue(BackdropKindProperty(), winrt::box_value(value));
         return {};
     }
-    bool DesktopFlyout::IsTransitionAnimationEnabled(winrt::author::getter) { return m_isTransitionAnimationEnabled; }
+    bool DesktopFlyout::IsTransitionAnimationEnabled(winrt::author::getter)
+    {
+        return winrt::unbox_value<bool>(self(this)->GetValue(IsTransitionAnimationEnabledProperty()));
+    }
     winrt::author::setter DesktopFlyout::IsTransitionAnimationEnabled(bool value)
     {
-        m_isTransitionAnimationEnabled = value;
+        self(this)->SetValue(IsTransitionAnimationEnabledProperty(), winrt::box_value(value));
         return {};
     }
-    double DesktopFlyout::PressedScale(winrt::author::getter) { return m_pressedScale; }
+    double DesktopFlyout::PressedScale(winrt::author::getter)
+    {
+        return winrt::unbox_value<double>(self(this)->GetValue(PressedScaleProperty()));
+    }
     winrt::author::setter DesktopFlyout::PressedScale(double value)
     {
-        m_pressedScale = std::isfinite(value) ? std::clamp(value, 0.1, 2.0) : 1.0;
+        self(this)->SetValue(PressedScaleProperty(), winrt::box_value(value));
         return {};
     }
-    bool DesktopFlyout::IsSwipeToDismissEnabled(winrt::author::getter) { return m_isSwipeToDismissEnabled; }
+    bool DesktopFlyout::IsSwipeToDismissEnabled(winrt::author::getter)
+    {
+        return winrt::unbox_value<bool>(self(this)->GetValue(IsSwipeToDismissEnabledProperty()));
+    }
     winrt::author::setter DesktopFlyout::IsSwipeToDismissEnabled(bool value)
     {
-        m_isSwipeToDismissEnabled = value;
+        self(this)->SetValue(IsSwipeToDismissEnabledProperty(), winrt::box_value(value));
         return {};
     }
-    double DesktopFlyout::SwipeDismissThreshold(winrt::author::getter) { return m_swipeDismissThreshold; }
+    double DesktopFlyout::SwipeDismissThreshold(winrt::author::getter)
+    {
+        return winrt::unbox_value<double>(self(this)->GetValue(SwipeDismissThresholdProperty()));
+    }
     winrt::author::setter DesktopFlyout::SwipeDismissThreshold(double value)
     {
-        m_swipeDismissThreshold = std::isfinite(value) ? std::clamp(value, 1.0, 2000.0) : 80.0;
+        self(this)->SetValue(SwipeDismissThresholdProperty(), winrt::box_value(value));
         return {};
     }
-    Windows::Foundation::TimeSpan DesktopFlyout::AutoCloseDelay(winrt::author::getter) { return m_autoCloseDelay; }
+    Windows::Foundation::TimeSpan DesktopFlyout::AutoCloseDelay(winrt::author::getter)
+    {
+        return winrt::unbox_value<Windows::Foundation::TimeSpan>(self(this)->GetValue(AutoCloseDelayProperty()));
+    }
     winrt::author::setter DesktopFlyout::AutoCloseDelay(Windows::Foundation::TimeSpan value)
     {
-        m_autoCloseDelay = value;
-        if (m_native->isOpen)
-        {
-            m_native->host.ConfigureAutoCloseTimer(value);
-        }
+        self(this)->SetValue(AutoCloseDelayProperty(), winrt::box_value(value));
         return {};
     }
 
     DesktopFlyoutState DesktopFlyout::State(winrt::author::getter)
     {
-        return m_native->isOpen ? DesktopFlyoutState::open : DesktopFlyoutState::closed;
+        return m_native && m_native->isOpen ? DesktopFlyoutState::open : DesktopFlyoutState::closed;
     }
-    bool DesktopFlyout::IsOpen(winrt::author::getter) { return m_native->isOpen; }
+    bool DesktopFlyout::IsOpen(winrt::author::getter)
+    {
+        return winrt::unbox_value<bool>(self(this)->GetValue(IsOpenProperty()));
+    }
+
+    void DesktopFlyout::SetIsOpen(bool value)
+    {
+        self(this)->SetValue(IsOpenProperty(), winrt::box_value(value));
+    }
 
     void DesktopFlyout::RefreshContent()
     {
@@ -701,6 +1010,7 @@ namespace winrt::DesktopFlyouts::author
         {
             m_native->panel = winrt::DesktopFlyouts::DesktopFlyoutIslandsPanel{};
         }
+        m_native->panel.DataContext(self(this)->DataContext());
         m_native->panel.Orientation(m_islandsOrientation);
         m_native->panel.Spacing(static_cast<double>(m_islandSpacing));
         auto children = m_native->panel.Children();
@@ -778,12 +1088,20 @@ namespace winrt::DesktopFlyouts::author
 
     void DesktopFlyout::Show()
     {
+        if (!m_native || m_isClosed)
+        {
+            return;
+        }
         m_native->customPlacementPoint.reset();
         ShowCore();
     }
 
     void DesktopFlyout::Show(Windows::Foundation::Point bottomCenterPoint)
     {
+        if (!m_native || m_isClosed)
+        {
+            return;
+        }
         m_native->customPlacementPoint = POINT{
             static_cast<LONG>(std::lround(bottomCenterPoint.X)),
             static_cast<LONG>(std::lround(bottomCenterPoint.Y)) };
@@ -792,12 +1110,20 @@ namespace winrt::DesktopFlyouts::author
 
     void DesktopFlyout::ShowAt(std::int32_t x, std::int32_t y)
     {
+        if (!m_native || m_isClosed)
+        {
+            return;
+        }
         m_native->customPlacementPoint = POINT{ x, y };
         ShowCore();
     }
 
     void DesktopFlyout::ShowCore()
     {
+        if (!m_native || m_isClosed)
+        {
+            return;
+        }
         EnsureUiThread(*m_native);
         auto owner = reinterpret_cast<HWND>(m_ownerWindowHandle);
         if (owner == nullptr || !IsWindow(owner))
@@ -805,7 +1131,7 @@ namespace winrt::DesktopFlyouts::author
             owner = GetForegroundWindow();
         }
         winrt::check_bool(owner != nullptr);
-        if (m_activationMode != DesktopFlyoutActivationMode::activate)
+        if (m_activationMode != DesktopFlyoutActivationMode::Activate)
         {
             m_native->host.PreserveActivationState();
         }
@@ -815,9 +1141,10 @@ namespace winrt::DesktopFlyouts::author
         UpdateFlyoutLayout();
         m_native->host.Show(m_activationMode);
         m_native->isOpen = true;
+        SetIsOpen(true);
         m_native->host.IsOpen(true);
         m_native->host.ConfigureAutoCloseTimer(m_autoCloseDelay);
-        if (m_activationMode != DesktopFlyoutActivationMode::activate)
+        if (m_activationMode != DesktopFlyoutActivationMode::Activate)
         {
             m_native->host.RestoreActivationState();
         }
@@ -825,27 +1152,44 @@ namespace winrt::DesktopFlyouts::author
 
     void DesktopFlyout::NavigateFocus()
     {
+        if (!m_native || m_isClosed)
+        {
+            return;
+        }
         NavigateFocus(Windows::UI::Xaml::Hosting::XamlSourceFocusNavigationReason::Programmatic);
     }
 
     void DesktopFlyout::NavigateFocus(Windows::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason)
     {
+        if (!m_native || m_isClosed)
+        {
+            return;
+        }
         EnsureUiThread(*m_native);
         m_native->host.NavigateFocus(reason);
     }
 
     bool DesktopFlyout::TryPreTranslateMessage(std::int64_t message)
     {
+        if (!m_native || m_isClosed)
+        {
+            return false;
+        }
         EnsureUiThread(*m_native);
         return m_native->host.TryPreTranslateMessage(reinterpret_cast<MSG const*>(message));
     }
 
     void DesktopFlyout::Hide()
     {
+        if (!m_native || m_isClosed)
+        {
+            return;
+        }
         EnsureUiThread(*m_native);
         m_native->host.StopAutoCloseTimer();
         m_native->host.Hide();
         m_native->isOpen = false;
+        SetIsOpen(false);
         m_native->host.IsOpen(false);
     }
 }

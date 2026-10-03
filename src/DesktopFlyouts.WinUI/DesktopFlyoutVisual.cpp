@@ -373,7 +373,8 @@ namespace winrt::DesktopFlyouts::detail
         Microsoft::UI::Xaml::Hosting::DesktopWindowXamlSource const& xamlSource,
         Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> const& islands,
         Microsoft::UI::Xaml::Controls::Orientation orientation,
-        std::int32_t spacing)
+        std::int32_t spacing,
+        Windows::Foundation::IInspectable const& dataContext)
     {
         if (!xamlSource)
         {
@@ -493,6 +494,7 @@ namespace winrt::DesktopFlyouts::detail
         }
 
         EnsureRoot();
+        m_root.DataContext(dataContext);
         if (m_content)
         {
             m_root.Children().Append(m_content);
@@ -502,6 +504,14 @@ namespace winrt::DesktopFlyouts::detail
         // WinUI system-backdrop controller. This is also what makes the first
         // show use the same material as subsequent shows.
         UpdateIslandBackdrops();
+    }
+
+    void DesktopFlyoutVisual::DataContext(Windows::Foundation::IInspectable const& value)
+    {
+        if (m_root)
+        {
+            m_root.DataContext(value);
+        }
     }
 
     void DesktopFlyoutVisual::ApplySystemBackdrop(
@@ -525,7 +535,7 @@ namespace winrt::DesktopFlyouts::detail
                 {
                     backdrop.SystemBackdrop(nullptr);
                 }
-                else if (m_backdropKind == author::DesktopFlyoutBackdropKind::mica)
+                else if (m_backdropKind == author::DesktopFlyoutBackdropKind::Mica)
                 {
                     backdrop.SystemBackdrop(Microsoft::UI::Xaml::Media::SystemBackdrop{
                         Microsoft::UI::Xaml::Media::MicaBackdrop{} });

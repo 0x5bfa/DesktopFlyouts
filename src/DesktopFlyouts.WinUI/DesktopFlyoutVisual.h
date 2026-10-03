@@ -35,7 +35,9 @@ namespace winrt::DesktopFlyouts::detail
             Microsoft::UI::Xaml::Hosting::DesktopWindowXamlSource const& xamlSource,
             Windows::Foundation::Collections::IObservableVector<winrt::DesktopFlyouts::DesktopFlyoutIsland> const& islands,
             Microsoft::UI::Xaml::Controls::Orientation orientation,
-            std::int32_t spacing);
+            std::int32_t spacing,
+            Windows::Foundation::IInspectable const& dataContext);
+        void DataContext(Windows::Foundation::IInspectable const& value);
         void ApplySystemBackdrop(
             Microsoft::UI::Xaml::Hosting::DesktopWindowXamlSource const& xamlSource,
             bool enabled,
@@ -104,7 +106,7 @@ namespace winrt::DesktopFlyouts::detail
         bool m_neverActivate{};
         bool m_backdropEnabled{};
         author::DesktopFlyoutBackdropKind m_backdropKind{
-            author::DesktopFlyoutBackdropKind::desktop_acrylic };
+            author::DesktopFlyoutBackdropKind::DesktopAcrylic };
         double m_pressedScale{ 1.0 };
         double m_swipeDismissThreshold{ 80.0 };
         bool m_isOpen{};

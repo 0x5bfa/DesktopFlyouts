@@ -79,9 +79,9 @@ namespace winrt::DesktopFlyouts::author
         if (icon != nullptr && message == WM_APP + 0x5BFA)
         {
             const auto point = icon->TrayIconPoint();
-            auto args = winrt::make<winrt::DesktopFlyouts::implementation::SystemTrayIconEventArgs>(
+            auto args = winrt::make<winrt::DesktopFlyouts::implementation::MouseEventReceivedEventArgs>(
                 point);
-            switch (static_cast<UINT>(lParam))
+            switch (LOWORD(lParam))
             {
             case WM_LBUTTONUP:
                 icon->RaiseLeftClicked(args);
@@ -128,12 +128,12 @@ namespace winrt::DesktopFlyouts::author
         });
     }
 
-    SystemTrayIconEventArgs::SystemTrayIconEventArgs(Windows::Foundation::Point point)
+    MouseEventReceivedEventArgs::MouseEventReceivedEventArgs(Windows::Foundation::Point point)
         : m_point(point)
     {
     }
 
-    Windows::Foundation::Point SystemTrayIconEventArgs::Point(winrt::author::getter)
+    Windows::Foundation::Point MouseEventReceivedEventArgs::Point(winrt::author::getter)
     {
         return m_point;
     }
@@ -188,18 +188,33 @@ namespace winrt::DesktopFlyouts::author
 
     SystemTrayIcon::~SystemTrayIcon()
     {
-        if (!m_native)
-        {
-            return;
-        }
-
         try
         {
-            EnsureUiThread(*m_native);
-            Destroy();
+            Close();
         }
         catch (...)
         {
+        }
+    }
+
+    void SystemTrayIcon::Close(winrt::author::override)
+    {
+        if (m_isClosed)
+        {
+            return;
+        }
+        if (!m_native)
+        {
+            m_isClosed = true;
+            return;
+        }
+        EnsureUiThread(*m_native);
+        Hide();
+        m_isClosed = true;
+        if (m_native->callbackWindow != nullptr)
+        {
+            DestroyWindow(m_native->callbackWindow);
+            m_native->callbackWindow = nullptr;
         }
         if (m_native->icon != nullptr)
         {
@@ -292,7 +307,7 @@ namespace winrt::DesktopFlyouts::author
     }
 
     winrt::event_token SystemTrayIcon::LeftClicked(
-        Windows::Foundation::EventHandler<winrt::DesktopFlyouts::SystemTrayIconEventArgs> const& handler)
+        Windows::Foundation::EventHandler<winrt::DesktopFlyouts::MouseEventReceivedEventArgs> const& handler)
     {
         return m_leftClicked.add(handler);
     }
@@ -303,7 +318,7 @@ namespace winrt::DesktopFlyouts::author
     }
 
     winrt::event_token SystemTrayIcon::RightClicked(
-        Windows::Foundation::EventHandler<winrt::DesktopFlyouts::SystemTrayIconEventArgs> const& handler)
+        Windows::Foundation::EventHandler<winrt::DesktopFlyouts::MouseEventReceivedEventArgs> const& handler)
     {
         return m_rightClicked.add(handler);
     }
@@ -314,7 +329,7 @@ namespace winrt::DesktopFlyouts::author
     }
 
     winrt::event_token SystemTrayIcon::LeftDoubleClicked(
-        Windows::Foundation::EventHandler<winrt::DesktopFlyouts::SystemTrayIconEventArgs> const& handler)
+        Windows::Foundation::EventHandler<winrt::DesktopFlyouts::MouseEventReceivedEventArgs> const& handler)
     {
         return m_leftDoubleClicked.add(handler);
     }
@@ -325,7 +340,7 @@ namespace winrt::DesktopFlyouts::author
     }
 
     winrt::event_token SystemTrayIcon::RightDoubleClicked(
-        Windows::Foundation::EventHandler<winrt::DesktopFlyouts::SystemTrayIconEventArgs> const& handler)
+        Windows::Foundation::EventHandler<winrt::DesktopFlyouts::MouseEventReceivedEventArgs> const& handler)
     {
         return m_rightDoubleClicked.add(handler);
     }
@@ -336,35 +351,39 @@ namespace winrt::DesktopFlyouts::author
     }
 
     void SystemTrayIcon::RaiseLeftClicked(
-        winrt::DesktopFlyouts::SystemTrayIconEventArgs const& args,
+        winrt::DesktopFlyouts::MouseEventReceivedEventArgs const& args,
         winrt::author::ignore)
     {
-        m_leftClicked(nullptr, args);
+        m_leftClicked(*self(this), args);
     }
 
     void SystemTrayIcon::RaiseRightClicked(
-        winrt::DesktopFlyouts::SystemTrayIconEventArgs const& args,
+        winrt::DesktopFlyouts::MouseEventReceivedEventArgs const& args,
         winrt::author::ignore)
     {
-        m_rightClicked(nullptr, args);
+        m_rightClicked(*self(this), args);
     }
 
     void SystemTrayIcon::RaiseLeftDoubleClicked(
-        winrt::DesktopFlyouts::SystemTrayIconEventArgs const& args,
+        winrt::DesktopFlyouts::MouseEventReceivedEventArgs const& args,
         winrt::author::ignore)
     {
-        m_leftDoubleClicked(nullptr, args);
+        m_leftDoubleClicked(*self(this), args);
     }
 
     void SystemTrayIcon::RaiseRightDoubleClicked(
-        winrt::DesktopFlyouts::SystemTrayIconEventArgs const& args,
+        winrt::DesktopFlyouts::MouseEventReceivedEventArgs const& args,
         winrt::author::ignore)
     {
-        m_rightDoubleClicked(nullptr, args);
+        m_rightDoubleClicked(*self(this), args);
     }
 
     void SystemTrayIcon::Show()
     {
+        if (m_isClosed || !m_native)
+        {
+            return;
+        }
         EnsureUiThread(*m_native);
         m_isVisible = true;
 
@@ -372,7 +391,7 @@ namespace winrt::DesktopFlyouts::author
         data.cbSize = sizeof(data);
         data.hWnd = m_native->callbackWindow;
         data.uID = 1;
-        data.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_GUID;
+        data.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_GUID | NIF_SHOWTIP;
         data.uCallbackMessage = m_native->callbackMessage;
         data.hIcon = m_native->icon;
         data.guidItem = m_id;
@@ -395,6 +414,11 @@ namespace winrt::DesktopFlyouts::author
 
     void SystemTrayIcon::Hide()
     {
+        if (!m_native)
+        {
+            m_isVisible = false;
+            return;
+        }
         EnsureUiThread(*m_native);
         m_isVisible = false;
         if (m_native->shellCreated)
@@ -412,6 +436,10 @@ namespace winrt::DesktopFlyouts::author
 
     void SystemTrayIcon::SetIcon(winrt::hstring iconPath)
     {
+        if (m_isClosed || !m_native)
+        {
+            return;
+        }
         EnsureUiThread(*m_native);
         auto newIcon = LoadTrayIcon(std::wstring(iconPath));
         winrt::check_bool(newIcon != nullptr);
@@ -429,6 +457,10 @@ namespace winrt::DesktopFlyouts::author
 
     void SystemTrayIcon::SetIconHandle(std::int64_t iconHandle)
     {
+        if (m_isClosed || !m_native)
+        {
+            return;
+        }
         EnsureUiThread(*m_native);
         auto newIcon = CopyIcon(reinterpret_cast<HICON>(iconHandle));
         winrt::check_bool(newIcon != nullptr);
@@ -446,12 +478,6 @@ namespace winrt::DesktopFlyouts::author
 
     void SystemTrayIcon::Destroy()
     {
-        EnsureUiThread(*m_native);
         Hide();
-        if (m_native->callbackWindow != nullptr)
-        {
-            DestroyWindow(m_native->callbackWindow);
-            m_native->callbackWindow = nullptr;
-        }
     }
 }

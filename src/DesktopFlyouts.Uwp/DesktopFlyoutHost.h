@@ -60,7 +60,7 @@ namespace winrt::DesktopFlyouts::detail
         HWND m_islandWindow{};
         Windows::UI::Xaml::Hosting::DesktopWindowXamlSource m_xamlSource{ nullptr };
         std::function<void()> m_hideCallback;
-        author::DesktopFlyoutActivationMode m_activationMode{ author::DesktopFlyoutActivationMode::activate };
+        author::DesktopFlyoutActivationMode m_activationMode{ author::DesktopFlyoutActivationMode::Activate };
         bool m_hideOnLostFocus{ true };
         bool m_isOpen{};
         UINT_PTR m_autoCloseTimerId{};

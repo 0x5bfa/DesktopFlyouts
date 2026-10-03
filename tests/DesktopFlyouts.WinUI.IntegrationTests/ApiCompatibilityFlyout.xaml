@@ -1,0 +1,17 @@
+<flyout:DesktopFlyout
+    x:Class="DesktopFlyouts.WinUI.IntegrationTests.ApiCompatibilityFlyout"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:flyout="using:DesktopFlyouts"
+    Placement="BottomRight">
+
+    <flyout:DesktopFlyout.Style>
+        <Style TargetType="flyout:DesktopFlyout">
+            <Setter Property="FlyoutWidth" Value="360" />
+        </Style>
+    </flyout:DesktopFlyout.Style>
+
+    <flyout:DesktopFlyoutIsland IslandHeight="*">
+        <TextBlock x:Name="BoundLabelText" Text="{Binding Label}" />
+    </flyout:DesktopFlyoutIsland>
+</flyout:DesktopFlyout>

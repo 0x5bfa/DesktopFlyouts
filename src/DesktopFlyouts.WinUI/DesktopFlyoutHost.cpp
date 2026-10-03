@@ -87,7 +87,7 @@ namespace winrt::DesktopFlyouts::detail
 
         if (message == WM_MOUSEACTIVATE)
         {
-            if (host != nullptr && host->m_activationMode == author::DesktopFlyoutActivationMode::never_activate)
+            if (host != nullptr && host->m_activationMode == author::DesktopFlyoutActivationMode::NeverActivate)
             {
                 host->RestoreActivationState();
                 return MA_NOACTIVATE;
@@ -98,7 +98,7 @@ namespace winrt::DesktopFlyouts::detail
 
         if (message == WM_SETFOCUS &&
             host != nullptr &&
-            host->m_activationMode == author::DesktopFlyoutActivationMode::never_activate)
+            host->m_activationMode == author::DesktopFlyoutActivationMode::NeverActivate)
         {
             host->RestoreActivationState();
             return 0;
@@ -160,7 +160,7 @@ namespace winrt::DesktopFlyouts::detail
         LPARAM lParam) noexcept
     {
         auto* host = reinterpret_cast<DesktopFlyoutHost*>(GetPropW(window, c_hostPropertyName));
-        if (host != nullptr && host->m_activationMode == author::DesktopFlyoutActivationMode::never_activate)
+        if (host != nullptr && host->m_activationMode == author::DesktopFlyoutActivationMode::NeverActivate)
         {
             if (message == WM_MOUSEACTIVATE)
             {
@@ -298,7 +298,7 @@ namespace winrt::DesktopFlyouts::detail
 
         m_window = CreateWindowExW(
             WS_EX_NOREDIRECTIONBITMAP | WS_EX_TOOLWINDOW | WS_EX_TOPMOST |
-                (activationMode == author::DesktopFlyoutActivationMode::never_activate
+                (activationMode == author::DesktopFlyoutActivationMode::NeverActivate
                 ? WS_EX_NOACTIVATE
                 : 0),
             c_hostWindowClassName,
@@ -322,7 +322,7 @@ namespace winrt::DesktopFlyouts::detail
         SetWindowLongPtrW(m_islandWindow, GWL_STYLE, WS_CHILD | WS_VISIBLE);
         SetNoActivateStyle(
             m_islandWindow,
-            activationMode == author::DesktopFlyoutActivationMode::never_activate);
+            activationMode == author::DesktopFlyoutActivationMode::NeverActivate);
         SubclassIslandWindow();
     }
 
@@ -369,7 +369,7 @@ namespace winrt::DesktopFlyouts::detail
     void DesktopFlyoutHost::ActivationMode(author::DesktopFlyoutActivationMode value) noexcept
     {
         m_activationMode = value;
-        const auto noActivate = value == author::DesktopFlyoutActivationMode::never_activate;
+        const auto noActivate = value == author::DesktopFlyoutActivationMode::NeverActivate;
         SetNoActivateStyle(m_window, noActivate);
         SetNoActivateStyle(m_islandWindow, noActivate);
     }
@@ -408,7 +408,7 @@ namespace winrt::DesktopFlyouts::detail
         winrt::check_bool(m_window != nullptr);
         winrt::check_bool(m_xamlSource != nullptr);
 
-        const auto flags = (m_activationMode == author::DesktopFlyoutActivationMode::activate)
+        const auto flags = (m_activationMode == author::DesktopFlyoutActivationMode::Activate)
             ? 0U
             : SWP_NOACTIVATE;
 
@@ -446,7 +446,7 @@ namespace winrt::DesktopFlyouts::detail
             return;
         }
 
-        if (activationMode == author::DesktopFlyoutActivationMode::activate)
+        if (activationMode == author::DesktopFlyoutActivationMode::Activate)
         {
             ShowWindow(m_window, SW_SHOW);
             if (m_xamlSource)
@@ -527,7 +527,7 @@ namespace winrt::DesktopFlyouts::detail
         Microsoft::UI::Xaml::Hosting::XamlSourceFocusNavigationReason reason) noexcept
     {
         if (!m_xamlSource || m_islandWindow == nullptr ||
-            m_activationMode == author::DesktopFlyoutActivationMode::never_activate)
+            m_activationMode == author::DesktopFlyoutActivationMode::NeverActivate)
         {
             return false;
         }

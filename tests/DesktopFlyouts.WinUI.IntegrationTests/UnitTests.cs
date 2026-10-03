@@ -20,6 +20,36 @@ public sealed class UnitTests
         await RunBasicChecks(app.TestOwnerWindow);
     }
 
+    [UITestMethod]
+    public async Task LegacyXamlContentDependencyPropertiesAndDataContextWorkAtRuntime()
+    {
+        var app = (App)Microsoft.UI.Xaml.Application.Current;
+        using var flyout = new ApiCompatibilityFlyout
+        {
+            OwnerWindowHandle = app.TestOwnerWindow,
+            IsTransitionAnimationEnabled = false,
+            DataContext = new FlyoutBindingModel("before show"),
+        };
+
+        Ensure(flyout.Placement == DesktopFlyoutPlacementMode.BottomRight,
+            "Legacy PascalCase placement names must be available in XAML.");
+        Ensure(flyout.FlyoutWidth.Value == 360,
+            "A Style Setter must configure FlyoutWidth as a dependency property.");
+        Ensure(flyout.Islands.Count == 1,
+            "A direct DesktopFlyoutIsland child must be added to Islands.");
+
+        flyout.Show();
+        await Task.Delay(100);
+        Ensure(flyout.IsOpen, "The XAML-derived flyout must open.");
+        Ensure(flyout.BoundLabel == "before show", "The initial DataContext must reach island content.");
+
+        flyout.DataContext = new FlyoutBindingModel("after show");
+        await Task.Delay(100);
+        Ensure(flyout.BoundLabel == "after show", "DataContext changes must reach open island content.");
+    }
+
+    private sealed record FlyoutBindingModel(string Label);
+
     private const int MonitorDefaultToNearest = 2;
     private const int PositionTolerancePixels = 4;
     public static async Task RunBasicChecks(nint ownerWindow)

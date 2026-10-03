@@ -44,7 +44,7 @@
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyout" ThreadingModel="both" />
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopMenuFlyout" ThreadingModel="both" />
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.SystemTrayIcon" ThreadingModel="both" />
-                <ActivatableClass ActivatableClassId="DesktopFlyouts.SystemTrayIconEventArgs" ThreadingModel="both" />
+                <ActivatableClass ActivatableClassId="DesktopFlyouts.MouseEventReceivedEventArgs" ThreadingModel="both" />
             </InProcessServer>
         </Extension>
     </Extensions>

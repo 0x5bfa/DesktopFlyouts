@@ -95,8 +95,24 @@ namespace winrt::DesktopFlyouts::author
 
     DesktopMenuFlyout::~DesktopMenuFlyout()
     {
+        try
+        {
+            Close();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void DesktopMenuFlyout::Close(winrt::author::override)
+    {
+        if (m_isClosed)
+        {
+            return;
+        }
         if (!m_native)
         {
+            m_isClosed = true;
             return;
         }
 
@@ -149,6 +165,7 @@ namespace winrt::DesktopFlyouts::author
             DestroyWindow(m_native->window);
         }
         m_native.reset();
+        m_isClosed = true;
     }
 
     std::int64_t DesktopMenuFlyout::OwnerWindowHandle(winrt::author::getter)
@@ -250,6 +267,10 @@ namespace winrt::DesktopFlyouts::author
 
     void DesktopMenuFlyout::Show(Windows::Foundation::Point point)
     {
+        if (m_isClosed || !m_native)
+        {
+            return;
+        }
         ShowAt(
             static_cast<std::int32_t>(std::lround(point.X)),
             static_cast<std::int32_t>(std::lround(point.Y)));
@@ -257,6 +278,10 @@ namespace winrt::DesktopFlyouts::author
 
     void DesktopMenuFlyout::ShowAt(std::int32_t x, std::int32_t y)
     {
+        if (m_isClosed || !m_native)
+        {
+            return;
+        }
         EnsureUiThread(*m_native);
 
         auto owner = m_native->ownerWindow;
@@ -300,6 +325,10 @@ namespace winrt::DesktopFlyouts::author
 
     bool DesktopMenuFlyout::TryPreTranslateMessage(std::int64_t message)
     {
+        if (m_isClosed || !m_native)
+        {
+            return false;
+        }
         EnsureUiThread(*m_native);
         if (!m_native->xamlSource || message == 0)
         {
@@ -365,6 +394,10 @@ namespace winrt::DesktopFlyouts::author
 
     void DesktopMenuFlyout::Hide()
     {
+        if (!m_native)
+        {
+            return;
+        }
         EnsureUiThread(*m_native);
         if (m_menuFlyout)
         {

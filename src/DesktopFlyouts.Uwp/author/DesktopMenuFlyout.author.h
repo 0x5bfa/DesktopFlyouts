@@ -16,11 +16,16 @@ namespace winrt::DesktopFlyouts::author
     struct DesktopMenuFlyout :
         winrt::author::runtimeclass<
             winrt::Windows::UI::Xaml::Controls::ItemsControl,
+            winrt::Windows::Foundation::IClosable,
             winrt::author::internal<winrt::non_agile>>,
+        winrt::author::apply_attr<
+            winrt::author::contentproperty,
+            winrt::author::attr_string{ "Items" }>,
         winrt::author::unsealed
     {
         DesktopMenuFlyout();
         ~DesktopMenuFlyout();
+        void Close(winrt::author::override = {});
 
         std::int64_t OwnerWindowHandle(winrt::author::getter = {});
         winrt::author::setter OwnerWindowHandle(std::int64_t value);
@@ -44,6 +49,7 @@ namespace winrt::DesktopFlyouts::author
         std::int64_t m_ownerWindowHandle{};
         winrt::Windows::UI::Xaml::Controls::MenuFlyout m_menuFlyout{ nullptr };
         std::unique_ptr<DesktopMenuFlyoutNativeState> m_native;
+        bool m_isClosed{};
     };
 }
 

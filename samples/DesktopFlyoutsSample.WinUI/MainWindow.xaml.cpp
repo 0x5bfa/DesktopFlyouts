@@ -37,15 +37,15 @@ namespace
     {
         switch (index)
         {
-        case 0: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::top_left;
-        case 1: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::top_center;
-        case 2: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::top_right;
-        case 3: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::bottom_left;
-        case 4: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::bottom_center;
-        case 5: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::bottom_right;
-        case 6: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::left_center;
-        case 7: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::right_center;
-        default: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::bottom_right;
+        case 0: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::TopLeft;
+        case 1: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::TopCenter;
+        case 2: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::TopRight;
+        case 3: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::BottomLeft;
+        case 4: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::BottomCenter;
+        case 5: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::BottomRight;
+        case 6: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::LeftCenter;
+        case 7: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::RightCenter;
+        default: return winrt::DesktopFlyouts::DesktopFlyoutPlacementMode::BottomRight;
         }
     }
 
@@ -53,13 +53,13 @@ namespace
     {
         switch (index)
         {
-        case 0: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::vertical;
-        case 1: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::bottom_to_top;
-        case 2: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::top_to_bottom;
-        case 3: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::horizontal;
-        case 4: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::left_to_right;
-        case 5: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::right_to_left;
-        default: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::vertical;
+        case 0: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::Vertical;
+        case 1: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::BottomToTop;
+        case 2: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::TopToBottom;
+        case 3: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::Horizontal;
+        case 4: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::LeftToRight;
+        case 5: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::RightToLeft;
+        default: return winrt::DesktopFlyouts::DesktopFlyoutPopupDirection::Vertical;
         }
     }
 }
@@ -164,7 +164,7 @@ namespace winrt::DesktopFlyoutsSample::WinUI::implementation
                 { 0xA4, 0x06, 0x5F, 0x68, 0x55, 0x84, 0xFD, 0x4D } } };
         m_trayLeftToken = m_trayIcon.LeftClicked([this](auto const&, IInspectable const& value)
         {
-            if (auto args = value.try_as<winrt::DesktopFlyouts::SystemTrayIconEventArgs>())
+            if (auto args = value.try_as<winrt::DesktopFlyouts::MouseEventReceivedEventArgs>())
             {
                 const auto point = args.Point();
                 ConfigureSelectedExampleContent();
@@ -174,7 +174,7 @@ namespace winrt::DesktopFlyoutsSample::WinUI::implementation
         });
         m_trayRightToken = m_trayIcon.RightClicked([this](auto const&, IInspectable const& value)
         {
-            if (auto args = value.try_as<winrt::DesktopFlyouts::SystemTrayIconEventArgs>())
+            if (auto args = value.try_as<winrt::DesktopFlyouts::MouseEventReceivedEventArgs>())
             {
                 const auto point = args.Point();
                 m_menuFlyout.ShowAt(
@@ -494,8 +494,8 @@ namespace winrt::DesktopFlyoutsSample::WinUI::implementation
         m_flyout.PressedScale(SwipeCheckBox().IsChecked().GetBoolean() ? 0.96 : 1.0);
         m_flyout.SwipeDismissThreshold(threshold);
         m_flyout.BackdropKind(BackdropKindComboBox().SelectedIndex() == 0
-            ? winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::mica
-            : winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::desktop_acrylic);
+            ? winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::Mica
+            : winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::DesktopAcrylic);
         m_flyout.ActivationMode(static_cast<winrt::DesktopFlyouts::DesktopFlyoutActivationMode>(
             std::clamp(ActivationModeComboBox().SelectedIndex(), 0, 2)));
         m_flyout.Placement(PlacementFromIndex(
@@ -675,8 +675,8 @@ namespace winrt::DesktopFlyoutsSample::WinUI::implementation
         if (m_flyout)
         {
             m_flyout.BackdropKind(BackdropKindComboBox().SelectedIndex() == 0
-                ? winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::mica
-                : winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::desktop_acrylic);
+                ? winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::Mica
+                : winrt::DesktopFlyouts::DesktopFlyoutBackdropKind::DesktopAcrylic);
         }
     }
 
