@@ -23,9 +23,9 @@
     <Applications>
         <Application Id="App"
                      Executable="$targetnametoken$.exe"
-                     EntryPoint="$targetentrypoint$">
+                     EntryPoint="Windows.FullTrustApplication">
             <uap:VisualElements DisplayName="DesktopFlyoutsSample.WinUI"
-                                 Description="DesktopFlyouts native WinUI 3 sample"
+                                 Description="DesktopFlyouts C# Windows App SDK sample"
                                  BackgroundColor="transparent"
                                  Square150x150Logo="Assets\Square150x150Logo.png"
                                  Square44x44Logo="Assets\Square44x44Logo.png">
@@ -42,6 +42,9 @@
             <InProcessServer>
                 <Path>DesktopFlyouts.WinUI.dll</Path>
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyout" ThreadingModel="both" />
+                <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIsland" ThreadingModel="both" />
+                <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIslandTemplateSettings" ThreadingModel="both" />
+                <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIslandsPanel" ThreadingModel="both" />
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopMenuFlyout" ThreadingModel="both" />
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.SystemTrayIcon" ThreadingModel="both" />
                 <ActivatableClass ActivatableClassId="DesktopFlyouts.MouseEventReceivedEventArgs" ThreadingModel="both" />

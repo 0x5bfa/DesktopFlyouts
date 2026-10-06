@@ -8,10 +8,10 @@ using DesktopFlyout = UwpProjection::DesktopFlyouts.DesktopFlyout;
 using DesktopFlyoutIsland = UwpProjection::DesktopFlyouts.DesktopFlyoutIsland;
 using DesktopFlyoutPlacementMode = UwpProjection::DesktopFlyouts.DesktopFlyoutPlacementMode;
 using DesktopFlyoutPopupDirection = UwpProjection::DesktopFlyouts.DesktopFlyoutPopupDirection;
-using FlyoutBorder = UwpProjection::Windows.UI.Xaml.Controls.Border;
-using FlyoutGridLength = UwpProjection::Windows.UI.Xaml.GridLength;
-using FlyoutGridUnitType = UwpProjection::Windows.UI.Xaml.GridUnitType;
-using FlyoutOrientation = UwpProjection::Windows.UI.Xaml.Controls.Orientation;
+using FlyoutBorder = Windows.UI.Xaml.Controls.Border;
+using FlyoutGridLength = Windows.UI.Xaml.GridLength;
+using FlyoutGridUnitType = Windows.UI.Xaml.GridUnitType;
+using FlyoutOrientation = Windows.UI.Xaml.Controls.Orientation;
 
 namespace DesktopFlyouts.Uwp.IntegrationTests;
 

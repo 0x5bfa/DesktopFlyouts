@@ -31,9 +31,16 @@
   </Folder>
 
   <Folder Name="/samples/">
-    <Project Path="samples/DesktopFlyoutsSample.WinUI/DesktopFlyoutsSample.WinUI.vcxproj" Id="bb7b0d92-7b4b-4f4b-9ea2-f3a0cf2d1d4c">
-      <Platform Solution="*|arm64" Project="ARM64" />
+    <Project Path="samples/DesktopFlyoutsSample.WinUI/DesktopFlyoutsSample.WinUI.csproj">
+      <Platform Solution="*|arm64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.vcxproj" />
+      <Deploy />
+    </Project>
+    <Project Path="samples/DesktopFlyoutsSample.Uwp/DesktopFlyoutsSample.Uwp.csproj">
+      <Platform Solution="*|arm64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <BuildDependency Project="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.vcxproj" />
       <Deploy />
     </Project>
   </Folder>

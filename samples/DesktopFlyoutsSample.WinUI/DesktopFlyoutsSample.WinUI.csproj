@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <WindowsSdkPackageVersion>10.0.26100.38</WindowsSdkPackageVersion>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>DesktopFlyoutsSample.WinUI</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;arm64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <BuildInParallel>false</BuildInParallel>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Generated Files\**;x64\**;ARM64\**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+    <Content Include="Assets\*.png" />
+    <Content Include="..\..\$(Platform)\$(Configuration)\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.dll"
+             Link="DesktopFlyouts.WinUI.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.vcxproj"
+                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true">
+      <AdditionalProperties>SolutionDir=$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\'))</AdditionalProperties>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\DesktopFlyouts.WinUI.Projection\DesktopFlyouts.WinUI.Projection.csproj" />
+  </ItemGroup>
+</Project>

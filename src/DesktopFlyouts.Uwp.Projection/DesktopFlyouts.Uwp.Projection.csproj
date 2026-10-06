@@ -5,7 +5,9 @@
 		<TargetFramework>net10.0-windows$(WindowsSdkReferenceVersion)</TargetFramework>
 		<Platforms>x64;arm64</Platforms>
 		<PlatformTarget>AnyCPU</PlatformTarget>
-		<CsWinRTIncludes>DesktopFlyouts;Windows.UI.Xaml</CsWinRTIncludes>
+		<UseUwp>true</UseUwp>
+		<DefaultLanguage>en-US</DefaultLanguage>
+		<CsWinRTIncludes>DesktopFlyouts</CsWinRTIncludes>
 		<NoWarn>$(NoWarn);CS0108;CS0436</NoWarn>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>

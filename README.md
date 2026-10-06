@@ -9,7 +9,9 @@ You can consume this project via NuGet. Use NuGet Package Manager or run the fol
 
 ### WinUI for UWP (UWP/WinUI2)
 
-The UWP version of sample app is currently under development. Recommend to use WinUI 3
+For .NET 10 applications, set `<UseUwp>true</UseUwp>` in the application project.
+The library uses the SDK's `Windows.UI.Xaml` projection so that XAML controls have
+the same managed types in the application and the library.
 
 <a style="text-decoration:none" href="https://www.nuget.org/packages/DesktopFlyouts.Uwp"><img src="https://img.shields.io/nuget/v/DesktopFlyouts.Uwp" alt="NuGet badge" /></a>
 
@@ -83,12 +85,38 @@ if (_desktopMenuFlyout.IsOpen)
 _desktopMenuFlyout.Show(e.Point);
 ```
 
+## C# sample apps
+
+Both samples use the library's C# projection and share their flyout examples:
+
+- [Windows App SDK / WinUI 3](samples/DesktopFlyoutsSample.WinUI/DesktopFlyoutsSample.WinUI.csproj)
+- [UWP](samples/DesktopFlyoutsSample.Uwp/DesktopFlyoutsSample.Uwp.csproj)
+
+Open `DesktopFlyouts.slnx`, select either sample as the startup project, and run it with
+the `x64` or `arm64` platform. Both demonstrate eight content examples, placement,
+popup direction, activation, backdrops, swipe dismissal, auto-close, islands, menus,
+and tray icons. The UWP sample uses .NET 10's UWP support and hosts `Windows.UI.Xaml`
+in a desktop window through XAML Islands, as required by the desktop flyout component.
+Its numeric settings use standard UWP text boxes instead of WinUI 3's `NumberBox`.
+
+With WinApp CLI installed, the scripts build with Visual Studio MSBuild and launch
+the packaged app:
+
+```powershell
+.\samples\DesktopFlyoutsSample.WinUI\Run-DesktopFlyoutsSample.ps1
+.\samples\DesktopFlyoutsSample.Uwp\Run-DesktopFlyoutsSample.ps1
+```
+
+Each script accepts `-Configuration Debug|Release` and `-Platform x64|arm64`.
+Use Visual Studio MSBuild when building from the command line because the samples
+reference the native C++ projects as well as the managed projections.
+
 ## Building from the source
 
 1. Prerequisites
     - Windows 10 (Build 10.0.17763.0) onwards and Windows 11
-    - Visual Studio 2022
-    - .NET 9/10 SDK
+    - Visual Studio 2026 with C++ desktop and Windows application development tools
+    - .NET 10 SDK
 2. Clone the repo
 3. Open the solution
 4. Build the solution

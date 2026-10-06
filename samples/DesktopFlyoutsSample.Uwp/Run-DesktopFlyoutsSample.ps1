@@ -7,7 +7,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$project = Join-Path $PSScriptRoot 'DesktopFlyoutsSample.WinUI.csproj'
+$project = Join-Path $PSScriptRoot 'DesktopFlyoutsSample.Uwp.csproj'
 $msbuild = 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe'
 & $msbuild $project /restore /t:Build "/p:Configuration=$Configuration" "/p:Platform=$Platform" /m /v:minimal
 if ($LASTEXITCODE -ne 0) { throw "Sample build failed with exit code $LASTEXITCODE." }

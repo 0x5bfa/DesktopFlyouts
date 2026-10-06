@@ -12,6 +12,16 @@ public sealed class ProjectionTests
         Assert.ThrowsExactly<ArgumentNullException>(() => SystemTrayIconExtensions.SetIcon(null!, nint.Zero));
     }
 
+    [TestMethod]
+    public void FlyoutUsesThePlatformXamlProjection()
+    {
+        Assert.AreEqual(typeof(Windows.UI.Xaml.UIElement),
+            typeof(DesktopFlyout).GetProperty(nameof(DesktopFlyout.Content))!.PropertyType);
+        Assert.IsTrue(typeof(Windows.UI.Xaml.Controls.Control).IsAssignableFrom(typeof(DesktopFlyout)));
+        Assert.AreEqual(typeof(Windows.UI.Xaml.GridLength),
+            typeof(DesktopFlyout).GetProperty(nameof(DesktopFlyout.FlyoutWidth))!.PropertyType);
+    }
+
     // This method is a real C# consumer compile fixture. Building the test assembly
     // verifies the generated UWP projection supports these normal call patterns.
     private static void CompileTypicalConsumerUsage(
@@ -32,6 +42,7 @@ public sealed class ProjectionTests
         }
 
         flyout.HideOnLostFocus = !flyout.HideOnLostFocus;
+        flyout.Content = new Windows.UI.Xaml.Controls.Border();
         flyout.Placement = flyout.Placement;
         _ = flyout.State;
         flyout.Hide();
