@@ -1,111 +1,140 @@
 # Copyright (c) 0x5BFA. All rights reserved.
 # Licensed under the MIT license.
 
-name: DesktopFlyouts CI
+name: CI
 
 on:
   push:
     branches:
       - main
     paths-ignore:
-      - '.github/assets/**'
       - 'docs/**'
       - '*.md'
   pull_request:
     paths-ignore:
-      - '.github/assets/**'
       - 'docs/**'
       - '*.md'
 
-run-name: ${{ github.event_name == 'pull_request' && 'DesktopFlyouts PR Validation' || 'DesktopFlyouts CI Validation' }}
+run-name: ${{ github.event_name == 'pull_request' && 'PR validation' || 'CI validation' }}
 
 env:
-  WORKING_DIR:           '${{ github.workspace }}' # 'D:\a\DesktopFlyouts\DesktopFlyouts'
-  SOLUTION_PATH:         '${{ github.workspace }}\DesktopFlyouts.slnx'
-  WASDK_APP_PROJ_PATH:   '${{ github.workspace }}\samples\DesktopFlyouts.Wasdk.Sample.App\DesktopFlyouts.Wasdk.Sample.App.csproj'
-  UWP_APP_PROJ_PATH:     '${{ github.workspace }}\samples\DesktopFlyouts.Uwp.Sample.App\DesktopFlyouts.Uwp.Sample.App.csproj'
-  UNO_APP_PROJ_PATH:     '${{ github.workspace }}\samples\DesktopFlyouts.Uno.Sample.App\DesktopFlyouts.Uno.Sample.App.csproj'
+  SOLUTION_PATH: 'DesktopFlyouts.slnx'
 
 jobs:
-  build-wasdk:
+  x64:
     runs-on: windows-2025-vs2026
     strategy:
       fail-fast: false
       matrix:
         configuration: [Debug, Release]
-        platform: [x64, ARM64]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
-      PLATFORM: ${{ matrix.platform }}
 
     steps:
-    - name: Checkout the repository
+    - name: Checkout repository
       uses: actions/checkout@v6
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v3
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: |
-          9.0.x
-          10.0.x
 
-    - name: Build the sample app
-      run: msbuild /restore $env:WASDK_APP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:AppxBundle=Never
+    - name: Add VSTest to PATH
+      shell: pwsh
+      run: |
+        $vstest = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
+        if (-not $vstest) { throw 'VSTest.Console.exe was not found in the Visual Studio installation.' }
+        Split-Path -Parent $vstest | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-  build-uwp:
-    runs-on: windows-2025-vs2026
+    - name: Build solution
+      run: msbuild /restore $env:SOLUTION_PATH /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=x64 /m
+
+    - name: Run C++ unit tests
+      shell: pwsh
+      run: |
+        vstest.console.exe ".\x64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" ".\x64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" /Platform:x64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Run C# projection unit tests
+      shell: pwsh
+      run: |
+        dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Run UWP runtime integration tests
+      if: matrix.configuration == 'Debug'
+      shell: pwsh
+      run: |
+        $recipe = ".\tests\DesktopFlyouts.Uwp.IntegrationTests\bin\x64\$env:CONFIGURATION\net10.0-windows10.0.26100.0\DesktopFlyouts.Uwp.IntegrationTests.build.appxrecipe"
+        if (-not (Test-Path -LiteralPath $recipe)) { throw "UWP test recipe was not found: $recipe" }
+        & vstest.console.exe $recipe /Platform:x64 /Framework:frameworkuap10
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Run WinUI runtime integration tests
+      if: matrix.configuration == 'Debug'
+      shell: pwsh
+      run: |
+        $recipe = ".\tests\DesktopFlyouts.WinUI.IntegrationTests\bin\x64\$env:CONFIGURATION\net10.0-windows10.0.26100.0\DesktopFlyouts.WinUI.IntegrationTests.build.appxrecipe"
+        if (-not (Test-Path -LiteralPath $recipe)) { throw "WinUI test recipe was not found: $recipe" }
+        & vstest.console.exe $recipe /Platform:x64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  arm64:
+    runs-on: windows-11-vs2026-arm
     strategy:
       fail-fast: false
       matrix:
         configuration: [Debug, Release]
-        platform: [x64, ARM64]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
-      PLATFORM: ${{ matrix.platform }}
 
     steps:
-    - name: Checkout the repository
+    - name: Checkout repository
       uses: actions/checkout@v6
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v3
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: |
-          9.0.x
-          10.0.x
 
-    - name: Build the sample app
-      run: msbuild /restore $env:UWP_APP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:AppxBundle=Never
+    - name: Add VSTest to PATH
+      shell: pwsh
+      run: |
+        $vstest = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -find 'Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' | Select-Object -First 1
+        if (-not $vstest) { throw 'VSTest.Console.exe was not found in the Visual Studio installation.' }
+        Split-Path -Parent $vstest | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-  build-uno:
-    runs-on: windows-2025-vs2026
-    strategy:
-      fail-fast: false
-      matrix:
-        configuration: [Debug, Release]
-        platform: [x64, arm64] # requires lowercase for Uno
-    env:
-      CONFIGURATION: ${{ matrix.configuration }}
-      PLATFORM: ${{ matrix.platform }}
+    - name: Build solution
+      run: msbuild /restore $env:SOLUTION_PATH /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=arm64 /m
 
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v6
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: |
-          9.0.x
-          10.0.x
+    - name: Run C++ unit tests
+      shell: pwsh
+      run: |
+        vstest.console.exe ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.WinUI.Tests.dll" ".\ARM64\$env:CONFIGURATION\DesktopFlyouts.Uwp.Tests.dll" /Platform:ARM64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-    - name: Restore the sample app
-      run: dotnet restore $env:UNO_APP_PROJ_PATH
+    - name: Run C# projection unit tests
+      shell: pwsh
+      run: |
+        dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-    - name: Build the sample app
-      run: dotnet build $env:UNO_APP_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM --no-restore
+    - name: Run UWP runtime integration tests
+      if: matrix.configuration == 'Debug'
+      shell: pwsh
+      run: |
+        $recipe = ".\tests\DesktopFlyouts.Uwp.IntegrationTests\bin\arm64\$env:CONFIGURATION\net10.0-windows10.0.26100.0\DesktopFlyouts.Uwp.IntegrationTests.build.appxrecipe"
+        if (-not (Test-Path -LiteralPath $recipe)) { throw "UWP test recipe was not found: $recipe" }
+        & vstest.console.exe $recipe /Platform:ARM64 /Framework:frameworkuap10
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Run WinUI runtime integration tests
+      if: matrix.configuration == 'Debug'
+      shell: pwsh
+      run: |
+        $recipe = ".\tests\DesktopFlyouts.WinUI.IntegrationTests\bin\arm64\$env:CONFIGURATION\net10.0-windows10.0.26100.0\DesktopFlyouts.WinUI.IntegrationTests.build.appxrecipe"
+        if (-not (Test-Path -LiteralPath $recipe)) { throw "WinUI test recipe was not found: $recipe" }
+        & vstest.console.exe $recipe /Platform:ARM64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

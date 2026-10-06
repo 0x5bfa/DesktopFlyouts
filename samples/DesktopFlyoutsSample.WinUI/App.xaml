@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="DesktopFlyoutsSample.WinUI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DesktopFlyoutsSample.WinUI">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Default">
+                            <SolidColorBrush x:Key="FlyoutOverlayBackgroundBrush">#09FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush">#33FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="FlyoutSeparatorPrimaryBackgroundBrush">#15FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="FlyoutSeparatorSecondaryBackgroundBrush">#18000000</SolidColorBrush>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="FlyoutOverlayBackgroundBrush">#40FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush">#26000000</SolidColorBrush>
+                            <SolidColorBrush x:Key="FlyoutSeparatorPrimaryBackgroundBrush">#0F000000</SolidColorBrush>
+                            <SolidColorBrush x:Key="FlyoutSeparatorSecondaryBackgroundBrush">#10000000</SolidColorBrush>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Dark">
+                            <SolidColorBrush x:Key="FlyoutOverlayBackgroundBrush">#09FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush">#33FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="FlyoutSeparatorPrimaryBackgroundBrush">#15FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="FlyoutSeparatorSecondaryBackgroundBrush">#18000000</SolidColorBrush>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="HighContrast">
+                            <SolidColorBrush x:Key="FlyoutOverlayBackgroundBrush">#09FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush">#FFFFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="FlyoutSeparatorPrimaryBackgroundBrush">#15FFFFFF</SolidColorBrush>
+                            <SolidColorBrush x:Key="FlyoutSeparatorSecondaryBackgroundBrush">#18000000</SolidColorBrush>
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

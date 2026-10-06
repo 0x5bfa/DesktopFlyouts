@@ -121,10 +121,10 @@ The Windows App SDK package can apply backdrops to flyout islands.
 ```xml
 <desktop:DesktopFlyout
     IsBackdropEnabled="True"
-    BackdropKind="Acrylic" />
+    BackdropKind="DesktopAcrylic" />
 ```
 
-`BackdropKind` can be `Acrylic` or `Mica`. UWP builds keep the same API surface, but do not create a Windows App SDK system backdrop.
+`BackdropKind` can be `DesktopAcrylic` or `Mica`. UWP builds keep the same API surface, but do not create a Windows App SDK system backdrop.
 
 ## Lifetime
 
