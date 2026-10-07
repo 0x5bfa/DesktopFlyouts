@@ -87,29 +87,36 @@ _desktopMenuFlyout.Show(e.Point);
 
 ## C# sample apps
 
-Both samples use the library's C# projection and share their flyout examples:
+The original C# samples have separate XAML views and code-behind for each platform:
 
-- [Windows App SDK / WinUI 3](samples/DesktopFlyoutsSample.WinUI/DesktopFlyoutsSample.WinUI.csproj)
-- [UWP](samples/DesktopFlyoutsSample.Uwp/DesktopFlyoutsSample.Uwp.csproj)
+- [Windows App SDK / WinUI 3](samples/DesktopFlyouts.Wasdk.Sample.App/DesktopFlyouts.Wasdk.Sample.App.csproj): eight flyout examples, settings, menus, and a tray icon.
+- [UWP tray host](samples/DesktopFlyouts.Uwp.Sample.TrayHost/DesktopFlyouts.Uwp.Sample.TrayHost.csproj): a desktop process hosting Windows.UI.Xaml through XAML Islands.
+- [UWP secondary app](samples/DesktopFlyouts.Uwp.Sample.App/DesktopFlyouts.Uwp.Sample.App.csproj): opened from the tray menu using the sample protocol.
+- [UWP packaging project](samples/DesktopFlyouts.Uwp.Sample.Packaging/DesktopFlyouts.Uwp.Sample.Packaging.wapproj): packages the tray host and secondary app together.
 
-Open `DesktopFlyouts.slnx`, select either sample as the startup project, and run it with
-the `x64` or `arm64` platform. Both demonstrate eight content examples, placement,
-popup direction, activation, backdrops, swipe dismissal, auto-close, islands, menus,
-and tray icons. The UWP sample uses .NET 10's UWP support and hosts `Windows.UI.Xaml`
-in a desktop window through XAML Islands, as required by the desktop flyout component.
-Its numeric settings use standard UWP text boxes instead of WinUI 3's `NumberBox`.
+Open `DesktopFlyouts.slnx` and use the `x64` or `arm64` platform. Set
+`DesktopFlyouts.Wasdk.Sample.App` or `DesktopFlyouts.Uwp.Sample.Packaging` as the
+startup project. In the UWP sample, left-click the tray icon to toggle the flyout,
+or right-click it to open the menu. Choose **Devices** to open the secondary app.
 
-With WinApp CLI installed, the scripts build with Visual Studio MSBuild and launch
-the packaged app:
+Build from the command line with Visual Studio MSBuild, because the solution
+includes native C++ projects and a Windows Application Packaging Project:
 
 ```powershell
-.\samples\DesktopFlyoutsSample.WinUI\Run-DesktopFlyoutsSample.ps1
-.\samples\DesktopFlyoutsSample.Uwp\Run-DesktopFlyoutsSample.ps1
+& 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe' DesktopFlyouts.slnx /restore /t:Build /p:Configuration=Debug /p:Platform=x64 /m
 ```
 
-Each script accepts `-Configuration Debug|Release` and `-Platform x64|arm64`.
-Use Visual Studio MSBuild when building from the command line because the samples
-reference the native C++ projects as well as the managed projections.
+With WinApp CLI installed, launch the built WASDK sample:
+
+```powershell
+winapp run samples\DesktopFlyouts.Wasdk.Sample.App\DesktopFlyouts.Wasdk.Sample.App.csproj -c Debug --arch x64 -p Platform=x64 --no-build --detach
+```
+
+Launch the built UWP package from its layout directory:
+
+```powershell
+winapp run samples\DesktopFlyouts.Uwp.Sample.Packaging\bin\x64\Debug --manifest samples\DesktopFlyouts.Uwp.Sample.Packaging\bin\x64\Debug\AppxManifest.xml --exe DesktopFlyouts.Uwp.Sample.TrayHost\DesktopFlyouts.Uwp.Sample.TrayHost.exe --detach
+```
 
 ## Building from the source
 

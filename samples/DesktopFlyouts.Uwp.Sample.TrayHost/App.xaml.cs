@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using System;
+using System.IO;
 using System.Threading;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -24,7 +25,7 @@ namespace DesktopFlyouts
 			PInvoke.RoInitialize(RO_INIT_TYPE.RO_INIT_SINGLETHREADED);
 
 			_systemTrayIcon = new(
-				"Tray.ico",
+				Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, "Tray.ico"),
 				"DesktopFlyouts sample app (UWP)",
 				new("022F5158-F05A-4FE1-B356-34F14B363625"));
 
@@ -33,12 +34,15 @@ namespace DesktopFlyouts
 			_systemTrayIcon.Show();
 
 			// Initialize XAML Island
-			WindowsXamlManager.InitializeForCurrentThread();
+			using var xamlManager = WindowsXamlManager.InitializeForCurrentThread();
+			InitializeComponent();
+			Resources = new AppResources();
 			SynchronizationContext.SetSynchronizationContext(new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
 
 			// Initialize XAML flyouts
 			_desktopFlyout = new MainDesktopFlyout();
 			_desktopMenuFlyout = new MainDesktopMenuFlyout();
+
 
 			MSG msg;
 			while (PInvoke.GetMessage(&msg, HWND.Null, 0U, 0U))

@@ -40,4 +40,18 @@
 	<Capabilities>
 		<rescap:Capability Name="runFullTrust" />
 	</Capabilities>
+  <Extensions>
+    <Extension Category="windows.activatableClass.inProcessServer">
+      <InProcessServer>
+        <Path>DesktopFlyouts.WinUI.dll</Path>
+        <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyout" ThreadingModel="both" />
+        <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIsland" ThreadingModel="both" />
+        <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIslandTemplateSettings" ThreadingModel="both" />
+        <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopFlyoutIslandsPanel" ThreadingModel="both" />
+        <ActivatableClass ActivatableClassId="DesktopFlyouts.DesktopMenuFlyout" ThreadingModel="both" />
+        <ActivatableClass ActivatableClassId="DesktopFlyouts.SystemTrayIcon" ThreadingModel="both" />
+        <ActivatableClass ActivatableClassId="DesktopFlyouts.MouseEventReceivedEventArgs" ThreadingModel="both" />
+      </InProcessServer>
+    </Extension>
+  </Extensions>
 </Package>

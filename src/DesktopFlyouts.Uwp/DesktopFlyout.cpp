@@ -102,6 +102,31 @@ namespace
         return { 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
     }
 
+    void CopyResources(
+        winrt::Windows::UI::Xaml::ResourceDictionary const& source,
+        winrt::Windows::UI::Xaml::ResourceDictionary const& target)
+    {
+        target.Clear();
+        for (auto const& entry : source)
+        {
+            target.Insert(entry.Key(), entry.Value());
+        }
+        target.ThemeDictionaries().Clear();
+        for (auto const& entry : source.ThemeDictionaries())
+        {
+            auto dictionary = winrt::Windows::UI::Xaml::ResourceDictionary{};
+            CopyResources(entry.Value().as<winrt::Windows::UI::Xaml::ResourceDictionary>(), dictionary);
+            target.ThemeDictionaries().Insert(entry.Key(), dictionary);
+        }
+        target.MergedDictionaries().Clear();
+        for (auto const& merged : source.MergedDictionaries())
+        {
+            auto dictionary = winrt::Windows::UI::Xaml::ResourceDictionary{};
+            CopyResources(merged, dictionary);
+            target.MergedDictionaries().Append(dictionary);
+        }
+    }
+
     double ResolveFlyoutLength(
         winrt::Windows::UI::Xaml::GridLength length,
         double available,
@@ -153,7 +178,9 @@ namespace winrt::DesktopFlyouts::author
         : m_templateSettings(
             winrt::make<winrt::DesktopFlyouts::implementation::DesktopFlyoutIslandTemplateSettings>())
     {
-        self(this)->DefaultStyleKey(winrt::box_value(L"DesktopFlyouts.DesktopFlyoutIsland"));
+        self(this)->DefaultStyleKey(winrt::box_value(L"Windows.UI.Xaml.Controls.ContentControl"));
+        self(this)->HorizontalContentAlignment(Windows::UI::Xaml::HorizontalAlignment::Stretch);
+        self(this)->VerticalContentAlignment(Windows::UI::Xaml::VerticalAlignment::Stretch);
         m_cornerRadiusToken = self(this)->RegisterPropertyChangedCallback(
             Windows::UI::Xaml::Controls::Control::CornerRadiusProperty(),
             [this](auto const&, auto const&)
@@ -735,6 +762,14 @@ namespace winrt::DesktopFlyouts::author
                 m_native->host.ConfigureAutoCloseTimer(m_autoCloseDelay);
             }
         });
+        RegisterDependencyPropertyChangedCallback(Windows::UI::Xaml::FrameworkElement::WidthProperty(), [this]
+        {
+            UpdateFlyoutLayout();
+        });
+        RegisterDependencyPropertyChangedCallback(Windows::UI::Xaml::FrameworkElement::HeightProperty(), [this]
+        {
+            UpdateFlyoutLayout();
+        });
         RegisterDependencyPropertyChangedCallback(Windows::UI::Xaml::FrameworkElement::DataContextProperty(), [this]
         {
             if (m_native && m_native->panel)
@@ -1011,6 +1046,7 @@ namespace winrt::DesktopFlyouts::author
             m_native->panel = winrt::DesktopFlyouts::DesktopFlyoutIslandsPanel{};
         }
         m_native->panel.DataContext(self(this)->DataContext());
+        CopyResources(self(this)->Resources(), m_native->panel.Resources());
         m_native->panel.Orientation(m_islandsOrientation);
         m_native->panel.Spacing(static_cast<double>(m_islandSpacing));
         auto children = m_native->panel.Children();
@@ -1052,8 +1088,14 @@ namespace winrt::DesktopFlyouts::author
         const auto workHeightDip = std::max(1.0, (workArea.bottom - workArea.top) / scale);
         m_native->panel.Measure({ static_cast<float>(workWidthDip), static_cast<float>(workHeightDip) });
         const auto desired = m_native->panel.DesiredSize();
-        const auto widthDip = ResolveFlyoutLength(m_flyoutWidth, workWidthDip, std::max(1.0f, desired.Width));
-        const auto heightDip = ResolveFlyoutLength(m_flyoutHeight, workHeightDip, std::max(1.0f, desired.Height));
+        const auto explicitWidth = self(this)->Width();
+        const auto explicitHeight = self(this)->Height();
+        const auto widthDip = m_flyoutWidth.GridUnitType == Windows::UI::Xaml::GridUnitType::Auto && std::isfinite(explicitWidth)
+            ? explicitWidth
+            : ResolveFlyoutLength(m_flyoutWidth, workWidthDip, std::max(1.0f, desired.Width));
+        const auto heightDip = m_flyoutHeight.GridUnitType == Windows::UI::Xaml::GridUnitType::Auto && std::isfinite(explicitHeight)
+            ? explicitHeight
+            : ResolveFlyoutLength(m_flyoutHeight, workHeightDip, std::max(1.0f, desired.Height));
         const auto width = std::max(1, static_cast<int>(std::ceil(widthDip * scale)));
         const auto height = std::max(1, static_cast<int>(std::ceil(heightDip * scale)));
         const auto margin = self(this)->Margin();

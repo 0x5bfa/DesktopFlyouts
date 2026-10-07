@@ -17,9 +17,10 @@ and C# projections. Its public ABI is authored for IdlGen 2.0.
 - `src/DesktopFlyouts.WinUI`: Windows App SDK / WinUI 3 component and host adapters.
 - `src/DesktopFlyouts.Uwp`: UWP component and host adapters.
 - `src/DesktopFlyouts.WinUI.Projection` and `src/DesktopFlyouts.Uwp.Projection`: C# projections.
-- `samples/DesktopFlyoutsSample.WinUI`: packaged C# Windows App SDK sample.
-- `samples/DesktopFlyoutsSample.Uwp`: packaged C# UWP sample.
-- `samples/Shared`: common C# sample interaction and content code.
+- `samples/DesktopFlyouts.Wasdk.Sample.App`: packaged C# Windows App SDK sample.
+- `samples/DesktopFlyouts.Uwp.Sample.TrayHost`: C# desktop tray host using UWP XAML Islands.
+- `samples/DesktopFlyouts.Uwp.Sample.App`: UWP secondary app opened from the tray menu.
+- `samples/DesktopFlyouts.Uwp.Sample.Packaging`: packaging project for both UWP processes.
 - `tests`: native unit tests, C# projection checks, and packaged runtime integration tests.
 
 See the [sample instructions](../README.md#c-sample-apps) for building and running either sample.
