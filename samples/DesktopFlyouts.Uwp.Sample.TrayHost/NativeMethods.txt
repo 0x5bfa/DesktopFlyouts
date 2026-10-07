@@ -1,0 +1,4 @@
+GetMessage
+TranslateMessage
+DispatchMessage
+RoInitialize

@@ -1,0 +1,43 @@
+<Package
+	xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+	xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+	xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+	xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+	IgnorableNamespaces="uap rescap">
+
+	<Identity Name="d6120692-1c26-4251-b686-e2321694e3b0" Publisher="CN=0x5BFA" Version="1.0.0.0" />
+
+	<Properties>
+		<DisplayName>DesktopFlyouts sample app (WASDK)</DisplayName>
+		<PublisherDisplayName>0x5BFA</PublisherDisplayName>
+		<Logo>Assets\StoreLogo.png</Logo>
+	</Properties>
+
+	<Dependencies>
+		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+	</Dependencies>
+
+	<Resources>
+		<Resource Language="x-generate"/>
+	</Resources>
+
+	<Applications>
+		<Application Id="App"
+			Executable="$targetnametoken$.exe"
+			EntryPoint="$targetentrypoint$">
+			<uap:VisualElements
+				DisplayName="DF sample app (WASDK)"
+				Description="DesktopFlyouts sample app (WASDK)"
+				BackgroundColor="transparent"
+				Square150x150Logo="Assets\Square150x150Logo.png"
+				Square44x44Logo="Assets\Square44x44Logo.png">
+				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"  Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
+				<uap:SplashScreen Image="Assets\SplashScreen.png" />
+			</uap:VisualElements>
+		</Application>
+	</Applications>
+
+	<Capabilities>
+		<rescap:Capability Name="runFullTrust" />
+	</Capabilities>
+</Package>

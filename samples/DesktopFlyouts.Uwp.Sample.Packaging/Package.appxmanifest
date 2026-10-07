@@ -1,0 +1,48 @@
+<Package
+	xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+	xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+	xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+	xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+	IgnorableNamespaces="uap mp">
+
+	<Identity Name="5270f1ab-c78a-4f29-a964-3886d725e183" Publisher="CN=0x5BFA" Version="1.0.0.0" />
+
+	<mp:PhoneIdentity PhoneProductId="5270f1ab-c78a-4f29-a964-3886d725e183" PhonePublisherId="5270f1ab-c78a-4f29-a964-3886d725e183"/>
+
+	<Properties>
+		<DisplayName>DesktopFlyouts sample app (UWP)</DisplayName>
+		<PublisherDisplayName>0x5BFA</PublisherDisplayName>
+		<Logo>Assets\StoreLogo.png</Logo>
+	</Properties>
+
+	<Dependencies>
+		<TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+	</Dependencies>
+
+	<Resources>
+		<Resource Language="x-generate"/>
+	</Resources>
+
+	<Applications>
+		<Application Id="App" Executable="DesktopFlyouts.Uwp.Sample.TrayHost\DesktopFlyouts.Uwp.Sample.TrayHost.exe" EntryPoint="Windows.FullTrustApplication">
+			<uap:VisualElements DisplayName="DF sample app (UWP)" Description="DesktopFlyouts sample app (UWP)" BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
+				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+				<uap:SplashScreen Image="Assets\SplashScreen.png" />
+			</uap:VisualElements>
+
+			<Extensions>
+				<uap:Extension Category="windows.protocol" Executable="DesktopFlyouts.Uwp.Sample.App\DesktopFlyouts.Uwp.Sample.App.exe" EntryPoint="App2">
+					<uap:Protocol Name="tif-secondaryapp">
+						<uap:DisplayName>TIF</uap:DisplayName>
+					</uap:Protocol>
+				</uap:Extension>
+			</Extensions>
+
+		</Application>
+	</Applications>
+
+	<Capabilities>
+		<rescap:Capability Name="runFullTrust" />
+	</Capabilities>
+
+</Package>

@@ -1,0 +1,41 @@
+<local:DesktopFlyout
+    x:Class="DesktopFlyouts.StickySmallFlyout"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:DesktopFlyouts"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    FlyoutWidth="360"
+    mc:Ignorable="d">
+
+    <local:DesktopFlyout.Islands>
+        <local:DesktopFlyoutIsland IslandHeight="260">
+            <Grid Padding="18" RowSpacing="14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Compact flyout" />
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Single island layout" />
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Row="1"
+                    VerticalAlignment="Center"
+                    Spacing="8">
+                    <ToggleSwitch Header="Sync status" IsOn="True" />
+                    <ProgressBar Value="64" />
+                </StackPanel>
+
+                <Button
+                    Grid.Row="2"
+                    HorizontalAlignment="Right"
+                    Content="Done" />
+            </Grid>
+        </local:DesktopFlyoutIsland>
+    </local:DesktopFlyout.Islands>
+
+</local:DesktopFlyout>
