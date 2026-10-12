@@ -28,7 +28,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.csproj" />
+		<ProjectReference Include="..\..\src\DesktopFlyouts.WinUI.Projection\DesktopFlyouts.WinUI.Projection.csproj" />
 	</ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\$(Platform)\$(Configuration)\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.dll"
+             Link="DesktopFlyouts.WinUI.dll" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\..\src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.vcxproj"
+                      Condition="'$(BuildingSolutionFile)' != 'true'"
+                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true">
+      <AdditionalProperties>SolutionDir=$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\'))\</AdditionalProperties>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

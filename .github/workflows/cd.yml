@@ -5,23 +5,26 @@ name: DesktopFlyouts CD
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: Package version to publish to NuGet.org (for example, 2.0.0).
+        required: true
+        type: string
 
-env:
-  WORKING_DIR:         '${{ github.workspace }}' # 'D:\a\DesktopFlyouts\DesktopFlyouts'
-  WASDK_APP_PROJ_PATH: '${{ github.workspace }}\src\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.csproj'
-  UWP_APP_PROJ_PATH:   '${{ github.workspace }}\src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.csproj'
-  UNO_LIB_PROJ_PATH:  '${{ github.workspace }}\src\DesktopFlyouts.Uno\DesktopFlyouts.Uno.csproj'
-  OUTPUT_DIR:          '${{ github.workspace }}\artifacts'
+permissions:
+  contents: read
 
 jobs:
-  build-pack-publish:
+  build-and-release:
     runs-on: windows-2025-vs2026
+    permissions:
+      contents: write
     env:
-      CONFIGURATION: 'Release'
-      PLATFORM: 'x64'
+      CONFIGURATION: Release
+      PACKAGE_VERSION: ${{ inputs.version }}
 
     steps:
-    - name: Checkout the repository
+    - name: Checkout repository
       uses: actions/checkout@v6
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v3
@@ -30,28 +33,45 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: |
-          9.0.x
-          10.0.x
+        dotnet-version: 10.0.x
 
-    - name: Pack the project (WASDK)
-      run: dotnet build $env:WASDK_APP_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM -o $env:OUTPUT_DIR
+    - name: Build Release x64
+      run: msbuild DesktopFlyouts.slnx /restore /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=x64 /m
 
-    - name: Pack the project (UWP)
-      run: dotnet build $env:UWP_APP_PROJ_PATH   -c $env:CONFIGURATION -a $env:PLATFORM -o $env:OUTPUT_DIR
+    - name: Build Release ARM64
+      run: msbuild DesktopFlyouts.slnx /restore /t:Build /p:Configuration=$env:CONFIGURATION /p:Platform=arm64 /m
 
-    - name: Pack the project (Uno)
-      run: dotnet build $env:UNO_LIB_PROJ_PATH   -c $env:CONFIGURATION -a $env:PLATFORM -o $env:OUTPUT_DIR
+    - name: Pack NuGet packages
+      shell: pwsh
+      run: |
+        $packageOutputPath = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+        dotnet pack src/DesktopFlyouts.Uwp.Projection/DesktopFlyouts.Uwp.Projection.csproj -c $env:CONFIGURATION --no-build --no-restore -p:Platform=x64 -p:Version=$env:PACKAGE_VERSION "-p:PackageOutputPath=$packageOutputPath"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        dotnet pack src/DesktopFlyouts.WinUI.Projection/DesktopFlyouts.WinUI.Projection.csproj -c $env:CONFIGURATION --no-build --no-restore -p:Platform=x64 -p:Version=$env:PACKAGE_VERSION "-p:PackageOutputPath=$packageOutputPath"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-    - name: Upload nupkg artifacts
+    - name: Verify package artifacts
+      shell: pwsh
+      run: |
+        $packages = @(Get-ChildItem -Path artifacts -Filter '*.nupkg' -File)
+        if ($packages.Count -ne 2) { throw "Expected two NuGet packages, found $($packages.Count)." }
+        $packages | ForEach-Object { Write-Host $_.Name }
+
+    - name: Upload NuGet artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: NuPkg artifacts
-        path: |
-          ${{ env.OUTPUT_DIR }}\*.nupkg
-          ${{ env.OUTPUT_DIR }}\*.snupkg
+        name: NuGet packages ${{ env.PACKAGE_VERSION }}
+        path: artifacts/*.nupkg
+        if-no-files-found: error
+        retention-days: 30
 
     - name: Publish to NuGet.org
+      shell: pwsh
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
       run: |
-        dotnet nuget push ${{ env.OUTPUT_DIR }}\*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json  --skip-duplicate
-        dotnet nuget push ${{ env.OUTPUT_DIR }}\*.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        if (-not $env:NUGET_API_KEY) { throw 'Configure the NUGET_API_KEY repository secret before manually publishing.' }
+        Get-ChildItem -Path artifacts -Filter '*.nupkg' -File | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }

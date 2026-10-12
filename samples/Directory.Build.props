@@ -1,0 +1,16 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>preview</LangVersion>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
+    <PublishAot>true</PublishAot>
+    <AotCompatible>true</AotCompatible>
+    <Platforms>x64;arm64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'arm64'">win-arm64</RuntimeIdentifier>
+  </PropertyGroup>
+</Project>

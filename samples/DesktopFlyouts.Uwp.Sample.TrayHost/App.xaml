@@ -5,32 +5,7 @@
     xmlns:local="using:DesktopFlyouts">
 
     <Application.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-
-                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-
-                <ResourceDictionary>
-                    <ResourceDictionary.ThemeDictionaries>
-                        <ResourceDictionary x:Key="Default">
-                            <SolidColorBrush x:Key="FlyoutOverlayBackgroundBrush">#09FFFFFF</SolidColorBrush>
-                            <SolidColorBrush x:Key="FlyoutSeparatorPrimaryBackgroundBrush">#15FFFFFF</SolidColorBrush>
-                            <SolidColorBrush x:Key="FlyoutSeparatorSecondaryBackgroundBrush">#18000000</SolidColorBrush>
-                        </ResourceDictionary>
-                        <ResourceDictionary x:Key="Light">
-                            <SolidColorBrush x:Key="FlyoutOverlayBackgroundBrush">#40FFFFFF</SolidColorBrush>
-                            <SolidColorBrush x:Key="FlyoutSeparatorPrimaryBackgroundBrush">#0F000000</SolidColorBrush>
-                            <SolidColorBrush x:Key="FlyoutSeparatorSecondaryBackgroundBrush">#10000000</SolidColorBrush>
-                        </ResourceDictionary>
-                        <ResourceDictionary x:Key="HighContrast">
-                            <SolidColorBrush x:Key="FlyoutOverlayBackgroundBrush">#09FFFFFF</SolidColorBrush>
-                            <SolidColorBrush x:Key="FlyoutSeparatorPrimaryBackgroundBrush">#15FFFFFF</SolidColorBrush>
-                            <SolidColorBrush x:Key="FlyoutSeparatorSecondaryBackgroundBrush">#18000000</SolidColorBrush>
-                        </ResourceDictionary>
-                    </ResourceDictionary.ThemeDictionaries>
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
+        <local:AppResources />
     </Application.Resources>
 
 </Application>

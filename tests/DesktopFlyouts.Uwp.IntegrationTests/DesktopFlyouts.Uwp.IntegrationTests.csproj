@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>DesktopFlyouts.Uwp.IntegrationTests</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Nullable>enable</Nullable>
+    <UseUwp>true</UseUwp>
+    <Platforms>x86;x64;arm64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <PublishAot>true</PublishAot>
+    <PublishProfile>win-$(Platform).pubxml</PublishProfile>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="TestContainer" />
+    <Manifest Include="$(ApplicationManifest)" />
+    <Content Include="Assets\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\..\$(Platform)\$(Configuration)\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.dll"
+             Link="DesktopFlyouts.Uwp.dll"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="MSTest" Version="3.10.4" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DesktopFlyouts.Uwp.Projection\DesktopFlyouts.Uwp.Projection.csproj">
+      <Aliases>UwpProjection</Aliases>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Target Name="ExcludeProjectionTypesFromUwpXamlCompilation"
+          BeforeTargets="MarkupCompilePass2">
+    <ItemGroup>
+      <_UwpProjectionReferenceForXaml Include="@(ReferencePath)"
+                                      Condition="'%(Filename)' == 'DesktopFlyouts.Uwp.Projection'" />
+      <ReferencePath Remove="@(_UwpProjectionReferenceForXaml)" />
+      <_UwpProjectionAssemblyReferencePath Include="@(ReferenceAssemblyPaths)"
+                                           Condition="'%(Filename)' == 'DesktopFlyouts.Uwp.Projection'" />
+      <ReferenceAssemblyPaths Remove="@(_UwpProjectionAssemblyReferencePath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RestoreProjectionReferenceAfterUwpXamlCompilation"
+          AfterTargets="MarkupCompilePass2">
+    <ItemGroup>
+      <ReferencePath Include="@(_UwpProjectionReferenceForXaml)">
+        <Aliases>UwpProjection</Aliases>
+      </ReferencePath>
+      <_UwpProjectionReferenceForXaml Remove="@(_UwpProjectionReferenceForXaml)" />
+      <ReferenceAssemblyPaths Include="@(_UwpProjectionAssemblyReferencePath)" />
+      <_UwpProjectionAssemblyReferencePath Remove="@(_UwpProjectionAssemblyReferencePath)" />
+    </ItemGroup>
+  </Target>
+</Project>
