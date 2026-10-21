@@ -35,6 +35,8 @@ jobs:
       uses: actions/checkout@v6
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v3
+      with:
+        msbuild-architecture: x64
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v4
 
@@ -57,9 +59,9 @@ jobs:
     - name: Run C# projection unit tests
       shell: pwsh
       run: |
-        dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
+        dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -c $env:CONFIGURATION -p:Platform=x64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=x64
+        dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -c $env:CONFIGURATION -p:Platform=x64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Run UWP runtime integration tests
@@ -94,6 +96,8 @@ jobs:
       uses: actions/checkout@v6
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v3
+      with:
+        msbuild-architecture: arm64
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v4
 
@@ -116,9 +120,9 @@ jobs:
     - name: Run C# projection unit tests
       shell: pwsh
       run: |
-        dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
+        dotnet test tests/DesktopFlyouts.WinUI.Projection.Tests/DesktopFlyouts.WinUI.Projection.Tests.csproj --no-build --no-restore -c $env:CONFIGURATION -p:Platform=arm64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -p:Platform=arm64
+        dotnet test tests/DesktopFlyouts.Uwp.Projection.Tests/DesktopFlyouts.Uwp.Projection.Tests.csproj --no-build --no-restore -c $env:CONFIGURATION -p:Platform=arm64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Run UWP runtime integration tests

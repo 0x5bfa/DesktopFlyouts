@@ -56,10 +56,13 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DesktopFlyouts.Uwp.Sample.App\DesktopFlyouts.Uwp.Sample.App.csproj">
+      <!-- The solution builds dependencies before packaging; publishing must not build them again. -->
+      <AdditionalProperties Condition="'$(BuildingSolutionFile)' == 'true'">BuildProjectReferences=false</AdditionalProperties>
       <UseLowTrustEntryPoint>True</UseLowTrustEntryPoint>
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
-      <PublishProfile>Properties\PublishProfiles\win-$(Platform).pubxml</PublishProfile>
     </ProjectReference>
-    <ProjectReference Include="..\DesktopFlyouts.Uwp.Sample.TrayHost\DesktopFlyouts.Uwp.Sample.TrayHost.csproj" />
+    <ProjectReference Include="..\DesktopFlyouts.Uwp.Sample.TrayHost\DesktopFlyouts.Uwp.Sample.TrayHost.csproj">
+      <AdditionalProperties Condition="'$(BuildingSolutionFile)' == 'true'">BuildProjectReferences=false</AdditionalProperties>
+    </ProjectReference>
   </ItemGroup>
 </Project>
