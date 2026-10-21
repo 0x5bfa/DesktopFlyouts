@@ -201,8 +201,6 @@ publish/
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
-!samples/DesktopFlyouts.Uwp.Sample.App/Properties/PublishProfiles/*.pubxml
-!samples/DesktopFlyouts.Uwp.Sample.TrayHost/Properties/PublishProfiles/*.pubxml
 *.publishproj
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to
@@ -418,3 +416,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Visual Studio C++/WinRT compiler cache
+*.cppwinrt_comp.cache

@@ -27,7 +27,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.csproj" />
+		<ProjectReference Include="..\..\src\DesktopFlyouts.Uwp.Projection\DesktopFlyouts.Uwp.Projection.csproj">
+			<!-- Use the projection's normal output path when the host is published. -->
+			<GlobalPropertiesToRemove>RuntimeIdentifier;SelfContained;PublishDir;PublishProfile</GlobalPropertiesToRemove>
+		</ProjectReference>
 	</ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\$(Platform)\$(Configuration)\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.dll"
+             Link="DesktopFlyouts.Uwp.dll" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\..\src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.vcxproj"
+                      Condition="'$(BuildingSolutionFile)' != 'true'"
+                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true">
+      <AdditionalProperties>SolutionDir=$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\'))\</AdditionalProperties>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

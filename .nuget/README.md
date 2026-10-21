@@ -1,74 +1,10 @@
-DesktopFlyouts is a WinUI library for showing desktop flyouts from tray icons or programmatically.
+# Native package restore
 
-## Usage
+DesktopFlyouts is restored as a native C++/WinRT Windows App SDK component. The project files restore
+Windows App SDK, C++/WinRT, WebView2, and IdlGen 2.0 through NuGet; vcpkg is not required.
 
-### DesktopFlyout
+The public WinRT contract is authored under `src/DesktopFlyouts.WinUI/author`. Generated IDL,
+implementation headers, projections, and package cache output are build artifacts.
 
-```xml
-<me:DesktopFlyout
-    x:Class="..."
-    xmlns:me="using:U5BFA.Libraries"
-    FlyoutWidth="360">
-
-    <me:DesktopFlyoutIsland IslandHeight="300">
-        <!-- Put elements here -->
-    </me:DesktopFlyoutIsland>
-    <me:DesktopFlyoutIsland IslandHeight="300">
-        <!-- Put elements here -->
-    </me:DesktopFlyoutIsland>
-
-</me:DesktopFlyout>
-```
-
-```cs
-if (_desktopFlyout.IsOpen)
-    _desktopFlyout.Hide();
-else
-    _desktopFlyout.Show();
-```
-
-### DesktopMenuFlyout
-
-```xml
-<me:DesktopMenuFlyout
-    x:Class="..."
-    xmlns:me="using:U5BFA.Libraries">
-
-    <MenuFlyoutSubItem Text="Settings">
-        <MenuFlyoutSubItem.Icon>
-            <FontIcon Glyph="..." />
-        </MenuFlyoutSubItem.Icon>
-        <MenuFlyoutSubItem.Items>
-            <MenuFlyoutItem Text="Theme" />
-            <MenuFlyoutItem Text="Language" />
-            <MenuFlyoutItem Text="Privacy" />
-        </MenuFlyoutSubItem.Items>
-    </MenuFlyoutSubItem>
-    <MenuFlyoutSeparator />
-    <MenuFlyoutItem Text="Exit">
-        <MenuFlyoutItem.Icon>
-            <FontIcon Glyph="..." />
-        </MenuFlyoutItem.Icon>
-    </MenuFlyoutItem>
-
-</me:DesktopMenuFlyout>
-```
-
-```cs
-if (_desktopMenuFlyout.IsOpen)
-    _desktopMenuFlyout.Hide();
-
-_desktopMenuFlyout.Show(e.Point);
-```
-
-## Documentation
-
-- Getting started: https://github.com/0x5bfa/DesktopFlyouts/blob/main/docs/getting-started.md
-- DesktopFlyout: https://github.com/0x5bfa/DesktopFlyouts/blob/main/docs/desktop-flyout.md
-- DesktopMenuFlyout: https://github.com/0x5bfa/DesktopFlyouts/blob/main/docs/desktop-menu-flyout.md
-- SystemTrayIcon: https://github.com/0x5bfa/DesktopFlyouts/blob/main/docs/system-tray-icon.md
-- Focus and activation: https://github.com/0x5bfa/DesktopFlyouts/blob/main/docs/focus-and-activation.md
-
-## License
-
-Copyright (c) 0x5BFA. All rights reserved.
+See [the native getting-started guide](../docs/getting-started.md) and
+[the C++/WinRT architecture notes](../docs/cppwinrt-migration.md).
