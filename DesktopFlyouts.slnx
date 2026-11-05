@@ -65,5 +65,8 @@
       <Platform Solution="*|x86" Project="x86" />
     </Project>
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DesktopFlyouts.X11.Tests/DesktopFlyouts.X11.Tests.csproj" />
+  </Folder>
 
 </Solution>

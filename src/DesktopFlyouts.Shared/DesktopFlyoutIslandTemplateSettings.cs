@@ -20,7 +20,7 @@ namespace DesktopFlyouts
     /// </remarks>
     public partial class DesktopFlyoutIslandTemplateSettings : DependencyObject
     {
-#if WASDK && !HAS_UNO
+#if WASDK
         /// <summary>
         /// Gets the corner radius used by backdrop elements inside the island template.
         /// </summary>
@@ -28,12 +28,14 @@ namespace DesktopFlyouts
         [GeneratedDependencyProperty]
         public partial CornerRadius BackdropCornerRadius { get; internal set; }
 
+#if !HAS_UNO
         /// <summary>
         /// Gets the library-created system backdrop used by backdrop elements inside the island template.
         /// </summary>
         /// <value>The owning flyout's generated system backdrop for this island.</value>
         [GeneratedDependencyProperty]
         public partial SystemBackdrop? SystemBackdrop { get; internal set; }
+#endif
 #endif
     }
 }
