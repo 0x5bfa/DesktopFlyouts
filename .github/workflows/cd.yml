@@ -1,10 +1,12 @@
 # Copyright (c) 0x5BFA. All rights reserved.
 # Licensed under the MIT license.
 
-name: DesktopFlyouts CD
+name: CD
 
 on:
   workflow_dispatch:
+
+run-name: 'Publish package to NuGet.org'
 
 env:
   WORKING_DIR:         '${{ github.workspace }}' # 'D:\a\DesktopFlyouts\DesktopFlyouts'
@@ -15,10 +17,11 @@ env:
 
 jobs:
   build-pack-publish:
-    runs-on: windows-2025-vs2026
-    env:
-      CONFIGURATION: 'Release'
-      PLATFORM: 'x64'
+    runs-on: windows-latest
+    environment: nuget.org
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
     - name: Checkout the repository
@@ -28,20 +31,25 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: |
           9.0.x
           10.0.x
+    - name: NuGet login
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: '0x5bfa'
 
     - name: Pack the project (WASDK)
-      run: dotnet build $env:WASDK_APP_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM -o $env:OUTPUT_DIR
+      run: dotnet build $env:WASDK_APP_PROJ_PATH -c Release -a x64 -o $env:OUTPUT_DIR
 
     - name: Pack the project (UWP)
-      run: dotnet build $env:UWP_APP_PROJ_PATH   -c $env:CONFIGURATION -a $env:PLATFORM -o $env:OUTPUT_DIR
+      run: dotnet build $env:UWP_APP_PROJ_PATH   -c Release -a x64 -o $env:OUTPUT_DIR
 
     - name: Pack the project (Uno)
-      run: dotnet build $env:UNO_LIB_PROJ_PATH   -c $env:CONFIGURATION -a $env:PLATFORM -o $env:OUTPUT_DIR
+      run: dotnet build $env:UNO_LIB_PROJ_PATH   -c Release -a x64 -o $env:OUTPUT_DIR
 
     - name: Upload nupkg artifacts
       uses: actions/upload-artifact@v4
@@ -53,5 +61,7 @@ jobs:
 
     - name: Publish to NuGet.org
       run: |
-        dotnet nuget push ${{ env.OUTPUT_DIR }}\*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json  --skip-duplicate
-        dotnet nuget push ${{ env.OUTPUT_DIR }}\*.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        dotnet nuget push ${{ env.OUTPUT_DIR }}\*.nupkg --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate
+        dotnet nuget push ${{ env.OUTPUT_DIR }}\*.snupkg --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate
+      env:
+        NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
