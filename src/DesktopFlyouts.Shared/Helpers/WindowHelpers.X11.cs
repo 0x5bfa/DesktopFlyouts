@@ -4,7 +4,7 @@
 // _NET_WM_STRUT_PARTIAL on child windows identifies individual panel positions.
 
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using static DesktopFlyouts.X11PInvoke;
@@ -52,17 +52,15 @@ namespace DesktopFlyouts
                     return new Rectangle(0, 0, 1920, 1080);
                 }
 
-                // Read _NET_WORKAREA (4 CARDINALs: left, top, width, height)
-                if (TryReadNetWorkArea(display, rootWindow, out var workArea))
-                {
-                    return workArea;
-                }
+                var hasMonitor = TryReadMonitorRect(display, rootWindow, anchorPoint, out var monitorRect);
+                if (!hasMonitor && TryReadScreenDimensions(display, out var screenRect))
+                    monitorRect = screenRect;
 
-                // Fallback: full screen
-                if (TryReadScreenDimensions(display, out var screenRect))
-                {
-                    return screenRect;
-                }
+                if (TryReadNetWorkArea(display, rootWindow, out var workArea))
+                    return X11ScreenGeometry.ApplyWorkArea(monitorRect, workArea);
+
+                if (monitorRect.Width > 0 && monitorRect.Height > 0)
+                    return monitorRect;
 
                 // all methods failed, using default 1920x1080
                 return new Rectangle(0, 0, 1920, 1080);
@@ -90,13 +88,10 @@ namespace DesktopFlyouts
                 if (rootWindow == IntPtr.Zero)
                     return false;
 
-                // Enumerate child windows and check _NET_WM_STRUT_PARTIAL / _NET_WM_STRUT
-                if (!TryReadNetWorkArea(display, rootWindow, out var workArea))
+                // Strut coordinates are relative to the complete root window, not an
+                // individual XRandR monitor.
+                if (!TryReadScreenDimensions(display, out var screenRect))
                     return false;
-
-                var screenRect = workArea;
-                if (TryReadScreenDimensions(display, out var full))
-                    screenRect = full;
 
                 return TryFindPanelAtPoint(display, rootWindow, point, screenRect, out rect, out edge);
             }
@@ -111,18 +106,62 @@ namespace DesktopFlyouts
             workArea = default;
 
             var netWorkAreaAtom = XInternAtom(display, "_NET_WORKAREA", false);
-            if (ReadCardinals(display, rootWindow, netWorkAreaAtom, out var cardinals) && cardinals.Length >= 4)
-            {
-                workArea = new Rectangle(
-                    (int)cardinals[0],
-                    (int)cardinals[1],
-                    (int)cardinals[2],
-                    (int)cardinals[3]);
-                return workArea.Width > 0 && workArea.Height > 0;
-            }
+            if (!ReadCardinals(display, rootWindow, netWorkAreaAtom, out var cardinals))
+                return false;
 
-            // _NET_WORKAREA not available or empty
-            return false;
+            nuint currentDesktop = 0;
+            var currentDesktopAtom = XInternAtom(display, "_NET_CURRENT_DESKTOP", false);
+            if (ReadCardinals(display, rootWindow, currentDesktopAtom, out var desktopValues) &&
+                desktopValues.Length > 0)
+                currentDesktop = desktopValues[0];
+
+            return X11ScreenGeometry.TrySelectWorkArea(cardinals, currentDesktop, out workArea);
+        }
+
+        private static bool TryReadMonitorRect(
+            IntPtr display,
+            IntPtr rootWindow,
+            Point? anchorPoint,
+            out Rectangle monitorRect)
+        {
+            monitorRect = default;
+            nint monitorsPointer = 0;
+            try
+            {
+                monitorsPointer = XRRGetMonitors(display, rootWindow, true, out var monitorCount);
+                if (monitorsPointer is 0 || monitorCount <= 0)
+                    return false;
+
+                var monitorSize = Marshal.SizeOf<XRRMonitorInfo>();
+                var monitors = new List<X11MonitorGeometry>(monitorCount);
+                for (var i = 0; i < monitorCount; i++)
+                {
+                    var monitor = Marshal.PtrToStructure<XRRMonitorInfo>(
+                        monitorsPointer + (i * monitorSize));
+                    if (monitor.width <= 0 || monitor.height <= 0)
+                        continue;
+
+                    monitors.Add(new X11MonitorGeometry(
+                        new Rectangle(monitor.x, monitor.y, monitor.width, monitor.height),
+                        monitor.primary != 0));
+                }
+
+                monitorRect = X11ScreenGeometry.SelectMonitor(monitors, anchorPoint);
+                return monitorRect.Width > 0 && monitorRect.Height > 0;
+            }
+            catch (DllNotFoundException)
+            {
+                return false;
+            }
+            catch (EntryPointNotFoundException)
+            {
+                return false;
+            }
+            finally
+            {
+                if (monitorsPointer is not 0)
+                    XRRFreeMonitors(monitorsPointer);
+            }
         }
 
         private static bool TryReadScreenDimensions(IntPtr display, out Rectangle screenRect)
@@ -306,11 +345,12 @@ namespace DesktopFlyouts
             var result = XGetWindowProperty(
                 display, (nuint)window, (nuint)atom,
                 0, 256,
-                false, 6, // CARDINAL = 6
-                out var actualType, out _,
+                false, XA_CARDINAL,
+                out var actualType, out var actualFormat,
                 out var nItems, out _, out var prop);
 
-            if (result != 0 || actualType is 0 || nItems is 0 || prop is 0)
+            if (result != 0 || actualType != XA_CARDINAL || actualFormat != 32 ||
+                nItems is 0 || nItems > int.MaxValue || prop is 0)
                 return false;
 
             try
