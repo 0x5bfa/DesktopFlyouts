@@ -388,16 +388,11 @@ namespace DesktopFlyouts
 
         private void UpdateFlyoutTheme()
         {
-            if (GeneralHelpers.IsTaskbarLight())
-            {
-                foreach (var island in Islands)
-                    island.RequestedTheme = ElementTheme.Light;
-            }
-            else
-            {
-                foreach (var island in Islands)
-                    island.RequestedTheme = ElementTheme.Dark;
-            }
+            var requestedTheme = GeneralHelpers.IsTaskbarLight() ? ElementTheme.Light : ElementTheme.Dark;
+            RequestedTheme = requestedTheme;
+
+            foreach (var island in Islands)
+                island.RequestedTheme = requestedTheme;
         }
 
         private void UpdateIslandBackdrops()
