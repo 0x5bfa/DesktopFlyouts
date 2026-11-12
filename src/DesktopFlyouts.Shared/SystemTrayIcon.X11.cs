@@ -3,6 +3,7 @@ using Tmds.DBus.Protocol;
 using DesktopFlyouts.DBus;
 using SkiaSharp;
 using Svg.Skia;
+using System.Drawing;
 
 namespace DesktopFlyouts;
 
@@ -11,7 +12,7 @@ namespace DesktopFlyouts;
 /// </summary>
 /// <remarks>
 /// <see cref="SystemTrayIcon"/> wraps the StatusNotifierItem D-Bus protocol and raises click events
-/// with screen coordinates that can be passed to the point-based flyout and menu show methods.
+/// with screen coordinates. The protocol does not expose the icon's full screen bounds.
 /// Call <see cref="Show"/> to register the icon with the StatusNotifierWatcher and
 /// <see cref="Destroy"/> to remove it. Call <see cref="Dispose()"/> explicitly when the object
 /// is no longer needed to release its owned resources.
@@ -126,6 +127,20 @@ public class SystemTrayIcon : IDisposable
     /// </summary>
     /// <value>The full path to an icon file.</value>
     public string IconPath => _iconPath;
+
+    /// <summary>
+    /// Tries to get the tray icon bounds in physical screen pixels.
+    /// </summary>
+    /// <param name="bounds">Receives an empty rectangle.</param>
+    /// <returns><see langword="false"/> because the StatusNotifierItem protocol does not expose icon bounds.</returns>
+    /// <remarks>
+    /// Click events can provide a screen point, but that point is not treated as the icon bounds.
+    /// </remarks>
+    public bool TryGetBounds(out Rectangle bounds)
+    {
+        bounds = Rectangle.Empty;
+        return false;
+    }
 
     /// <summary>
     /// Replaces the current icon with one loaded from a file path.

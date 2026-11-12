@@ -8,7 +8,6 @@
     xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
     FlyoutHeight="725"
     IslandsOrientation="Horizontal"
-    Placement="BottomCenter"
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>

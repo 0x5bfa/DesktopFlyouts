@@ -40,14 +40,6 @@ namespace DesktopFlyouts
         public static readonly DependencyProperty IsOpenProperty =
             DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(false));
 
-        public partial DesktopFlyoutPopupDirection PopupDirection
-        {
-            get => (DesktopFlyoutPopupDirection)GetValue(PopupDirectionProperty);
-            set => SetValue(PopupDirectionProperty, value);
-        }
-        public static readonly DependencyProperty PopupDirectionProperty =
-            DependencyProperty.Register(nameof(PopupDirection), typeof(DesktopFlyoutPopupDirection), typeof(DesktopFlyout), new PropertyMetadata(DesktopFlyoutPopupDirection.Vertical));
-
         public partial Orientation IslandsOrientation
         {
             get => (Orientation)GetValue(IslandsOrientationProperty);
@@ -55,14 +47,6 @@ namespace DesktopFlyouts
         }
         public static readonly DependencyProperty IslandsOrientationProperty =
             DependencyProperty.Register(nameof(IslandsOrientation), typeof(Orientation), typeof(DesktopFlyout), new PropertyMetadata(Orientation.Vertical, (d, e) => ((DesktopFlyout)d).OnIslandsOrientationPropertyChanged(e)));
-
-        public partial DesktopFlyoutPlacementMode Placement
-        {
-            get => (DesktopFlyoutPlacementMode)GetValue(PlacementProperty);
-            set => SetValue(PlacementProperty, value);
-        }
-        public static readonly DependencyProperty PlacementProperty =
-            DependencyProperty.Register(nameof(Placement), typeof(DesktopFlyoutPlacementMode), typeof(DesktopFlyout), new PropertyMetadata(DesktopFlyoutPlacementMode.BottomRight));
 
         public partial MenuFlyout? MenuFlyout
         {

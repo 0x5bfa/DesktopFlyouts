@@ -22,6 +22,29 @@ namespace DesktopFlyouts
 
     internal unsafe static partial class WindowHelpers
     {
+        internal static Point GetCursorPosition()
+        {
+            Point point = default;
+            return PInvoke.GetCursorPos(&point)
+                ? point
+                : Point.Empty;
+        }
+
+        internal static Rectangle GetFlyoutWorkAreaRect(DesktopFlyoutPosition position, Point? cursorPosition = null)
+        {
+            if (position.Anchor is Rectangle anchor)
+            {
+                return GetFlyoutWorkAreaRect(new Point(anchor.Left + (anchor.Width / 2), anchor.Top + (anchor.Height / 2)));
+            }
+
+            if (position.MonitorSelection is DesktopFlyoutMonitorSelection.Cursor)
+            {
+                return GetFlyoutWorkAreaRect(cursorPosition ?? GetCursorPosition());
+            }
+
+            return GetFlyoutWorkAreaRect();
+        }
+
         internal static Point GetBottomRightCornerPoint()
         {
             var rect = GetFlyoutWorkAreaRect();
@@ -96,16 +119,51 @@ namespace DesktopFlyouts
             return true;
         }
 
-        internal static bool TryGetTaskbarInfoForPoint(Point point, out Rectangle rect, out TaskbarEdge edge)
+        internal static bool TryGetMonitorScreenRect(Rectangle anchor, out Rectangle screenBounds)
+        {
+            RECT anchorRect = new()
+            {
+                left = anchor.Left,
+                top = anchor.Top,
+                right = Math.Max(anchor.Right, anchor.Left + 1),
+                bottom = Math.Max(anchor.Bottom, anchor.Top + 1),
+            };
+            var monitor = PInvoke.MonitorFromRect(&anchorRect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+            if (monitor.IsNull)
+            {
+                screenBounds = default;
+                return false;
+            }
+
+            MONITORINFO monitorInfo = new() { cbSize = (uint)sizeof(MONITORINFO) };
+            if (!PInvoke.GetMonitorInfo(monitor, &monitorInfo))
+            {
+                screenBounds = default;
+                return false;
+            }
+
+            screenBounds = Rectangle.FromLTRB(
+                monitorInfo.rcMonitor.left,
+                monitorInfo.rcMonitor.top,
+                monitorInfo.rcMonitor.right,
+                monitorInfo.rcMonitor.bottom);
+            return true;
+        }
+
+        internal static bool TryGetTaskbarInfoForBounds(Rectangle bounds, out Rectangle rect, out TaskbarEdge edge)
         {
             if (!TryGetTaskbarInfo(out rect, out edge))
                 return false;
 
             const int tolerance = 8;
-            var testRect = rect;
-            testRect.Inflate(tolerance, tolerance);
+            var taskbarSearchBounds = rect;
+            taskbarSearchBounds.Inflate(tolerance, tolerance);
+            if (taskbarSearchBounds.IntersectsWith(bounds))
+                return true;
 
-            return testRect.Contains(point);
+            rect = default;
+            edge = default;
+            return false;
         }
 
         private static Rectangle GetSystemWorkAreaRect()
@@ -128,15 +186,24 @@ namespace DesktopFlyouts
                 return false;
             }
 
-            rect = Rectangle.FromLTRB(data.rc.left, data.rc.top, data.rc.right, data.rc.bottom);
-            edge = data.uEdge switch
+            var taskbarEdge = data.uEdge switch
             {
                 PInvoke.ABE_LEFT => TaskbarEdge.Left,
                 PInvoke.ABE_TOP => TaskbarEdge.Top,
                 PInvoke.ABE_RIGHT => TaskbarEdge.Right,
-                _ => TaskbarEdge.Bottom,
+                PInvoke.ABE_BOTTOM => TaskbarEdge.Bottom,
+                _ => (TaskbarEdge?)null,
             };
 
+            rect = Rectangle.FromLTRB(data.rc.left, data.rc.top, data.rc.right, data.rc.bottom);
+            if (taskbarEdge is null || rect.Width <= 0 || rect.Height <= 0)
+            {
+                rect = default;
+                edge = default;
+                return false;
+            }
+
+            edge = taskbarEdge.Value;
             return true;
         }
     }

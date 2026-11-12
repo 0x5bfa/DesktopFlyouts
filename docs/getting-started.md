@@ -25,9 +25,7 @@ Define a `DesktopFlyout` with one or more `DesktopFlyoutIsland` sections.
     x:Class="MyApp.MainDesktopFlyout"
     FlyoutWidth="360"
     ActivationMode="NoActivateOnOpen"
-    HideOnLostFocus="False"
-    Placement="BottomRight"
-    PopupDirection="Vertical">
+    HideOnLostFocus="False">
 
     <desktop:DesktopFlyoutIsland IslandHeight="300">
         <Grid Padding="16">
@@ -48,7 +46,7 @@ private void ToggleFlyout()
     if (_flyout.IsOpen)
         _flyout.Hide();
     else
-        _flyout.Show();
+        _flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 }
 ```
 
@@ -58,18 +56,30 @@ Call `Dispose` when the flyout is no longer needed.
 _flyout.Dispose();
 ```
 
-## Show from a screen point
+## Show from a screen anchor
 
-Use `Show(Point)` when you already have a physical screen coordinate, such as the center of a tray icon.
+`ForAnchor` accepts a physical-pixel screen rectangle and requires the side where the flyout should
+appear. This works with tray icons, buttons, and other UI elements when their screen bounds are
+available.
 
 ```csharp
 private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
 {
-    _flyout.Show(e.Point);
+    if (sender is SystemTrayIcon trayIcon && trayIcon.TryGetBounds(out var bounds))
+    {
+        _flyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
+    }
+    else
+    {
+        var pointBounds = new System.Drawing.Rectangle((int)e.Point.X, (int)e.Point.Y, 0, 0);
+        _flyout.Show(DesktopFlyoutPosition.ForAnchor(pointBounds, DesktopFlyoutAnchorSide.Above));
+    }
 }
 ```
 
-`Show(Point)` treats the point as the desired bottom-center point of the flyout for that open operation only. Later calls to `Show()` use the configured `Placement`.
+`ForTaskbarAnchor` detects the taskbar edge when supported and opens toward the work area. If the
+platform cannot report taskbar bounds, it estimates the side from the nearest monitor edge. To anchor
+to a normal UI element, pass its physical screen bounds to `ForAnchor` with an explicit side.
 
 ## Add a tray menu
 

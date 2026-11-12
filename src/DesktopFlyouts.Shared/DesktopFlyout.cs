@@ -7,7 +7,6 @@ using System.Drawing;
 using System.Threading.Tasks;
 using Windows.Graphics;
 using FoundationPoint = Windows.Foundation.Point;
-using FoundationRect = Windows.Foundation.Rect;
 using FoundationSize = Windows.Foundation.Size;
 
 #if UWP
@@ -37,8 +36,8 @@ namespace DesktopFlyouts
     /// <remarks>
     /// Use <see cref="DesktopFlyout"/> when you need a lightweight desktop surface that can be opened
     /// from a tray icon or from application code. Add one or more <see cref="DesktopFlyoutIsland"/>
-    /// instances to define the visible sections, then call <see cref="Show()"/> or the point-based
-    /// overload to display the flyout. Dispose the instance when it is no longer used
+    /// instances to define the visible sections, then call <see cref="Show()"/> or
+    /// <see cref="Show(DesktopFlyoutPosition)"/> to display it. Dispose the instance when it is no longer used
     /// so the underlying host window and XAML island can be released.
     /// </remarks>
     [ContentProperty(Name = nameof(Islands))]
@@ -52,7 +51,8 @@ namespace DesktopFlyouts
         private readonly XamlIslandHostWindow? _host;
         private bool _isPopupAnimationPlaying;
         private bool _isPressAnimationActive;
-        private Point? _customPlacementBottomCenterPoint;
+        private DesktopFlyoutPosition? _position;
+        private Rectangle _activeWorkArea;
         private DesktopFlyoutPopupDirection _activePopupDirection = DesktopFlyoutPopupDirection.BottomToTop;
         private DispatcherTimer? _autoCloseTimer;
         private DispatcherTimer? _restoreActivationTimer;
@@ -136,21 +136,47 @@ namespace DesktopFlyouts
         }
 
         /// <summary>
-        /// Opens the flyout using its configured placement.
+        /// Opens the flyout at the default bottom-right position.
         /// </summary>
         /// <remarks>
-        /// The flyout is positioned from <see cref="Placement"/> and animated from the direction
-        /// resolved by <see cref="PopupDirection"/>. Calls made while an open or close transition is
-        /// running are ignored. <see cref="IsOpen"/> becomes <see langword="true"/> after the open
-        /// transition completes.
+        /// The flyout uses the default bottom-right work-area position. Calls made while an open or
+        /// close transition is running are ignored. <see cref="IsOpen"/> becomes <see langword="true"/>
+        /// after the open transition completes.
         /// </remarks>
         public void Show()
         {
+            Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
+        }
+
+        /// <summary>
+        /// Opens the flyout using a position request resolved for this show operation.
+        /// </summary>
+        public void Show(DesktopFlyoutPosition position)
+        {
+            ArgumentNullException.ThrowIfNull(position);
+
             if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null || _isPopupAnimationPlaying)
             {
-                _customPlacementBottomCenterPoint = null;
                 return;
             }
+
+            Point? cursorPosition = null;
+            if (!position.Anchor.HasValue && position.MonitorSelection is DesktopFlyoutMonitorSelection.Cursor)
+            {
+                cursorPosition = WindowHelpers.GetCursorPosition();
+            }
+
+            if (position.IsTaskbarAnchor && position.Anchor is Rectangle anchorBounds)
+            {
+                var hasDetectedTaskbar = WindowHelpers.TryGetTaskbarInfoForBounds(anchorBounds, out _, out var taskbarEdge);
+                var hasMonitorBounds = WindowHelpers.TryGetMonitorScreenRect(anchorBounds, out var monitorBounds);
+                position = position.ResolveTaskbarAnchor(
+                    hasDetectedTaskbar ? taskbarEdge : null,
+                    hasMonitorBounds ? monitorBounds : null);
+            }
+
+            _position = position;
+            _activeWorkArea = WindowHelpers.GetFlyoutWorkAreaRect(_position, cursorPosition);
 
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
@@ -160,7 +186,7 @@ namespace DesktopFlyouts
                 _host.PreserveActivationState();
 
             _host.SetActivationMode(ActivationMode);
-            _host.Maximize(WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint), shouldActivateOnOpen);
+            _host.Maximize(_activeWorkArea, shouldActivateOnOpen);
 
             _ = Task.Run(async () =>
             {
@@ -207,21 +233,14 @@ namespace DesktopFlyouts
         }
 
         /// <summary>
-        /// Opens the flyout at the specified bottom-center screen point.
+        /// Opens the flyout around the specified screen-space point using taskbar-edge detection
+        /// when available.
         /// </summary>
-        /// <param name="bottomCenterPoint">The desired bottom-center point of the flyout in physical screen pixels.</param>
-        /// <remarks>
-        /// This overload is useful when opening from a tray icon or another screen-space target.
-        /// The requested point is used for this open operation only; later calls to <see cref="Show()"/>
-        /// return to the configured <see cref="Placement"/>.
-        /// </remarks>
-        public void Show(Point bottomCenterPoint)
+        /// <param name="anchorPoint">The screen-space anchor point.</param>
+        [Obsolete("Use Show(DesktopFlyoutPosition.ForAnchor(bounds, side)) or ForTaskbarAnchor(bounds) instead.")]
+        public void Show(Point anchorPoint)
         {
-            if (_isPopupAnimationPlaying)
-                return;
-
-            _customPlacementBottomCenterPoint = bottomCenterPoint;
-            Show();
+            Show(DesktopFlyoutPosition.ForTaskbarAnchor(new Rectangle(anchorPoint, Size.Empty)));
         }
 
         /// <summary>
@@ -341,14 +360,11 @@ namespace DesktopFlyouts
             IslandsItemsControl.InvalidateMeasure();
         }
 
-        private DesktopFlyoutPopupDirection UpdateFlyoutRegion(
-            FoundationRect? resizeAnchorRegion = null,
-            DesktopFlyoutPopupDirection resizePopupDirection = DesktopFlyoutPopupDirection.Vertical)
+        private DesktopFlyoutPopupDirection UpdateFlyoutRegion()
         {
             if (_host?.DesktopWindowXamlSource is null || IslandsItemsControl is null)
-                return ResolvePopupDirection(PopupDirection, default, WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint));
+                return _activePopupDirection;
 
-            var customBottomCenterPoint = _customPlacementBottomCenterPoint;
             var scale = _host.XamlIslandRasterizationScale;
             var flyoutWidth = GetCurrentFlyoutWidth();
             var flyoutHeight = GetCurrentFlyoutHeight();
@@ -356,43 +372,22 @@ namespace DesktopFlyouts
             var scaledMargin = GetScaledMargin(Margin, scale);
             var frameWidth = scaledFlyoutSize.Width + scaledMargin.Left + scaledMargin.Right;
             var frameHeight = scaledFlyoutSize.Height + scaledMargin.Top + scaledMargin.Bottom;
-            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(customBottomCenterPoint);
+            var workArea = _activeWorkArea;
             var hostWidth = workArea.Width;
             var hostHeight = workArea.Height;
             var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, hostWidth)));
             var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, hostHeight)));
-            var requestedPopupDirection = PopupDirection;
-            _customPlacementBottomCenterPoint = null;
-
-            double left;
-            double top;
-
-            if (customBottomCenterPoint is Point bottomCenterPoint)
-            {
-                (left, top) = GetCustomPlacementOrigin(
-                    bottomCenterPoint,
-                    regionWidth,
-                    regionHeight,
-                    scaledFlyoutSize,
-                    scaledMargin,
-                    workArea);
-            }
-            else
-            {
-                (left, top) = resizeAnchorRegion is FoundationRect anchorRegion
-                    ? GetResizeOrigin(anchorRegion, resizePopupDirection, regionWidth, regionHeight)
-                    : GetPlacementOrigin(Placement, regionWidth, regionHeight, workArea);
-            }
-
-            left = Clamp(left, workArea.Left, workArea.Right - regionWidth);
-            top = Clamp(top, workArea.Top, workArea.Bottom - regionHeight);
-
-            var region = new RectInt32() { X = (int)Math.Round(left), Y = (int)Math.Round(top), Width = (int)regionWidth, Height = (int)regionHeight };
+            var resolvedPosition = DesktopFlyoutPositionResolver.Resolve(
+                _position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight),
+                workArea,
+                new Size(regionWidth, regionHeight));
+            var bounds = resolvedPosition.Bounds;
+            var region = new RectInt32() { X = bounds.X, Y = bounds.Y, Width = bounds.Width, Height = bounds.Height };
 
             _host.MoveAndResize(region, ShouldActivateOnOpen());
             _host.SetHWndRectRegion(new RectInt32() { Width = region.Width, Height = region.Height });
 
-            return ResolvePopupDirection(requestedPopupDirection, region, workArea);
+            return resolvedPosition.TransitionDirection;
         }
 
         internal void OnIslandSizeChanged()
@@ -432,7 +427,7 @@ namespace DesktopFlyouts
                 ApplyResolvedFlyoutSize();
                 MeasureRootGridForAvailableFlyoutSize();
                 UpdateLayout();
-                _activePopupDirection = UpdateFlyoutRegion(_host.WindowSize, _activePopupDirection);
+                _activePopupDirection = UpdateFlyoutRegion();
                 SetOpenTransform();
             }
             finally
@@ -475,7 +470,7 @@ namespace DesktopFlyouts
                 return (0, 0);
 
             var scale = _host.XamlIslandRasterizationScale;
-            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(_customPlacementBottomCenterPoint);
+            var workArea = _activeWorkArea;
             var availableWidth = (workArea.Width / scale) - Margin.Left - Margin.Right;
             var availableHeight = (workArea.Height / scale) - Margin.Top - Margin.Bottom;
 
@@ -1202,90 +1197,6 @@ namespace DesktopFlyouts
                 margin.Top * scale,
                 margin.Right * scale,
                 margin.Bottom * scale);
-        }
-
-        private static (double Left, double Top) GetCustomPlacementOrigin(
-            Point point,
-            int regionWidth,
-            int regionHeight,
-            FoundationSize flyoutSize,
-            Thickness scaledMargin,
-            Rectangle workArea)
-        {
-            if (WindowHelpers.TryGetTaskbarInfoForPoint(point, out _, out var taskbarEdge))
-            {
-                return taskbarEdge switch
-                {
-                    TaskbarEdge.Left => (workArea.Left, point.Y - (regionHeight / 2D)),
-                    TaskbarEdge.Top => (point.X - (regionWidth / 2D), workArea.Top),
-                    TaskbarEdge.Right => (workArea.Right - regionWidth, point.Y - (regionHeight / 2D)),
-                    _ => (point.X - (regionWidth / 2D), workArea.Bottom - regionHeight),
-                };
-            }
-
-            return (
-                point.X - (flyoutSize.Width / 2D) - scaledMargin.Left,
-                point.Y - flyoutSize.Height - scaledMargin.Top);
-        }
-
-        private static (double Left, double Top) GetPlacementOrigin(DesktopFlyoutPlacementMode placement, double width, double height, Rectangle workArea)
-        {
-            return placement switch
-            {
-                DesktopFlyoutPlacementMode.BottomCenter => (workArea.Left + ((workArea.Width - width) / 2), workArea.Bottom - height),
-                DesktopFlyoutPlacementMode.BottomLeft => (workArea.Left, workArea.Bottom - height),
-                DesktopFlyoutPlacementMode.BottomRight => (workArea.Right - width, workArea.Bottom - height),
-                DesktopFlyoutPlacementMode.TopCenter => (workArea.Left + ((workArea.Width - width) / 2), workArea.Top),
-                DesktopFlyoutPlacementMode.TopLeft => (workArea.Left, workArea.Top),
-                DesktopFlyoutPlacementMode.TopRight => (workArea.Right - width, workArea.Top),
-                DesktopFlyoutPlacementMode.LeftCenter => (workArea.Left, workArea.Top + ((workArea.Height - height) / 2)),
-                DesktopFlyoutPlacementMode.RightCenter => (workArea.Right - width, workArea.Top + ((workArea.Height - height) / 2)),
-                _ => (workArea.Right - width, workArea.Bottom - height),
-            };
-        }
-
-        private static (double Left, double Top) GetResizeOrigin(
-            FoundationRect anchorRegion,
-            DesktopFlyoutPopupDirection popupDirection,
-            double width,
-            double height)
-        {
-            var left = popupDirection is DesktopFlyoutPopupDirection.RightToLeft
-                ? anchorRegion.X + anchorRegion.Width - width
-                : popupDirection is DesktopFlyoutPopupDirection.LeftToRight
-                    ? anchorRegion.X
-                    : anchorRegion.X + ((anchorRegion.Width - width) / 2D);
-
-            var top = popupDirection is DesktopFlyoutPopupDirection.BottomToTop
-                ? anchorRegion.Y + anchorRegion.Height - height
-                : popupDirection is DesktopFlyoutPopupDirection.TopToBottom
-                    ? anchorRegion.Y
-                    : anchorRegion.Y + ((anchorRegion.Height - height) / 2D);
-
-            return (left, top);
-        }
-
-        private static DesktopFlyoutPopupDirection ResolvePopupDirection(DesktopFlyoutPopupDirection requestedDirection, RectInt32 region, Rectangle workArea)
-        {
-            return requestedDirection switch
-            {
-                DesktopFlyoutPopupDirection.BottomToTop => DesktopFlyoutPopupDirection.BottomToTop,
-                DesktopFlyoutPopupDirection.TopToBottom => DesktopFlyoutPopupDirection.TopToBottom,
-                DesktopFlyoutPopupDirection.LeftToRight => DesktopFlyoutPopupDirection.LeftToRight,
-                DesktopFlyoutPopupDirection.RightToLeft => DesktopFlyoutPopupDirection.RightToLeft,
-                DesktopFlyoutPopupDirection.Horizontal => IsRightHalf(region, workArea) ? DesktopFlyoutPopupDirection.RightToLeft : DesktopFlyoutPopupDirection.LeftToRight,
-                _ => IsBottomHalf(region, workArea) ? DesktopFlyoutPopupDirection.BottomToTop : DesktopFlyoutPopupDirection.TopToBottom,
-            };
-        }
-
-        private static bool IsBottomHalf(RectInt32 region, Rectangle workArea)
-        {
-            return region.Y + (region.Height / 2D) >= workArea.Top + (workArea.Height / 2D);
-        }
-
-        private static bool IsRightHalf(RectInt32 region, Rectangle workArea)
-        {
-            return region.X + (region.Width / 2D) >= workArea.Left + (workArea.Width / 2D);
         }
 
         private static bool IsVerticalDirection(DesktopFlyoutPopupDirection popupDirection)

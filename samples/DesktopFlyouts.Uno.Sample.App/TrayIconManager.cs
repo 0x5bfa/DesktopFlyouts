@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using Windows.Foundation;
 
 namespace DesktopFlyouts;
@@ -57,7 +58,7 @@ internal partial class TrayIconManager : IDisposable
         };
     }
 
-    internal void ToggleFlyout(Point? point = null)
+    internal void ToggleFlyout(DesktopFlyoutPosition? position = null)
     {
         if (DesktopFlyout is null)
             return;
@@ -68,20 +69,28 @@ internal partial class TrayIconManager : IDisposable
         }
         else
         {
-            if (DesktopFlyout is StickySmallFlyout && point is not null)
-            {
-                DesktopFlyout.Show(new((int)point.Value.X, (int)point.Value.Y));
-            }
-            else
-            {
-                DesktopFlyout.Show();
-            }
+            DesktopFlyout.Show(position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
         }
     }
 
     private void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
     {
-        ToggleFlyout(new((int)e.Point.X, (int)e.Point.Y));
+        if (DesktopFlyout is null)
+            return;
+
+        if (DesktopFlyout.IsOpen)
+        {
+            DesktopFlyout.Hide();
+        }
+        else if (SystemTrayIcon?.TryGetBounds(out var bounds) == true)
+        {
+            DesktopFlyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
+        }
+        else
+        {
+            var anchor = new Rectangle((int)e.Point.X, (int)e.Point.Y, 0, 0);
+            DesktopFlyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
+        }
     }
 
     private void SystemTrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)

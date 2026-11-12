@@ -7,7 +7,7 @@ namespace DesktopFlyouts
     /// Specifies the direction used for flyout placement and transition animations.
     /// </summary>
     /// <remarks>
-    /// The automatic values, <see cref="Vertical"/> and <see cref="Horizontal"/>, are resolved from
+    /// <see cref="Auto"/>, <see cref="Vertical"/>, and <see cref="Horizontal"/> are resolved from
     /// the final flyout region when the flyout opens.
     /// </remarks>
     public enum DesktopFlyoutPopupDirection
@@ -41,5 +41,10 @@ namespace DesktopFlyouts
         /// Chooses a horizontal direction based on placement.
         /// </summary>
         Horizontal,
+
+        /// <summary>
+        /// Resolves the transition from the final placement.
+        /// </summary>
+        Auto,
     }
 }

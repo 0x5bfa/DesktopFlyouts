@@ -7,7 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     FlyoutHeight="725"
     IslandsOrientation="Horizontal"
-    Placement="BottomCenter"
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>

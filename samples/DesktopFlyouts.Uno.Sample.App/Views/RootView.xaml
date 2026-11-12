@@ -128,29 +128,6 @@
                         <TextBlock
                             VerticalAlignment="Center"
                             Style="{StaticResource BodyTextBlockStyle}"
-                            Text="Popup direction" />
-                        <ComboBox
-                            Grid.Column="1"
-                            Width="150"
-                            HorizontalAlignment="Left"
-                            IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                            ItemsSource="{x:Bind ViewModel.PopupDirections.Values}"
-                            SelectedIndex="{x:Bind ViewModel.SelectedPopupDirectionIndex, Mode=TwoWay}" />
-                    </Grid>
-                </Border>
-
-                <Border
-                    Padding="16,12"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    CornerRadius="8">
-                    <Grid ColumnSpacing="16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            Style="{StaticResource BodyTextBlockStyle}"
                             Text="Enable backdrop" />
                         <ToggleSwitch
                             Grid.Column="1"
@@ -172,14 +149,13 @@
                         <TextBlock
                             VerticalAlignment="Center"
                             Style="{StaticResource BodyTextBlockStyle}"
-                            Text="Placement" />
+                            Text="Position request" />
                         <ComboBox
                             Grid.Column="1"
                             Width="150"
                             HorizontalAlignment="Left"
-                            IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                            ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
-                            SelectedIndex="{x:Bind ViewModel.SelectedFlyoutPlacementIndex, Mode=TwoWay}" />
+                            ItemsSource="{x:Bind ViewModel.FlyoutPositions.Values}"
+                            SelectedIndex="{x:Bind ViewModel.SelectedPositionIndex, Mode=TwoWay}" />
                     </Grid>
                 </Border>
 

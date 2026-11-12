@@ -64,8 +64,13 @@ namespace DesktopFlyouts
 
 			if (_desktopFlyout.IsOpen)
 				_desktopFlyout.Hide();
+			else if (_systemTrayIcon?.TryGetBounds(out var bounds) == true)
+				_desktopFlyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
 			else
-				_desktopFlyout.Show();
+			{
+				var anchor = new System.Drawing.Rectangle((int)e.Point.X, (int)e.Point.Y, 0, 0);
+				_desktopFlyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
+			}
 		}
 
 		private static void SystemTrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)

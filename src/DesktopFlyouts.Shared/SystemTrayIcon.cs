@@ -19,8 +19,8 @@ namespace DesktopFlyouts
     /// Provides functionality for displaying and managing a system tray icon in the taskbar.
     /// </summary>
     /// <remarks>
-    /// <see cref="SystemTrayIcon"/> wraps the Win32 notification icon APIs and raises click events
-    /// with screen coordinates that can be passed to the point-based flyout and menu show methods.
+    /// <see cref="SystemTrayIcon"/> wraps the Win32 notification icon APIs, raises click events
+    /// with screen coordinates, and can query the current icon bounds when the shell exposes them.
     /// Call <see cref="Show"/> to add the icon to the shell notification area and
     /// <see cref="Destroy"/> to remove it. Call <see cref="Dispose()"/> explicitly when the object
     /// is no longer needed to release its owned resources.
@@ -96,6 +96,38 @@ namespace DesktopFlyouts
         /// </summary>
         /// <value>The GUID used by the shell to identify this notification icon.</value>
         public Guid Id { get; }
+
+        /// <summary>
+        /// Tries to get the tray icon bounds in physical screen pixels.
+        /// </summary>
+        /// <param name="bounds">Receives the icon bounds when available; otherwise, receives an empty rectangle.</param>
+        /// <returns><see langword="true"/> when the shell returned the current icon bounds; otherwise, <see langword="false"/>.</returns>
+        /// <remarks>
+        /// Returns <see langword="false"/> if the icon is not registered, is hidden, or the shell
+        /// cannot provide its bounds. No estimated coordinates are returned as a successful result.
+        /// </remarks>
+        public bool TryGetBounds(out Rectangle bounds)
+        {
+            bounds = Rectangle.Empty;
+            if (_disposed || !_created || !_IsVisible || _hWnd.IsNull)
+            {
+                return false;
+            }
+
+            NOTIFYICONIDENTIFIER identifier = default;
+            identifier.cbSize = (uint)sizeof(NOTIFYICONIDENTIFIER);
+            identifier.hWnd = _hWnd;
+            identifier.guidItem = Id;
+
+            RECT rect = default;
+            if (!SUCCEEDED(PInvoke.Shell_NotifyIconGetRect(&identifier, &rect)) || rect.right <= rect.left || rect.bottom <= rect.top)
+            {
+                return false;
+            }
+
+            bounds = Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
+            return true;
+        }
 
         /// <summary>
         /// Occurs when the tray icon receives a left-click.
@@ -361,23 +393,14 @@ namespace DesktopFlyouts
             _hIcon = default;
         }
 
-        private Point GetCenterPointOfTrayIcon(HWND hWnd)
+        private Point GetCenterPointOfTrayIcon()
         {
-            NOTIFYICONIDENTIFIER nii = default;
-            nii.cbSize = (uint)sizeof(NOTIFYICONIDENTIFIER);
-            nii.hWnd = hWnd;
-            nii.guidItem = Id;
-
-            RECT rect = default;
-            Point point = default;
-            HRESULT hr = PInvoke.Shell_NotifyIconGetRect(&nii, &rect);
-            if (SUCCEEDED(hr))
+            if (TryGetBounds(out var bounds))
             {
-                point.X = rect.right - (rect.Width / 2);
-                point.Y = rect.bottom - (rect.Height / 2);
+                return new Point(bounds.Left + (bounds.Width / 2), bounds.Top + (bounds.Height / 2));
             }
 
-            return point;
+            return Point.Empty;
         }
 
         private LRESULT WndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
@@ -391,7 +414,7 @@ namespace DesktopFlyouts
                             case PInvoke.WM_LBUTTONUP:
                                 {
                                     PInvoke.SetForegroundWindow(hWnd);
-                                    var point = GetCenterPointOfTrayIcon(hWnd);
+                                    var point = GetCenterPointOfTrayIcon();
                                     if (!point.IsEmpty)
                                     {
                                         LeftClicked?.Invoke(this, new MouseEventReceivedEventArgs(point));
@@ -402,7 +425,7 @@ namespace DesktopFlyouts
                             case PInvoke.WM_RBUTTONUP:
                                 {
                                     PInvoke.SetForegroundWindow(hWnd);
-                                    var point = GetCenterPointOfTrayIcon(hWnd);
+                                    var point = GetCenterPointOfTrayIcon();
                                     if (!point.IsEmpty)
                                     {
                                         RightClicked?.Invoke(this, new MouseEventReceivedEventArgs(point));
@@ -413,7 +436,7 @@ namespace DesktopFlyouts
                             case PInvoke.WM_LBUTTONDBLCLK:
                                 {
                                     PInvoke.SetForegroundWindow(hWnd);
-                                    var point = GetCenterPointOfTrayIcon(hWnd);
+                                    var point = GetCenterPointOfTrayIcon();
                                     if (!point.IsEmpty)
                                     {
                                         LeftDoubleClicked?.Invoke(this, new MouseEventReceivedEventArgs(point));
@@ -424,7 +447,7 @@ namespace DesktopFlyouts
                             case PInvoke.WM_RBUTTONDBLCLK:
                                 {
                                     PInvoke.SetForegroundWindow(hWnd);
-                                    var point = GetCenterPointOfTrayIcon(hWnd);
+                                    var point = GetCenterPointOfTrayIcon();
                                     if (!point.IsEmpty)
                                     {
                                         RightDoubleClicked?.Invoke(this, new MouseEventReceivedEventArgs(point));

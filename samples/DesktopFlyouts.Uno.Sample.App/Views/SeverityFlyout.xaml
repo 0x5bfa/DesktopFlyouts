@@ -8,8 +8,6 @@
     FlyoutWidth="360"
     HideOnLostFocus="False"
     IslandsOrientation="Vertical"
-    Placement="BottomRight"
-    PopupDirection="RightToLeft"
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>

@@ -41,10 +41,7 @@ namespace DesktopFlyouts
         internal partial double AutoCloseDelaySecondsValue { get; set; }
 
         [ObservableProperty]
-        internal partial int SelectedPopupDirectionIndex { get; set; }
-
-        [ObservableProperty]
-        internal partial int SelectedFlyoutPlacementIndex { get; set; }
+        internal partial int SelectedPositionIndex { get; set; }
 
         [ObservableProperty]
         internal partial int SelectedFlyoutExampleIndex { get; set; }
@@ -58,8 +55,7 @@ namespace DesktopFlyouts
         [ObservableProperty]
         internal partial int SelectedSystemBackdropIndex { get; set; }
 
-        public Dictionary<DesktopFlyoutPopupDirection, string> PopupDirections { get; private set; } = [];
-        public Dictionary<DesktopFlyoutPlacementMode, string> FlyoutPlacements { get; private set; } = [];
+        public Dictionary<DesktopFlyoutPosition, string> FlyoutPositions { get; private set; } = [];
         public Dictionary<DesktopFlyoutActivationMode, string> ActivationModes { get; private set; } = [];
         public Dictionary<DesktopFlyoutSampleKind, string> FlyoutExamples { get; private set; } = [];
         public Dictionary<DesktopFlyoutBackdropKind, string> SystemBackdrops { get; private set; } = [];
@@ -89,23 +85,16 @@ namespace DesktopFlyouts
             FlyoutExamples.Add(DesktopFlyoutSampleKind.Severity, "Severity");
             SelectedFlyoutExampleIndex = 0;
 
-            PopupDirections.Add(DesktopFlyoutPopupDirection.Vertical, "Vertical");
-            PopupDirections.Add(DesktopFlyoutPopupDirection.BottomToTop, "Bottom to top");
-            PopupDirections.Add(DesktopFlyoutPopupDirection.TopToBottom, "Top to bottom");
-            PopupDirections.Add(DesktopFlyoutPopupDirection.Horizontal, "Horizontal");
-            PopupDirections.Add(DesktopFlyoutPopupDirection.LeftToRight, "Left to right");
-            PopupDirections.Add(DesktopFlyoutPopupDirection.RightToLeft, "Right to left");
-            SelectedPopupDirectionIndex = 0;
-
-            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.TopLeft, "Top left");
-            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.TopCenter, "Top center");
-            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.TopRight, "Top right");
-            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.BottomLeft, "Bottom left");
-            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.BottomCenter, "Bottom center");
-            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.BottomRight, "Bottom right");
-            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.LeftCenter, "Left center");
-            FlyoutPlacements.Add(DesktopFlyoutPlacementMode.RightCenter, "Right center");
-            SelectedFlyoutPlacementIndex = 5;
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.TopLeft, DesktopFlyoutMonitorSelection.Cursor), "Top left");
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.TopCenter, DesktopFlyoutMonitorSelection.Cursor), "Top center");
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.TopRight, DesktopFlyoutMonitorSelection.Cursor), "Top right");
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.LeftCenter, DesktopFlyoutMonitorSelection.Cursor), "Left center");
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.RightCenter, DesktopFlyoutMonitorSelection.Cursor), "Right center");
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomLeft, DesktopFlyoutMonitorSelection.Cursor), "Bottom left");
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomCenter, DesktopFlyoutMonitorSelection.Cursor), "Bottom center");
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight, DesktopFlyoutMonitorSelection.Cursor), "Bottom right");
+            FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight, DesktopFlyoutMonitorSelection.Cursor, DesktopFlyoutPopupDirection.RightToLeft), "Bottom right (from right)");
+            SelectedPositionIndex = FlyoutPositions.Count - 2;
 
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica");
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.DesktopAcrylic, "Desktop Acrylic");
@@ -160,18 +149,6 @@ namespace DesktopFlyouts
                 TrayIconManager.Default.DesktopFlyout!.ActivationMode = ActivationModes.ElementAt(value).Key;
         }
 
-        partial void OnSelectedPopupDirectionIndexChanged(int value)
-        {
-            if (IsDefaultFlyoutSelected())
-                TrayIconManager.Default.DesktopFlyout?.PopupDirection = PopupDirections.ElementAt(value).Key;
-        }
-
-        partial void OnSelectedFlyoutPlacementIndexChanged(int value)
-        {
-            if (IsDefaultFlyoutSelected())
-                TrayIconManager.Default.DesktopFlyout?.Placement = FlyoutPlacements.ElementAt(value).Key;
-        }
-
         partial void OnSelectedFlyoutExampleIndexChanged(int value)
         {
             var flyoutKind = FlyoutExamples.ElementAt(value).Key;
@@ -221,8 +198,6 @@ namespace DesktopFlyouts
             flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
             flyout.SwipeDismissThreshold = SwipeDismissThresholdValue;
             flyout.IsBackdropEnabled = IsBackdropEnabled;
-            flyout.Placement = FlyoutPlacements.ElementAt(SelectedFlyoutPlacementIndex).Key;
-            flyout.PopupDirection = PopupDirections.ElementAt(SelectedPopupDirectionIndex).Key;
         }
 
         private static bool IsDefaultFlyoutSelected()
@@ -246,7 +221,7 @@ namespace DesktopFlyouts
 
         private void ExecuteToggleFlyoutOpenCommand()
         {
-            TrayIconManager.Default.ToggleFlyout();
+            TrayIconManager.Default.ToggleFlyout(position: FlyoutPositions.ElementAt(SelectedPositionIndex).Key);
         }
     }
 }

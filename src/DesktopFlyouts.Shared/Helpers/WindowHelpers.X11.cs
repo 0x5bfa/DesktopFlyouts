@@ -26,6 +26,48 @@ namespace DesktopFlyouts
             return XOpenDisplay(IntPtr.Zero);
         }
 
+        internal static Point GetCursorPosition()
+        {
+            ThrowHelper.ThrowIfNotLinux();
+
+            var display = OpenDisplay();
+            if (display == IntPtr.Zero)
+            {
+                return Point.Empty;
+            }
+
+            try
+            {
+                var rootWindow = XDefaultRootWindow(display);
+                if (rootWindow == IntPtr.Zero ||
+                    XQueryPointer(display, rootWindow, out _, out _, out var rootX, out var rootY, out _, out _, out _) == 0)
+                {
+                    return Point.Empty;
+                }
+
+                return new Point(rootX, rootY);
+            }
+            finally
+            {
+                XCloseDisplay(display);
+            }
+        }
+
+        internal static Rectangle GetFlyoutWorkAreaRect(DesktopFlyoutPosition position, Point? cursorPosition = null)
+        {
+            if (position.Anchor is Rectangle anchor)
+            {
+                return GetFlyoutWorkAreaRect(new Point(anchor.Left + (anchor.Width / 2), anchor.Top + (anchor.Height / 2)));
+            }
+
+            if (position.MonitorSelection is DesktopFlyoutMonitorSelection.Cursor)
+            {
+                return GetFlyoutWorkAreaRect(cursorPosition ?? GetCursorPosition());
+            }
+
+            return GetFlyoutWorkAreaRect();
+        }
+
         internal static Point GetBottomRightCornerPoint()
         {
             ThrowHelper.ThrowIfNotLinux();
@@ -73,12 +115,13 @@ namespace DesktopFlyouts
             }
         }
 
-        internal static bool TryGetTaskbarInfoForPoint(Point point, out Rectangle rect, out TaskbarEdge edge)
+        internal static bool TryGetMonitorScreenRect(Rectangle anchorBounds, out Rectangle screenBounds)
         {
             ThrowHelper.ThrowIfNotLinux();
 
-            rect = default;
-            edge = TaskbarEdge.Bottom;
+            // X11 reports screen bounds for the root display; per-monitor rectangles are not
+            // exposed through the display APIs used by this helper.
+            screenBounds = default;
 
             var display = OpenDisplay();
             if (display == IntPtr.Zero)
@@ -90,15 +133,34 @@ namespace DesktopFlyouts
                 if (rootWindow == IntPtr.Zero)
                     return false;
 
-                // Enumerate child windows and check _NET_WM_STRUT_PARTIAL / _NET_WM_STRUT
-                if (!TryReadNetWorkArea(display, rootWindow, out var workArea))
+                return TryReadScreenDimensions(display, out screenBounds);
+            }
+            finally
+            {
+                XCloseDisplay(display);
+            }
+        }
+
+        internal static bool TryGetTaskbarInfoForBounds(Rectangle bounds, out Rectangle rect, out TaskbarEdge edge)
+        {
+            ThrowHelper.ThrowIfNotLinux();
+
+            rect = default;
+            edge = default;
+
+            var display = OpenDisplay();
+            if (display == IntPtr.Zero)
+                return false;
+
+            try
+            {
+                var rootWindow = XDefaultRootWindow(display);
+                if (rootWindow == IntPtr.Zero || !TryReadScreenDimensions(display, out var screenRect))
                     return false;
 
-                var screenRect = workArea;
-                if (TryReadScreenDimensions(display, out var full))
-                    screenRect = full;
-
-                return TryFindPanelAtPoint(display, rootWindow, point, screenRect, out rect, out edge);
+                // EWMH struts identify panels that reserve screen space. Third-party panels that
+                // do not publish these properties cannot be detected here.
+                return TryFindPanelForBounds(display, rootWindow, bounds, screenRect, out rect, out edge);
             }
             finally
             {
@@ -144,9 +206,9 @@ namespace DesktopFlyouts
             return false;
         }
 
-        private static bool TryFindPanelAtPoint(
+        private static bool TryFindPanelForBounds(
             IntPtr display, IntPtr rootWindow,
-            Point point, Rectangle screenRect,
+            Rectangle anchorBounds, Rectangle screenRect,
             out Rectangle panelRect, out TaskbarEdge panelEdge)
         {
             panelRect = default;
@@ -164,8 +226,6 @@ namespace DesktopFlyouts
 
                 var netWmStrutPartial = XInternAtom(display, "_NET_WM_STRUT_PARTIAL", false);
                 var netWmStrut = XInternAtom(display, "_NET_WM_STRUT", false);
-                var cardinalAtom = XInternAtom(display, "CARDINAL", false);
-
                 for (int i = 0; i < nchildren; i++)
                 {
                     var child = Marshal.ReadIntPtr(children, i * IntPtr.Size);
@@ -183,8 +243,8 @@ namespace DesktopFlyouts
 
                         if (leftStrut > 0)
                         {
-                            var panelRectCandidate = new Rectangle(0, (int)struts[4], leftStrut, (int)struts[5] - (int)struts[4]);
-                            if (IsPointNearRect(point, panelRectCandidate, tolerance))
+                            var panelRectCandidate = new Rectangle(0, (int)struts[4], leftStrut, Math.Max(1, (int)struts[5] - (int)struts[4] + 1));
+                            if (IsRectNearRect(anchorBounds, panelRectCandidate, tolerance))
                             {
                                 panelRect = new Rectangle(0, 0, leftStrut, screenRect.Height);
                                 panelEdge = TaskbarEdge.Left;
@@ -195,8 +255,8 @@ namespace DesktopFlyouts
                         if (rightStrut > 0)
                         {
                             var panelX = screenRect.Width - rightStrut;
-                            var panelRectCandidate = new Rectangle(panelX, (int)struts[6], rightStrut, (int)struts[7] - (int)struts[6]);
-                            if (IsPointNearRect(point, panelRectCandidate, tolerance))
+                            var panelRectCandidate = new Rectangle(panelX, (int)struts[6], rightStrut, Math.Max(1, (int)struts[7] - (int)struts[6] + 1));
+                            if (IsRectNearRect(anchorBounds, panelRectCandidate, tolerance))
                             {
                                 panelRect = new Rectangle(panelX, 0, rightStrut, screenRect.Height);
                                 panelEdge = TaskbarEdge.Right;
@@ -206,8 +266,8 @@ namespace DesktopFlyouts
 
                         if (topStrut > 0)
                         {
-                            var panelRectCandidate = new Rectangle((int)struts[8], 0, (int)struts[9] - (int)struts[8], topStrut);
-                            if (IsPointNearRect(point, panelRectCandidate, tolerance))
+                            var panelRectCandidate = new Rectangle((int)struts[8], 0, Math.Max(1, (int)struts[9] - (int)struts[8] + 1), topStrut);
+                            if (IsRectNearRect(anchorBounds, panelRectCandidate, tolerance))
                             {
                                 panelRect = new Rectangle(0, 0, screenRect.Width, topStrut);
                                 panelEdge = TaskbarEdge.Top;
@@ -218,8 +278,8 @@ namespace DesktopFlyouts
                         if (bottomStrut > 0)
                         {
                             var panelY = screenRect.Height - bottomStrut;
-                            var panelRectCandidate = new Rectangle((int)struts[10], panelY, (int)struts[11] - (int)struts[10], bottomStrut);
-                            if (IsPointNearRect(point, panelRectCandidate, tolerance))
+                            var panelRectCandidate = new Rectangle((int)struts[10], panelY, Math.Max(1, (int)struts[11] - (int)struts[10] + 1), bottomStrut);
+                            if (IsRectNearRect(anchorBounds, panelRectCandidate, tolerance))
                             {
                                 panelRect = new Rectangle(0, panelY, screenRect.Width, bottomStrut);
                                 panelEdge = TaskbarEdge.Bottom;
@@ -238,7 +298,7 @@ namespace DesktopFlyouts
                         if (leftStrut > 0)
                         {
                             var candidate = new Rectangle(0, 0, leftStrut, screenRect.Height);
-                            if (IsPointNearRect(point, candidate, tolerance))
+                            if (IsRectNearRect(anchorBounds, candidate, tolerance))
                             {
                                 panelRect = candidate;
                                 panelEdge = TaskbarEdge.Left;
@@ -250,7 +310,7 @@ namespace DesktopFlyouts
                         {
                             var panelX = screenRect.Width - rightStrut;
                             var candidate = new Rectangle(panelX, 0, rightStrut, screenRect.Height);
-                            if (IsPointNearRect(point, candidate, tolerance))
+                            if (IsRectNearRect(anchorBounds, candidate, tolerance))
                             {
                                 panelRect = candidate;
                                 panelEdge = TaskbarEdge.Right;
@@ -261,7 +321,7 @@ namespace DesktopFlyouts
                         if (topStrut > 0)
                         {
                             var candidate = new Rectangle(0, 0, screenRect.Width, topStrut);
-                            if (IsPointNearRect(point, candidate, tolerance))
+                            if (IsRectNearRect(anchorBounds, candidate, tolerance))
                             {
                                 panelRect = candidate;
                                 panelEdge = TaskbarEdge.Top;
@@ -273,7 +333,7 @@ namespace DesktopFlyouts
                         {
                             var panelY = screenRect.Height - bottomStrut;
                             var candidate = new Rectangle(0, panelY, screenRect.Width, bottomStrut);
-                            if (IsPointNearRect(point, candidate, tolerance))
+                            if (IsRectNearRect(anchorBounds, candidate, tolerance))
                             {
                                 panelRect = candidate;
                                 panelEdge = TaskbarEdge.Bottom;
@@ -292,11 +352,11 @@ namespace DesktopFlyouts
             return false;
         }
 
-        private static bool IsPointNearRect(Point point, Rectangle rect, int tolerance)
+        private static bool IsRectNearRect(Rectangle bounds, Rectangle candidate, int tolerance)
         {
-            var testRect = rect;
+            var testRect = candidate;
             testRect.Inflate(tolerance, tolerance);
-            return testRect.Contains(point);
+            return testRect.IntersectsWith(bounds);
         }
 
         private static bool ReadCardinals(IntPtr display, nint window, nint atom, out nuint[] cardinals)

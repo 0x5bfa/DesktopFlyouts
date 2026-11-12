@@ -6,8 +6,6 @@
     xmlns:local="using:DesktopFlyouts"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     FlyoutWidth="1000"
-    Placement="BottomLeft"
-    PopupDirection="Horizontal"
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>

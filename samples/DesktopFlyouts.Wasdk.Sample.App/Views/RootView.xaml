@@ -52,22 +52,14 @@
                         Command="{x:Bind ViewModel.ToggleFlyoutOpenCommand}"
                         Content="Toggle open" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Popup direction">
-                    <ComboBox
-                        Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                        ItemsSource="{x:Bind ViewModel.PopupDirections.Values}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedPopupDirectionIndex, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Enable backdrop">
                     <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Placement">
+                <wctcontrols:SettingsCard Header="Position request">
                     <ComboBox
                         Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                        ItemsSource="{x:Bind ViewModel.FlyoutPlacements.Values}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedFlyoutPlacementIndex, Mode=TwoWay}" />
+                        ItemsSource="{x:Bind ViewModel.FlyoutPositions.Values}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedPositionIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Flyout width">
                     <NumberBox

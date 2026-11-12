@@ -9,7 +9,6 @@
     ActivationMode="NeverActivate"
     AutoCloseDelay="0:0:1.5"
     IslandsOrientation="Horizontal"
-    Placement="BottomCenter"
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>

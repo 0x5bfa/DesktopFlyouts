@@ -10,8 +10,6 @@ Use it when you need a small desktop surface that can be shown from a tray icon 
 <desktop:DesktopFlyout
     x:Class="MyApp.MainDesktopFlyout"
     FlyoutWidth="360"
-    Placement="BottomRight"
-    PopupDirection="Vertical"
     ActivationMode="NoActivateOnOpen">
 
     <desktop:DesktopFlyoutIsland IslandHeight="300">
@@ -25,7 +23,7 @@ Use it when you need a small desktop surface that can be shown from a tray icon 
 
 ```csharp
 var flyout = new MainDesktopFlyout();
-flyout.Show();
+flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 ```
 
 ## Islands
@@ -41,34 +39,61 @@ The flyout content is the `Islands` collection. Each island is a `DesktopFlyoutI
 
 Use `IslandsOrientation="Vertical"` for stacked sections and `Horizontal` for side-by-side sections. `IslandHeight` is used for vertical layout. `IslandWidth` is used for horizontal layout.
 
-## Placement
+## Position requests
 
-`Show()` positions the flyout by `Placement`.
+Pass a position request to `Show`. The flyout is measured first, then positioned in physical screen
+pixels and clamped to the selected monitor's work area. The chosen anchor side stays fixed when an
+open flyout changes size.
 
-Available values:
+Position is supplied per `Show` call. The former `Placement` and `PopupDirection` XAML properties
+have been removed.
 
-- `BottomRight`
-- `BottomLeft`
-- `BottomCenter`
-- `TopRight`
-- `TopLeft`
-- `TopCenter`
-- `LeftCenter`
-- `RightCenter`
-
-`Show(Point)` bypasses `Placement` for that open operation and treats the point as the desired bottom-center point in physical screen pixels.
+For a regular UI anchor, pass its screen-space bounds and the side where the flyout should appear.
+The default alignment is centered. The transition direction defaults to the direction implied by
+the chosen side.
 
 ```csharp
-flyout.Show(new Point(x, y));
+var anchor = new Rectangle(x, y, width, height);
+flyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
 ```
 
-## Popup direction
+For a tray icon, use `TryGetBounds` and `ForTaskbarAnchor`:
 
-`PopupDirection` controls the transition direction.
+```csharp
+if (trayIcon.TryGetBounds(out var trayIconBounds))
+    flyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(trayIconBounds));
+```
 
-- `Vertical`: resolves to `BottomToTop` in the bottom half of the work area, otherwise `TopToBottom`.
-- `Horizontal`: resolves to `RightToLeft` in the right half of the work area, otherwise `LeftToRight`.
-- Explicit values always use the requested direction.
+`ForTaskbarAnchor` uses a taskbar edge reported by the platform when available and opens toward the
+work area. If detection fails, it infers a side from the nearest monitor edge; if monitor bounds are
+also unavailable, it uses `Above`. Windows shell taskbars and X11 panels that publish EWMH strut
+properties can be detected. Third-party bars that expose no supported geometry are not guaranteed
+to be detected. The nearest-edge fallback is a separate estimate, not a detection result.
+
+Use `DesktopFlyoutAnchorSide.Above`, `Below`, `Left`, or `Right` for an explicit side. Use
+`DesktopFlyoutAnchorAlignment.Start`, `Center`, or `End` to align the flyout along the anchor.
+
+For a fixed work-area position, use `DesktopFlyoutWorkAreaPosition` and choose whether to use the
+primary monitor or the monitor under the cursor.
+
+```csharp
+flyout.Show(DesktopFlyoutPosition.InWorkArea(
+    DesktopFlyoutWorkAreaPosition.BottomRight,
+    DesktopFlyoutMonitorSelection.Cursor));
+```
+
+The transition follows the resolved placement by default. Pass a `DesktopFlyoutPopupDirection` to
+the request factory only when the transition should intentionally differ from the placement. For
+example, `BottomRight` normally enters from below; pass `RightToLeft` to make the same placement
+enter from the right. `Auto` remains available as a transition direction, but there is no automatic
+position or anchor-side request.
+
+```csharp
+flyout.Show(DesktopFlyoutPosition.InWorkArea(
+    DesktopFlyoutWorkAreaPosition.BottomRight,
+    DesktopFlyoutMonitorSelection.Cursor,
+    DesktopFlyoutPopupDirection.RightToLeft));
+```
 
 ## Sizing
 

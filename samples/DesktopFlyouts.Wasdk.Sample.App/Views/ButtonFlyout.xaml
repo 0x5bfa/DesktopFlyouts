@@ -11,8 +11,6 @@
     HideOnLostFocus="False"
     IsSwipeToDismissEnabled="True"
     IslandsOrientation="Vertical"
-    Placement="BottomRight"
-    PopupDirection="RightToLeft"
     PressedScale="0.9"
     mc:Ignorable="d">
 

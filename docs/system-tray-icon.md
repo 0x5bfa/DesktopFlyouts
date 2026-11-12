@@ -37,14 +37,23 @@ var trayIconFromHandle = new SystemTrayIcon(
 
 When the icon is created from a handle, the handle is copied internally.
 
-## Click points
+## Icon bounds and click points
 
 `LeftClicked` and `RightClicked` provide the center point of the tray icon in physical screen pixels.
+Use `TryGetBounds` when the full icon rectangle is needed by `ForTaskbarAnchor`:
 
 ```csharp
 private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
 {
-    flyout.Show(e.Point);
+    if (sender is SystemTrayIcon trayIcon && trayIcon.TryGetBounds(out var bounds))
+    {
+        flyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
+    }
+    else
+    {
+        var pointBounds = new System.Drawing.Rectangle((int)e.Point.X, (int)e.Point.Y, 0, 0);
+        flyout.Show(DesktopFlyoutPosition.ForAnchor(pointBounds, DesktopFlyoutAnchorSide.Above));
+    }
 }
 
 private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)
@@ -52,6 +61,10 @@ private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e
     menu.Show(e.Point);
 }
 ```
+
+`TryGetBounds` returns `false` and an empty rectangle when the icon is unavailable or the platform
+cannot provide its bounds. The X11 StatusNotifierItem implementation does not expose icon geometry;
+its click event can still provide a screen point for an explicitly sided `ForAnchor` request.
 
 ## Visibility and updates
 

@@ -100,33 +100,11 @@ namespace DesktopFlyouts
         }
 
         /// <summary>
-        /// Gets or sets the preferred popup direction.
-        /// </summary>
-        /// <value>The preferred direction for open and close transitions. The default is <see cref="DesktopFlyoutPopupDirection.Vertical"/>.</value>
-        /// <remarks>
-        /// Automatic directions are resolved from the final flyout position. A flyout in the bottom
-        /// half of the work area opens upward; a flyout in the top half opens downward.
-        /// </remarks>
-        [GeneratedDependencyProperty(DefaultValue = DesktopFlyoutPopupDirection.Vertical)]
-        public partial DesktopFlyoutPopupDirection PopupDirection { get; set; }
-
-        /// <summary>
         /// Gets or sets how islands are arranged.
         /// </summary>
         /// <value>The orientation used to arrange <see cref="Islands"/>. The default is <see cref="Orientation.Vertical"/>.</value>
         [GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
         public partial Orientation IslandsOrientation { get; set; }
-
-        /// <summary>
-        /// Gets or sets the flyout placement on the work area.
-        /// </summary>
-        /// <value>The work-area placement used by <see cref="DesktopFlyout.Show()"/>. The default is <see cref="DesktopFlyoutPlacementMode.BottomRight"/>.</value>
-        /// <remarks>
-        /// This property is ignored for the one open operation started by the point-based
-        /// <see cref="DesktopFlyout.Show()"/> overload.
-        /// </remarks>
-        [GeneratedDependencyProperty(DefaultValue = DesktopFlyoutPlacementMode.BottomRight)]
-        public partial DesktopFlyoutPlacementMode Placement { get; set; }
 
         /// <summary>
         /// Gets or sets the menu flyout associated with the desktop flyout.

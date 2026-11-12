@@ -17,6 +17,18 @@ partial class X11PInvoke
     [LibraryImport(LibX11)]
     public static partial nint XDefaultRootWindow(nint display);
 
+    [LibraryImport(LibX11)]
+    public static partial int XQueryPointer(
+        nint display,
+        nint window,
+        out nint rootReturn,
+        out nint childReturn,
+        out int rootXReturn,
+        out int rootYReturn,
+        out int winXReturn,
+        out int winYReturn,
+        out nuint maskReturn);
+
     [LibraryImport(LibX11, StringMarshalling = StringMarshalling.Utf8)]
     public static partial nint XInternAtom(nint display, string atomName, [MarshalAs(UnmanagedType.Bool)] bool onlyIfExists);
 
