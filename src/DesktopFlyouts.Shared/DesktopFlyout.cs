@@ -60,6 +60,8 @@ namespace DesktopFlyouts
         private bool _isAnimationsEnabledChangedSubscribed;
 #endif
         private bool _isPopupAnimationPlaying;
+        private bool _isOpening;
+        private bool _hideAfterOpen;
         private bool _isPressAnimationActive;
         private DesktopFlyoutPosition? _position;
         private Rectangle _activeWorkArea;
@@ -158,9 +160,9 @@ namespace DesktopFlyouts
         /// Opens the flyout at the default bottom-right position.
         /// </summary>
         /// <remarks>
-        /// The flyout uses the default bottom-right work-area position. Calls made while an open or
-        /// close transition is running are ignored. <see cref="IsOpen"/> becomes <see langword="true"/>
-        /// after the open transition completes.
+        /// The flyout uses the default bottom-right work-area position. A call during an opening
+        /// transition cancels a deferred close request. <see cref="IsOpen"/> becomes
+        /// <see langword="true"/> after the open transition completes.
         /// </remarks>
         public void Show()
         {
@@ -174,8 +176,16 @@ namespace DesktopFlyouts
         {
             ArgumentNullException.ThrowIfNull(position);
 
-            if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null || _isPopupAnimationPlaying)
+            if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null)
             {
+                return;
+            }
+
+            if (_isPopupAnimationPlaying)
+            {
+                if (_isOpening)
+                    _hideAfterOpen = false;
+
                 return;
             }
 
@@ -200,6 +210,7 @@ namespace DesktopFlyouts
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
             _isPopupAnimationPlaying = true;
+            _isOpening = true;
             var shouldActivateOnOpen = ShouldActivateOnOpen();
             if (!shouldActivateOnOpen)
                 _host.PreserveActivationState();
@@ -266,8 +277,9 @@ namespace DesktopFlyouts
         /// Closes the flyout.
         /// </summary>
         /// <remarks>
-        /// Calls made while an open or close transition is running are ignored. <see cref="IsOpen"/>
-        /// becomes <see langword="false"/> after the close transition completes.
+        /// A call during an opening transition is deferred until the open transition completes.
+        /// Calls during a close transition are ignored. <see cref="IsOpen"/> becomes
+        /// <see langword="false"/> after the close transition completes.
         /// </remarks>
         public void Hide()
         {
@@ -295,8 +307,16 @@ namespace DesktopFlyouts
             StopSwipeDismissRestoreStoryboard();
             ResetSwipeDismissTracking();
 
-            if (_disposed || RootGrid is null || _isPopupAnimationPlaying)
+            if (_disposed || RootGrid is null)
                 return;
+
+            if (_isPopupAnimationPlaying)
+            {
+                if (_isOpening)
+                    _hideAfterOpen = true;
+
+                return;
+            }
 
             _isPopupAnimationPlaying = true;
             if (!closeFromCurrentTransform)
@@ -549,6 +569,15 @@ namespace DesktopFlyouts
             ResetSwipeDismissTracking();
             SetOpenTransform();
             _isPopupAnimationPlaying = false;
+            _isOpening = false;
+
+            if (_hideAfterOpen)
+            {
+                _hideAfterOpen = false;
+                Hide();
+                return;
+            }
+
             IsOpen = true;
             if (ShouldActivateOnOpen())
                 PrepareInitialFocus();
