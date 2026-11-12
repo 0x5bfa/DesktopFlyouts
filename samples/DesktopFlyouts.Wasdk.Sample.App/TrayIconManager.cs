@@ -64,7 +64,10 @@ namespace DesktopFlyouts
             if (DesktopFlyout is null)
                 return;
 
-            if (DesktopFlyout.TransitionState is DesktopFlyoutTransitionState.Open or DesktopFlyoutTransitionState.Opening)
+            if (DesktopFlyout.TransitionState is
+                DesktopFlyoutTransitionState.Open or
+                DesktopFlyoutTransitionState.Opening or
+                DesktopFlyoutTransitionState.Closing)
             {
                 DesktopFlyout.Hide();
             }
@@ -79,7 +82,10 @@ namespace DesktopFlyouts
             if (DesktopFlyout is null)
                 return;
 
-            if (DesktopFlyout.TransitionState is DesktopFlyoutTransitionState.Open or DesktopFlyoutTransitionState.Opening)
+            if (DesktopFlyout.TransitionState is
+                DesktopFlyoutTransitionState.Open or
+                DesktopFlyoutTransitionState.Opening or
+                DesktopFlyoutTransitionState.Closing)
             {
                 DesktopFlyout.Hide();
             }

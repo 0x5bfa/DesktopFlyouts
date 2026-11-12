@@ -62,7 +62,10 @@ namespace DesktopFlyouts
 			if (_desktopFlyout is null)
 				return;
 
-			if (_desktopFlyout.IsOpen)
+			if (_desktopFlyout.TransitionState is
+				DesktopFlyoutTransitionState.Open or
+				DesktopFlyoutTransitionState.Opening or
+				DesktopFlyoutTransitionState.Closing)
 				_desktopFlyout.Hide();
 			else if (_systemTrayIcon?.TryGetBounds(out var bounds) == true)
 				_desktopFlyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
