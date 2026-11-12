@@ -121,6 +121,7 @@ namespace DesktopFlyouts
         /// Gets or sets whether open and close transitions are enabled.
         /// </summary>
         /// <value><see langword="true"/> to animate open and close transitions; otherwise, <see langword="false"/>. The default is <see langword="true"/>.</value>
+        /// <remarks>Windows hosts also respect the user's system animation setting, even when this property is <see langword="true"/>.</remarks>
         [GeneratedDependencyProperty(DefaultValue = true)]
         public partial bool IsTransitionAnimationEnabled { get; set; }
 

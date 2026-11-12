@@ -52,7 +52,11 @@
   </Folder>
 
   <Folder Name="/src/">
-    <Project Path="src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj" />
+    <Project Path="src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
     <Project Path="src/DesktopFlyouts.Shared/DesktopFlyouts.Shared.shproj" Id="97b61227-b152-453d-a2d1-f7a98fc83367" />
     <Project Path="src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.csproj" Id="d3ef520c-8296-4e85-aaec-0b184e2be188">
       <Platform Solution="*|ARM64" Project="ARM64" />

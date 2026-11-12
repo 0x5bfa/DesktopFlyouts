@@ -9,6 +9,11 @@ using Windows.Graphics;
 using FoundationPoint = Windows.Foundation.Point;
 using FoundationSize = Windows.Foundation.Size;
 
+#if (UWP || WASDK) && !HAS_UNO
+using Windows.Foundation.Metadata;
+using Windows.UI.ViewManagement;
+#endif
+
 #if UWP
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -49,6 +54,11 @@ namespace DesktopFlyouts
         private const double SwipeDismissAxisDominanceRatio = 1.2D;
 
         private readonly XamlIslandHostWindow? _host;
+#if (UWP || WASDK) && !HAS_UNO
+        private readonly UISettings _uiSettings;
+        private bool _systemAnimationsEnabled;
+        private bool _isAnimationsEnabledChangedSubscribed;
+#endif
         private bool _isPopupAnimationPlaying;
         private bool _isPressAnimationActive;
         private DesktopFlyoutPosition? _position;
@@ -86,6 +96,15 @@ namespace DesktopFlyouts
             _host = new XamlIslandHostWindow();
             _host.SetContent(this);
             _ = _host.UpdateWindowVisibility(false);
+#if (UWP || WASDK) && !HAS_UNO
+            _uiSettings = new UISettings();
+            _systemAnimationsEnabled = _uiSettings.AnimationsEnabled;
+            if (ApiInformation.IsEventPresent("Windows.UI.ViewManagement.UISettings", "AnimationsEnabledChanged"))
+            {
+                _uiSettings.AnimationsEnabledChanged += UISettings_AnimationsEnabledChanged;
+                _isAnimationsEnabledChangedSubscribed = true;
+            }
+#endif
 #if HAS_UNO
             if (HideOnLostFocus)
                 _host.WindowInactivated += HostWindow_Inactivated;
@@ -218,7 +237,7 @@ namespace DesktopFlyouts
                     if (!shouldActivateOnOpen)
                         RestartRestoreActivationTimer();
 
-                    if (IsTransitionAnimationEnabled)
+                    if (AreTransitionAnimationsEnabled)
                     {
                         var storyboard = GetOpenStoryboard(_activePopupDirection);
                         storyboard.Completed += OpenAnimationStoryboard_Completed;
@@ -283,7 +302,7 @@ namespace DesktopFlyouts
             if (!closeFromCurrentTransform)
                 SetOpenTransform();
 
-            if (IsTransitionAnimationEnabled)
+            if (AreTransitionAnimationsEnabled)
             {
                 var storyboard = GetCloseStoryboard(_activePopupDirection, closeFromCurrentTransform);
                 storyboard.Completed += CloseAnimationStoryboard_Completed;
@@ -892,7 +911,7 @@ namespace DesktopFlyouts
         {
             StopSwipeDismissRestoreStoryboard();
 
-            if (!IsTransitionAnimationEnabled)
+            if (!AreTransitionAnimationsEnabled)
             {
                 SetOpenTransform();
                 RestartAutoCloseTimer();
@@ -959,6 +978,15 @@ namespace DesktopFlyouts
             if (transform is null)
                 return;
 
+            if (!AreSystemAnimationsEnabled)
+            {
+                StopPressedScaleStoryboard();
+                transform.ScaleX = scale;
+                transform.ScaleY = scale;
+                _pressScaleTargetScale = scale;
+                return;
+            }
+
             var currentScaleX = transform.ScaleX;
             var currentScaleY = transform.ScaleY;
 
@@ -1003,7 +1031,7 @@ namespace DesktopFlyouts
 
         private bool IsPressedScaleEnabled()
         {
-            return Math.Abs(GetResolvedPressedScale() - 1.0D) > 0.001D;
+            return AreSystemAnimationsEnabled && Math.Abs(GetResolvedPressedScale() - 1.0D) > 0.001D;
         }
 
         private double GetResolvedPressedScale()
@@ -1214,6 +1242,20 @@ namespace DesktopFlyouts
             return Math.Min(Math.Max(value, min), Math.Max(min, max));
         }
 
+        private bool AreSystemAnimationsEnabled
+        {
+            get
+            {
+#if (UWP || WASDK) && !HAS_UNO
+                return _systemAnimationsEnabled;
+#else
+                return true;
+#endif
+            }
+        }
+
+        private bool AreTransitionAnimationsEnabled => IsTransitionAnimationEnabled && AreSystemAnimationsEnabled;
+
         private void HostWindow_Inactivated(object? sender, EventArgs e)
         {
             if (HideOnLostFocus) Hide();
@@ -1224,9 +1266,19 @@ namespace DesktopFlyouts
             if (_disposed)
                 return;
 
+#if (UWP || WASDK) && !HAS_UNO
+            _systemAnimationsEnabled = _uiSettings.AnimationsEnabled;
+#endif
             UpdateFlyoutTheme();
             UpdateIslandBackdrops();
         }
+
+#if (UWP || WASDK) && !HAS_UNO
+        private void UISettings_AnimationsEnabledChanged(UISettings sender, UISettingsAnimationsEnabledChangedEventArgs args)
+        {
+            _systemAnimationsEnabled = sender.AnimationsEnabled;
+        }
+#endif
 
         /// <inheritdoc/>
         public void Dispose()
@@ -1241,6 +1293,10 @@ namespace DesktopFlyouts
 
             _host?.WindowInactivated -= HostWindow_Inactivated;
             _host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
+#if (UWP || WASDK) && !HAS_UNO
+            if (_isAnimationsEnabledChangedSubscribed)
+                _uiSettings.AnimationsEnabledChanged -= UISettings_AnimationsEnabledChanged;
+#endif
             RootGrid?.GettingFocus -= RootGrid_GettingFocus;
             RootGrid?.PointerPressed -= RootGrid_PointerPressed;
             RootGrid?.PointerMoved -= RootGrid_PointerMoved;
