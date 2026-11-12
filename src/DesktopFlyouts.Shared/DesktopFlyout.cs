@@ -404,6 +404,8 @@ namespace DesktopFlyouts
 
             foreach (var island in Islands)
                 island.RequestedTheme = requestedTheme;
+
+            UpdateIslandBackdrops();
         }
 
         private void UpdateIslandBackdrops()
