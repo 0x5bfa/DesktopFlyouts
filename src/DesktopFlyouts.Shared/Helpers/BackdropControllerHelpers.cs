@@ -16,7 +16,7 @@ namespace DesktopFlyouts
     {
         private static UISettings UISettings => field ??= new UISettings();
 
-        internal static DesktopAcrylicController? GetAcrylicController(SystemBackdropTheme theme)
+        internal static DesktopAcrylicController? GetAcrylicController(bool useLightTheme)
         {
             if (!DesktopAcrylicController.IsSupported())
                 return null;
@@ -24,12 +24,12 @@ namespace DesktopFlyouts
             if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
                 return GetAccentedAcrylicController();
 
-            return IsLightTheme(theme)
+            return useLightTheme
                 ? GetLightAcrylicController()
                 : GetDarkAcrylicController();
         }
 
-        internal static MicaController? GetMicaController(SystemBackdropTheme theme)
+        internal static MicaController? GetMicaController(bool useLightTheme)
         {
             if (!MicaController.IsSupported())
                 return null;
@@ -37,7 +37,7 @@ namespace DesktopFlyouts
             if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
                 return GetAccentedMicaController();
 
-            return IsLightTheme(theme)
+            return useLightTheme
                 ? GetLightMicaController()
                 : GetDarkMicaController();
         }
@@ -110,15 +110,6 @@ namespace DesktopFlyouts
             };
         }
 
-        private static bool IsLightTheme(SystemBackdropTheme theme)
-        {
-            return theme switch
-            {
-                SystemBackdropTheme.Light => true,
-                SystemBackdropTheme.Dark => false,
-                _ => GeneralHelpers.IsTaskbarLight(),
-            };
-        }
     }
 #endif
 }

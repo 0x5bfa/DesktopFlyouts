@@ -17,9 +17,9 @@ namespace DesktopFlyouts
         private readonly SystemBackdropTheme _theme;
         private readonly Dictionary<ICompositionSupportsSystemBackdrop, TargetState> _targets = [];
 
-        protected DesktopFlyoutSystemBackdrop(SystemBackdropTheme theme)
+        protected DesktopFlyoutSystemBackdrop(bool useLightTheme)
         {
-            _theme = theme;
+            _theme = useLightTheme ? SystemBackdropTheme.Light : SystemBackdropTheme.Dark;
         }
 
         protected abstract ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration);
@@ -88,27 +88,27 @@ namespace DesktopFlyouts
 
     internal sealed partial class DesktopFlyoutAcrylicBackdrop : DesktopFlyoutSystemBackdrop
     {
-        internal DesktopFlyoutAcrylicBackdrop(SystemBackdropTheme theme)
-            : base(theme)
+        internal DesktopFlyoutAcrylicBackdrop(bool useLightTheme)
+            : base(useLightTheme)
         {
         }
 
         protected override ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration)
         {
-            return BackdropControllerHelpers.GetAcrylicController(configuration.Theme);
+            return BackdropControllerHelpers.GetAcrylicController(configuration.Theme is SystemBackdropTheme.Light);
         }
     }
 
     internal sealed partial class DesktopFlyoutMicaBackdrop : DesktopFlyoutSystemBackdrop
     {
-        internal DesktopFlyoutMicaBackdrop(SystemBackdropTheme theme)
-            : base(theme)
+        internal DesktopFlyoutMicaBackdrop(bool useLightTheme)
+            : base(useLightTheme)
         {
         }
 
         protected override ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration)
         {
-            var controller = BackdropControllerHelpers.GetMicaController(configuration.Theme);
+            var controller = BackdropControllerHelpers.GetMicaController(configuration.Theme is SystemBackdropTheme.Light);
             if (controller is not null)
                 controller.Kind = MicaKind.Base;
 
