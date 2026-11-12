@@ -14,6 +14,10 @@ using Windows.Foundation.Metadata;
 using Windows.UI.ViewManagement;
 #endif
 
+#if WASDK && !HAS_UNO
+using Microsoft.UI.Composition.SystemBackdrops;
+#endif
+
 #if UWP
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -302,10 +306,12 @@ namespace DesktopFlyouts
             if (!IsBackdropEnabled)
                 return null;
 
+            var theme = GeneralHelpers.IsTaskbarLight() ? SystemBackdropTheme.Light : SystemBackdropTheme.Dark;
+
             return BackdropKind switch
             {
-                DesktopFlyoutBackdropKind.Mica => new DesktopFlyoutMicaBackdrop(),
-                _ => new DesktopFlyoutAcrylicBackdrop(),
+                DesktopFlyoutBackdropKind.Mica => new DesktopFlyoutMicaBackdrop(theme),
+                _ => new DesktopFlyoutAcrylicBackdrop(theme),
             };
         }
 #endif

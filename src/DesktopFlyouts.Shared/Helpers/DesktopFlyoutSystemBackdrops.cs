@@ -14,7 +14,13 @@ namespace DesktopFlyouts
 {
     internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
     {
+        private readonly SystemBackdropTheme _theme;
         private readonly Dictionary<ICompositionSupportsSystemBackdrop, TargetState> _targets = [];
+
+        protected DesktopFlyoutSystemBackdrop(SystemBackdropTheme theme)
+        {
+            _theme = theme;
+        }
 
         protected abstract ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration);
 
@@ -72,7 +78,8 @@ namespace DesktopFlyouts
         {
             var defaultConfiguration = GetDefaultSystemBackdropConfiguration(target, xamlRoot);
 
-            configuration.Theme = defaultConfiguration.Theme;
+            configuration.Theme = _theme;
+            configuration.IsHighContrast = defaultConfiguration.IsHighContrast;
             configuration.IsInputActive = true;
         }
 
@@ -81,6 +88,11 @@ namespace DesktopFlyouts
 
     internal sealed partial class DesktopFlyoutAcrylicBackdrop : DesktopFlyoutSystemBackdrop
     {
+        internal DesktopFlyoutAcrylicBackdrop(SystemBackdropTheme theme)
+            : base(theme)
+        {
+        }
+
         protected override ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration)
         {
             return BackdropControllerHelpers.GetAcrylicController(configuration.Theme);
@@ -89,6 +101,11 @@ namespace DesktopFlyouts
 
     internal sealed partial class DesktopFlyoutMicaBackdrop : DesktopFlyoutSystemBackdrop
     {
+        internal DesktopFlyoutMicaBackdrop(SystemBackdropTheme theme)
+            : base(theme)
+        {
+        }
+
         protected override ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration)
         {
             var controller = BackdropControllerHelpers.GetMicaController(configuration.Theme);
