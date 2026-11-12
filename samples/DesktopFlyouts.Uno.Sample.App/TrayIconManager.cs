@@ -63,7 +63,7 @@ internal partial class TrayIconManager : IDisposable
         if (DesktopFlyout is null)
             return;
 
-        if (DesktopFlyout.IsOpen)
+        if (DesktopFlyout.TransitionState is DesktopFlyoutTransitionState.Open or DesktopFlyoutTransitionState.Opening)
         {
             DesktopFlyout.Hide();
         }
@@ -78,7 +78,7 @@ internal partial class TrayIconManager : IDisposable
         if (DesktopFlyout is null)
             return;
 
-        if (DesktopFlyout.IsOpen)
+        if (DesktopFlyout.TransitionState is DesktopFlyoutTransitionState.Open or DesktopFlyoutTransitionState.Opening)
         {
             DesktopFlyout.Hide();
         }

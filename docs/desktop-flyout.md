@@ -115,6 +115,14 @@ Both properties are `GridLength` values. `Auto` uses desired size. Star sizing s
 <desktop:DesktopFlyout HideOnLostFocus="False" />
 ```
 
+`TransitionState` reports `Closed`, `Opening`, `Open`, or `Closing`; `TransitionStateChanged` fires
+when the state changes. A `Hide` during opening is applied after opening completes. A newer `Show`
+during opening cancels that deferred close. A `Show` during closing is replayed after the flyout
+finishes closing, while a newer `Hide` cancels that replay. Controllers that track their own flyout
+state should use `TransitionStateChanged` to stay synchronized with native focus-loss dismissal and
+forward requests during transitions. Avoid buffering the same request in both the controller and
+the flyout.
+
 `AutoCloseDelay` starts after the flyout has opened.
 
 ```csharp

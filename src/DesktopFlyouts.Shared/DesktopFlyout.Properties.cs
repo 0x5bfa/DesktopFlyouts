@@ -60,6 +60,20 @@ namespace DesktopFlyouts
         public partial bool IsOpen { get; private set; }
 
         /// <summary>
+        /// Gets the current lifecycle phase of the flyout.
+        /// </summary>
+        /// <value>The current opening, open, closing, or closed state.</value>
+        /// <remarks>
+        /// Unlike <see cref="IsOpen"/>, this property also distinguishes transitions in progress.
+        /// </remarks>
+        public DesktopFlyoutTransitionState TransitionState { get; private set; } = DesktopFlyoutTransitionState.Closed;
+
+        /// <summary>
+        /// Occurs when <see cref="TransitionState"/> changes.
+        /// </summary>
+        public event EventHandler? TransitionStateChanged;
+
+        /// <summary>
         /// Identifies the <see cref="FlyoutWidth"/> dependency property.
         /// </summary>
         public static readonly DependencyProperty FlyoutWidthProperty =

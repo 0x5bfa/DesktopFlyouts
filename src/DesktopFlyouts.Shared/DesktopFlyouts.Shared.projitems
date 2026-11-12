@@ -24,6 +24,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPopupDirection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPosition.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPositionResolver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutTransitionState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThrowHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.X11.cs" />

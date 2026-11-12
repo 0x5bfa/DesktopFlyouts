@@ -60,8 +60,9 @@ namespace DesktopFlyouts
         private bool _isAnimationsEnabledChangedSubscribed;
 #endif
         private bool _isPopupAnimationPlaying;
-        private bool _isOpening;
         private bool _hideAfterOpen;
+        private bool _showAfterClose;
+        private DesktopFlyoutPosition? _showAfterClosePosition;
         private bool _isPressAnimationActive;
         private DesktopFlyoutPosition? _position;
         private Rectangle _activeWorkArea;
@@ -161,8 +162,9 @@ namespace DesktopFlyouts
         /// </summary>
         /// <remarks>
         /// The flyout uses the default bottom-right work-area position. A call during an opening
-        /// transition cancels a deferred close request. <see cref="IsOpen"/> becomes
-        /// <see langword="true"/> after the open transition completes.
+        /// transition cancels a deferred close request. A call during closing is replayed after the
+        /// close transition completes. <see cref="IsOpen"/> becomes <see langword="true"/> after
+        /// the open transition completes.
         /// </remarks>
         public void Show()
         {
@@ -183,11 +185,19 @@ namespace DesktopFlyouts
 
             if (_isPopupAnimationPlaying)
             {
-                if (_isOpening)
+                if (TransitionState is DesktopFlyoutTransitionState.Opening)
                     _hideAfterOpen = false;
+                else
+                {
+                    _showAfterClose = true;
+                    _showAfterClosePosition = position;
+                }
 
                 return;
             }
+
+            _showAfterClose = false;
+            _showAfterClosePosition = null;
 
             Point? cursorPosition = null;
             if (!position.Anchor.HasValue && position.MonitorSelection is DesktopFlyoutMonitorSelection.Cursor)
@@ -210,7 +220,7 @@ namespace DesktopFlyouts
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
             _isPopupAnimationPlaying = true;
-            _isOpening = true;
+            SetTransitionState(DesktopFlyoutTransitionState.Opening);
             var shouldActivateOnOpen = ShouldActivateOnOpen();
             if (!shouldActivateOnOpen)
                 _host.PreserveActivationState();
@@ -277,8 +287,8 @@ namespace DesktopFlyouts
         /// Closes the flyout.
         /// </summary>
         /// <remarks>
-        /// A call during an opening transition is deferred until the open transition completes.
-        /// Calls during a close transition are ignored. <see cref="IsOpen"/> becomes
+        /// A call during an opening transition is deferred until the open transition completes. A
+        /// call during closing cancels a queued reopen. <see cref="IsOpen"/> becomes
         /// <see langword="false"/> after the close transition completes.
         /// </remarks>
         public void Hide()
@@ -312,13 +322,26 @@ namespace DesktopFlyouts
 
             if (_isPopupAnimationPlaying)
             {
-                if (_isOpening)
+                if (TransitionState is DesktopFlyoutTransitionState.Opening)
                     _hideAfterOpen = true;
+                else
+                {
+                    _showAfterClose = false;
+                    _showAfterClosePosition = null;
+                }
 
                 return;
             }
 
+            if (TransitionState is DesktopFlyoutTransitionState.Closed)
+            {
+                _showAfterClose = false;
+                _showAfterClosePosition = null;
+                return;
+            }
+
             _isPopupAnimationPlaying = true;
+            SetTransitionState(DesktopFlyoutTransitionState.Closing);
             if (!closeFromCurrentTransform)
                 SetOpenTransform();
 
@@ -569,7 +592,6 @@ namespace DesktopFlyouts
             ResetSwipeDismissTracking();
             SetOpenTransform();
             _isPopupAnimationPlaying = false;
-            _isOpening = false;
 
             if (_hideAfterOpen)
             {
@@ -584,6 +606,7 @@ namespace DesktopFlyouts
             else
                 RestartRestoreActivationTimer();
             RestartAutoCloseTimer();
+            SetTransitionState(DesktopFlyoutTransitionState.Open);
         }
 
         private void CompleteClose()
@@ -594,9 +617,13 @@ namespace DesktopFlyouts
             RestoreFocusSuppression();
             ResetPressedScale();
             SetClosedTransform(_activePopupDirection);
-            _isPopupAnimationPlaying = false;
             IsOpen = false;
             _ = _host?.UpdateWindowVisibility(false);
+            _isPopupAnimationPlaying = false;
+            SetTransitionState(DesktopFlyoutTransitionState.Closed);
+
+            if (_showAfterClose)
+                QueueShowAfterClose();
         }
 
         private void PrepareInitialFocus()
@@ -1285,6 +1312,35 @@ namespace DesktopFlyouts
 
         private bool AreTransitionAnimationsEnabled => IsTransitionAnimationEnabled && AreSystemAnimationsEnabled;
 
+        private void SetTransitionState(DesktopFlyoutTransitionState transitionState)
+        {
+            if (TransitionState == transitionState)
+                return;
+
+            TransitionState = transitionState;
+            TransitionStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void QueueShowAfterClose()
+        {
+#if UWP
+            _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, ShowAfterClose);
+#elif WASDK
+            DispatcherQueue.TryEnqueue(ShowAfterClose);
+#endif
+        }
+
+        private void ShowAfterClose()
+        {
+            if (_disposed || TransitionState is not DesktopFlyoutTransitionState.Closed || !_showAfterClose || _showAfterClosePosition is null)
+                return;
+
+            var position = _showAfterClosePosition!;
+            _showAfterClose = false;
+            _showAfterClosePosition = null;
+            Show(position);
+        }
+
         private void HostWindow_Inactivated(object? sender, EventArgs e)
         {
             if (HideOnLostFocus) Hide();
@@ -1353,6 +1409,9 @@ namespace DesktopFlyouts
             }
             _host?.Dispose();
             IsOpen = false;
+            _showAfterClose = false;
+            _showAfterClosePosition = null;
+            SetTransitionState(DesktopFlyoutTransitionState.Closed);
 
             GC.SuppressFinalize(this);
         }
