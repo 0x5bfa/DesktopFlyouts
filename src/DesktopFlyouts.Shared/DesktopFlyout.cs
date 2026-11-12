@@ -301,17 +301,22 @@ namespace DesktopFlyouts
         }
 
 #if WASDK && !HAS_UNO
-        internal SystemBackdrop? CreateIslandSystemBackdrop()
+        internal SystemBackdrop? CreateIslandSystemBackdrop(ElementTheme islandTheme)
         {
             if (!IsBackdropEnabled)
                 return null;
 
-            var theme = GeneralHelpers.IsTaskbarLight() ? SystemBackdropTheme.Light : SystemBackdropTheme.Dark;
+            var useLightTheme = islandTheme switch
+            {
+                ElementTheme.Light => true,
+                ElementTheme.Dark => false,
+                _ => GeneralHelpers.IsTaskbarLight(),
+            };
 
             return BackdropKind switch
             {
-                DesktopFlyoutBackdropKind.Mica => new DesktopFlyoutMicaBackdrop(theme),
-                _ => new DesktopFlyoutAcrylicBackdrop(theme),
+                DesktopFlyoutBackdropKind.Mica => new DesktopFlyoutMicaBackdrop(useLightTheme),
+                _ => new DesktopFlyoutAcrylicBackdrop(useLightTheme),
             };
         }
 #endif
@@ -1356,7 +1361,6 @@ namespace DesktopFlyouts
             _systemAnimationsEnabled = _uiSettings.AnimationsEnabled;
 #endif
             UpdateFlyoutTheme();
-            UpdateIslandBackdrops();
         }
 
 #if (UWP || WASDK) && !HAS_UNO
