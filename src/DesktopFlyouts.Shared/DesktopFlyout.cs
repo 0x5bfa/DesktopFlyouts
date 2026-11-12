@@ -1276,7 +1276,17 @@ namespace DesktopFlyouts
 #if (UWP || WASDK) && !HAS_UNO
         private void UISettings_AnimationsEnabledChanged(UISettings sender, UISettingsAnimationsEnabledChangedEventArgs args)
         {
-            _systemAnimationsEnabled = sender.AnimationsEnabled;
+            void UpdateSystemAnimationsEnabled()
+            {
+                if (!_disposed)
+                    _systemAnimationsEnabled = sender.AnimationsEnabled;
+            }
+
+#if UWP
+            _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, UpdateSystemAnimationsEnabled);
+#elif WASDK
+            DispatcherQueue.TryEnqueue(UpdateSystemAnimationsEnabled);
+#endif
         }
 #endif
 
