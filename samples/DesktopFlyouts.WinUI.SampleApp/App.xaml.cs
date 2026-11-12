@@ -23,7 +23,7 @@ namespace DesktopFlyouts
         {
             TrayIconManager.Default.Initialize(new(
                 Path.Combine(Package.Current.InstalledLocation.Path, "Assets\\Tray.ico"),
-                "DesktopFlyouts sample app (WASDK)",
+                "DesktopFlyouts sample app (WinUI)",
                 new("28DE460A-8BD6-4539-A406-5F685584FD4D")));
 
             _window = new MainWindow();

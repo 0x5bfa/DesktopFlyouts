@@ -28,7 +28,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\DesktopFlyouts.Wasdk\DesktopFlyouts.Wasdk.csproj" />
+		<ProjectReference Include="..\..\src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.csproj" />
 	</ItemGroup>
 
 </Project>

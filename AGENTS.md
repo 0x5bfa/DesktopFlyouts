@@ -10,17 +10,17 @@ DesktopFlyouts is a WinUI library for showing lightweight desktop flyouts, menu 
 ├───src
 │   ├───DesktopFlyouts.Shared
 │   │   └───DesktopFlyouts.Shared.shproj
-│   ├───DesktopFlyouts.Wasdk
-│   │   └───DesktopFlyouts.Wasdk.csproj
+│   ├───DesktopFlyouts.WinUI
+│   │   └───DesktopFlyouts.WinUI.csproj
 │   ├───DesktopFlyouts.Uwp
 │   │   └───DesktopFlyouts.Uwp.csproj
 │   └───DesktopFlyouts.Uno
 │       └───DesktopFlyouts.Uno.csproj
 └───samples
-    ├───DesktopFlyouts.Wasdk.Sample.App
-    │   └───DesktopFlyouts.Wasdk.Sample.App.csproj
-    ├───DesktopFlyouts.Uwp.Sample.App
-    │   └───DesktopFlyouts.Uwp.Sample.App.csproj
+    ├───DesktopFlyouts.WinUI.SampleApp
+    │   └───DesktopFlyouts.WinUI.SampleApp.csproj
+    ├───DesktopFlyouts.Uwp.SampleApp
+    │   └───DesktopFlyouts.Uwp.SampleApp.csproj
     ├───DesktopFlyouts.Uwp.Sample.Packaging
     │   └───DesktopFlyouts.Uwp.Sample.Packaging.wapproj
     └───DesktopFlyouts.Uwp.Sample.TrayHost
@@ -41,7 +41,7 @@ Keep in mind that for Uno Platform, `WASDK` and `HAS_UNO` will both be true.
 
 ## Build Commands
 
-Run validation one command at a time and inspect each result before moving on. WASDK and UWP builds require Windows; skip them on other platforms.
+Run validation one command at a time and inspect each result before moving on. WinUI and UWP builds require Windows; skip them on other platforms.
 
 1. Build the Uno library (cross-platform):
 
@@ -52,7 +52,7 @@ dotnet msbuild /restore:false src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj /
 2. Build the WinUI 3 sample and library (Windows only):
 
 ```powershell
-dotnet msbuild /restore:false samples\DesktopFlyouts.Wasdk.Sample.App\DesktopFlyouts.Wasdk.Sample.App.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
+dotnet msbuild /restore:false samples\DesktopFlyouts.WinUI.SampleApp\DesktopFlyouts.WinUI.SampleApp.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
 ```
 
 3. Build the UWP library (Windows only):
@@ -72,23 +72,23 @@ git ls-files --eol
 
 ## Packaged App Debugging And Launch
 
-The WASDK sample is a packaged app. Do not validate launch by running the built `.exe` directly with `Start-Process` or `dotnet run`. That path can fail with `REGDB_E_CLASSNOTREG`. Use a package-aware launch path.
+The WinUI sample is a packaged app. Do not validate launch by running the built `.exe` directly with `Start-Process` or `dotnet run`. That path can fail with `REGDB_E_CLASSNOTREG`. Use a package-aware launch path.
 
-After building the WASDK sample, register the generated package manifest and launch through `shell:AppsFolder`.
+After building the WinUI sample, register the generated package manifest and launch through `shell:AppsFolder`.
 
 ```powershell
-$manifest = Join-Path (Get-Location) 'samples\DesktopFlyouts.Wasdk.Sample.App\bin\x64\Debug\net10.0-windows10.0.26100.0\AppxManifest.xml'
+$manifest = Join-Path (Get-Location) 'samples\DesktopFlyouts.WinUI.SampleApp\bin\x64\Debug\net10.0-windows10.0.26100.0\AppxManifest.xml'
 Add-AppxPackage -Register $manifest -DisableDevelopmentMode
 
 $package = Get-AppxPackage -Name 'd6120692-1c26-4251-b686-e2321694e3b0'
 Start-Process "shell:AppsFolder\$($package.PackageFamilyName)!App"
 
 Start-Sleep -Seconds 5
-Get-Process -Name DesktopFlyouts.Wasdk.Sample.App -ErrorAction SilentlyContinue |
+Get-Process -Name DesktopFlyouts.WinUI.SampleApp -ErrorAction SilentlyContinue |
     Select-Object Id, ProcessName, MainWindowHandle, Responding, HasExited
 ```
 
-A successful launch should show a live `DesktopFlyouts.Wasdk.Sample.App` process with `Responding = True` and a non-zero `MainWindowHandle`.
+A successful launch should show a live `DesktopFlyouts.WinUI.SampleApp` process with `Responding = True` and a non-zero `MainWindowHandle`.
 
 ## Debugging
 
@@ -98,7 +98,7 @@ From PowerShell, read the same Application log with:
 
 ```powershell
 Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=(Get-Date).AddMinutes(-10)} |
-    Where-Object { $_.Message -match 'DesktopFlyouts.Wasdk.Sample.App|DesktopFlyouts' } |
+    Where-Object { $_.Message -match 'DesktopFlyouts.WinUI.SampleApp|DesktopFlyouts' } |
     Select-Object -First 10 TimeCreated, ProviderName, Id, LevelDisplayName, Message |
     Format-List
 ```
@@ -108,7 +108,7 @@ If the log shows `0x80040154 REGDB_E_CLASSNOTREG` from `WindowsAppRuntime.Deploy
 Stop running samples before rebuilding if output files are locked:
 
 ```powershell
-Get-Process -Name DesktopFlyouts.Wasdk.Sample.App -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-Process -Name DesktopFlyouts.WinUI.SampleApp -ErrorAction SilentlyContinue | Stop-Process -Force
 ```
 
 ## Validation Checklist
@@ -117,9 +117,9 @@ Validate one item at a time:
 
 1. `git status --short --branch` to understand the current branch and dirty files.
 2. Build the Uno library.
-3. Build the WASDK sample (Windows only).
+3. Build the WinUI sample (Windows only).
 4. Build the UWP library when shared code changed (Windows only).
-5. Launch the WASDK sample as packaged, never by direct `.exe` (Windows only).
+5. Launch the WinUI sample as packaged, never by direct `.exe` (Windows only).
 6. Confirm the app has a responsive process and real window handle (Windows only).
 7. Run `git diff --check`.
 8. Confirm changed text files remain CRLF.

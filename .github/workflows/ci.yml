@@ -22,12 +22,12 @@ run-name: ${{ github.event_name == 'pull_request' && 'DesktopFlyouts PR Validati
 env:
   WORKING_DIR:           '${{ github.workspace }}' # 'D:\a\DesktopFlyouts\DesktopFlyouts'
   SOLUTION_PATH:         '${{ github.workspace }}\DesktopFlyouts.slnx'
-  WASDK_APP_PROJ_PATH:   '${{ github.workspace }}\samples\DesktopFlyouts.Wasdk.Sample.App\DesktopFlyouts.Wasdk.Sample.App.csproj'
-  UWP_APP_PROJ_PATH:     '${{ github.workspace }}\samples\DesktopFlyouts.Uwp.Sample.App\DesktopFlyouts.Uwp.Sample.App.csproj'
-  UNO_APP_PROJ_PATH:     '${{ github.workspace }}\samples\DesktopFlyouts.Uno.Sample.App\DesktopFlyouts.Uno.Sample.App.csproj'
+  WINUI_PROJ_PATH:       '${{ github.workspace }}\samples\DesktopFlyouts.WinUI.SampleApp\DesktopFlyouts.WinUI.SampleApp.csproj'
+  UWP_PROJ_PATH:         '${{ github.workspace }}\samples\DesktopFlyouts.Uwp.SampleApp\DesktopFlyouts.Uwp.SampleApp.csproj'
+  UNO_PROJ_PATH:         '${{ github.workspace }}\samples\DesktopFlyouts.Uno.SampleApp\DesktopFlyouts.Uno.SampleApp.csproj'
 
 jobs:
-  build-wasdk:
+  build-winui:
     runs-on: windows-2025-vs2026
     strategy:
       fail-fast: false
@@ -53,7 +53,7 @@ jobs:
           10.0.x
 
     - name: Build the sample app
-      run: msbuild /restore $env:WASDK_APP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:AppxBundle=Never
+      run: msbuild /restore $env:WINUI_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:AppxBundle=Never
 
   build-uwp:
     runs-on: windows-2025-vs2026
@@ -81,7 +81,7 @@ jobs:
           10.0.x
 
     - name: Build the sample app
-      run: msbuild /restore $env:UWP_APP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:AppxBundle=Never
+      run: msbuild /restore $env:UWP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:AppxBundle=Never
 
   build-uno:
     runs-on: windows-2025-vs2026
@@ -104,8 +104,7 @@ jobs:
           9.0.x
           10.0.x
 
-    - name: Restore the sample app
-      run: dotnet restore $env:UNO_APP_PROJ_PATH
-
     - name: Build the sample app
-      run: dotnet build $env:UNO_APP_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM --no-restore
+      run: |
+        dotnet restore $env:UNO_PROJ_PATH
+        dotnet build $env:UNO_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM --no-restore

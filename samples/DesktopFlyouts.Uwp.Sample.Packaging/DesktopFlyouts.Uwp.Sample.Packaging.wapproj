@@ -55,7 +55,7 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DesktopFlyouts.Uwp.Sample.App\DesktopFlyouts.Uwp.Sample.App.csproj">
+    <ProjectReference Include="..\DesktopFlyouts.Uwp.SampleApp\DesktopFlyouts.Uwp.SampleApp.csproj">
       <UseLowTrustEntryPoint>True</UseLowTrustEntryPoint>
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
       <PublishProfile>Properties\PublishProfiles\win-$(Platform).pubxml</PublishProfile>

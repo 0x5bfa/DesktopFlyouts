@@ -7,7 +7,7 @@
     <ResourceDictionary.MergedDictionaries>
 
         <!--#region DesktopFlyout-->
-        <ResourceDictionary Source="ms-appx:///DesktopFlyouts.Wasdk/DesktopFlyout.xaml" />
+        <ResourceDictionary Source="ms-appx:///DesktopFlyouts.WinUI/DesktopFlyout.xaml" />
         <!--#endregion-->
 
     </ResourceDictionary.MergedDictionaries>

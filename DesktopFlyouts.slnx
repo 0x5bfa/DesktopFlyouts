@@ -18,7 +18,7 @@
     <File Path=".nuget/README.md" />
   </Folder>
   <Folder Name="/samples-uwp/">
-    <Project Path="samples/DesktopFlyouts.Uwp.Sample.App/DesktopFlyouts.Uwp.Sample.App.csproj">
+    <Project Path="samples/DesktopFlyouts.Uwp.SampleApp/DesktopFlyouts.Uwp.SampleApp.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
@@ -34,8 +34,8 @@
       <Deploy />
     </Project>
   </Folder>
-  <Folder Name="/samples-wasdk/">
-    <Project Path="samples/DesktopFlyouts.Wasdk.Sample.App/DesktopFlyouts.Wasdk.Sample.App.csproj">
+  <Folder Name="/samples-winui/">
+    <Project Path="samples/DesktopFlyouts.WinUI.SampleApp/DesktopFlyouts.WinUI.SampleApp.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
@@ -43,7 +43,7 @@
     </Project>
   </Folder>
   <Folder Name="/samples-uno/">
-    <Project Path="samples/DesktopFlyouts.Uno.Sample.App/DesktopFlyouts.Uno.Sample.App.csproj">
+    <Project Path="samples/DesktopFlyouts.Uno.SampleApp/DesktopFlyouts.Uno.SampleApp.csproj">
       <Platform Solution="*|ARM64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
@@ -63,7 +63,7 @@
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
     </Project>
-    <Project Path="src/DesktopFlyouts.Wasdk/DesktopFlyouts.Wasdk.csproj">
+    <Project Path="src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />

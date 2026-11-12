@@ -31,7 +31,7 @@
 			</uap:VisualElements>
 
 			<Extensions>
-				<uap:Extension Category="windows.protocol" Executable="DesktopFlyouts.Uwp.Sample.App\DesktopFlyouts.Uwp.Sample.App.exe" EntryPoint="App2">
+				<uap:Extension Category="windows.protocol" Executable="DesktopFlyouts.Uwp.SampleApp\DesktopFlyouts.Uwp.SampleApp.exe" EntryPoint="App2">
 					<uap:Protocol Name="tif-secondaryapp">
 						<uap:DisplayName>TIF</uap:DisplayName>
 					</uap:Protocol>
