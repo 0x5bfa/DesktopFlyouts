@@ -1,23 +1,18 @@
-<Project Sdk="Uno.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net9.0-desktop;net10.0-desktop</TargetFrameworks>
-    <UnoSingleProject>true</UnoSingleProject>
-    <OutputType>Library</OutputType>
-    <!-- Ensures the .xr.xml files are generated in a proper layout folder -->
-    <GenerateLibraryLayout>true</GenerateLibraryLayout>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+﻿<Project Sdk="Uno.Sdk">
 
-    <!--
-      UnoFeatures let's you quickly add and manage implicit package references based on the features you want to use.
-      https://aka.platform.uno/singleproject-features
-    -->
-    
-    <UnoFeatures>
-      SkiaRenderer;
-    </UnoFeatures>
-  </PropertyGroup>
-  <PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net9.0-desktop;net10.0-desktop</TargetFrameworks>
+		<UnoSingleProject>true</UnoSingleProject>
+		<OutputType>Library</OutputType>
+		<!--  Ensures the .xr.xml files are generated in a proper layout folder  -->
+		<GenerateLibraryLayout>true</GenerateLibraryLayout>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<!--  UnoFeatures let's you quickly add and manage implicit package references based on the features you want to use. https://aka.platform.uno/singleproject-features  -->
+		<UnoFeatures>SkiaRenderer;</UnoFeatures>
+	</PropertyGroup>
+
+	<PropertyGroup>
 		<NoWarn>$(NoWarn);CS8305;NU5104;CS1591</NoWarn>
 		<DefineConstants>$(DefineConstants);WASDK</DefineConstants>
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
@@ -37,7 +32,7 @@
 		<PackageId>DesktopFlyouts.Uno</PackageId>
 		<Title>DesktopFlyouts.Uno</Title>
 		<Authors>Get;0x5BFA</Authors>
-		<Version>2.1.0</Version>
+		<Version>2.2.0</Version>
 		<Description>Uno library for showing desktop flyouts from tray icons or programmatically.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -56,14 +51,12 @@
 		<!-- <PackageReference Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" PrivateAssets="all" /> -->
 		<PackageReference Include="Tmds.DBus.Protocol" />
 		<PackageReference Include="Tmds.DBus.Generator" />
-    	<PackageReference Include="Svg.Skia" />
+		<PackageReference Include="Svg.Skia" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.DBus.xml"
-			Namespace="DesktopFlyouts.DBus" GenerateDBusTypes="true" />
-		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.portal.Settings.xml"
-			Namespace="DesktopFlyouts.DBus" GenerateDBusTypes="true" />
+		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.DBus.xml" Namespace="DesktopFlyouts.DBus" GenerateDBusTypes="true" />
+		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.portal.Settings.xml" Namespace="DesktopFlyouts.DBus" GenerateDBusTypes="true" />
 		<AdditionalFiles Include="dbus-interfaces\org.freedesktop.DBus.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
 		<AdditionalFiles Include="dbus-interfaces\org.kde.StatusNotifierWatcher.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Proxy" />
 		<AdditionalFiles Include="dbus-interfaces\org.kde.StatusNotifierItem.xml" Namespace="DesktopFlyouts.DBus" DBusGeneratorMode="Handler" />
