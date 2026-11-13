@@ -205,8 +205,6 @@ namespace DesktopFlyouts
                 : SHOW_WINDOW_CMD.SW_HIDE;
 
             PInvoke.ShowWindow(HWnd, command);
-            if (isVisible && activate)
-                PInvoke.SetForegroundWindow(HWnd);
 #if UWP
             PInvoke.ShowWindow(_xamlHwnd, command);
 #else
@@ -224,7 +222,12 @@ namespace DesktopFlyouts
 #endif
 
             if (isVisible)
+            {
                 ApplyActivationModeToWindows();
+
+                if (activate)
+                    PInvoke.SetForegroundWindow(HWnd);
+            }
 
             return default;
         }
