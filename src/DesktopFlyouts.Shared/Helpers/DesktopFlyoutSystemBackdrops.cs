@@ -17,6 +17,8 @@ namespace DesktopFlyouts
         private readonly SystemBackdropTheme _theme;
         private readonly Dictionary<ICompositionSupportsSystemBackdrop, TargetState> _targets = [];
 
+        internal bool UseLightTheme => _theme is SystemBackdropTheme.Light;
+
         protected DesktopFlyoutSystemBackdrop(bool useLightTheme)
         {
             _theme = useLightTheme ? SystemBackdropTheme.Light : SystemBackdropTheme.Dark;

@@ -132,10 +132,10 @@ namespace DesktopFlyouts
             return Math.Max(0D, cornerRadius > 0D ? cornerRadius - 1D : 0D);
         }
 
-        internal void UpdateOwnerBackdrop()
+        internal void UpdateOwnerBackdrop(bool forceUpdate = false)
         {
             TemplateSettings.SystemBackdrop = _owner is not null && _owner.TryGetTarget(out var owner)
-                ? owner.CreateIslandSystemBackdrop(RequestedTheme)
+                ? owner.CreateIslandSystemBackdrop(RequestedTheme, forceUpdate ? null : TemplateSettings.SystemBackdrop)
                 : null;
         }
 

@@ -279,50 +279,60 @@ namespace DesktopFlyouts
             _host.Maximize(_activeWorkArea, shouldActivateOnOpen);
 #endif
 
-            _ = Task.Run(async () =>
-            {
 #if UWP
-                await RootGrid.Dispatcher.TryRunAsync(CoreDispatcherPriority.Normal, async () =>
+            _ = RootGrid.Dispatcher.TryRunAsync(CoreDispatcherPriority.Normal, async () =>
 #elif WASDK
-                RootGrid.DispatcherQueue.TryEnqueue(async () =>
+            RootGrid.DispatcherQueue.TryEnqueue(async () =>
 #endif
-                {
+            {
+                if (_disposed)
+                    return;
+
 #if !HAS_UNO
-                    RefreshActiveWorkAreaForTaskbarLease();
+                RefreshActiveWorkAreaForTaskbarLease();
 #endif
-                    ResetResolvedFlyoutSize();
-                    UpdateLayout();
-                    await Task.Delay(1);
-                    ApplyResolvedFlyoutSize();
+                ResetResolvedFlyoutSize();
+                UpdateLayout();
+                await Task.Delay(1);
+                if (_disposed)
+                    return;
 
-                    UpdateLayout();
-                    await Task.Delay(1);
+                ApplyResolvedFlyoutSize();
 
-                    UpdateFlyoutTheme();
-                    UpdateFocusSuppression();
-                    _activePopupDirection = UpdateFlyoutRegion();
+                UpdateLayout();
+                await Task.Delay(1);
+                if (_disposed)
+                    return;
 
-                    // Ensure to hide first
-                    SetClosedTransform(_activePopupDirection);
+                UpdateFlyoutTheme();
+                UpdateFocusSuppression();
+                _activePopupDirection = UpdateFlyoutRegion();
 
-                    UpdateLayout();
-                    await Task.Delay(1);
+                // Ensure to hide first
+                SetClosedTransform(_activePopupDirection);
 
-                    await _host.UpdateWindowVisibility(true, shouldActivateOnOpen);
-                    if (!shouldActivateOnOpen)
-                        RestartRestoreActivationTimer();
+                UpdateLayout();
+                await Task.Delay(1);
+                if (_disposed)
+                    return;
 
-                    if (AreTransitionAnimationsEnabled)
-                    {
-                        var storyboard = GetOpenStoryboard(_activePopupDirection);
-                        storyboard.Completed += OpenAnimationStoryboard_Completed;
-                        storyboard.Begin();
-                    }
-                    else
-                    {
-                        CompleteOpen();
-                    }
-                });
+                await _host.UpdateWindowVisibility(true, shouldActivateOnOpen);
+                if (_disposed)
+                    return;
+
+                if (!shouldActivateOnOpen)
+                    RestartRestoreActivationTimer();
+
+                if (AreTransitionAnimationsEnabled)
+                {
+                    var storyboard = GetOpenStoryboard(_activePopupDirection);
+                    storyboard.Completed += OpenAnimationStoryboard_Completed;
+                    storyboard.Begin();
+                }
+                else
+                {
+                    CompleteOpen();
+                }
             });
         }
 
@@ -351,7 +361,7 @@ namespace DesktopFlyouts
         }
 
 #if WASDK && !HAS_UNO
-        internal SystemBackdrop? CreateIslandSystemBackdrop(ElementTheme islandTheme)
+        internal SystemBackdrop? CreateIslandSystemBackdrop(ElementTheme islandTheme, SystemBackdrop? currentBackdrop)
         {
             if (!IsBackdropEnabled)
                 return null;
@@ -362,6 +372,14 @@ namespace DesktopFlyouts
                 ElementTheme.Dark => false,
                 _ => GeneralHelpers.IsTaskbarLight(),
             };
+
+            var useMica = BackdropKind is DesktopFlyoutBackdropKind.Mica;
+            if (currentBackdrop is DesktopFlyoutSystemBackdrop backdrop
+                && backdrop.UseLightTheme == useLightTheme
+                && (useMica ? backdrop is DesktopFlyoutMicaBackdrop : backdrop is DesktopFlyoutAcrylicBackdrop))
+            {
+                return backdrop;
+            }
 
             return BackdropKind switch
             {
@@ -448,7 +466,7 @@ namespace DesktopFlyouts
         }
 #endif
 
-        private void UpdateFlyoutTheme()
+        private void UpdateFlyoutTheme(bool forceBackdropUpdate = false)
         {
             var requestedTheme = GeneralHelpers.IsTaskbarLight() ? ElementTheme.Light : ElementTheme.Dark;
             RequestedTheme = requestedTheme;
@@ -456,14 +474,14 @@ namespace DesktopFlyouts
             foreach (var island in Islands)
                 island.RequestedTheme = requestedTheme;
 
-            UpdateIslandBackdrops();
+            UpdateIslandBackdrops(forceBackdropUpdate);
         }
 
-        private void UpdateIslandBackdrops()
+        private void UpdateIslandBackdrops(bool forceUpdate = false)
         {
 #if WASDK && !HAS_UNO
             foreach (var island in Islands)
-                island.UpdateOwnerBackdrop();
+                island.UpdateOwnerBackdrop(forceUpdate);
 #endif
         }
 
@@ -1619,7 +1637,7 @@ namespace DesktopFlyouts
 #if (UWP || WASDK) && !HAS_UNO
             _systemAnimationsEnabled = _uiSettings.AnimationsEnabled;
 #endif
-            UpdateFlyoutTheme();
+            UpdateFlyoutTheme(forceBackdropUpdate: true);
         }
 
 #if (UWP || WASDK) && !HAS_UNO
@@ -1667,6 +1685,10 @@ namespace DesktopFlyouts
             RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
             RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
             RootGrid?.PointerExited -= RootGrid_PointerExited;
+#if WASDK && !HAS_UNO
+            foreach (var island in Islands)
+                island.ClearOwnerBackdrop();
+#endif
             if (IslandsItemsControl is not null)
                 IslandsItemsControl.ItemsSource = null;
 
