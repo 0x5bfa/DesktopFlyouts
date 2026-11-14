@@ -60,6 +60,10 @@ namespace DesktopFlyouts
 
         private readonly XamlIslandHostWindow? _host;
 #if !HAS_UNO
+        // Keep the native viewport monitor-sized; only content and the input region change.
+        private readonly Canvas _hostCanvas;
+        private readonly Grid _hostContainer;
+        private Rectangle _hostBounds;
         private TaskbarFlyoutVisibilityLease? _taskbarFlyoutVisibilityLease;
         private TaskbarOverflowFlyoutMonitor? _taskbarOverflowFlyoutMonitor;
         private Rectangle? _taskbarOverflowAnchorBounds;
@@ -92,6 +96,7 @@ namespace DesktopFlyouts
         private bool _isSwipeDismissDragging;
         private bool _isFocusManagerGettingFocusSubscribed;
         private bool _isUpdatingOpenFlyoutLayout;
+        private bool _isOpenFlyoutLayoutUpdateQueued;
         private bool _disposed;
 
         private Grid? RootGrid;
@@ -108,7 +113,15 @@ namespace DesktopFlyouts
             DefaultStyleKey = typeof(DesktopFlyout);
 
             _host = new XamlIslandHostWindow();
+#if !HAS_UNO
+            _hostCanvas = new Canvas();
+            _hostContainer = new Grid();
+            _hostContainer.Children.Add(this);
+            _hostCanvas.Children.Add(_hostContainer);
+            _host.SetContent(_hostCanvas);
+#else
             _host.SetContent(this);
+#endif
             _ = _host.UpdateWindowVisibility(false);
 #if (UWP || WASDK) && !HAS_UNO
             _uiSettings = new UISettings();
@@ -209,6 +222,7 @@ namespace DesktopFlyouts
 
             _showAfterClose = false;
             _showAfterClosePosition = null;
+            CancelOpenFlyoutLayoutUpdate();
 
 #if !HAS_UNO
             UpdateTaskbarFlyoutVisibilityLease(position);
@@ -258,7 +272,12 @@ namespace DesktopFlyouts
                 _host.PreserveActivationState();
 
             _host.SetActivationMode(ActivationMode);
+#if !HAS_UNO
+            UpdateHostBounds(shouldActivateOnOpen);
+            PrepareHostContainerLayout();
+#else
             _host.Maximize(_activeWorkArea, shouldActivateOnOpen);
+#endif
 
             _ = Task.Run(async () =>
             {
@@ -382,6 +401,7 @@ namespace DesktopFlyouts
                 return;
             }
 
+            CancelOpenFlyoutLayoutUpdate();
             _isPopupAnimationPlaying = true;
             SetTransitionState(DesktopFlyoutTransitionState.Closing);
             if (!closeFromCurrentTransform)
@@ -466,6 +486,9 @@ namespace DesktopFlyouts
             if (_host?.DesktopWindowXamlSource is null || IslandsItemsControl is null)
                 return _activePopupDirection;
 
+#if !HAS_UNO
+            UpdateHostBounds(ShouldActivateOnOpen());
+#endif
             var scale = _host.XamlIslandRasterizationScale;
             var flyoutWidth = GetCurrentFlyoutWidth();
             var flyoutHeight = GetCurrentFlyoutHeight();
@@ -485,8 +508,23 @@ namespace DesktopFlyouts
             var bounds = resolvedPosition.Bounds;
             var region = new RectInt32() { X = bounds.X, Y = bounds.Y, Width = bounds.Width, Height = bounds.Height };
 
+#if !HAS_UNO
+            // Apply position and size in one XAML layout without resizing the native viewport.
+            _hostContainer.Width = region.Width / scale;
+            _hostContainer.Height = region.Height / scale;
+            Canvas.SetLeft(_hostContainer, (region.X - _hostBounds.Left) / scale);
+            Canvas.SetTop(_hostContainer, (region.Y - _hostBounds.Top) / scale);
+            _hostCanvas.UpdateLayout();
+            _host.SetHWndRectRegion(new RectInt32
+            {
+                X = region.X - _hostBounds.Left,
+                Y = region.Y - _hostBounds.Top,
+                Width = region.Width,
+                Height = region.Height,
+            });
+#else
             _host.MoveAndResize(region, ShouldActivateOnOpen());
-            _host.SetHWndRectRegion(new RectInt32() { Width = region.Width, Height = region.Height });
+#endif
 
             return resolvedPosition.TransitionDirection;
         }
@@ -510,7 +548,37 @@ namespace DesktopFlyouts
 
         private void UpdateOpenFlyoutLayout()
         {
-            if (!IsOpen ||
+            if (_disposed ||
+                !IsOpen ||
+                _isPopupAnimationPlaying ||
+                _isUpdatingOpenFlyoutLayout ||
+                _isOpenFlyoutLayoutUpdateQueued ||
+                RootGrid is null ||
+                _host?.DesktopWindowXamlSource is null)
+            {
+                return;
+            }
+
+            // Coalesce property and LayoutUpdated notifications into one content layout per frame.
+            _isOpenFlyoutLayoutUpdateQueued = true;
+            CompositionTarget.Rendering += OpenFlyoutLayout_Rendering;
+        }
+
+        private void CancelOpenFlyoutLayoutUpdate()
+        {
+            if (!_isOpenFlyoutLayoutUpdateQueued)
+                return;
+
+            CompositionTarget.Rendering -= OpenFlyoutLayout_Rendering;
+            _isOpenFlyoutLayoutUpdateQueued = false;
+        }
+
+        private void OpenFlyoutLayout_Rendering(object? sender, object e)
+        {
+            CancelOpenFlyoutLayoutUpdate();
+
+            if (_disposed ||
+                !IsOpen ||
                 _isPopupAnimationPlaying ||
                 _isUpdatingOpenFlyoutLayout ||
                 RootGrid is null ||
@@ -525,9 +593,8 @@ namespace DesktopFlyouts
             {
 #if !HAS_UNO
                 RefreshActiveWorkAreaForTaskbarLease();
+                PrepareHostContainerLayout();
 #endif
-                ResetResolvedFlyoutSize();
-                MeasureRootGridForAvailableFlyoutSize();
                 ApplyResolvedFlyoutSize();
                 MeasureRootGridForAvailableFlyoutSize();
                 UpdateLayout();
@@ -656,6 +723,7 @@ namespace DesktopFlyouts
 
         private void CompleteClose()
         {
+            CancelOpenFlyoutLayoutUpdate();
             StopAutoCloseTimer();
             StopSwipeDismissRestoreStoryboard();
             ResetSwipeDismissTracking();
@@ -1390,6 +1458,28 @@ namespace DesktopFlyouts
         }
 
 #if !HAS_UNO
+        private void UpdateHostBounds(bool activate)
+        {
+            var bounds = WindowHelpers.TryGetMonitorScreenRect(_activeWorkArea, out var monitorBounds)
+                ? monitorBounds
+                : _activeWorkArea;
+            if (_hostBounds == bounds)
+                return;
+
+            _host?.Maximize(bounds, activate);
+            _hostBounds = bounds;
+        }
+
+        private void PrepareHostContainerLayout()
+        {
+            var scale = _host?.XamlIslandRasterizationScale ?? 1.0D;
+            // Measure against the available area, not the previous visible container size.
+            _hostContainer.Width = double.NaN;
+            _hostContainer.Height = double.NaN;
+            _hostContainer.MaxWidth = _activeWorkArea.Width / scale;
+            _hostContainer.MaxHeight = _activeWorkArea.Height / scale;
+        }
+
         private void UpdateTaskbarFlyoutVisibilityLease(DesktopFlyoutPosition position)
         {
             _taskbarOverflowFlyoutMonitor?.Dispose();
@@ -1541,6 +1631,7 @@ namespace DesktopFlyouts
                 return;
 
             _disposed = true;
+            CancelOpenFlyoutLayoutUpdate();
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
 #if !HAS_UNO

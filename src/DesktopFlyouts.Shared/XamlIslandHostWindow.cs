@@ -25,6 +25,7 @@ using Windows.Win32.System.WinRT.Xaml;
 using WinRT;
 #elif WASDK
 using Microsoft.UI;
+using Microsoft.UI.Content;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
 #endif
@@ -49,6 +50,7 @@ namespace DesktopFlyouts
         private HWND _preservedActiveHWnd = default;
         private HWND _preservedFocusHWnd = default;
         private readonly Dictionary<nint, nint> _subclassedXamlWndProcs = [];
+        private RectInt32? _windowRegion;
         private bool _disposed;
         private DesktopFlyoutActivationMode _activationMode = DesktopFlyoutActivationMode.Activate;
 
@@ -161,38 +163,50 @@ namespace DesktopFlyouts
             if (_disposed)
                 return;
 
+            RECT currentBounds;
+            if (PInvoke.GetWindowRect(HWnd, &currentBounds)
+                && currentBounds.left == rect.X
+                && currentBounds.top == rect.Y
+                && currentBounds.right - currentBounds.left == rect.Width
+                && currentBounds.bottom - currentBounds.top == rect.Height)
+            {
+                return;
+            }
+
+            // Size the island through WinUI's site bridge (or WM_SIZE for UWP) only.
             var flags = activate ? 0 : SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
             PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, rect.X, rect.Y, rect.Width, rect.Height, flags);
-            PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, rect.Width, rect.Height, flags);
         }
 
         internal void Maximize(System.Drawing.Rectangle workArea, bool activate = true)
         {
-            if (_disposed)
-                return;
-
-            var flags = activate ? 0 : SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
-            PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, workArea.X, workArea.Y, workArea.Width, workArea.Height, flags);
-            PInvoke.SetWindowPos(_xamlHwnd, HWND.HWND_TOP, 0, 0, workArea.Width, workArea.Height, flags);
+            MoveAndResize(new RectInt32 { X = workArea.X, Y = workArea.Y, Width = workArea.Width, Height = workArea.Height }, activate);
         }
 
         internal void SetHWndRectRegion(RectInt32 rect)
         {
-            if (_disposed)
+            if (_disposed || _windowRegion?.Equals(rect) == true)
                 return;
 
-            SetWindowRectRegion(HWnd, rect);
-            SetWindowRectRegion(_xamlHwnd, rect);
+            var hostUpdated = SetWindowRectRegion(HWnd, rect);
+            var islandUpdated = SetWindowRectRegion(_xamlHwnd, rect);
+            if (hostUpdated && islandUpdated)
+                _windowRegion = rect;
         }
 
-        private static void SetWindowRectRegion(HWND hWnd, RectInt32 rect)
+        private static bool SetWindowRectRegion(HWND hWnd, RectInt32 rect)
         {
             HRGN region = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
             if (region.IsNull)
-                return;
+                return false;
 
             if (PInvoke.SetWindowRgn(hWnd, region, false) == 0)
+            {
                 PInvoke.DeleteObject(region);
+                return false;
+            }
+
+            return true;
         }
 
         internal ValueTask UpdateWindowVisibility(bool isVisible, bool activate = true)
@@ -468,6 +482,7 @@ namespace DesktopFlyouts
 
 #elif WASDK
             DesktopWindowXamlSource!.Initialize(Win32Interop.GetWindowIdFromWindow(HWnd));
+            DesktopWindowXamlSource.SiteBridge.ResizePolicy = ContentSizePolicy.ResizeContentToParentWindow;
             _xamlHwnd = (HWND)Win32Interop.GetWindowFromWindowId(DesktopWindowXamlSource.SiteBridge.WindowId);
 #endif
 
