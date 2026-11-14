@@ -1,7 +1,10 @@
 ﻿<Project Sdk="Uno.Sdk">
 
 	<PropertyGroup>
+
 		<TargetFrameworks>net9.0-desktop;net10.0-desktop</TargetFrameworks>
+		<NoWarn>$(NoWarn);CS8305;NU5104;CS1591</NoWarn>
+
 		<UnoSingleProject>true</UnoSingleProject>
 		<OutputType>Library</OutputType>
 		<!--  Ensures the .xr.xml files are generated in a proper layout folder  -->
@@ -10,10 +13,6 @@
 		<Nullable>enable</Nullable>
 		<!--  UnoFeatures let's you quickly add and manage implicit package references based on the features you want to use. https://aka.platform.uno/singleproject-features  -->
 		<UnoFeatures>SkiaRenderer;</UnoFeatures>
-	</PropertyGroup>
-
-	<PropertyGroup>
-		<NoWarn>$(NoWarn);CS8305;NU5104;CS1591</NoWarn>
 		<DefineConstants>$(DefineConstants);WASDK</DefineConstants>
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 
@@ -39,14 +38,15 @@
 		<RepositoryUrl>https://github.com/0x5bfa/DesktopFlyouts</RepositoryUrl>
 		<PackageTags>Shell System TrayIcon DesktopFlyouts DesktopFlyout UWP WinUI MUX WASDK WindowsAppSDK Uno Platform Windows</PackageTags>
 		<PackageIcon>icon-128.png</PackageIcon>
-  </PropertyGroup>
-  
+
+	</PropertyGroup>
+
 	<ItemGroup>
 		<None Include="..\..\.nuget\README.md" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 		<None Include="..\..\.nuget\icon-128.png" Pack="true" PackagePath="" />
 	</ItemGroup>
-  
+
 	<ItemGroup>
 		<!-- <PackageReference Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" PrivateAssets="all" /> -->
 		<PackageReference Include="Tmds.DBus.Protocol" />
@@ -67,4 +67,5 @@
 		<Page Include="Themes\Generic.xaml" />
 		<Page Include="Themes\DesktopFlyout.xaml" />
 	</ItemGroup>
+
 </Project>
