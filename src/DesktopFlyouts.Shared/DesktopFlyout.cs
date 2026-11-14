@@ -58,6 +58,9 @@ namespace DesktopFlyouts
         private const double SwipeDismissAxisDominanceRatio = 1.2D;
 
         private readonly XamlIslandHostWindow? _host;
+#if !HAS_UNO
+        private TaskbarFlyoutVisibilityLease? _taskbarFlyoutVisibilityLease;
+#endif
 #if (UWP || WASDK) && !HAS_UNO
         private readonly UISettings _uiSettings;
         private bool _systemAnimationsEnabled;
@@ -203,6 +206,10 @@ namespace DesktopFlyouts
             _showAfterClose = false;
             _showAfterClosePosition = null;
 
+#if !HAS_UNO
+            UpdateTaskbarFlyoutVisibilityLease(position);
+#endif
+
             Point? cursorPosition = null;
             if (!position.Anchor.HasValue && position.MonitorSelection is DesktopFlyoutMonitorSelection.Cursor)
             {
@@ -220,6 +227,9 @@ namespace DesktopFlyouts
 
             _position = position;
             _activeWorkArea = WindowHelpers.GetFlyoutWorkAreaRect(_position, cursorPosition);
+#if !HAS_UNO
+            RefreshActiveWorkAreaForTaskbarLease();
+#endif
 
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
@@ -240,6 +250,9 @@ namespace DesktopFlyouts
                 RootGrid.DispatcherQueue.TryEnqueue(async () =>
 #endif
                 {
+#if !HAS_UNO
+                    RefreshActiveWorkAreaForTaskbarLease();
+#endif
                     ResetResolvedFlyoutSize();
                     UpdateLayout();
                     await Task.Delay(1);
@@ -492,6 +505,9 @@ namespace DesktopFlyouts
 
             try
             {
+#if !HAS_UNO
+                RefreshActiveWorkAreaForTaskbarLease();
+#endif
                 ResetResolvedFlyoutSize();
                 MeasureRootGridForAvailableFlyoutSize();
                 ApplyResolvedFlyoutSize();
@@ -627,6 +643,9 @@ namespace DesktopFlyouts
             SetClosedTransform(_activePopupDirection);
             IsOpen = false;
             _ = _host?.UpdateWindowVisibility(false);
+#if !HAS_UNO
+            ReleaseTaskbarFlyoutVisibilityLease();
+#endif
             _isPopupAnimationPlaying = false;
             SetTransitionState(DesktopFlyoutTransitionState.Closed);
 
@@ -1349,6 +1368,51 @@ namespace DesktopFlyouts
             Show(position);
         }
 
+#if !HAS_UNO
+        private void UpdateTaskbarFlyoutVisibilityLease(DesktopFlyoutPosition position)
+        {
+            if (!position.IsTaskbarAnchor || position.Anchor is not Rectangle anchorBounds)
+            {
+                ReleaseTaskbarFlyoutVisibilityLease();
+                return;
+            }
+
+            var newLease = TaskbarFlyoutVisibilityLease.TryAcquire(anchorBounds);
+            if (newLease is null)
+                return;
+
+            var previousLease = _taskbarFlyoutVisibilityLease;
+            _taskbarFlyoutVisibilityLease = newLease;
+            previousLease?.Dispose();
+        }
+
+        private void ReleaseTaskbarFlyoutVisibilityLease()
+        {
+            _taskbarFlyoutVisibilityLease?.Dispose();
+            _taskbarFlyoutVisibilityLease = null;
+        }
+
+        private void RefreshActiveWorkAreaForTaskbarLease()
+        {
+            if (_taskbarFlyoutVisibilityLease is null
+                || _position?.Anchor is not Rectangle anchorBounds)
+            {
+                return;
+            }
+
+            var workArea = WindowHelpers.GetFlyoutWorkAreaRect(_position);
+            if (_taskbarFlyoutVisibilityLease.TryGetTaskbarBounds(out var taskbarBounds)
+                && WindowHelpers.TryGetMonitorScreenRect(anchorBounds, out var monitorBounds))
+            {
+                _activeWorkArea = WindowHelpers.ExcludeTaskbarFromWorkArea(workArea, taskbarBounds, monitorBounds);
+            }
+            else
+            {
+                _activeWorkArea = workArea;
+            }
+        }
+#endif
+
         private void HostWindow_Inactivated(object? sender, EventArgs e)
         {
             if (HideOnLostFocus) Hide();
@@ -1391,6 +1455,9 @@ namespace DesktopFlyouts
             _disposed = true;
             StopAutoCloseTimer();
             StopRestoreActivationTimer();
+#if !HAS_UNO
+            ReleaseTaskbarFlyoutVisibilityLease();
+#endif
             RestoreFocusSuppression();
 
             _host?.WindowInactivated -= HostWindow_Inactivated;

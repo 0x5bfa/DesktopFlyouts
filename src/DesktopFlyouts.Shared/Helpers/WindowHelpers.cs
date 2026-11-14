@@ -166,6 +166,51 @@ namespace DesktopFlyouts
             return false;
         }
 
+        internal static Rectangle ExcludeTaskbarFromWorkArea(
+            Rectangle workArea,
+            Rectangle taskbarBounds,
+            Rectangle monitorBounds)
+        {
+            // An auto-hide taskbar can overlay an rcWork that spans the whole monitor. Subtract
+            // only its actual overlap, so a taskbar already excluded from rcWork is not counted twice.
+            var overlap = Rectangle.Intersect(workArea, taskbarBounds);
+            if (overlap.Width <= 0 || overlap.Height <= 0)
+                return workArea;
+
+            var edge = taskbarBounds.Width >= taskbarBounds.Height
+                ? Math.Abs((long)taskbarBounds.Top - monitorBounds.Top) <= Math.Abs((long)monitorBounds.Bottom - taskbarBounds.Bottom)
+                    ? TaskbarEdge.Top
+                    : TaskbarEdge.Bottom
+                : Math.Abs((long)taskbarBounds.Left - monitorBounds.Left) <= Math.Abs((long)monitorBounds.Right - taskbarBounds.Right)
+                    ? TaskbarEdge.Left
+                    : TaskbarEdge.Right;
+
+            return edge switch
+            {
+                TaskbarEdge.Left => Rectangle.FromLTRB(
+                    Math.Max(workArea.Left, overlap.Right),
+                    workArea.Top,
+                    workArea.Right,
+                    workArea.Bottom),
+                TaskbarEdge.Top => Rectangle.FromLTRB(
+                    workArea.Left,
+                    Math.Max(workArea.Top, overlap.Bottom),
+                    workArea.Right,
+                    workArea.Bottom),
+                TaskbarEdge.Right => Rectangle.FromLTRB(
+                    workArea.Left,
+                    workArea.Top,
+                    Math.Min(workArea.Right, overlap.Left),
+                    workArea.Bottom),
+                TaskbarEdge.Bottom => Rectangle.FromLTRB(
+                    workArea.Left,
+                    workArea.Top,
+                    workArea.Right,
+                    Math.Min(workArea.Bottom, overlap.Top)),
+                _ => workArea,
+            };
+        }
+
         private static Rectangle GetSystemWorkAreaRect()
         {
             RECT rect;

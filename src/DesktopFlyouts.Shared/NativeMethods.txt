@@ -56,6 +56,10 @@ DestroyWindow
 UnregisterClass
 GetWindowRect
 IsWindowVisible
+IsWindow
+GetWindowThreadProcessId
+FindWindowEx
+PostMessage
 ShowWindow
 GetForegroundWindow
 GetActiveWindow
@@ -70,4 +74,5 @@ GetCursorPos
 Shell_NotifyIconGetRect
 SHAppBarMessage
 MonitorFromRect
+MonitorFromWindow
 GetMonitorInfo
