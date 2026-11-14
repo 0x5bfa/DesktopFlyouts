@@ -1,0 +1,10 @@
+<Project>
+    <Import Project="../Directory.Build.targets" />
+
+    <PropertyGroup>
+        <!-- Keep the tests portable and independent from the library's Windows RIDs. -->
+        <RuntimeIdentifiers></RuntimeIdentifiers>
+        <RuntimeIdentifier></RuntimeIdentifier>
+        <Platforms>AnyCPU</Platforms>
+    </PropertyGroup>
+</Project>

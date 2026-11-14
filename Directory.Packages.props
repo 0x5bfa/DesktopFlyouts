@@ -11,6 +11,9 @@
 		<PackageVersion Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.3.260402-preview2" />
 		<PackageVersion Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.3.260402-preview2" />
 		<PackageVersion Include="Microsoft.UI.Xaml" Version="2.8.7" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+		<PackageVersion Include="MSTest.TestAdapter" Version="4.5.3" />
+		<PackageVersion Include="MSTest.TestFramework" Version="4.5.3" />
 		<PackageVersion Include="Microsoft.WindowsAppSDK.Runtime" Version="2.6.5" />
 		<PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="2.6.5" />
 	</ItemGroup>

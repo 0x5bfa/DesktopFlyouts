@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="MSTest.TestAdapter" />
+    <PackageReference Include="MSTest.TestFramework" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="**\*.cs" Exclude="obj\**;bin\**" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutHostLayout.cs" Link="Production\DesktopFlyoutHostLayout.cs" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPlacementMode.cs" Link="Production\DesktopFlyoutPlacementMode.cs" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPopupDirection.cs" Link="Production\DesktopFlyoutPopupDirection.cs" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPosition.cs" Link="Production\DesktopFlyoutPosition.cs" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPositionResolver.cs" Link="Production\DesktopFlyoutPositionResolver.cs" />
+    <Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\TaskbarEdge.cs" Link="Production\TaskbarEdge.cs" />
+  </ItemGroup>
+</Project>

@@ -11,14 +11,6 @@ using static DesktopFlyouts.X11PInvoke;
 
 namespace DesktopFlyouts
 {
-    internal enum TaskbarEdge
-    {
-        Left,
-        Top,
-        Right,
-        Bottom,
-    }
-
     internal static partial class WindowHelpers
     {
         private static IntPtr OpenDisplay()

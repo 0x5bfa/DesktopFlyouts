@@ -506,23 +506,24 @@ namespace DesktopFlyouts
                 workArea,
                 new Size(regionWidth, regionHeight));
             var bounds = resolvedPosition.Bounds;
-            var region = new RectInt32() { X = bounds.X, Y = bounds.Y, Width = bounds.Width, Height = bounds.Height };
 
 #if !HAS_UNO
             // Apply position and size in one XAML layout without resizing the native viewport.
-            _hostContainer.Width = region.Width / scale;
-            _hostContainer.Height = region.Height / scale;
-            Canvas.SetLeft(_hostContainer, (region.X - _hostBounds.Left) / scale);
-            Canvas.SetTop(_hostContainer, (region.Y - _hostBounds.Top) / scale);
+            var hostLayout = DesktopFlyoutHostLayout.Create(_hostBounds, bounds, scale);
+            _hostContainer.Width = hostLayout.DipRegion.Width;
+            _hostContainer.Height = hostLayout.DipRegion.Height;
+            Canvas.SetLeft(_hostContainer, hostLayout.DipRegion.X);
+            Canvas.SetTop(_hostContainer, hostLayout.DipRegion.Y);
             _hostCanvas.UpdateLayout();
             _host.SetHWndRectRegion(new RectInt32
             {
-                X = region.X - _hostBounds.Left,
-                Y = region.Y - _hostBounds.Top,
-                Width = region.Width,
-                Height = region.Height,
+                X = hostLayout.RelativePhysicalRegion.X,
+                Y = hostLayout.RelativePhysicalRegion.Y,
+                Width = hostLayout.RelativePhysicalRegion.Width,
+                Height = hostLayout.RelativePhysicalRegion.Height,
             });
 #else
+            var region = new RectInt32() { X = bounds.X, Y = bounds.Y, Width = bounds.Width, Height = bounds.Height };
             _host.MoveAndResize(region, ShouldActivateOnOpen());
 #endif
 
@@ -1494,7 +1495,21 @@ namespace DesktopFlyouts
             }
 
             _taskbarOverflowAnchorBounds = anchorBounds;
-            _taskbarOverflowFlyoutMonitor = TaskbarOverflowFlyoutMonitor.TryCreate(anchorBounds, this, OnTaskbarOverflowFlyoutClosed);
+#if UWP
+            _taskbarOverflowFlyoutMonitor = TaskbarOverflowFlyoutMonitor.TryCreate(
+                anchorBounds,
+                action =>
+                {
+                    _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action());
+                    return true;
+                },
+                OnTaskbarOverflowFlyoutClosed);
+#elif WASDK
+            _taskbarOverflowFlyoutMonitor = TaskbarOverflowFlyoutMonitor.TryCreate(
+                anchorBounds,
+                action => DispatcherQueue.TryEnqueue(() => action()),
+                OnTaskbarOverflowFlyoutClosed);
+#endif
 
             var newLease = TaskbarFlyoutVisibilityLease.TryAcquire(anchorBounds);
             if (newLease is null)
