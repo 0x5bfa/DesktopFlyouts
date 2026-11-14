@@ -70,10 +70,12 @@ also unavailable, it uses `Above`. Windows shell taskbars and X11 panels that pu
 properties can be detected. Third-party bars that expose no supported geometry are not guaranteed
 to be detected. The nearest-edge fallback is a separate estimate, not a detection result.
 
-On Windows, an icon in an open notification-area overflow flyout anchors to that flyout's full
-window bounds, including all rows or columns of icons. The desktop flyout opens beyond it toward
-the work area and is sized to the available space on that side. When the overflow closes, the
-desktop flyout moves back to the taskbar edge.
+On Windows, an icon in an open notification-area overflow flyout uses that flyout's full window
+bounds, including all rows or columns, to choose the contact edge. Alignment along the other axis
+stays on the tray icon. The adjacent transparent margin overlaps the shell host so it does not add
+to the shell's own visual inset; the other margins and the public `Margin` value are unchanged.
+The desktop flyout is sized to the available space on that side. When the overflow closes, it moves
+back to the taskbar edge with its usual margins.
 
 Use `DesktopFlyoutAnchorSide.Above`, `Below`, `Left`, or `Right` for an explicit side. Use
 `DesktopFlyoutAnchorAlignment.Start`, `Center`, or `End` to align the flyout along the anchor.

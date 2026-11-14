@@ -1483,10 +1483,20 @@ namespace DesktopFlyouts
                 _activeWorkArea = workArea;
             }
 
-            if (_taskbarOverflowFlyoutMonitor?.TryGetBounds(out var overflowBounds) == true)
+            if (_taskbarOverflowAnchorBounds is Rectangle trayIconBounds
+                && _taskbarOverflowFlyoutMonitor?.TryGetBounds(out var overflowBounds) == true)
             {
-                _position = DesktopFlyoutPosition.ForAnchor(overflowBounds, _position.AnchorSide, _position.AnchorAlignment, _position.TransitionDirection);
-                _activeWorkArea = DesktopFlyoutPositionResolver.GetWorkAreaOutsideAnchor(_activeWorkArea, overflowBounds, _position.AnchorSide);
+                var scaledMargin = GetScaledMargin(Margin, _host?.XamlIslandRasterizationScale ?? 1.0D);
+                var adjacentMargin = _position.AnchorSide switch
+                {
+                    DesktopFlyoutAnchorSide.Above => scaledMargin.Bottom,
+                    DesktopFlyoutAnchorSide.Below => scaledMargin.Top,
+                    DesktopFlyoutAnchorSide.Left => scaledMargin.Right,
+                    _ => scaledMargin.Left,
+                };
+                var anchor = DesktopFlyoutPositionResolver.GetOverflowAnchor(trayIconBounds, overflowBounds, _position.AnchorSide, (int)Math.Floor(Math.Max(0, adjacentMargin)));
+                _position = DesktopFlyoutPosition.ForAnchor(anchor, _position.AnchorSide, _position.AnchorAlignment, _position.TransitionDirection);
+                _activeWorkArea = DesktopFlyoutPositionResolver.GetWorkAreaOutsideAnchor(_activeWorkArea, anchor, _position.AnchorSide);
             }
         }
 #endif

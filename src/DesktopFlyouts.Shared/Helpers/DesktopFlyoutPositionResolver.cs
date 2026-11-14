@@ -16,10 +16,7 @@ namespace DesktopFlyouts
     /// </summary>
     internal static class DesktopFlyoutPositionResolver
     {
-        public static DesktopFlyoutPositionResult Resolve(
-            DesktopFlyoutPosition position,
-            Rectangle workArea,
-            Size flyoutSize)
+        public static DesktopFlyoutPositionResult Resolve(DesktopFlyoutPosition position, Rectangle workArea, Size flyoutSize)
         {
             DesktopFlyoutAnchorSide side;
             Rectangle bounds;
@@ -78,10 +75,25 @@ namespace DesktopFlyouts
             return nearest.Side;
         }
 
+        internal static Rectangle GetOverflowAnchor(Rectangle trayIcon, Rectangle overflowBounds, DesktopFlyoutAnchorSide side, int adjacentMargin = 0)
+        {
+            // Keep alignment on the tray icon's perpendicular axis. Only the contact edge comes
+            // from the overflow. Let our transparent adjacent margin overlap the shell host so
+            // the gap between the visuals consists of the shell's own inset, rather than both.
+            return side switch
+            {
+                DesktopFlyoutAnchorSide.Above => new Rectangle(trayIcon.Left, overflowBounds.Top + adjacentMargin, trayIcon.Width, 0),
+                DesktopFlyoutAnchorSide.Below => new Rectangle(trayIcon.Left, overflowBounds.Bottom - adjacentMargin, trayIcon.Width, 0),
+                DesktopFlyoutAnchorSide.Left => new Rectangle(overflowBounds.Left + adjacentMargin, trayIcon.Top, 0, trayIcon.Height),
+                DesktopFlyoutAnchorSide.Right => new Rectangle(overflowBounds.Right - adjacentMargin, trayIcon.Top, 0, trayIcon.Height),
+                _ => throw new ArgumentOutOfRangeException(nameof(side)),
+            };
+        }
+
         internal static Rectangle GetWorkAreaOutsideAnchor(Rectangle workArea, Rectangle anchor, DesktopFlyoutAnchorSide side)
         {
-            // Measure in the space beyond the entire overflow host so clamping cannot move the
-            // flyout back over it. Its current bounds include every row/column of tray icons.
+            // Measure beyond the contact edge so clamping cannot move visible content back over
+            // the overflow. The contact edge may include our transparent adjacent margin.
             return side switch
             {
                 DesktopFlyoutAnchorSide.Above => Rectangle.FromLTRB(
@@ -96,11 +108,7 @@ namespace DesktopFlyouts
             };
         }
 
-        private static Rectangle ResolveAnchorPosition(
-            DesktopFlyoutPosition position,
-            Rectangle workArea,
-            Size flyoutSize,
-            out DesktopFlyoutAnchorSide side)
+        private static Rectangle ResolveAnchorPosition(DesktopFlyoutPosition position, Rectangle workArea, Size flyoutSize, out DesktopFlyoutAnchorSide side)
         {
             var anchor = position.Anchor!.Value;
             side = position.AnchorSide;

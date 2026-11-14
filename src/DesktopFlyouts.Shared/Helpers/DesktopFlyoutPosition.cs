@@ -196,8 +196,10 @@ namespace DesktopFlyouts
                 return this;
             }
 
-            anchor = overflowBounds ?? anchor;
-            var side = DesktopFlyoutPositionResolver.ResolveTaskbarAnchorSide(anchor, monitorBounds, taskbarEdge);
+            var side = DesktopFlyoutPositionResolver.ResolveTaskbarAnchorSide(overflowBounds ?? anchor, monitorBounds, taskbarEdge);
+            if (overflowBounds is Rectangle overflow)
+                anchor = DesktopFlyoutPositionResolver.GetOverflowAnchor(anchor, overflow, side);
+
             return ForAnchor(anchor, side, AnchorAlignment, TransitionDirection);
         }
     }
