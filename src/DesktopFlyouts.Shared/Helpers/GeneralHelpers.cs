@@ -24,10 +24,6 @@ namespace DesktopFlyouts
             return value is int v && v != 0;
         }
 
-        internal static bool IsTrayIconInOverflowFlyout()
-        {
-            return false;
-        }
     }
 }
 #endif

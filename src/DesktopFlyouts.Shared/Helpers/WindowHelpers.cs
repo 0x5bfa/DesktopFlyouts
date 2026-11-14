@@ -177,13 +177,7 @@ namespace DesktopFlyouts
             if (overlap.Width <= 0 || overlap.Height <= 0)
                 return workArea;
 
-            var edge = taskbarBounds.Width >= taskbarBounds.Height
-                ? Math.Abs((long)taskbarBounds.Top - monitorBounds.Top) <= Math.Abs((long)monitorBounds.Bottom - taskbarBounds.Bottom)
-                    ? TaskbarEdge.Top
-                    : TaskbarEdge.Bottom
-                : Math.Abs((long)taskbarBounds.Left - monitorBounds.Left) <= Math.Abs((long)monitorBounds.Right - taskbarBounds.Right)
-                    ? TaskbarEdge.Left
-                    : TaskbarEdge.Right;
+            var edge = GetTaskbarEdge(taskbarBounds, monitorBounds);
 
             return edge switch
             {
@@ -209,6 +203,99 @@ namespace DesktopFlyouts
                     Math.Min(workArea.Bottom, overlap.Top)),
                 _ => workArea,
             };
+        }
+
+        internal static TaskbarEdge GetTaskbarEdge(Rectangle taskbarBounds, Rectangle monitorBounds)
+        {
+            return taskbarBounds.Width >= taskbarBounds.Height
+                ? Math.Abs((long)taskbarBounds.Top - monitorBounds.Top) <= Math.Abs((long)monitorBounds.Bottom - taskbarBounds.Bottom)
+                    ? TaskbarEdge.Top
+                    : TaskbarEdge.Bottom
+                : Math.Abs((long)taskbarBounds.Left - monitorBounds.Left) <= Math.Abs((long)monitorBounds.Right - taskbarBounds.Right)
+                    ? TaskbarEdge.Left
+                    : TaskbarEdge.Right;
+        }
+
+        internal static Rectangle GetTaskbarEdgeAnchor(
+            Rectangle sourceAnchor,
+            Rectangle taskbarBounds,
+            Rectangle monitorBounds,
+            out TaskbarEdge edge)
+        {
+            edge = GetTaskbarEdge(taskbarBounds, monitorBounds);
+
+            var centerX = sourceAnchor.Left + (sourceAnchor.Width / 2);
+            var centerY = sourceAnchor.Top + (sourceAnchor.Height / 2);
+            return edge switch
+            {
+                TaskbarEdge.Top => new Rectangle(
+                    Math.Clamp(centerX, taskbarBounds.Left, Math.Max(taskbarBounds.Left, taskbarBounds.Right - 1)),
+                    taskbarBounds.Bottom,
+                    0,
+                    0),
+                TaskbarEdge.Left => new Rectangle(
+                    taskbarBounds.Right,
+                    Math.Clamp(centerY, taskbarBounds.Top, Math.Max(taskbarBounds.Top, taskbarBounds.Bottom - 1)),
+                    0,
+                    0),
+                TaskbarEdge.Right => new Rectangle(
+                    taskbarBounds.Left,
+                    Math.Clamp(centerY, taskbarBounds.Top, Math.Max(taskbarBounds.Top, taskbarBounds.Bottom - 1)),
+                    0,
+                    0),
+                _ => new Rectangle(
+                    Math.Clamp(centerX, taskbarBounds.Left, Math.Max(taskbarBounds.Left, taskbarBounds.Right - 1)),
+                    taskbarBounds.Top,
+                    0,
+                    0),
+            };
+        }
+
+        internal static bool TryGetTaskbarOverflowWindowForBounds(Rectangle bounds, out HWND overflowWindow)
+        {
+            var anchorBounds = Rectangle.FromLTRB(
+                bounds.Left,
+                bounds.Top,
+                Math.Max(bounds.Right, bounds.Left + 1),
+                Math.Max(bounds.Bottom, bounds.Top + 1));
+
+            foreach (var className in new[] { "TopLevelWindowForOverflowXamlIsland", "NotifyIconOverflowWindow" })
+            {
+                var candidate = FindWindowByClass(className, HWND.Null);
+                while (!candidate.IsNull)
+                {
+                    if (PInvoke.IsWindowVisible(candidate))
+                    {
+                        RECT windowBounds;
+                        if (PInvoke.GetWindowRect(candidate, &windowBounds))
+                        {
+                            var rect = Rectangle.FromLTRB(windowBounds.left, windowBounds.top, windowBounds.right, windowBounds.bottom);
+                            if (rect.IntersectsWith(anchorBounds))
+                            {
+                                overflowWindow = candidate;
+                                return true;
+                            }
+                        }
+                    }
+
+                    candidate = FindWindowByClass(className, candidate);
+                }
+            }
+
+            overflowWindow = HWND.Null;
+            return false;
+        }
+
+        private static HWND FindWindowByClass(string className, HWND childAfter)
+        {
+            fixed (char* classNamePointer = className)
+            {
+                return PInvoke.FindWindowEx(
+                    HWND.Null,
+                    childAfter,
+                    (PCWSTR)classNamePointer,
+                    default);
+            }
         }
 
         private static Rectangle GetSystemWorkAreaRect()

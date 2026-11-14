@@ -78,6 +78,24 @@ namespace DesktopFlyouts
             return nearest.Side;
         }
 
+        internal static Rectangle GetWorkAreaOutsideAnchor(Rectangle workArea, Rectangle anchor, DesktopFlyoutAnchorSide side)
+        {
+            // Measure in the space beyond the entire overflow host so clamping cannot move the
+            // flyout back over it. Its current bounds include every row/column of tray icons.
+            return side switch
+            {
+                DesktopFlyoutAnchorSide.Above => Rectangle.FromLTRB(
+                    workArea.Left, workArea.Top, workArea.Right, Math.Clamp(anchor.Top, workArea.Top, workArea.Bottom)),
+                DesktopFlyoutAnchorSide.Below => Rectangle.FromLTRB(
+                    workArea.Left, Math.Clamp(anchor.Bottom, workArea.Top, workArea.Bottom), workArea.Right, workArea.Bottom),
+                DesktopFlyoutAnchorSide.Left => Rectangle.FromLTRB(
+                    workArea.Left, workArea.Top, Math.Clamp(anchor.Left, workArea.Left, workArea.Right), workArea.Bottom),
+                DesktopFlyoutAnchorSide.Right => Rectangle.FromLTRB(
+                    Math.Clamp(anchor.Right, workArea.Left, workArea.Right), workArea.Top, workArea.Right, workArea.Bottom),
+                _ => throw new ArgumentOutOfRangeException(nameof(side)),
+            };
+        }
+
         private static Rectangle ResolveAnchorPosition(
             DesktopFlyoutPosition position,
             Rectangle workArea,

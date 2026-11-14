@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using Windows.Graphics;
@@ -60,6 +61,9 @@ namespace DesktopFlyouts
         private readonly XamlIslandHostWindow? _host;
 #if !HAS_UNO
         private TaskbarFlyoutVisibilityLease? _taskbarFlyoutVisibilityLease;
+        private TaskbarOverflowFlyoutMonitor? _taskbarOverflowFlyoutMonitor;
+        private Rectangle? _taskbarOverflowAnchorBounds;
+        private bool _taskbarOverflowRepositionPending;
 #endif
 #if (UWP || WASDK) && !HAS_UNO
         private readonly UISettings _uiSettings;
@@ -220,9 +224,23 @@ namespace DesktopFlyouts
             {
                 var hasDetectedTaskbar = WindowHelpers.TryGetTaskbarInfoForBounds(anchorBounds, out _, out var taskbarEdge);
                 var hasMonitorBounds = WindowHelpers.TryGetMonitorScreenRect(anchorBounds, out var monitorBounds);
+                Rectangle? overflowBounds = null;
+#if !HAS_UNO
+                if (_taskbarOverflowFlyoutMonitor?.TryGetBounds(out var currentOverflowBounds) == true)
+                {
+                    overflowBounds = currentOverflowBounds;
+                    // Overflow icons need not intersect the taskbar, especially with multiple rows.
+                    if (hasMonitorBounds && _taskbarFlyoutVisibilityLease?.TryGetTaskbarBounds(out var taskbarBounds) == true)
+                    {
+                        taskbarEdge = WindowHelpers.GetTaskbarEdge(taskbarBounds, monitorBounds);
+                        hasDetectedTaskbar = true;
+                    }
+                }
+#endif
                 position = position.ResolveTaskbarAnchor(
                     hasDetectedTaskbar ? taskbarEdge : null,
-                    hasMonitorBounds ? monitorBounds : null);
+                    hasMonitorBounds ? monitorBounds : null,
+                    overflowBounds);
             }
 
             _position = position;
@@ -631,6 +649,9 @@ namespace DesktopFlyouts
                 RestartRestoreActivationTimer();
             RestartAutoCloseTimer();
             SetTransitionState(DesktopFlyoutTransitionState.Open);
+#if !HAS_UNO
+            RepositionAfterTaskbarOverflowClosedIfPending();
+#endif
         }
 
         private void CompleteClose()
@@ -1371,11 +1392,19 @@ namespace DesktopFlyouts
 #if !HAS_UNO
         private void UpdateTaskbarFlyoutVisibilityLease(DesktopFlyoutPosition position)
         {
+            _taskbarOverflowFlyoutMonitor?.Dispose();
+            _taskbarOverflowFlyoutMonitor = null;
+            _taskbarOverflowAnchorBounds = null;
+            _taskbarOverflowRepositionPending = false;
+
             if (!position.IsTaskbarAnchor || position.Anchor is not Rectangle anchorBounds)
             {
                 ReleaseTaskbarFlyoutVisibilityLease();
                 return;
             }
+
+            _taskbarOverflowAnchorBounds = anchorBounds;
+            _taskbarOverflowFlyoutMonitor = TaskbarOverflowFlyoutMonitor.TryCreate(anchorBounds, this, OnTaskbarOverflowFlyoutClosed);
 
             var newLease = TaskbarFlyoutVisibilityLease.TryAcquire(anchorBounds);
             if (newLease is null)
@@ -1388,20 +1417,63 @@ namespace DesktopFlyouts
 
         private void ReleaseTaskbarFlyoutVisibilityLease()
         {
+            _taskbarOverflowFlyoutMonitor?.Dispose();
+            _taskbarOverflowFlyoutMonitor = null;
+            _taskbarOverflowAnchorBounds = null;
+            _taskbarOverflowRepositionPending = false;
             _taskbarFlyoutVisibilityLease?.Dispose();
             _taskbarFlyoutVisibilityLease = null;
         }
 
+        private void OnTaskbarOverflowFlyoutClosed()
+        {
+            _taskbarOverflowFlyoutMonitor = null;
+            if (_disposed)
+                return;
+
+            _taskbarOverflowRepositionPending = true;
+            RepositionAfterTaskbarOverflowClosedIfPending();
+        }
+
+        private void RepositionAfterTaskbarOverflowClosedIfPending()
+        {
+            if (!_taskbarOverflowRepositionPending
+                || _disposed
+                || TransitionState is not DesktopFlyoutTransitionState.Open
+                || !IsOpen
+                || _isPopupAnimationPlaying
+                || _taskbarOverflowAnchorBounds is not Rectangle originalAnchor
+                || _taskbarFlyoutVisibilityLease is null
+                || !_taskbarFlyoutVisibilityLease.TryGetTaskbarBounds(out var taskbarBounds)
+                || !WindowHelpers.TryGetMonitorScreenRect(originalAnchor, out var monitorBounds))
+            {
+                return;
+            }
+
+            var edgeAnchor = WindowHelpers.GetTaskbarEdgeAnchor(originalAnchor, taskbarBounds, monitorBounds, out var taskbarEdge);
+            var anchorSide = taskbarEdge switch
+            {
+                TaskbarEdge.Top => DesktopFlyoutAnchorSide.Below,
+                TaskbarEdge.Left => DesktopFlyoutAnchorSide.Right,
+                TaskbarEdge.Right => DesktopFlyoutAnchorSide.Left,
+                _ => DesktopFlyoutAnchorSide.Above,
+            };
+
+            Debug.WriteLine($"[DesktopFlyout] Repositioning from notification-area overflow to taskbar edge {taskbarEdge}; anchor={edgeAnchor}.");
+            _taskbarOverflowRepositionPending = false;
+            _position = DesktopFlyoutPosition.ForAnchor(edgeAnchor, anchorSide);
+            UpdateOpenFlyoutLayout();
+        }
+
         private void RefreshActiveWorkAreaForTaskbarLease()
         {
-            if (_taskbarFlyoutVisibilityLease is null
-                || _position?.Anchor is not Rectangle anchorBounds)
+            if (_position?.Anchor is not Rectangle anchorBounds)
             {
                 return;
             }
 
             var workArea = WindowHelpers.GetFlyoutWorkAreaRect(_position);
-            if (_taskbarFlyoutVisibilityLease.TryGetTaskbarBounds(out var taskbarBounds)
+            if (_taskbarFlyoutVisibilityLease?.TryGetTaskbarBounds(out var taskbarBounds) == true
                 && WindowHelpers.TryGetMonitorScreenRect(anchorBounds, out var monitorBounds))
             {
                 _activeWorkArea = WindowHelpers.ExcludeTaskbarFromWorkArea(workArea, taskbarBounds, monitorBounds);
@@ -1409,6 +1481,12 @@ namespace DesktopFlyouts
             else
             {
                 _activeWorkArea = workArea;
+            }
+
+            if (_taskbarOverflowFlyoutMonitor?.TryGetBounds(out var overflowBounds) == true)
+            {
+                _position = DesktopFlyoutPosition.ForAnchor(overflowBounds, _position.AnchorSide, _position.AnchorAlignment, _position.TransitionDirection);
+                _activeWorkArea = DesktopFlyoutPositionResolver.GetWorkAreaOutsideAnchor(_activeWorkArea, overflowBounds, _position.AnchorSide);
             }
         }
 #endif

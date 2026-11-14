@@ -189,13 +189,14 @@ namespace DesktopFlyouts
             return InWorkArea(workAreaPosition, monitor, transitionDirection);
         }
 
-        internal DesktopFlyoutPosition ResolveTaskbarAnchor(TaskbarEdge? taskbarEdge, Rectangle? monitorBounds)
+        internal DesktopFlyoutPosition ResolveTaskbarAnchor(TaskbarEdge? taskbarEdge, Rectangle? monitorBounds, Rectangle? overflowBounds = null)
         {
             if (!IsTaskbarAnchor || Anchor is not Rectangle anchor)
             {
                 return this;
             }
 
+            anchor = overflowBounds ?? anchor;
             var side = DesktopFlyoutPositionResolver.ResolveTaskbarAnchorSide(anchor, monitorBounds, taskbarEdge);
             return ForAnchor(anchor, side, AnchorAlignment, TransitionDirection);
         }

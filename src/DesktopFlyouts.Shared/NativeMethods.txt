@@ -58,6 +58,13 @@ GetWindowRect
 IsWindowVisible
 IsWindow
 GetWindowThreadProcessId
+SetWinEventHook
+UnhookWinEvent
+EVENT_OBJECT_DESTROY
+EVENT_OBJECT_HIDE
+OBJECT_IDENTIFIER
+CHILDID_SELF
+WINEVENT_OUTOFCONTEXT
 FindWindowEx
 PostMessage
 ShowWindow
