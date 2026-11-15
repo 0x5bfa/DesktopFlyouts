@@ -25,7 +25,6 @@ GetMessage
 TranslateMessage
 DispatchMessage
 RoInitialize
-PostQuitMessage
 DefWindowProc
 LoadLibrary
 GetClientRect

@@ -507,11 +507,6 @@ namespace DesktopFlyouts
                             PInvoke.SendMessage(_coreHwnd, PInvoke.WM_SIZE, (WPARAM)(nuint)x, y);
                     }
                     break;
-                case PInvoke.WM_DESTROY:
-                    {
-                        PInvoke.PostQuitMessage(0);
-                    }
-                    break;
 #endif
                 case PInvoke.WM_SETTINGCHANGE:
                 case PInvoke.WM_THEMECHANGED:
