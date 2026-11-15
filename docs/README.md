@@ -139,7 +139,7 @@ The host installs a `CoreDispatcher` synchronization context on each XAML thread
 separate flyout resource dictionary for every window. `Show(position)` and menu `Show(point)`
 requests made before content is attached are retained and replayed after initialization; the
 latest request wins. `Hide` or `Dispose` cancels a pending request. The UWP sample combines the
-executable, MSIX manifest, and tray assets in `samples/DesktopFlyouts.Uwp.SampleApp`.
+executable, MSIX manifest, and tray assets in `samples/DesktopFlyouts.SampleApp.Uwp`.
 
 ## DesktopFlyout
 

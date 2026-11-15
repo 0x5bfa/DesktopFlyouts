@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using DesktopFlyouts.SampleApp.Shared;
 using Windows.Foundation;
 
 namespace DesktopFlyouts;

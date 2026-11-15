@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DesktopFlyouts.SampleApp.Shared;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;

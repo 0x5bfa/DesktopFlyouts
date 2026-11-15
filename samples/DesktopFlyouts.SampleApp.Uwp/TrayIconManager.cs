@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using DesktopFlyouts.SampleApp.Shared;
 
 namespace DesktopFlyouts
 {

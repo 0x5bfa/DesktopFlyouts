@@ -20,6 +20,8 @@
 		<ProjectReference Include="../../src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj" />
 	</ItemGroup>
 
+	<Import Project="../DesktopFlyouts.SampleApp.Shared/DesktopFlyouts.SampleApp.Shared.projitems" Label="Shared" />
+
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" />
 	</ItemGroup>

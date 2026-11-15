@@ -31,4 +31,6 @@
 		<ProjectReference Include="..\..\src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.csproj" />
 	</ItemGroup>
 
+	<Import Project="..\DesktopFlyouts.SampleApp.Shared\DesktopFlyouts.SampleApp.Shared.projitems" Label="Shared" />
+
 </Project>
