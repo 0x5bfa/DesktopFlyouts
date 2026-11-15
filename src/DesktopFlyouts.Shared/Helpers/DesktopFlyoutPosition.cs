@@ -180,31 +180,6 @@ namespace DesktopFlyouts
                 transitionDirection: transitionDirection);
         }
 
-        /// <summary>
-        /// Creates a fixed work-area position request using the legacy placement enum.
-        /// </summary>
-        [Obsolete("Use the DesktopFlyoutWorkAreaPosition overload instead.")]
-        public static DesktopFlyoutPosition InWorkArea(
-            DesktopFlyoutPlacementMode position,
-            DesktopFlyoutMonitorSelection monitor = DesktopFlyoutMonitorSelection.Primary,
-            DesktopFlyoutPopupDirection transitionDirection = DesktopFlyoutPopupDirection.Auto)
-        {
-            var workAreaPosition = position switch
-            {
-                DesktopFlyoutPlacementMode.TopLeft => DesktopFlyoutWorkAreaPosition.TopLeft,
-                DesktopFlyoutPlacementMode.TopCenter => DesktopFlyoutWorkAreaPosition.TopCenter,
-                DesktopFlyoutPlacementMode.TopRight => DesktopFlyoutWorkAreaPosition.TopRight,
-                DesktopFlyoutPlacementMode.LeftCenter => DesktopFlyoutWorkAreaPosition.LeftCenter,
-                DesktopFlyoutPlacementMode.RightCenter => DesktopFlyoutWorkAreaPosition.RightCenter,
-                DesktopFlyoutPlacementMode.BottomLeft => DesktopFlyoutWorkAreaPosition.BottomLeft,
-                DesktopFlyoutPlacementMode.BottomCenter => DesktopFlyoutWorkAreaPosition.BottomCenter,
-                DesktopFlyoutPlacementMode.BottomRight => DesktopFlyoutWorkAreaPosition.BottomRight,
-                _ => DesktopFlyoutWorkAreaPosition.BottomRight,
-            };
-
-            return InWorkArea(workAreaPosition, monitor, transitionDirection);
-        }
-
         internal DesktopFlyoutPosition ResolveTaskbarAnchor(TaskbarEdge? taskbarEdge, Rectangle? monitorBounds, Rectangle? overflowBounds = null)
         {
             if (!IsTaskbarAnchor || Anchor is not Rectangle anchor)

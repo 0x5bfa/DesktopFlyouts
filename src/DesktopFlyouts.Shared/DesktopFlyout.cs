@@ -46,8 +46,8 @@ namespace DesktopFlyouts
     /// <remarks>
     /// Use <see cref="DesktopFlyout"/> when you need a lightweight desktop surface that can be opened
     /// from a tray icon or from application code. Add one or more <see cref="DesktopFlyoutIsland"/>
-    /// instances to define the visible sections, then call <see cref="Show()"/> or
-    /// <see cref="Show(DesktopFlyoutPosition)"/> to display it. Dispose the instance when it is no longer used
+    /// instances to define the visible sections, then call <see cref="Show(DesktopFlyoutPosition)"/>
+    /// to display it. Dispose the instance when it is no longer used
     /// so the underlying host window and XAML island can be released.
     /// </remarks>
     [ContentProperty(Name = nameof(Islands))]
@@ -191,22 +191,13 @@ namespace DesktopFlyouts
         }
 
         /// <summary>
-        /// Opens the flyout at the default bottom-right position.
-        /// </summary>
-        /// <remarks>
-        /// The flyout uses the default bottom-right work-area position. A call during an opening
-        /// transition cancels a deferred close request. A call during closing is replayed after the
-        /// close transition completes. <see cref="IsOpen"/> becomes <see langword="true"/> after
-        /// the open transition completes.
-        /// </remarks>
-        public void Show()
-        {
-            Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
-        }
-
-        /// <summary>
         /// Opens the flyout using a position request resolved for this show operation.
         /// </summary>
+        /// <remarks>
+        /// A call during an opening transition cancels a deferred close request. A call during closing
+        /// is replayed after the close transition completes. <see cref="IsOpen"/> becomes <see langword="true"/> after
+        /// the open transition completes.
+        /// </remarks>
         public void Show(DesktopFlyoutPosition position)
         {
             ArgumentNullException.ThrowIfNull(position);

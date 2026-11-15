@@ -9,10 +9,16 @@ belong in **Unreleased** until the next release is tagged.
 
 - Remove `DesktopFlyout.Show(System.Drawing.Point)`. Use
   `Show(DesktopFlyoutPosition.ForAnchor(bounds, side))` for an explicit screen anchor, or
-  `Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon))` for a tray icon. Parameterless `Show()` and
-  `Show(DesktopFlyoutPosition)` remain supported, as does `DesktopMenuFlyout.Show(Point)`.
+  `Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon))` for a tray icon.
+- Remove parameterless `DesktopFlyout.Show()`. Every flyout show request must specify a
+  `DesktopFlyoutPosition`. To retain bottom-right placement on the primary monitor, use
+  `Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight))`.
 - Remove `DesktopFlyoutPosition.ForTaskbarAnchor(Rectangle)`. Use `ForTrayIcon` to follow a live
   tray icon, or `ForAnchor` for fixed coordinates with an explicit side.
+- Remove the obsolete `DesktopFlyoutPosition.InWorkArea(DesktopFlyoutPlacementMode, ...)` overload
+  and `DesktopFlyoutPlacementMode`. Use `InWorkArea(DesktopFlyoutWorkAreaPosition, ...)` and replace
+  each old enum member with the same named member of `DesktopFlyoutWorkAreaPosition`; their numeric
+  values differ, so do not migrate by casting.
 
 ### Added
 
@@ -40,6 +46,8 @@ belong in **Unreleased** until the next release is tagged.
 
 - Centralize release history and migration notes in this file. Update usage guides to the current
   package names, namespace, positioning API, backdrop values, and transition-aware toggling.
+- Consolidate the usage guides into `docs/README.md` and add `docs/api-reference.md` with public
+  API signatures, defaults, events, and platform availability.
 
 ## [2.2.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v2.2.0)
 

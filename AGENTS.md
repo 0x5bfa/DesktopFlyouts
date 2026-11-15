@@ -1,127 +1,23 @@
 # AGENTS.md
 
-DesktopFlyouts is a WinUI library for showing lightweight desktop flyouts, menu flyouts, and tray-icon driven UI from desktop apps. It ships three public library flavors:
+DesktopFlyouts provides lightweight desktop flyouts, menu flyouts, and tray icon integration for
+Windows App SDK / WinUI 3, UWP / WinUI 2, and Uno Platform on Linux / X11.
 
-## Code Structure
-
-```text
-.
-├───DesktopFlyouts.slnx
-├───src
-│   ├───DesktopFlyouts.Shared
-│   │   └───DesktopFlyouts.Shared.shproj
-│   ├───DesktopFlyouts.WinUI
-│   │   └───DesktopFlyouts.WinUI.csproj
-│   ├───DesktopFlyouts.Uwp
-│   │   └───DesktopFlyouts.Uwp.csproj
-│   └───DesktopFlyouts.Uno
-│       └───DesktopFlyouts.Uno.csproj
-└───samples
-    ├───DesktopFlyouts.WinUI.SampleApp
-    │   └───DesktopFlyouts.WinUI.SampleApp.csproj
-    ├───DesktopFlyouts.Uwp.SampleApp
-    │   └───DesktopFlyouts.Uwp.SampleApp.csproj
-    ├───DesktopFlyouts.Uwp.Sample.Packaging
-    │   └───DesktopFlyouts.Uwp.Sample.Packaging.wapproj
-    └───DesktopFlyouts.Uwp.Sample.TrayHost
-        └───DesktopFlyouts.Uwp.Sample.TrayHost.csproj
-```
-
-Most runtime behavior lives in `src/DesktopFlyouts.Shared` behind `#if WASDK`, `#if UWP`, and `#if HAS_UNO`. Keep all branches building when changing shared files.
-
-Keep in mind that for Uno Platform, `WASDK` and `HAS_UNO` will both be true.
-
-## Formatting And Editing Rules
-
-- This repo uses CRLF. Preserve CRLF for every changed text file.
-- `.editorconfig` sets UTF-8, CRLF, final newline, spaces, and 4-space indentation.
-- `.gitattributes` enforces `text=auto eol=crlf`.
-- Use existing patterns and dependency property generation style. Avoid broad refactors while fixing focused behavior.
+- Start with `git status --short --branch` to understand the current branch and uncommitted changes.
+- Most runtime behavior lives in `src/DesktopFlyouts.Shared` behind `#if WASDK`, `#if UWP`, and `#if HAS_UNO`. Keep all branches building when changing shared files.
+- Uno defines both `WASDK` and `HAS_UNO`; use `WASDK && !HAS_UNO` for Windows App SDK-specific code.
+- Follow `.editorconfig`: UTF-8, CRLF, a final newline, spaces, and 4-space indentation. `.gitattributes` enforces `text=auto eol=crlf`. Preserve existing indentation in project files.
+- Follow existing code patterns and dependency property generation conventions. Avoid broad refactors when fixing focused behavior.
 - Do not edit generated `bin`, `obj`, or `Generated Files` output.
-
-## Build Commands
-
-Run validation one command at a time and inspect each result before moving on. WinUI and UWP builds require Windows; skip them on other platforms.
-
-1. Build the Uno library (cross-platform):
-
-```powershell
-dotnet msbuild /restore:false src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
-```
-
-2. Build the WinUI 3 sample and library (Windows only):
-
-```powershell
-dotnet msbuild /restore:false samples\DesktopFlyouts.WinUI.SampleApp\DesktopFlyouts.WinUI.SampleApp.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
-```
-
-3. Build the UWP library (Windows only):
-
-```powershell
-dotnet msbuild /restore:false src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never
-```
-
-4. Check whitespace and line endings:
-
-```powershell
-git diff --check
-git ls-files --eol
-```
-
-`NETSDK1057` preview SDK messages can appear on this machine. Treat them as environment notices unless accompanied by a build failure.
-
-## Packaged App Debugging And Launch
-
-The WinUI sample is a packaged app. Do not validate launch by running the built `.exe` directly with `Start-Process` or `dotnet run`. That path can fail with `REGDB_E_CLASSNOTREG`. Use a package-aware launch path.
-
-After building the WinUI sample, register the generated package manifest and launch through `shell:AppsFolder`.
-
-```powershell
-$manifest = Join-Path (Get-Location) 'samples\DesktopFlyouts.WinUI.SampleApp\bin\x64\Debug\net10.0-windows10.0.26100.0\AppxManifest.xml'
-Add-AppxPackage -Register $manifest -DisableDevelopmentMode
-
-$package = Get-AppxPackage -Name 'd6120692-1c26-4251-b686-e2321694e3b0'
-Start-Process "shell:AppsFolder\$($package.PackageFamilyName)!App"
-
-Start-Sleep -Seconds 5
-Get-Process -Name DesktopFlyouts.WinUI.SampleApp -ErrorAction SilentlyContinue |
-    Select-Object Id, ProcessName, MainWindowHandle, Responding, HasExited
-```
-
-A successful launch should show a live `DesktopFlyouts.WinUI.SampleApp` process with `Responding = True` and a non-zero `MainWindowHandle`.
-
-## Debugging
-
-Use Event Viewer for startup and packaged-launch failures. Check `Windows Logs > Application` first, especially `.NET Runtime` event `1026`, `Application Error` event `1000`, and `Windows Error Reporting` event `1001`.
-
-From PowerShell, read the same Application log with:
-
-```powershell
-Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=(Get-Date).AddMinutes(-10)} |
-    Where-Object { $_.Message -match 'DesktopFlyouts.WinUI.SampleApp|DesktopFlyouts' } |
-    Select-Object -First 10 TimeCreated, ProviderName, Id, LevelDisplayName, Message |
-    Format-List
-```
-
-If the log shows `0x80040154 REGDB_E_CLASSNOTREG` from `WindowsAppRuntime.DeploymentInitializeOptions`, treat it as an invalid unpackaged/direct `.exe` launch path before blaming app code. Re-run the packaged launch steps above.
-
-Stop running samples before rebuilding if output files are locked:
-
-```powershell
-Get-Process -Name DesktopFlyouts.WinUI.SampleApp -ErrorAction SilentlyContinue | Stop-Process -Force
-```
-
-## Validation Checklist
-
-Validate one item at a time:
-
-1. `git status --short --branch` to understand the current branch and dirty files.
-2. Build the Uno library.
-3. Build the WinUI sample (Windows only).
-4. Build the UWP library when shared code changed (Windows only).
-5. Launch the WinUI sample as packaged, never by direct `.exe` (Windows only).
-6. Confirm the app has a responsive process and real window handle (Windows only).
-7. Run `git diff --check`.
-8. Confirm changed text files remain CRLF.
-9. Summarize what was changed, what was validated, and any remaining risk.
-
+- Keep usage documentation in `docs/README.md` and the detailed public API reference in `docs/api-reference.md`. Update affected examples, signatures, defaults, platform availability, and links when APIs or behavior change.
+- Update `CHANGE_LOG.md` when a change affects public APIs, runtime behavior, platform support, or other notable user-facing functionality or documentation. Add entries under `Unreleased` until the next release is tagged; keep existing release sections tied to their tags.
+- Describe breaking changes and their migration steps in the changelog. Keep release history and migration notes out of the usage guide and API reference; those documents should describe the current API.
+- Build the libraries and their samples one command at a time, and inspect each result before continuing. Shared runtime changes require checking all three library flavors. Use `/p:AppxBundle=Never` to avoid unnecessary Windows app bundle generation.
+- Use Visual Studio's MSBuild for UWP sample projects so the XAML compiler runs correctly; `dotnet msbuild` may leave `InitializeComponent` ungenerated.
+- WinUI and UWP builds require Windows; skip them on other platforms. Uno / X11 runtime validation requires Linux. Report checks that could not be run and why.
+- Do not launch sample apps or other UI applications, including the WinUI integration test app, unless the user explicitly requests it. Validate with builds and non-UI tests by default.
+- If an explicitly requested launch involves the packaged WinUI sample, register its generated `AppxManifest.xml` and launch through `shell:AppsFolder`, rather than running its executable directly. Stop running samples before rebuilding only if their output files are locked.
+- `NETSDK1057` preview SDK messages can appear on this machine. Treat them as environment notices unless accompanied by a build failure.
+- Run relevant non-UI tests using the commands in `tests/README.md`; unit tests use `dotnet test`. Build the WinUI integration test app, but run it with `dotnet run` only when the user explicitly requests UI execution on Windows with an interactive desktop.
+- Before finishing, run `git diff --check` and verify that changed text files use CRLF.
+- Summarize the changes, validation results, and any remaining risks or limitations.

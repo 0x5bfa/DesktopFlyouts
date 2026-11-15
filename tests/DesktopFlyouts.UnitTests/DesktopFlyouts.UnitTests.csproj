@@ -16,7 +16,7 @@
 	<ItemGroup>
 		<Compile Include="**\*.cs" Exclude="obj\**;bin\**" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutHostLayout.cs" Link="Production\DesktopFlyoutHostLayout.cs" />
-		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPlacementMode.cs" Link="Production\DesktopFlyoutPlacementMode.cs" />
+		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutWorkAreaPosition.cs" Link="Production\DesktopFlyoutWorkAreaPosition.cs" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPopupDirection.cs" Link="Production\DesktopFlyoutPopupDirection.cs" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPosition.cs" Link="Production\DesktopFlyoutPosition.cs" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPositionResolver.cs" Link="Production\DesktopFlyoutPositionResolver.cs" />

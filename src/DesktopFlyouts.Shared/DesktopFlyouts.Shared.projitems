@@ -14,7 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutBackdropKind.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutSystemBackdrops.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutActivationMode.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPlacementMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutWorkAreaPosition.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\GeneralHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\GeneralHelpers.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\IXamlSourceTransparency.cs" />

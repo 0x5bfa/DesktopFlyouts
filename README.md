@@ -25,17 +25,16 @@ Install the package for your XAML stack with NuGet Package Manager or the .NET C
 
 ### Uno Platform (Linux / X11)
 
+<a style="text-decoration:none" href="https://www.nuget.org/packages/DesktopFlyouts.Uno"><img src="https://img.shields.io/nuget/v/DesktopFlyouts.Uno" alt="NuGet badge" /></a>
+
 ```console
 > dotnet add package DesktopFlyouts.Uno
 ```
 
 ## Documentation
 
-- [Getting started](docs/getting-started.md)
-- [DesktopFlyout](docs/desktop-flyout.md)
-- [DesktopMenuFlyout](docs/desktop-menu-flyout.md)
-- [SystemTrayIcon](docs/system-tray-icon.md)
-- [Focus and activation](docs/focus-and-activation.md)
+- [Usage guide](docs/README.md)
+- [API reference](docs/api-reference.md)
 - [Changelog](CHANGE_LOG.md)
 
 ## Usage
@@ -64,7 +63,7 @@ This project provides `DesktopFlyout` for lightweight desktop panels and `Deskto
 if (_desktopFlyout.TransitionState is not DesktopFlyoutTransitionState.Closed)
     _desktopFlyout.Hide();
 else
-    _desktopFlyout.Show();
+    _desktopFlyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 ```
 
 ### DesktopMenuFlyout
@@ -91,7 +90,7 @@ _desktopMenuFlyout.Show(e.Point);
 ## Building from the source
 
 1. Prerequisites
-    - Windows 10 (Build 10.0.17763.0) onwards and Windows 11
+    - Windows 10 (Build 10.0.17763.0) onwards or Windows 11
     - Visual Studio with the Windows application build tools for your target
     - .NET 10 SDK
 2. Clone the repo

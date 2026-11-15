@@ -35,7 +35,7 @@ public sealed class DesktopFlyoutLifecycleTests
             Assert.IsTrue(flyout.DispatcherQueue.HasThreadAccess);
         };
 
-        flyout.Show();
+        flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
         await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
         var backdrop = island.TemplateSettings.SystemBackdrop;
         Assert.IsNotNull(backdrop);
@@ -48,7 +48,7 @@ public sealed class DesktopFlyoutLifecycleTests
         {
             flyout.Hide();
             await WaitForState(flyout, DesktopFlyoutTransitionState.Closed);
-            flyout.Show();
+            flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
             await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
             Assert.AreSame(backdrop, island.TemplateSettings.SystemBackdrop, $"Backdrop changed on open {cycle + 2}.");
             Assert.AreSame(backdrop, element.SystemBackdrop);
@@ -69,7 +69,7 @@ public sealed class DesktopFlyoutLifecycleTests
     public async Task Backdrop_settings_changes_replace_or_disconnect_the_visible_backdrop()
     {
         using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
-        flyout.Show();
+        flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
         await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
         var island = flyout.Islands[0];
         var element = FindBackdropElement(island);
@@ -103,14 +103,14 @@ public sealed class DesktopFlyoutLifecycleTests
         flyout.IsTransitionAnimationEnabled = animationsEnabled;
         for (var cycle = 0; cycle < 10; cycle++)
         {
-            flyout.Show();
+            flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
             Assert.AreEqual(DesktopFlyoutTransitionState.Opening, flyout.TransitionState);
             flyout.Hide();
             await WaitForState(flyout, DesktopFlyoutTransitionState.Closed);
             Assert.IsFalse(flyout.IsOpen);
         }
 
-        flyout.Show();
+        flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
         await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
         Assert.IsTrue(flyout.IsOpen);
     }
@@ -120,7 +120,7 @@ public sealed class DesktopFlyoutLifecycleTests
     {
         using var errors = new WrongThreadErrors();
         using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
-        flyout.Show();
+        flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
         Assert.AreEqual(DesktopFlyoutTransitionState.Opening, flyout.TransitionState);
         flyout.Dispose();
 
