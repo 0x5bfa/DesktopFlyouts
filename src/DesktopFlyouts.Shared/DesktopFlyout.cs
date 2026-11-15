@@ -329,17 +329,6 @@ namespace DesktopFlyouts
         }
 
         /// <summary>
-        /// Opens the flyout around the specified screen-space point using taskbar-edge detection
-        /// when available.
-        /// </summary>
-        /// <param name="anchorPoint">The screen-space anchor point.</param>
-        [Obsolete("Use Show(DesktopFlyoutPosition.ForAnchor(bounds, side)) or ForTrayIcon(trayIcon) instead.")]
-        public void Show(Point anchorPoint)
-        {
-            Show(DesktopFlyoutPosition.FromTaskbarBounds(new Rectangle(anchorPoint, Size.Empty)));
-        }
-
-        /// <summary>
         /// Closes the flyout.
         /// </summary>
         /// <remarks>

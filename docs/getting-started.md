@@ -2,19 +2,31 @@
 
 Install the package that matches your XAML stack.
 
-```console
-dotnet add package 0x5BFA.DesktopFlyouts.WinUI --prerelease
-```
+Windows App SDK / WinUI 3:
 
 ```console
-dotnet add package 0x5BFA.DesktopFlyouts.Uwp --prerelease
+dotnet add package DesktopFlyouts.WinUI
+```
+
+UWP / WinUI 2:
+
+```console
+dotnet add package DesktopFlyouts.Uwp
+```
+
+Uno Platform on Linux / X11:
+
+```console
+dotnet add package DesktopFlyouts.Uno
 ```
 
 Add the DesktopFlyouts namespace to XAML.
 
 ```xml
-xmlns:desktop="using:U5BFA.Libraries"
+xmlns:desktop="using:DesktopFlyouts"
 ```
+
+Use `using DesktopFlyouts;` in C# files that reference the controls and position types.
 
 ## Create a flyout
 
@@ -43,24 +55,25 @@ private readonly MainDesktopFlyout _flyout = new();
 
 private void ToggleFlyout()
 {
-    if (_flyout.IsOpen)
+    if (_flyout.TransitionState is not DesktopFlyoutTransitionState.Closed)
         _flyout.Hide();
     else
-        _flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
+        _flyout.Show();
 }
 ```
 
-Call `Dispose` when the flyout is no longer needed.
+`Show()` opens at the bottom-right of the primary monitor's work area. Use `TransitionState` when
+toggling so a click during opening also requests a close. Create and operate the flyout on the UI
+thread, and call `Dispose` on that thread when it is no longer needed.
 
 ```csharp
 _flyout.Dispose();
 ```
 
-## Show from a screen anchor
+## Show from a tray icon
 
-`ForAnchor` accepts a physical-pixel screen rectangle and requires the side where the flyout should
-appear. This works with tray icons, buttons, and other UI elements when their screen bounds are
-available.
+Pass a `SystemTrayIcon` to `ForTrayIcon` to follow its current screen bounds. If icon bounds are
+unavailable, use the click position with an explicit anchor side.
 
 ```csharp
 private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
@@ -78,8 +91,21 @@ private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
 ```
 
 `ForTrayIcon` follows the icon's current bounds, detects the taskbar edge, and opens toward the work area. If the
-platform cannot report taskbar bounds, it estimates the side from the nearest monitor edge. To anchor
-to a normal UI element, pass its physical screen bounds to `ForAnchor` with an explicit side.
+platform cannot report taskbar bounds, it estimates the side from the nearest monitor edge.
+
+## Show from a screen anchor
+
+`ForAnchor` accepts a `System.Drawing.Rectangle` in physical screen pixels and requires the side
+where the flyout should appear. Use it for buttons or other UI elements whose screen bounds are
+available.
+
+```csharp
+var anchor = new System.Drawing.Rectangle(x, y, width, height);
+_flyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
+```
+
+See [position requests](desktop-flyout.md#position-requests) for alignment, monitor selection, and
+transition directions.
 
 ## Add a tray menu
 

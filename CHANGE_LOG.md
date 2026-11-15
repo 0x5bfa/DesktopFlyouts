@@ -1,0 +1,103 @@
+# Changelog
+
+Release sections follow the repository's version tags. Changes after the latest tagged release
+belong in **Unreleased** until the next release is tagged.
+
+## Unreleased
+
+### Breaking changes
+
+- Remove `DesktopFlyout.Show(System.Drawing.Point)`. Use
+  `Show(DesktopFlyoutPosition.ForAnchor(bounds, side))` for an explicit screen anchor, or
+  `Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon))` for a tray icon. Parameterless `Show()` and
+  `Show(DesktopFlyoutPosition)` remain supported, as does `DesktopMenuFlyout.Show(Point)`.
+- Remove `DesktopFlyoutPosition.ForTaskbarAnchor(Rectangle)`. Use `ForTrayIcon` to follow a live
+  tray icon, or `ForAnchor` for fixed coordinates with an explicit side.
+
+### Added
+
+- Add `DesktopFlyoutPosition.ForTrayIcon(SystemTrayIcon)` with live icon-bound resolution.
+- Follow monitor work-area, taskbar, registered appbar, and visible auto-hide bar changes while a
+  flyout is open. Windows display/work-area/DPI messages and WinEvents coalesce layout updates;
+  a 250 ms sampler while opening or visible covers missed shell notifications and icon movement.
+- Add portable geometry tests and WinUI lifecycle, backdrop, live-placement, and native-event tests.
+  Consolidate `DesktopFlyouts.Windows.IntegrationTests` into `DesktopFlyouts.WinUI.IntegrationTests`.
+
+### Fixed
+
+- Keep flyout opening and backdrop cleanup on the owning UI thread. Reuse system backdrops across
+  open/close cycles and dispose detached `ContentExternalBackdropLink` instances on that thread,
+  preventing owning-thread errors during rapid toggles and garbage collection. Cancel queued
+  opening work when the flyout is disposed.
+- Keep monitor-sized host geometry stable during content resizing.
+- Place tray flyouts against the full notification-area overflow window, align with the clicked
+  icon's row or column, avoid an extra transparent gap, and reposition when the overflow closes.
+- Keep an auto-hide taskbar revealed while its tray-anchored flyout is visible.
+- Apply activation mode before showing the host and activate visible islands when requested.
+- Respond to system theme changes at runtime.
+
+### Documentation
+
+- Centralize release history and migration notes in this file. Update usage guides to the current
+  package names, namespace, positioning API, backdrop values, and transition-aware toggling.
+
+## [2.2.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v2.2.0)
+
+- Rename the Windows App SDK library project from `DesktopFlyouts.Wasdk` to
+  `DesktopFlyouts.WinUI`, and standardize sample project names by platform.
+- Update solution, build, and packaging references to the renamed projects. The WinUI NuGet
+  package remains `DesktopFlyouts.WinUI`.
+
+## [2.1.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v2.1.0)
+
+- Align flyout content and backdrop themes with the system theme.
+- Update dependencies.
+
+## [2.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v2.0.0)
+
+- Introduce `DesktopFlyoutPosition` requests for explicit anchors, taskbar anchors, and work-area
+  positions, including side, alignment, monitor selection, and transition direction.
+- Replace the `Placement` and `PopupDirection` XAML properties with position requests supplied to
+  `Show`. Use `Show(DesktopFlyoutPosition.InWorkArea(position, monitor, transitionDirection))` for
+  work-area placement, or `Show(DesktopFlyoutPosition.ForAnchor(bounds, side))` for a screen anchor.
+- Expose transition state and handle repeated requests during animations: defer closing during
+  opening, queue reopening during closing, and allow newer requests to cancel deferred work.
+- Respect the Windows animation setting and marshal setting changes to the UI thread.
+- Switch NuGet publishing to Trusted Signing.
+
+## [1.6.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v1.6.0)
+
+- Keep CsWin32-generated interop types internal to the library.
+- Fix UWP `RectInt32` namespace resolution.
+
+## [1.5.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v1.5.0)
+
+- Add Uno Platform support on Linux / X11, including system tray integration.
+- Replace the Windows App SDK metapackage with individual component package references.
+
+## [1.4.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v1.4.0)
+
+- Change the public namespace from `U5BFA.Libraries` to `DesktopFlyouts`. Update C# imports and
+  XAML namespace declarations to `using DesktopFlyouts;` and `using:DesktopFlyouts` respectively.
+- Add left and right double-click events to `SystemTrayIcon`, expand icon construction and
+  replacement APIs, and improve icon resource cleanup and path validation.
+- Support runtime island visibility changes with an `ItemsControl`-based layout.
+- Fix placement on the anchor's monitor, top-anchored resizing and repositioning, and freeform
+  island sizing. Handle press and swipe gestures per island.
+- Clear connected backdrops before disposing islands.
+
+## [1.2.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v1.2.0)
+
+- Rename the project and controls from TrayIconFlyout to DesktopFlyouts. Rename NuGet packages
+  to `DesktopFlyouts.WinUI` and `DesktopFlyouts.Uwp`.
+- Add activation modes, `AutoCloseDelay`, `PressedScale`, swipe-to-dismiss settings, and
+  left-center and right-center placement options.
+- Improve keyboard focus navigation and the non-activating mode.
+- Add system-backdrop hosting and accent color prevalence support.
+- Fix runtime resizing and overlap with auto-hide taskbars.
+- Adopt Central Package Management and expand the sample applications.
+
+## [1.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v1.0.0)
+
+- Initial tagged release, published under the TrayIconFlyout name for WinUI 3 and UWP / WinUI 2.
+- Provide desktop-hosted panel flyouts, menu flyouts, and a system tray icon helper.

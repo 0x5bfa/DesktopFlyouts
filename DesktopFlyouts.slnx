@@ -9,6 +9,7 @@
   <Folder Name="/.global/">
     <File Path=".editorconfig" />
     <File Path="AGENTS.md" />
+    <File Path="CHANGE_LOG.md" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />

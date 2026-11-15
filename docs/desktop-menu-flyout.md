@@ -19,7 +19,7 @@ Use it for tray-icon context menus or other menus that need to open at physical 
 
 ```csharp
 var menu = new MainDesktopMenuFlyout();
-menu.Show(new Point(x, y));
+menu.Show(new System.Drawing.Point(x, y));
 ```
 
 ## Items
@@ -35,7 +35,7 @@ The control rebuilds the hosted menu from `Items` when the item collection chang
 
 ## Coordinates
 
-`Show(Point)` expects a physical screen pixel. This matches the points raised by `SystemTrayIcon.LeftClicked` and `SystemTrayIcon.RightClicked`.
+`Show(System.Drawing.Point)` expects a point in physical screen pixels. This matches the points raised by `SystemTrayIcon.LeftClicked` and `SystemTrayIcon.RightClicked`.
 
 ```csharp
 private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)
@@ -50,7 +50,7 @@ private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e
 Adjust the point before calling `Show` if you want an offset.
 
 ```csharp
-menu.Show(new Point(e.Point.X, e.Point.Y - 32));
+menu.Show(new System.Drawing.Point(e.Point.X, e.Point.Y - 32));
 ```
 
 ## State and lifetime

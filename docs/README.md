@@ -12,7 +12,10 @@ DesktopFlyouts provides XAML controls for showing desktop-hosted flyouts from tr
 
 ## Package targets
 
-- `0x5BFA.DesktopFlyouts.WinUI`: Windows App SDK / WinUI 3.
-- `0x5BFA.DesktopFlyouts.Uwp`: UWP / WinUI 2.
+- `DesktopFlyouts.WinUI`: Windows App SDK / WinUI 3.
+- `DesktopFlyouts.Uwp`: UWP / WinUI 2.
+- `DesktopFlyouts.Uno`: Uno Platform on Linux / X11.
 
-Both packages expose the main APIs under the `U5BFA.Libraries` namespace.
+All packages expose the main APIs under the `DesktopFlyouts` namespace.
+
+See the [changelog](../CHANGE_LOG.md) for release history and migration notes.

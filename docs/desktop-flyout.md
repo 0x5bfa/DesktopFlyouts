@@ -23,8 +23,11 @@ Use it when you need a small desktop surface that can be shown from a tray icon 
 
 ```csharp
 var flyout = new MainDesktopFlyout();
-flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
+flyout.Show();
 ```
+
+`Show()` opens at the bottom-right of the primary monitor's work area. Pass a
+`DesktopFlyoutPosition` to `Show` to choose another position.
 
 ## Islands
 
@@ -45,8 +48,7 @@ Pass a position request to `Show`. The flyout is measured first, then positioned
 pixels and clamped to the selected monitor's work area. Explicit anchor sides remain fixed. Tray
 placement is resolved again when the icon, taskbar, or monitor layout changes.
 
-Position is supplied per `Show` call. The former `Placement` and `PopupDirection` XAML properties
-have been removed.
+Position is supplied per `Show` call.
 
 For a regular UI anchor, pass its screen-space bounds and the side where the flyout should appear.
 The default alignment is centered. The transition direction defaults to the direction implied by
@@ -69,8 +71,8 @@ also unavailable, it uses `Above`. Windows shell taskbars and X11 panels that pu
 properties can be detected. Third-party bars that expose no supported geometry are not guaranteed
 to be detected. The nearest-edge fallback is a separate estimate, not a detection result.
 
-The former `ForTaskbarAnchor(Rectangle)` factory has been removed. The icon must have shell-reported
-bounds when first shown; otherwise the show request is ignored. A temporarily unavailable icon keeps
+The icon must have shell-reported bounds when first shown; otherwise the show request is ignored.
+A temporarily unavailable icon keeps
 its last known anchor while the flyout is open. The caller continues to own the icon.
 
 Open flyouts follow changes to their monitor's work area, including registered appbars. On Windows,
@@ -79,17 +81,13 @@ Area already reserved by the work area is not subtracted twice. Tray requests re
 `InWorkArea` requests retain the monitor chosen when shown, even if the pointer moves elsewhere.
 Explicit `ForAnchor` coordinates remain fixed and are clamped into the current work area.
 
-Windows display/work-area/DPI notifications and bar WinEvents queue one layout update per frame.
-A 250 ms sampler runs only while the flyout is visible or opening to cover missed shell notifications,
-icon rearrangements, and Explorer restarts. Changes during opening are applied after the transition;
-closing and disposal stop the hooks and sampler. Geometry updates do not restart the open animation
-or activate the host window.
+Layout changes during opening are applied after the transition. Repositioning an open flyout does
+not restart its animation or activate its window.
 
 On Windows, an icon in an open notification-area overflow flyout uses that flyout's full window
 bounds, including all rows or columns, to choose the contact edge. Alignment along the other axis
-stays on the tray icon. The adjacent transparent margin overlaps the shell host so it does not add
-to the shell's own visual inset; the other margins and the public `Margin` value are unchanged.
-The desktop flyout is sized to the available space on that side. When the overflow closes, it moves
+stays on the tray icon. The flyout meets the overflow host without adding an extra transparent gap
+and is sized to the available space on that side. When the overflow closes, it moves
 back to the taskbar edge with its usual margins.
 
 Use `DesktopFlyoutAnchorSide.Above`, `Below`, `Left`, or `Right` for an explicit side. Use
@@ -153,6 +151,11 @@ flyout.AutoCloseDelay = TimeSpan.FromSeconds(4);
 
 Use `TimeSpan.Zero` or a negative value to disable automatic close.
 
+## Transitions
+
+`IsTransitionAnimationEnabled` defaults to `True`. On Windows, transitions also respect the system
+animation setting. Set this property to `False` to open and close without transition animations.
+
 ## Interaction
 
 `PressedScale` controls the pointer-pressed scale effect. The default is `1.0`, which disables the effect.
@@ -176,14 +179,15 @@ The Windows App SDK package can apply backdrops to flyout islands.
 ```xml
 <desktop:DesktopFlyout
     IsBackdropEnabled="True"
-    BackdropKind="Acrylic" />
+    BackdropKind="DesktopAcrylic" />
 ```
 
-`BackdropKind` can be `Acrylic` or `Mica`. UWP builds keep the same API surface, but do not create a Windows App SDK system backdrop.
+`BackdropKind` can be `DesktopAcrylic` or `Mica`. UWP builds keep the same API surface, but do not create a Windows App SDK system backdrop.
 
 ## Lifetime
 
-`DesktopFlyout` owns a desktop host window. Create the flyout once, reuse it, and call `Dispose` when it is no longer needed.
+`DesktopFlyout` owns a desktop host window. Create the flyout once, reuse it, and call `Show`, `Hide`,
+and `Dispose` on its owning UI thread. Call `Dispose` when the flyout is no longer needed.
 
 ```csharp
 flyout.Dispose();

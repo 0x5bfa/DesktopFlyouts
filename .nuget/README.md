@@ -7,7 +7,7 @@ DesktopFlyouts is a WinUI library for showing desktop flyouts from tray icons or
 ```xml
 <me:DesktopFlyout
     x:Class="..."
-    xmlns:me="using:U5BFA.Libraries"
+    xmlns:me="using:DesktopFlyouts"
     FlyoutWidth="360">
 
     <me:DesktopFlyoutIsland IslandHeight="300">
@@ -21,7 +21,7 @@ DesktopFlyouts is a WinUI library for showing desktop flyouts from tray icons or
 ```
 
 ```cs
-if (_desktopFlyout.IsOpen)
+if (_desktopFlyout.TransitionState is not DesktopFlyoutTransitionState.Closed)
     _desktopFlyout.Hide();
 else
     _desktopFlyout.Show();
@@ -32,7 +32,7 @@ else
 ```xml
 <me:DesktopMenuFlyout
     x:Class="..."
-    xmlns:me="using:U5BFA.Libraries">
+    xmlns:me="using:DesktopFlyouts">
 
     <MenuFlyoutSubItem Text="Settings">
         <MenuFlyoutSubItem.Icon>
@@ -68,6 +68,7 @@ _desktopMenuFlyout.Show(e.Point);
 - DesktopMenuFlyout: https://github.com/0x5bfa/DesktopFlyouts/blob/main/docs/desktop-menu-flyout.md
 - SystemTrayIcon: https://github.com/0x5bfa/DesktopFlyouts/blob/main/docs/system-tray-icon.md
 - Focus and activation: https://github.com/0x5bfa/DesktopFlyouts/blob/main/docs/focus-and-activation.md
+- Changelog: https://github.com/0x5bfa/DesktopFlyouts/blob/main/CHANGE_LOG.md
 
 ## License
 
