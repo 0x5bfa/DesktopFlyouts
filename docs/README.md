@@ -20,7 +20,7 @@ Install the package that matches your XAML stack:
 
 | Package | Target |
 | --- | --- |
-| `DesktopFlyouts.WinUI` | Windows App SDK / WinUI 3 |
+| `DesktopFlyouts.WinUI` | Windows App SDK / WinUI 3 desktop XAML island hosting |
 | `DesktopFlyouts.Uwp` | UWP / WinUI 2 desktop XAML island hosting |
 | `DesktopFlyouts.Uno` | Uno Platform on Linux / X11 |
 
@@ -89,6 +89,57 @@ private void ToggleFlyout()
 
 `Show` requires a position request. This example opens at the bottom-right of the primary monitor's
 work area. Use `TransitionState` for toggling so a click during opening also requests a close.
+
+### Start a UWP desktop host
+
+The UWP package uses XamlHostingKit for System XAML initialization and the desktop message loop.
+Disable the generated XAML entry point in the executable project:
+
+```xml
+<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+```
+
+Start the application from an STA entry point:
+
+```csharp
+using System;
+using DesktopFlyouts.Shared;
+
+internal static class Program
+{
+    [STAThread]
+    private static void Main() => XamlIslandApplication.Start(_ => new App());
+}
+```
+
+Create the first flyout in `App.OnLaunched`. Each additional `DesktopFlyout` or `DesktopMenuFlyout`
+needs a separate XAML thread and window:
+
+```csharp
+private MainDesktopFlyout? _flyout;
+private volatile MainDesktopMenuFlyout? _menu;
+
+protected override void OnLaunched(Windows.ApplicationModel.Activation.LaunchActivatedEventArgs args)
+{
+    _flyout = new MainDesktopFlyout();
+    XamlIslandApplication.CreateWindow(_ => _menu = new MainDesktopMenuFlyout());
+}
+```
+
+Dispatch later operations to the instance's `Dispatcher` when called from another thread:
+
+```csharp
+var menu = _menu;
+if (menu is not null)
+    _ = menu.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
+        () => menu.Show(screenPoint));
+```
+
+The host installs a `CoreDispatcher` synchronization context on each XAML thread. It loads a
+separate flyout resource dictionary for every window. `Show(position)` and menu `Show(point)`
+requests made before content is attached are retained and replayed after initialization; the
+latest request wins. `Hide` or `Dispose` cancels a pending request. The UWP sample combines the
+executable, MSIX manifest, and tray assets in `samples/DesktopFlyouts.Uwp.SampleApp`.
 
 ## DesktopFlyout
 
@@ -263,12 +314,11 @@ _flyout.Show(DesktopFlyoutPosition.InWorkArea(
 suppresses focusable states in the content. `HideOnLostFocus="True"` closes the flyout when its host
 is deactivated; set it to `False` for a persistent panel.
 
-### UWP message loop integration
+### UWP message dispatch
 
-UWP desktop hosts expose `TryPreTranslateMessage(nint message)` on both `DesktopFlyout` and
-`DesktopMenuFlyout`. Pass the address of the native `MSG` structure before dispatching it in the
-native message loop so keyboard navigation and accelerators can reach the island. A `true` return
-value means XAML handled the message.
+XamlHostingKit owns the desktop message loop and XAML message translation. Both flyout types
+retain `TryPreTranslateMessage(nint message)` for source compatibility; it returns `false`.
+Use [XamlIslandApplication](#start-a-uwp-desktop-host) to initialize the host.
 
 ## DesktopMenuFlyout
 

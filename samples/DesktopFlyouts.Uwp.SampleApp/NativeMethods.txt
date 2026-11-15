@@ -1,0 +1,5 @@
+DestroyWindow
+SetWindowSubclass
+RemoveWindowSubclass
+DefSubclassProc
+WM_CLOSE
