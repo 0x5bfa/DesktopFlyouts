@@ -97,8 +97,8 @@ that position after the close transition completes; another `Show` replaces the 
 public bool TryPreTranslateMessage(nint message);
 ```
 
-`message` points to a native `MSG` structure. Call before native message dispatch. Returns `true`
-when the hosted XAML island handled the message, otherwise `false`.
+Retained for source compatibility. Always returns `false`; XamlHostingKit owns the desktop message
+loop and XAML message translation.
 
 ### Events
 
@@ -223,8 +223,8 @@ public void Dispose();
 | `Hide()` | Hides both the menu and host and resets `IsOpen`. Calls after disposal are ignored. |
 | `Dispose()` | Closes the menu and releases its host. Repeated calls are safe. |
 
-**UWP only:** `bool TryPreTranslateMessage(nint message)` forwards a native `MSG` pointer to the
-island before dispatch and returns whether XAML handled it.
+**UWP only:** `bool TryPreTranslateMessage(nint message)` is retained for source compatibility
+and always returns `false`. XamlHostingKit performs XAML message translation.
 
 ## SystemTrayIcon
 
@@ -418,9 +418,25 @@ The following properties are **WinUI only**. They are publicly readable DPs with
 ### XamlIslandApplication
 
 **UWP only; namespace `DesktopFlyouts.Shared`.**
-`public partial class XamlIslandApplication : Application` supports UWP XAML island initialization.
-It has a public parameterless constructor and no additional public members. Application code
-normally does not create it directly.
+`public partial class XamlIslandApplication : Application` provides System XAML initialization
+through XamlHostingKit. It has a public parameterless constructor; applications normally use the
+static methods with their own `Application` subclass.
+
+```csharp
+public new static void Start(ApplicationInitializationCallback initializationCallback);
+public static void CreateWindow(ApplicationInitializationCallback initializationCallback);
+```
+
+| Method | Behavior |
+| --- | --- |
+| `Start(callback)` | Starts System XAML and runs the desktop message loop. Call from an STA entry point; the callback creates the application instance. |
+| `CreateWindow(callback)` | Creates an additional XamlHostingKit window and calls the callback on its XAML thread. Create one flyout or menu per window. |
+
+Both methods throw `ArgumentNullException` for a null callback. A flyout constructed outside a
+XamlHostingKit window, or a second flyout constructed in an already claimed window, throws
+`InvalidOperationException`. Dispatch later operations to the instance's `Dispatcher`.
+UWP flyout and menu `Show` requests made before content readiness are queued with their position;
+the latest request wins. `Hide` and `Dispose` cancel pending requests.
 
 ### TransparentWindow
 

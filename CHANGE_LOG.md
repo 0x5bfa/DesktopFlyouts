@@ -7,6 +7,13 @@ belong in **Unreleased** until the next release is tagged.
 
 ### Breaking changes
 
+- Replace UWP `DesktopWindowXamlSource` hosting with XamlHostingKit. Start desktop applications
+  with `DesktopFlyouts.Shared.XamlIslandApplication.Start` from an STA entry point and disable
+  the generated XAML entry point with `DISABLE_XAML_GENERATED_MAIN`. Construct each additional
+  flyout or menu in a separate `XamlIslandApplication.CreateWindow` callback and dispatch later
+  operations to its `Dispatcher`. XamlHostingKit owns the message loop; remove the manual loop
+  and message pretranslation. `TryPreTranslateMessage(nint)` remains available and returns `false`.
+
 - Remove `DesktopFlyout.Show(System.Drawing.Point)`. Use
   `Show(DesktopFlyoutPosition.ForAnchor(bounds, side))` for an explicit screen anchor, or
   `Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon))` for a tray icon.
@@ -21,6 +28,18 @@ belong in **Unreleased** until the next release is tagged.
   values differ, so do not migrate by casting.
 
 ### Added
+
+- Add the WinUI sample's settings screen and all eight flyout examples to the UWP sample. Marshal
+  settings and tray operations to the owning XAML threads, serialize example replacement, and
+  release flyout/menu hosts before closing the settings window. Use per-window UWP theme resources
+  and disable the Windows App SDK-only system backdrop settings.
+
+- Add UWP `XamlIslandApplication.Start` and `CreateWindow` helpers, per-window flyout resources,
+  and a `CoreDispatcher` synchronization context. Queue early flyout/menu show requests until
+  their content is ready, retaining the requested position and cancellation through `Hide`.
+- Consolidate the UWP sample executable, MSIX manifest, and assets in
+  `samples/DesktopFlyouts.Uwp.SampleApp`; remove the separate tray host, packaging project,
+  and secondary application/protocol demo.
 
 - Add `DesktopFlyoutPosition.ForTrayIcon(SystemTrayIcon)` with live icon-bound resolution.
 - Follow monitor work-area, taskbar, registered appbar, and visible auto-hide bar changes while a
@@ -41,13 +60,6 @@ belong in **Unreleased** until the next release is tagged.
 - Keep an auto-hide taskbar revealed while its tray-anchored flyout is visible.
 - Apply activation mode before showing the host and activate visible islands when requested.
 - Respond to system theme changes at runtime.
-
-### Documentation
-
-- Centralize release history and migration notes in this file. Update usage guides to the current
-  package names, namespace, positioning API, backdrop values, and transition-aware toggling.
-- Consolidate the usage guides into `docs/README.md` and add `docs/api-reference.md` with public
-  API signatures, defaults, events, and platform availability.
 
 ## [2.2.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v2.2.0)
 
