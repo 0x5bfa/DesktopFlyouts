@@ -41,12 +41,14 @@ namespace DesktopFlyouts
     /// <see cref="DesktopFlyout.Show(DesktopFlyoutPosition)"/>.
     /// </summary>
     /// <remarks>
-    /// Anchor rectangles use physical screen pixels. An explicit anchor side comes from the request;
-    /// a taskbar anchor side is resolved when shown and then remains fixed during size changes. The
-    /// transition direction defaults to the direction implied by placement.
+    /// Anchor rectangles use physical screen pixels. Explicit anchors remain fixed; tray-icon
+    /// anchors are resolved again as the desktop layout changes. The transition direction defaults
+    /// to the direction implied by placement.
     /// </remarks>
-    public sealed class DesktopFlyoutPosition
+    public sealed partial class DesktopFlyoutPosition
     {
+        private readonly Func<Rectangle?>? _getTrayIconBounds;
+
         private DesktopFlyoutPosition(
             Rectangle? anchor,
             bool isTaskbarAnchor,
@@ -54,7 +56,8 @@ namespace DesktopFlyouts
             DesktopFlyoutAnchorAlignment anchorAlignment,
             DesktopFlyoutWorkAreaPosition? workAreaPosition,
             DesktopFlyoutMonitorSelection monitorSelection,
-            DesktopFlyoutPopupDirection transitionDirection)
+            DesktopFlyoutPopupDirection transitionDirection,
+            Func<Rectangle?>? getTrayIconBounds = null)
         {
             Anchor = anchor;
             IsTaskbarAnchor = isTaskbarAnchor;
@@ -63,6 +66,7 @@ namespace DesktopFlyouts
             WorkAreaPosition = workAreaPosition;
             MonitorSelection = monitorSelection;
             TransitionDirection = transitionDirection;
+            _getTrayIconBounds = getTrayIconBounds;
         }
 
         internal Rectangle? Anchor { get; }
@@ -120,16 +124,7 @@ namespace DesktopFlyouts
                 transitionDirection: transitionDirection);
         }
 
-        /// <summary>
-        /// Creates a position request for an anchor on a taskbar or supported desktop panel.
-        /// </summary>
-        /// <param name="bounds">The anchor bounds in physical screen pixels.</param>
-        /// <remarks>
-        /// The containing taskbar edge is detected when the platform exposes its geometry. If no
-        /// taskbar is detected, the nearest monitor edge is used as a fallback. The chosen side is
-        /// fixed for the lifetime of this request.
-        /// </remarks>
-        public static DesktopFlyoutPosition ForTaskbarAnchor(Rectangle bounds)
+        internal static DesktopFlyoutPosition FromTaskbarBounds(Rectangle bounds)
         {
             if (bounds.Width < 0 || bounds.Height < 0)
             {
@@ -144,6 +139,27 @@ namespace DesktopFlyouts
                 workAreaPosition: null,
                 monitorSelection: DesktopFlyoutMonitorSelection.Cursor,
                 transitionDirection: DesktopFlyoutPopupDirection.Auto);
+        }
+
+        internal static DesktopFlyoutPosition FromTrayIconBounds(Func<Rectangle?> getBounds)
+        {
+            ArgumentNullException.ThrowIfNull(getBounds);
+            return new DesktopFlyoutPosition(null, true, DesktopFlyoutAnchorSide.Above,
+                DesktopFlyoutAnchorAlignment.Center, null, DesktopFlyoutMonitorSelection.Cursor,
+                DesktopFlyoutPopupDirection.Auto, getBounds);
+        }
+
+        internal bool TryResolveTrayIcon(out DesktopFlyoutPosition position)
+        {
+            position = this;
+            if (_getTrayIconBounds is null)
+                return true;
+
+            if (_getTrayIconBounds() is not Rectangle bounds || bounds.Width <= 0 || bounds.Height <= 0)
+                return false;
+
+            position = FromTaskbarBounds(bounds);
+            return true;
         }
 
         /// <summary>

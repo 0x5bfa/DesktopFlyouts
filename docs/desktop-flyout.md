@@ -42,8 +42,8 @@ Use `IslandsOrientation="Vertical"` for stacked sections and `Horizontal` for si
 ## Position requests
 
 Pass a position request to `Show`. The flyout is measured first, then positioned in physical screen
-pixels and clamped to the selected monitor's work area. The chosen anchor side stays fixed when an
-open flyout changes size.
+pixels and clamped to the selected monitor's work area. Explicit anchor sides remain fixed. Tray
+placement is resolved again when the icon, taskbar, or monitor layout changes.
 
 Position is supplied per `Show` call. The former `Placement` and `PopupDirection` XAML properties
 have been removed.
@@ -57,18 +57,33 @@ var anchor = new Rectangle(x, y, width, height);
 flyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
 ```
 
-For a tray icon, use `TryGetBounds` and `ForTaskbarAnchor`:
+For a tray icon, pass the icon itself to `ForTrayIcon`:
 
 ```csharp
-if (trayIcon.TryGetBounds(out var trayIconBounds))
-    flyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(trayIconBounds));
+flyout.Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon));
 ```
 
-`ForTaskbarAnchor` uses a taskbar edge reported by the platform when available and opens toward the
+`ForTrayIcon` queries the icon's latest bounds, uses a taskbar edge reported by the platform, and opens toward the
 work area. If detection fails, it infers a side from the nearest monitor edge; if monitor bounds are
 also unavailable, it uses `Above`. Windows shell taskbars and X11 panels that publish EWMH strut
 properties can be detected. Third-party bars that expose no supported geometry are not guaranteed
 to be detected. The nearest-edge fallback is a separate estimate, not a detection result.
+
+The former `ForTaskbarAnchor(Rectangle)` factory has been removed. The icon must have shell-reported
+bounds when first shown; otherwise the show request is ignored. A temporarily unavailable icon keeps
+its last known anchor while the flyout is open. The caller continues to own the icon.
+
+Open flyouts follow changes to their monitor's work area, including registered appbars. On Windows,
+the visible portion of a revealed auto-hide taskbar or registered auto-hide appbar is also excluded.
+Area already reserved by the work area is not subtracted twice. Tray requests refresh the icon bounds;
+`InWorkArea` requests retain the monitor chosen when shown, even if the pointer moves elsewhere.
+Explicit `ForAnchor` coordinates remain fixed and are clamped into the current work area.
+
+Windows display/work-area/DPI notifications and bar WinEvents queue one layout update per frame.
+A 250 ms sampler runs only while the flyout is visible or opening to cover missed shell notifications,
+icon rearrangements, and Explorer restarts. Changes during opening are applied after the transition;
+closing and disposal stop the hooks and sampler. Geometry updates do not restart the open animation
+or activate the host window.
 
 On Windows, an icon in an open notification-area overflow flyout uses that flyout's full window
 bounds, including all rows or columns, to choose the contact edge. Alignment along the other axis

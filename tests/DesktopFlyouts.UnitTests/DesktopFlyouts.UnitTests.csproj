@@ -21,6 +21,7 @@
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPosition.cs" Link="Production\DesktopFlyoutPosition.cs" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutPositionResolver.cs" Link="Production\DesktopFlyoutPositionResolver.cs" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\TaskbarEdge.cs" Link="Production\TaskbarEdge.cs" />
+		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\WindowHelpers.Geometry.cs" Link="Production\WindowHelpers.Geometry.cs" />
 	</ItemGroup>
 
 </Project>

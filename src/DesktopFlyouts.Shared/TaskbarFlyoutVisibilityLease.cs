@@ -51,6 +51,12 @@ namespace DesktopFlyouts
             return taskbarBounds.Width > 0 && taskbarBounds.Height > 0;
         }
 
+        internal bool IsForAnchor(Rectangle anchorBounds)
+        {
+            return !_disposed && IsCurrentTaskbarWindow(_taskbarWindow, _taskbarProcessId)
+                && FindTaskbarWindowForAnchor(anchorBounds) == _taskbarWindow;
+        }
+
         internal static TaskbarFlyoutVisibilityLease? TryAcquire(Rectangle anchorBounds)
         {
             var taskbarWindow = FindTaskbarWindowForAnchor(anchorBounds);

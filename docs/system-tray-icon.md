@@ -40,14 +40,15 @@ When the icon is created from a handle, the handle is copied internally.
 ## Icon bounds and click points
 
 `LeftClicked` and `RightClicked` provide the center point of the tray icon in physical screen pixels.
-Use `TryGetBounds` when the full icon rectangle is needed by `ForTaskbarAnchor`:
+Use `ForTrayIcon` to follow the icon as the taskbar layout changes. `TryGetBounds` can check whether
+the shell currently supplies a usable rectangle before falling back to a click point:
 
 ```csharp
 private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
 {
-    if (sender is SystemTrayIcon trayIcon && trayIcon.TryGetBounds(out var bounds))
+    if (sender is SystemTrayIcon trayIcon && trayIcon.TryGetBounds(out _))
     {
-        flyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
+        flyout.Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon));
     }
     else
     {

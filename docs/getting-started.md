@@ -65,9 +65,9 @@ available.
 ```csharp
 private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
 {
-    if (sender is SystemTrayIcon trayIcon && trayIcon.TryGetBounds(out var bounds))
+    if (sender is SystemTrayIcon trayIcon && trayIcon.TryGetBounds(out _))
     {
-        _flyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
+        _flyout.Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon));
     }
     else
     {
@@ -77,7 +77,7 @@ private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
 }
 ```
 
-`ForTaskbarAnchor` detects the taskbar edge when supported and opens toward the work area. If the
+`ForTrayIcon` follows the icon's current bounds, detects the taskbar edge, and opens toward the work area. If the
 platform cannot report taskbar bounds, it estimates the side from the nearest monitor edge. To anchor
 to a normal UI element, pass its physical screen bounds to `ForAnchor` with an explicit side.
 

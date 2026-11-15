@@ -67,8 +67,8 @@ namespace DesktopFlyouts
 				DesktopFlyoutTransitionState.Opening or
 				DesktopFlyoutTransitionState.Closing)
 				_desktopFlyout.Hide();
-			else if (_systemTrayIcon?.TryGetBounds(out var bounds) == true)
-				_desktopFlyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
+			else if (_systemTrayIcon?.TryGetBounds(out _) == true)
+				_desktopFlyout.Show(DesktopFlyoutPosition.ForTrayIcon(_systemTrayIcon));
 			else
 			{
 				var anchor = new System.Drawing.Rectangle((int)e.Point.X, (int)e.Point.Y, 0, 0);

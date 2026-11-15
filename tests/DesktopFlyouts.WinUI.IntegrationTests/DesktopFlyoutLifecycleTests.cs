@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Drawing;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
@@ -148,6 +150,71 @@ public sealed class DesktopFlyoutLifecycleTests
         });
         Assert.IsTrue(flyout.ApplyTemplate());
         return flyout;
+    }
+
+    [UITestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Live_tray_bounds_move_the_open_flyout_without_reopening_and_stop_sampling_when_closed(bool animationsEnabled)
+    {
+        using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
+        flyout.IsTransitionAnimationEnabled = animationsEnabled;
+        flyout.FlyoutWidth = new GridLength(160);
+        var area = Microsoft.UI.Windowing.DisplayArea.Primary.WorkArea;
+        Rectangle? bounds = new Rectangle(area.X + area.Width / 3, area.Y + area.Height / 3, 24, 24);
+        var reads = 0;
+        var request = CreateTrayRequest(() => { reads++; return bounds; });
+        var openings = 0;
+        flyout.TransitionStateChanged += (_, _) => { if (flyout.TransitionState is DesktopFlyoutTransitionState.Opening) openings++; };
+        flyout.Show(request);
+        await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
+        var container = (FrameworkElement)VisualTreeHelper.GetParent(flyout);
+        var previousX = Canvas.GetLeft(container);
+        var previousY = Canvas.GetTop(container);
+        var backdrop = flyout.Islands[0].TemplateSettings.SystemBackdrop;
+
+        bounds = new Rectangle(area.X + area.Width * 2 / 3, area.Y + area.Height * 2 / 3, 24, 24);
+        var timeout = Stopwatch.StartNew();
+        while (Math.Abs(Canvas.GetLeft(container) - previousX) + Math.Abs(Canvas.GetTop(container) - previousY) < 10)
+        {
+            Assert.IsTrue(timeout.Elapsed < TimeSpan.FromSeconds(3), "The live anchor did not update the actual host layout.");
+            await Task.Delay(10);
+        }
+
+        var updatedX = Canvas.GetLeft(container);
+        var updatedY = Canvas.GetTop(container);
+        Assert.AreEqual(1, openings, "Repositioning must not restart the opening transition.");
+        Assert.AreSame(backdrop, flyout.Islands[0].TemplateSettings.SystemBackdrop);
+        bounds = null;
+        await Task.Delay(400);
+        Assert.AreEqual(updatedX, Canvas.GetLeft(container), 0.01, "Temporarily missing bounds must keep the last anchor.");
+        Assert.AreEqual(updatedY, Canvas.GetTop(container), 0.01);
+
+        flyout.Hide();
+        await WaitForState(flyout, DesktopFlyoutTransitionState.Closed);
+        var readsWhenClosed = reads;
+        await Task.Delay(400);
+        Assert.AreEqual(readsWhenClosed, reads, "Closed flyouts must stop reading shell geometry.");
+    }
+
+    [UITestMethod]
+    public async Task Unavailable_tray_bounds_do_not_open_or_start_monitoring()
+    {
+        using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
+        var reads = 0;
+        flyout.Show(CreateTrayRequest(() => { reads++; return null; }));
+        await Task.Delay(400);
+        Assert.AreEqual(DesktopFlyoutTransitionState.Closed, flyout.TransitionState);
+        Assert.AreEqual(1, reads);
+    }
+
+    private static DesktopFlyoutPosition CreateTrayRequest(Func<Rectangle?> readBounds)
+    {
+        // Replace only the shell bounds source. The actual library, XAML host, dispatcher,
+        // sampler, transitions, and backdrop lifecycle all run normally.
+        var factory = typeof(DesktopFlyoutPosition).GetMethod("FromTrayIconBounds", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.IsNotNull(factory);
+        return (DesktopFlyoutPosition)factory.Invoke(null, new object[] { readBounds })!;
     }
 
     private static async Task WaitForState(DesktopFlyout flyout, DesktopFlyoutTransitionState expected)

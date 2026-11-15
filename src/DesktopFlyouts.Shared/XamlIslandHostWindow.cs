@@ -103,6 +103,7 @@ namespace DesktopFlyouts
 
         internal event EventHandler? WindowInactivated;
         internal event EventHandler? SystemSettingsChanged;
+        internal event EventHandler? DisplayAreaChanged;
 
         internal XamlIslandHostWindow()
         {
@@ -520,8 +521,16 @@ namespace DesktopFlyouts
                         if (_coreHwnd != default)
                             PInvoke.SendMessage(_coreHwnd, uMsg, wParam, lParam);
 #endif
-                        SystemSettingsChanged?.Invoke(this, EventArgs.Empty);
+                        if (uMsg == PInvoke.WM_SETTINGCHANGE)
+                            DisplayAreaChanged?.Invoke(this, EventArgs.Empty);
+
+                        if (uMsg != PInvoke.WM_SETTINGCHANGE || (uint)(nuint)wParam != (uint)Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETWORKAREA)
+                            SystemSettingsChanged?.Invoke(this, EventArgs.Empty);
                     }
+                    break;
+                case PInvoke.WM_DISPLAYCHANGE:
+                case PInvoke.WM_DPICHANGED:
+                    DisplayAreaChanged?.Invoke(this, EventArgs.Empty);
                     break;
                 case PInvoke.WM_SETFOCUS:
                     {

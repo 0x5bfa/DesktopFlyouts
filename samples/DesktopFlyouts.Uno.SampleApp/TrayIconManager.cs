@@ -88,9 +88,9 @@ internal partial class TrayIconManager : IDisposable
         {
             DesktopFlyout.Hide();
         }
-        else if (SystemTrayIcon?.TryGetBounds(out var bounds) == true)
+        else if (SystemTrayIcon?.TryGetBounds(out _) == true)
         {
-            DesktopFlyout.Show(DesktopFlyoutPosition.ForTaskbarAnchor(bounds));
+            DesktopFlyout.Show(DesktopFlyoutPosition.ForTrayIcon(SystemTrayIcon));
         }
         else
         {

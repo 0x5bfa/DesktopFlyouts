@@ -23,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\MouseEventReceivedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPopupDirection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPosition.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPosition.TrayIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutPositionResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutHostLayout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\TaskbarEdge.cs" />
@@ -32,6 +33,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TaskbarOverflowFlyoutMonitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TaskbarLayoutMonitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.Geometry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.Environment.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TaskbarFlyoutVisibilityLease.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TransparentWindow.X11.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)X11PInvoke.cs" />
