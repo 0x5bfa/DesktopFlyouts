@@ -6,28 +6,28 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Activation;
-using Windows.UI.Core;
+using Windows.System;
 using Windows.UI.Xaml;
-using XamlHostingKit;
+using Windows.UI.Xaml.Hosting;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace DesktopFlyouts
 {
     public partial class App : Application
     {
-        private static CoreDispatcher? _dispatcher;
+        private static DispatcherQueue? _dispatcherQueue;
         private static MainWindow? _window;
         private static bool _closing;
 
-        public App()
+        public unsafe App()
         {
-            InitializeComponent();
-        }
+            WindowsXamlManager.InitializeForCurrentThread();
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            SynchronizationContext.SetSynchronizationContext(new DispatcherQueueSynchronizationContext(_dispatcherQueue));
 
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
-        {
-            _dispatcher = XamlWindow.Current.Dispatcher;
-            SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(_dispatcher));
+            InitializeComponent();
 
             TrayIconManager.Default.Initialize(new SystemTrayIcon(
                 Path.Combine(AppContext.BaseDirectory, "Assets\\Tray.ico"),
@@ -36,12 +36,22 @@ namespace DesktopFlyouts
 
             _window = new MainWindow();
             _window.Show();
+
+            MSG message;
+            while (PInvoke.GetMessage(&message, HWND.Null, 0U, 0U))
+            {
+                if (!(_window?.TryPreTranslateMessage((nint)(&message)) ?? false) &&
+                    !TrayIconManager.Default.TryPreTranslateMessage((nint)(&message)))
+                {
+                    PInvoke.TranslateMessage(&message);
+                    PInvoke.DispatchMessage(&message);
+                }
+            }
         }
 
         internal static void ExitApplication()
         {
-            if (_dispatcher is not null)
-                _ = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => await ShutdownAsync());
+            _ = _dispatcherQueue?.TryEnqueue(async () => await ShutdownAsync());
         }
 
         private static async Task ShutdownAsync()
@@ -62,6 +72,7 @@ namespace DesktopFlyouts
             {
                 _window?.Dispose();
                 _window = null;
+                PInvoke.PostQuitMessage(0);
             }
         }
     }

@@ -104,9 +104,6 @@ namespace DesktopFlyouts
         private bool _isUpdatingOpenFlyoutLayout;
         private bool _isOpenFlyoutLayoutUpdateQueued;
         private bool _disposed;
-#if UWP
-        private DesktopFlyoutPosition? _pendingPosition;
-#endif
 
         private Grid? RootGrid;
         private ItemsControl? IslandsItemsControl;
@@ -122,19 +119,12 @@ namespace DesktopFlyouts
             DefaultStyleKey = typeof(DesktopFlyout);
 
             _host = new XamlIslandHostWindow();
-#if UWP
-            _host.ContentAttached += Host_ContentAttached;
-#endif
 #if !HAS_UNO
             _hostCanvas = new Canvas();
             _hostContainer = new Grid();
             _hostContainer.Children.Add(this);
             _hostCanvas.Children.Add(_hostContainer);
-#if UWP
-            _host.SetContent(_hostCanvas, this);
-#else
             _host.SetContent(_hostCanvas);
-#endif
 #else
             _host.SetContent(this);
 #endif
@@ -211,15 +201,8 @@ namespace DesktopFlyouts
         public void Show(DesktopFlyoutPosition position)
         {
             ArgumentNullException.ThrowIfNull(position);
-#if UWP
-            if (!_disposed && _host is not null && !_host.IsContentReady)
-            {
-                _pendingPosition = position;
-                return;
-            }
-#endif
 
-            if (_disposed || _host?.IsInitialized is not true || RootGrid is null)
+            if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null)
             {
                 return;
             }
@@ -346,9 +329,6 @@ namespace DesktopFlyouts
         /// </remarks>
         public void Hide()
         {
-#if UWP
-            _pendingPosition = null;
-#endif
             Hide(false);
         }
 
@@ -447,10 +427,10 @@ namespace DesktopFlyouts
         /// Lets the XAML island process a native keyboard message before dispatch.
         /// </summary>
         /// <param name="message">A pointer to the native MSG structure.</param>
-        /// <returns>Always <see langword="false"/>; XamlHostingKit performs message translation.</returns>
+        /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
         /// <remarks>
-        /// XamlHostingKit owns the UWP desktop message loop and performs XAML message translation.
-        /// This method remains available for source compatibility and returns <see langword="false"/>.
+        /// UWP desktop-host scenarios should call this from their native message loop so keyboard
+        /// navigation and accelerator processing can reach the hosted XAML island.
         /// </remarks>
         public bool TryPreTranslateMessage(nint message)
         {
@@ -493,7 +473,7 @@ namespace DesktopFlyouts
 
         private DesktopFlyoutPopupDirection UpdateFlyoutRegion(bool activateHost = false)
         {
-            if (_host?.IsInitialized is not true || IslandsItemsControl is null)
+            if (_host?.DesktopWindowXamlSource is null || IslandsItemsControl is null)
                 return _activePopupDirection;
 
 #if !HAS_UNO
@@ -565,7 +545,7 @@ namespace DesktopFlyouts
                 _isUpdatingOpenFlyoutLayout ||
                 _isOpenFlyoutLayoutUpdateQueued ||
                 RootGrid is null ||
-                _host?.IsInitialized is not true)
+                _host?.DesktopWindowXamlSource is null)
             {
                 return;
             }
@@ -593,7 +573,7 @@ namespace DesktopFlyouts
                 _isPopupAnimationPlaying ||
                 _isUpdatingOpenFlyoutLayout ||
                 RootGrid is null ||
-                _host?.IsInitialized is not true)
+                _host?.DesktopWindowXamlSource is null)
             {
                 return;
             }
@@ -1612,7 +1592,7 @@ namespace DesktopFlyouts
 
         private bool RefreshPlacement(bool apply = true)
         {
-            if (_disposed || _requestedPosition is null || _host?.IsInitialized is not true)
+            if (_disposed || _requestedPosition is null || _host?.DesktopWindowXamlSource is null)
                 return false;
 
             if (!_requestedPosition.TryResolveTrayIcon(out var position))
@@ -1706,16 +1686,6 @@ namespace DesktopFlyouts
             UpdateFlyoutTheme(forceBackdropUpdate: true);
         }
 
-#if UWP
-        private void Host_ContentAttached(object? sender, EventArgs e)
-        {
-            var position = _pendingPosition;
-            _pendingPosition = null;
-            if (!_disposed && position is not null)
-                Show(position);
-        }
-#endif
-
 #if (UWP || WASDK) && !HAS_UNO
         private void UISettings_AnimationsEnabledChanged(UISettings sender, UISettingsAnimationsEnabledChangedEventArgs args)
         {
@@ -1752,10 +1722,6 @@ namespace DesktopFlyouts
 
             _host?.WindowInactivated -= HostWindow_Inactivated;
             _host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
-#if UWP
-            _host?.ContentAttached -= Host_ContentAttached;
-            _pendingPosition = null;
-#endif
 #if !HAS_UNO
             _host?.DisplayAreaChanged -= HostWindow_DisplayAreaChanged;
 #endif

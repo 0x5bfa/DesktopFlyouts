@@ -2,7 +2,8 @@
 // Licensed under the MIT license.
 
 using System;
-using DesktopFlyouts.Shared;
+using Windows.Win32;
+using Windows.Win32.System.WinRT;
 
 namespace DesktopFlyouts
 {
@@ -11,9 +12,8 @@ namespace DesktopFlyouts
 		[STAThread]
 		static void Main()
 		{
-#pragma warning disable CA1806 // Do not ignore method results
-			XamlIslandApplication.Start(_ => new App());
-#pragma warning restore CA1806 // Do not ignore method results
+			PInvoke.RoInitialize(RO_INIT_TYPE.RO_INIT_SINGLETHREADED);
+			_ = new App();
 		}
 	}
 }

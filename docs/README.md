@@ -92,54 +92,62 @@ work area. Use `TransitionState` for toggling so a click during opening also req
 
 ### Start a UWP desktop host
 
-The UWP package uses XamlHostingKit for System XAML initialization and the desktop message loop.
-Disable the generated XAML entry point in the executable project:
+The UWP package hosts content with `DesktopWindowXamlSource`. Disable the generated XAML entry
+point in the executable project:
 
 ```xml
 <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
 ```
 
-Start the application from an STA entry point:
+Start System XAML and the application from an STA entry point:
 
 ```csharp
 using System;
-using DesktopFlyouts.Shared;
+using Windows.Win32;
+using Windows.Win32.System.WinRT;
 
 internal static class Program
 {
     [STAThread]
-    private static void Main() => XamlIslandApplication.Start(_ => new App());
+    private static void Main()
+    {
+        PInvoke.RoInitialize(RO_INIT_TYPE.RO_INIT_SINGLETHREADED);
+        _ = new App();
+    }
 }
 ```
 
-Create the first flyout in `App.OnLaunched`. Each additional `DesktopFlyout` or `DesktopMenuFlyout`
-needs a separate XAML thread and window:
+In the `Application` constructor, initialize the XAML manager and create flyouts on that thread.
+Each flyout owns a `DesktopWindowXamlSource`; they can share the application thread:
 
 ```csharp
-private MainDesktopFlyout? _flyout;
-private volatile MainDesktopMenuFlyout? _menu;
+WindowsXamlManager.InitializeForCurrentThread();
+SynchronizationContext.SetSynchronizationContext(
+    new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
 
-protected override void OnLaunched(Windows.ApplicationModel.Activation.LaunchActivatedEventArgs args)
+var flyout = new MainDesktopFlyout();
+var menu = new MainDesktopMenuFlyout();
+```
+
+Before dispatching each native message, give it to the flyouts so their islands can process
+keyboard input:
+
+```csharp
+MSG message;
+while (PInvoke.GetMessage(&message, HWND.Null, 0U, 0U))
 {
-    _flyout = new MainDesktopFlyout();
-    XamlIslandApplication.CreateWindow(_ => _menu = new MainDesktopMenuFlyout());
+    if (!flyout.TryPreTranslateMessage((nint)(&message)) &&
+        !menu.TryPreTranslateMessage((nint)(&message)))
+    {
+        PInvoke.TranslateMessage(&message);
+        PInvoke.DispatchMessage(&message);
+    }
 }
 ```
 
-Dispatch later operations to the instance's `Dispatcher` when called from another thread:
-
-```csharp
-var menu = _menu;
-if (menu is not null)
-    _ = menu.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
-        () => menu.Show(screenPoint));
-```
-
-The host installs a `CoreDispatcher` synchronization context on each XAML thread. It loads a
-separate flyout resource dictionary for every window. `Show(position)` and menu `Show(point)`
-requests made before content is attached are retained and replayed after initialization; the
-latest request wins. `Hide` or `Dispose` cancels a pending request. The UWP sample combines the
-executable, MSIX manifest, and tray assets in `samples/DesktopFlyouts.SampleApp.Uwp`.
+Dispatch later operations to the owning XAML thread when calling from another thread. The UWP
+sample combines the executable, MSIX manifest, and tray assets in
+`samples/DesktopFlyouts.SampleApp.Uwp`.
 
 ## DesktopFlyout
 
@@ -316,9 +324,9 @@ is deactivated; set it to `False` for a persistent panel.
 
 ### UWP message dispatch
 
-XamlHostingKit owns the desktop message loop and XAML message translation. Both flyout types
-retain `TryPreTranslateMessage(nint message)` for source compatibility; it returns `false`.
-Use [XamlIslandApplication](#start-a-uwp-desktop-host) to initialize the host.
+Call `TryPreTranslateMessage(nint message)` for each flyout before translating and dispatching a
+native message. It forwards the `MSG` to `DesktopWindowXamlSource` and returns `true` when the
+island handled it.
 
 ## DesktopMenuFlyout
 

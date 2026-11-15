@@ -77,6 +77,10 @@ namespace DesktopFlyouts
             });
         }
 
+        internal bool TryPreTranslateMessage(nint message) =>
+            (_flyout?.TryPreTranslateMessage(message) ?? false) ||
+            (_menu?.TryPreTranslateMessage(message) ?? false);
+
         private static void Toggle(DesktopFlyout flyout, DesktopFlyoutPosition position)
         {
             if (flyout.TransitionState is not DesktopFlyoutTransitionState.Closed)

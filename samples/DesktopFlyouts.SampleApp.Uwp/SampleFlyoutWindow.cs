@@ -7,14 +7,10 @@ using System.Threading.Tasks;
 using DesktopFlyouts.Shared;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
-using Windows.Win32;
-using Windows.Win32.Foundation;
-using XamlHostingKit;
-using WinRT.Interop;
 
 namespace DesktopFlyouts
 {
-    // Sample-only coordination until the library provides an asynchronous host API.
+    // Creates flyout controls and dispatches their operations on the application's XAML thread.
     internal sealed class SampleFlyoutWindow<T> where T : Control, IDisposable
     {
         private readonly T _content;
@@ -28,30 +24,15 @@ namespace DesktopFlyouts
 
         internal static Task<SampleFlyoutWindow<T>> CreateAsync(Func<T> factory)
         {
-            var completion = new TaskCompletionSource<SampleFlyoutWindow<T>>(TaskCreationOptions.RunContinuationsAsynchronously);
-            try
-            {
-                XamlIslandApplication.CreateWindow(_ =>
-                {
-                    try
-                    {
-                        completion.SetResult(new(factory()));
-                    }
-                    catch (Exception exception)
-                    {
-                        // Failed construction must not leave an empty window's message loop running.
-                        PInvoke.DestroyWindow((HWND)WindowNative.GetWindowHandle(XamlWindow.Current));
-                        completion.SetException(exception);
-                    }
-                });
-            }
-            catch (Exception exception)
-            {
-                completion.SetException(exception);
-            }
-
-            return completion.Task;
+            return Task.FromResult(new SampleFlyoutWindow<T>(factory()));
         }
+
+        internal bool TryPreTranslateMessage(nint message) => _content switch
+        {
+            DesktopFlyout flyout => flyout.TryPreTranslateMessage(message),
+            DesktopMenuFlyout menu => menu.TryPreTranslateMessage(message),
+            _ => false,
+        };
 
         internal async Task InvokeAsync(Action<T> action)
         {
