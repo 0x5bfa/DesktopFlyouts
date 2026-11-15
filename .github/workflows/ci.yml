@@ -51,10 +51,10 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
-    - name: Build Windows integration tests
-      run: dotnet build tests/DesktopFlyouts.Windows.IntegrationTests/DesktopFlyouts.Windows.IntegrationTests.csproj --configuration Release
-    - name: Run Windows integration tests
-      run: dotnet test tests/DesktopFlyouts.Windows.IntegrationTests/DesktopFlyouts.Windows.IntegrationTests.csproj --configuration Release --no-build --no-restore
+    - name: Build WinUI integration tests
+      run: dotnet build tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --configuration Release -p:Platform=x64
+    - name: Run WinUI integration tests
+      run: dotnet run --project tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --configuration Release --no-build --no-restore -p:Platform=x64
 
   build-winui:
     runs-on: windows-2025-vs2026

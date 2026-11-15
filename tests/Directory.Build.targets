@@ -1,7 +1,7 @@
 <Project>
     <Import Project="../Directory.Build.targets" />
 
-    <PropertyGroup>
+    <PropertyGroup Condition="'$(UseWinUI)' != 'true'">
         <!-- Keep the tests portable and independent from the library's Windows RIDs. -->
         <RuntimeIdentifiers></RuntimeIdentifiers>
         <RuntimeIdentifier></RuntimeIdentifier>

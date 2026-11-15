@@ -134,14 +134,22 @@ namespace DesktopFlyouts
 
         internal void UpdateOwnerBackdrop(bool forceUpdate = false)
         {
-            TemplateSettings.SystemBackdrop = _owner is not null && _owner.TryGetTarget(out var owner)
+            var backdrop = _owner is not null && _owner.TryGetTarget(out var owner)
                 ? owner.CreateIslandSystemBackdrop(RequestedTheme, forceUpdate ? null : TemplateSettings.SystemBackdrop)
                 : null;
+
+            if (backdrop is null)
+                ClearOwnerBackdrop();
+            else
+                TemplateSettings.SystemBackdrop = backdrop;
         }
 
         internal void ClearOwnerBackdrop()
         {
-            TemplateSettings.SystemBackdrop = null;
+            if (TemplateSettings.SystemBackdrop is DesktopFlyoutSystemBackdrop backdrop)
+                backdrop.ClearFrom(TemplateSettings);
+            else
+                TemplateSettings.SystemBackdrop = null;
         }
 #endif
 

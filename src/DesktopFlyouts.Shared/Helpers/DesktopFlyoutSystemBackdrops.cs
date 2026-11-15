@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
+using WinRT;
 
 namespace DesktopFlyouts
 {
@@ -26,6 +27,20 @@ namespace DesktopFlyouts
 
         protected abstract ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration);
 
+        internal void ClearFrom(DesktopFlyoutIslandTemplateSettings templateSettings)
+        {
+            var targets = new List<ICompositionSupportsSystemBackdrop>(_targets.Keys);
+            templateSettings.SystemBackdrop = null;
+
+            // SystemBackdropElement has now detached its links. Close them on the UI thread
+            // before the last managed reference can be released by the finalizer thread.
+            foreach (var target in targets)
+            {
+                if (!_targets.ContainsKey(target))
+                    target.As<IDisposable>().Dispose();
+            }
+        }
+
         protected override void OnTargetConnected(ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
         {
             base.OnTargetConnected(target, xamlRoot);
@@ -35,13 +50,13 @@ namespace DesktopFlyouts
 
             var configuration = CreateConfiguration(target, xamlRoot);
             var controller = TryCreateController(configuration);
+            // Keep the link available for UI-thread cleanup even if the material is unsupported.
+            _targets[target] = new(controller, configuration);
             if (controller is null)
                 return;
 
             controller.SetSystemBackdropConfiguration(configuration);
             controller.AddSystemBackdropTarget(target);
-
-            _targets[target] = new(controller, configuration);
         }
 
         protected override void OnTargetDisconnected(ICompositionSupportsSystemBackdrop target)
@@ -51,7 +66,7 @@ namespace DesktopFlyouts
             if (!_targets.Remove(target, out var state))
                 return;
 
-            state.Controller.RemoveSystemBackdropTarget(target);
+            state.Controller?.RemoveSystemBackdropTarget(target);
 
             if (state.Controller is IDisposable disposable)
                 disposable.Dispose();
@@ -65,7 +80,7 @@ namespace DesktopFlyouts
                 return;
 
             ApplyConfiguration(state.Configuration, target, xamlRoot);
-            state.Controller.SetSystemBackdropConfiguration(state.Configuration);
+            state.Controller?.SetSystemBackdropConfiguration(state.Configuration);
         }
 
         private SystemBackdropConfiguration CreateConfiguration(ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
@@ -85,7 +100,7 @@ namespace DesktopFlyouts
             configuration.IsInputActive = true;
         }
 
-        private sealed record TargetState(ISystemBackdropControllerWithTargets Controller, SystemBackdropConfiguration Configuration);
+        private sealed record TargetState(ISystemBackdropControllerWithTargets? Controller, SystemBackdropConfiguration Configuration);
     }
 
     internal sealed partial class DesktopFlyoutAcrylicBackdrop : DesktopFlyoutSystemBackdrop

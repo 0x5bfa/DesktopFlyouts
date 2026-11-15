@@ -1,6 +1,6 @@
 # Testing
 
-The repository has two MSTest projects. Both compile the production source files they cover directly into the test assembly, so the checks exercise current implementation code.
+The repository has two MSTest projects. Unit tests source-link the platform-neutral helpers. WinUI integration tests reference the actual WinUI library and source-link the internal User32 overflow helpers.
 
 ## Unit tests
 
@@ -16,17 +16,23 @@ dotnet build tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj --co
 dotnet test tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj --configuration Debug --no-build --no-restore
 ```
 
-## Windows integration tests
+## WinUI integration tests
 
-The Windows-only project targets `net10.0-windows10.0.26100.0`. It source-links the production overflow-window discovery and monitor code, creates test-owned top-level windows, and exercises real User32 window operations and WinEvent hooks. It checks discovery of matching visible windows, current bounds after resize, hide and destroy notifications, filtering of unrelated events, exactly-once deferred completion, callback cancellation on disposal, native callback lifetime across garbage collection, and cleanup when dispatch is rejected.
+`DesktopFlyouts.WinUI.IntegrationTests` is a Windows-only WinUI test application targeting `net10.0-windows10.0.26100.0`. It uses MSTest's Microsoft.Testing.Platform runner inside a real WinUI application with a dispatcher and message loop. It includes:
 
-The dispatcher is a controlled queued callback used by the test; it is not the WinUI dispatcher. The tests do not deterministically cover the initial discovery-to-hook race or Explorer restarts. They do not launch the sample app or guarantee rendered-frame behavior or absence of visual flicker.
+- Live XAML-island lifecycle tests for Desktop Acrylic and Mica: repeated open/close preserves the connected backdrop instance; transitions run on the owning UI thread; changing the backdrop kind or enabling/disabling it updates the visible element; a close requested during opening completes and permits reopening; and disposal cancels an already-queued open.
+- Forced garbage collections while backdrops are connected and after disposal, with managed `RPC_E_WRONG_THREAD` exceptions recorded as failures. A native fail-fast also fails the test process. This caught a `ContentExternalBackdropLink` being released on the finalizer thread after its element had detached it.
+- The former `DesktopFlyouts.Windows.IntegrationTests` User32 tests, now in this project: overflow-window discovery, bounds after resize, hide/destroy notifications, unrelated-event filtering, exactly-once deferred completion, callback cancellation on disposal, native callback lifetime across collection, and cleanup when dispatch is rejected.
 
-Run on Windows with the Windows SDK and .NET 10 installed:
+The test app is intentionally **unpackaged** and carries its Windows App SDK runtime alongside it, so it needs neither MSIX registration nor a separately installed Windows App Runtime. This differs from the packaged sample's launch requirements. Build and run on Windows with an interactive desktop, the Windows SDK, and .NET 10 installed (x64 example):
 
 ```powershell
-dotnet build tests/DesktopFlyouts.Windows.IntegrationTests/DesktopFlyouts.Windows.IntegrationTests.csproj --configuration Debug
-dotnet test tests/DesktopFlyouts.Windows.IntegrationTests/DesktopFlyouts.Windows.IntegrationTests.csproj --configuration Debug --no-build --no-restore
+dotnet build tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --configuration Debug -p:Platform=x64
+dotnet run --project tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --configuration Debug --no-build --no-restore -p:Platform=x64
 ```
 
-CI runs unit tests on Ubuntu and native integration tests on Windows. Both projects inherit repository compiler settings while disabling AOT publishing and Windows runtime identifiers for framework-dependent VSTest execution.
+Use `dotnet run` for the self-hosted MTP application; the existing VSTest-based `dotnet test` command still applies to the portable unit tests. To filter the integration suite, append `-- --filter "FullyQualifiedName~DesktopFlyoutLifecycleTests"` to the run command.
+
+The lifecycle tests exercise the public flyout methods used by the sample's tray icon and Toggle open button. They do not automate Explorer's tray, reproduce every scheduling interleaving, capture every native first-chance notification, or verify pixels and animation smoothness. The User32 tests retain their controlled queued dispatcher and do not deterministically cover the initial discovery-to-hook race or Explorer restarts.
+
+CI runs unit tests on Ubuntu and the combined WinUI/User32 integration suite on Windows. Both projects disable AOT publishing; the portable project uses VSTest without Windows runtime identifiers, while the WinUI app uses an architecture-specific runtime identifier and MTP.

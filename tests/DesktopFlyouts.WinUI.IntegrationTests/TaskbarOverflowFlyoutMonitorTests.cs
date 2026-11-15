@@ -14,7 +14,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace DesktopFlyouts.Windows.IntegrationTests;
+namespace DesktopFlyouts.WinUI.IntegrationTests;
 
 [TestClass]
 [DoNotParallelize]
