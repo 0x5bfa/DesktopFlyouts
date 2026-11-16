@@ -10,10 +10,7 @@ namespace DesktopFlyouts;
 /// Maps a screen-space physical flyout region into a monitor-sized host's local physical and
 /// XAML device-independent coordinates.
 /// </summary>
-internal readonly record struct DesktopFlyoutHostLayout(
-	Rectangle HostBounds,
-	Rectangle RelativePhysicalRegion,
-	DesktopFlyoutDipRegion DipRegion)
+internal readonly record struct DesktopFlyoutHostLayout(Rectangle HostBounds, Rectangle RelativePhysicalRegion, DesktopFlyoutDipRegion DipRegion)
 {
 	public static DesktopFlyoutHostLayout Create(Rectangle monitorBounds, Rectangle screenRegion, double rasterizationScale)
 	{

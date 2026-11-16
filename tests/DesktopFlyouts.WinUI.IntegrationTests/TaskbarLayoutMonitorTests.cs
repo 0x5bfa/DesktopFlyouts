@@ -47,7 +47,9 @@ public sealed class TaskbarLayoutMonitorTests
 		{
 			monitor.Dispose();
 			if (PInvoke.IsWindow(hwnd))
+			{
 				window.Close();
+			}
 		}
 	}
 

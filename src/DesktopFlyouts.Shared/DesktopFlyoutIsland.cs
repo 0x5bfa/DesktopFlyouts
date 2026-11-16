@@ -89,10 +89,14 @@ public partial class DesktopFlyoutIsland : ContentControl
 	private static void OnIslandSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
 	{
 		if (dependencyObject is not DesktopFlyoutIsland island)
+		{
 			return;
+		}
 
 		if (island._owner is not null && island._owner.TryGetTarget(out var owner))
+		{
 			owner.OnIslandSizeChanged();
+		}
 	}
 
 	private void OnCornerRadiusChanged()
@@ -103,7 +107,9 @@ public partial class DesktopFlyoutIsland : ContentControl
 	private void OnIslandVisibilityChanged()
 	{
 		if (_owner is not null && _owner.TryGetTarget(out var owner))
+		{
 			owner.OnIslandVisibilityChanged();
+		}
 	}
 
 	private void DesktopFlyoutIsland_LayoutUpdated(object? sender, object e)
@@ -122,7 +128,9 @@ public partial class DesktopFlyoutIsland : ContentControl
 		_lastDesiredSize = desiredSize;
 
 		if (_owner is not null && _owner.TryGetTarget(out var owner))
+		{
 			owner.OnIslandLayoutChanged();
+		}
 	}
 
 	private void UpdateTemplateSettings()
@@ -149,17 +157,25 @@ public partial class DesktopFlyoutIsland : ContentControl
 			: null;
 
 		if (backdrop is null)
+		{
 			ClearOwnerBackdrop();
+		}
 		else
+		{
 			TemplateSettings.SystemBackdrop = backdrop;
+		}
 	}
 
 	internal void ClearOwnerBackdrop()
 	{
 		if (TemplateSettings.SystemBackdrop is DesktopFlyoutSystemBackdrop backdrop)
+		{
 			backdrop.ClearFrom(TemplateSettings);
+		}
 		else
+		{
 			TemplateSettings.SystemBackdrop = null;
+		}
 	}
 #elif UWP
 	internal void UpdateOwnerBackdrop(bool forceUpdate = false)
@@ -172,10 +188,10 @@ public partial class DesktopFlyoutIsland : ContentControl
 		}
 
 		Brush? background = null;
-		if (_owner is not null
-			&& _owner.TryGetTarget(out var owner)
-			&& owner.BackdropKind is not DesktopFlyoutBackdropKind.None
-			&& GetTemplateChild("PART_RootGrid") is Grid)
+		if (_owner is not null &&
+			_owner.TryGetTarget(out var owner) &&
+			owner.BackdropKind is not DesktopFlyoutBackdropKind.None &&
+			GetTemplateChild("PART_RootGrid") is Grid)
 		{
 			var useLightTheme = RequestedTheme switch
 			{
@@ -184,11 +200,12 @@ public partial class DesktopFlyoutIsland : ContentControl
 				_ => GeneralHelpers.IsTaskbarLight(),
 			};
 			var useAccent = GeneralHelpers.IsTaskbarColorPrevalenceEnabled();
-			background = !forceUpdate && _ownerBackground is DesktopFlyoutBackdropBrush backdrop
-				&& backdrop.Kind == owner.BackdropKind
-				&& backdrop.UseLightTheme == useLightTheme && backdrop.UseAccent == useAccent
-				? backdrop
-				: new DesktopFlyoutBackdropBrush(owner.BackdropKind, useLightTheme, useAccent, owner.IsHostBackdropBrushEnabled);
+			background = !forceUpdate &&
+				_ownerBackground is DesktopFlyoutBackdropBrush backdrop &&
+				backdrop.Kind == owner.BackdropKind &&
+				backdrop.UseLightTheme == useLightTheme && backdrop.UseAccent == useAccent
+					? backdrop
+					: new DesktopFlyoutBackdropBrush(owner.BackdropKind, useLightTheme, useAccent, owner.IsHostBackdropBrushEnabled);
 		}
 
 		if (background is null)
@@ -198,7 +215,9 @@ public partial class DesktopFlyoutIsland : ContentControl
 		}
 
 		if (ReferenceEquals(background, _ownerBackground))
+		{
 			return;
+		}
 
 		Background = background;
 		_ownerBackground = background;
@@ -208,7 +227,9 @@ public partial class DesktopFlyoutIsland : ContentControl
 	private void ClearOwnerBackground()
 	{
 		if (_hasOwnerBackground && ReferenceEquals(ReadLocalValue(BackgroundProperty), _ownerBackground))
+		{
 			ClearValue(BackgroundProperty);
+		}
 
 		_ownerBackground = null;
 		_hasOwnerBackground = false;

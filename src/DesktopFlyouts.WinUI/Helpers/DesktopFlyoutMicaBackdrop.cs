@@ -16,7 +16,9 @@ internal sealed partial class DesktopFlyoutMicaBackdrop : DesktopFlyoutSystemBac
 	{
 		var controller = BackdropControllerHelpers.GetMicaController(configuration.Theme is SystemBackdropTheme.Light);
 		if (controller is not null)
+		{
 			controller.Kind = MicaKind.Base;
+		}
 
 		return controller;
 	}

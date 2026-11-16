@@ -77,7 +77,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		base.OnItemsChanged(e);
 
 		if (_disposed)
+		{
 			return;
+		}
 
 		if (_menuFlyout is null)
 		{
@@ -88,7 +90,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		_menuFlyout.Items.Clear();
 
 		foreach (var item in Items)
+		{
 			_menuFlyout.Items.Add((MenuFlyoutItemBase)item);
+		}
 	}
 
 	/// <summary>
@@ -102,7 +106,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	public void Show(Point point)
 	{
 		if (_disposed || _menuFlyout is null)
+		{
 			return;
+		}
 
 		UpdateFlyoutTheme();
 
@@ -124,7 +130,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	public void Hide()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_ = _host?.UpdateWindowVisibility(false);
 
@@ -142,7 +150,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	private void HostWindow_SystemSettingsChanged(object? sender, EventArgs e)
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		UpdateFlyoutTheme();
 	}
@@ -172,7 +182,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 
@@ -180,7 +192,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		{
 			_menuFlyout.Closed -= MenuFlyout_Closed;
 			if (IsOpen)
+			{
 				_menuFlyout.Hide();
+			}
 
 			_menuFlyout.Items.Clear();
 			_menuFlyout = null;
@@ -193,5 +207,4 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		GC.SuppressFinalize(this);
 	}
 }
-
 #endif

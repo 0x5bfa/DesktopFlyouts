@@ -34,7 +34,9 @@ internal partial class TrayIconManager : IDisposable
 	internal void SwitchFlyout(DesktopFlyoutSampleKind example)
 	{
 		if (_disposed || (DesktopFlyout is not null && SelectedFlyoutExample == example))
+		{
 			return;
+		}
 
 		var oldFlyout = DesktopFlyout;
 		var newFlyout = CreateFlyout(example);
@@ -62,7 +64,9 @@ internal partial class TrayIconManager : IDisposable
 	internal void ToggleFlyout(DesktopFlyoutPosition? position = null)
 	{
 		if (DesktopFlyout is null)
+		{
 			return;
+		}
 
 		if (DesktopFlyout.TransitionState is
 			DesktopFlyoutTransitionState.Open or
@@ -80,7 +84,9 @@ internal partial class TrayIconManager : IDisposable
 	private void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
 	{
 		if (DesktopFlyout is null)
+		{
 			return;
+		}
 
 		if (DesktopFlyout.TransitionState is
 			DesktopFlyoutTransitionState.Open or
@@ -103,10 +109,14 @@ internal partial class TrayIconManager : IDisposable
 	private void SystemTrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)
 	{
 		if (DesktopMenuFlyout is null)
+		{
 			return;
+		}
 
 		if (DesktopMenuFlyout.IsOpen)
+		{
 			DesktopMenuFlyout.Hide();
+		}
 
 		DesktopMenuFlyout.Show(new(e.Point.X, e.Point.Y - 32));
 	}
@@ -114,7 +124,9 @@ internal partial class TrayIconManager : IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 

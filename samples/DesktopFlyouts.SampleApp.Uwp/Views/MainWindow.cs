@@ -115,7 +115,9 @@ internal sealed unsafe class MainWindow : IDisposable
 	private void ResizeXamlWindow()
 	{
 		if (_xamlHwnd.IsNull)
+		{
 			return;
+		}
 
 		RECT clientRect;
 		PInvoke.GetClientRect(_hwnd, &clientRect);
@@ -133,7 +135,9 @@ internal sealed unsafe class MainWindow : IDisposable
 			SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
 
 		if (!_coreHwnd.IsNull)
+		{
 			PInvoke.SendMessage(_coreHwnd, PInvoke.WM_SIZE, (WPARAM)(nuint)width, height);
+		}
 	}
 
 	private LRESULT WindowProc(HWND hwnd, uint message, WPARAM wParam, LPARAM lParam)
@@ -145,7 +149,9 @@ internal sealed unsafe class MainWindow : IDisposable
 		}
 
 		if (message == PInvoke.WM_SIZE)
+		{
 			ResizeXamlWindow();
+		}
 
 		return PInvoke.DefWindowProc(hwnd, message, wParam, lParam);
 	}
@@ -153,7 +159,10 @@ internal sealed unsafe class MainWindow : IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
+
 		_disposed = true;
 
 		_desktopWindowXamlSource.Content = null;

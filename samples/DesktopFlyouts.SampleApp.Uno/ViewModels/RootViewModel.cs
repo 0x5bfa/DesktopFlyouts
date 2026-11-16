@@ -37,7 +37,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _iconPath, value))
+			{
 				OnIconPathChanged(value);
+			}
 		}
 	}
 
@@ -47,7 +49,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _tooltipText, value))
+			{
 				OnTooltipTextChanged(value);
+			}
 		}
 	}
 
@@ -57,7 +61,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _hideOnLostFocus, value))
+			{
 				OnHideOnLostFocusChanged(value);
+			}
 		}
 	}
 
@@ -67,7 +73,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _isSwipeToDismissEnabled, value))
+			{
 				OnIsSwipeToDismissEnabledChanged(value);
+			}
 		}
 	}
 
@@ -77,7 +85,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _swipeDismissThresholdValue, value))
+			{
 				OnSwipeDismissThresholdValueChanged(value);
+			}
 		}
 	}
 
@@ -87,7 +97,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _selectedActivationModeIndex, value))
+			{
 				OnSelectedActivationModeIndexChanged(value);
+			}
 		}
 	}
 
@@ -97,7 +109,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _autoCloseDelaySecondsValue, value))
+			{
 				OnAutoCloseDelaySecondsValueChanged(value);
+			}
 		}
 	}
 
@@ -116,7 +130,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _selectedFlyoutExampleIndex, value))
+			{
 				OnSelectedFlyoutExampleIndexChanged(value);
+			}
 		}
 	}
 
@@ -126,7 +142,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _flyoutWidthValue, value))
+			{
 				OnFlyoutWidthValueChanged(value);
+			}
 		}
 	}
 
@@ -136,7 +154,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _flyoutHeightValue, value))
+			{
 				OnFlyoutHeightValueChanged(value);
+			}
 		}
 	}
 
@@ -146,7 +166,9 @@ internal partial class RootViewModel : ObservableObject
 		set
 		{
 			if (SetProperty(ref _selectedSystemBackdropIndex, value))
+			{
 				OnSelectedSystemBackdropIndexChanged(value);
+			}
 		}
 	}
 
@@ -201,7 +223,9 @@ internal partial class RootViewModel : ObservableObject
 	private void OnIconPathChanged(string? value)
 	{
 		if (!string.IsNullOrEmpty(value) && System.IO.File.Exists(value))
+		{
 			TrayIconManager.Default.SystemTrayIcon?.SetIcon(value);
+		}
 	}
 
 	private void OnTooltipTextChanged(string? value)
@@ -212,31 +236,41 @@ internal partial class RootViewModel : ObservableObject
 	private void OnHideOnLostFocusChanged(bool value)
 	{
 		if (IsDefaultFlyoutSelected())
+		{
 			TrayIconManager.Default.DesktopFlyout?.HideOnLostFocus = value;
+		}
 	}
 
 	private void OnIsSwipeToDismissEnabledChanged(bool value)
 	{
 		if (IsDefaultFlyoutSelected())
+		{
 			TrayIconManager.Default.DesktopFlyout!.IsSwipeToDismissEnabled = value;
+		}
 	}
 
 	private void OnSwipeDismissThresholdValueChanged(double value)
 	{
 		if (IsDefaultFlyoutSelected())
+		{
 			TrayIconManager.Default.DesktopFlyout!.SwipeDismissThreshold = value;
+		}
 	}
 
 	private void OnAutoCloseDelaySecondsValueChanged(double value)
 	{
 		if (IsDefaultFlyoutSelected())
+		{
 			TrayIconManager.Default.DesktopFlyout!.AutoCloseDelay = ToAutoCloseDelay(value);
+		}
 	}
 
 	private void OnSelectedActivationModeIndexChanged(int value)
 	{
 		if (IsDefaultFlyoutSelected())
+		{
 			TrayIconManager.Default.DesktopFlyout!.ActivationMode = ActivationModes.ElementAt(value).Key;
+		}
 	}
 
 	private void OnSelectedFlyoutExampleIndexChanged(int value)
@@ -258,25 +292,33 @@ internal partial class RootViewModel : ObservableObject
 	private void OnSelectedSystemBackdropIndexChanged(int value)
 	{
 		if (IsDefaultFlyoutSelected())
+		{
 			TrayIconManager.Default.DesktopFlyout!.BackdropKind = SystemBackdrops.ElementAt(value).Key;
+		}
 	}
 
 	private void OnFlyoutWidthValueChanged(double value)
 	{
 		if (IsDefaultFlyoutSelected())
+		{
 			TrayIconManager.Default.DesktopFlyout!.FlyoutWidth = ToGridLength(value);
+		}
 	}
 
 	private void OnFlyoutHeightValueChanged(double value)
 	{
 		if (IsDefaultFlyoutSelected())
+		{
 			TrayIconManager.Default.DesktopFlyout!.FlyoutHeight = ToGridLength(value);
+		}
 	}
 
 	private void ApplyDefaultFlyoutSettings()
 	{
 		if (!IsDefaultFlyoutSelected())
+		{
 			return;
+		}
 
 		var flyout = TrayIconManager.Default.DesktopFlyout!;
 		flyout.BackdropKind = SystemBackdrops.ElementAt(SelectedSystemBackdropIndex).Key;

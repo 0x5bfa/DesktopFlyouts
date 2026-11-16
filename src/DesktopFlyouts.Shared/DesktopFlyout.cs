@@ -141,7 +141,9 @@ public partial class DesktopFlyout : Control, IDisposable
 #endif
 #if HAS_UNO
 		if (HideOnLostFocus)
+		{
 			_host.WindowInactivated += HostWindow_Inactivated;
+		}
 #else
 		_host.WindowInactivated += HostWindow_Inactivated;
 #endif
@@ -164,7 +166,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
 		RootGrid?.PointerExited -= RootGrid_PointerExited;
 		if (IslandsItemsControl is not null)
+		{
 			IslandsItemsControl.ItemsSource = null;
+		}
 
 		RootGrid = GetTemplateChild(PART_RootGrid) as Grid
 			?? throw new MissingFieldException($"Could not find {PART_RootGrid} in the given {nameof(DesktopFlyout)}'s style.");
@@ -211,7 +215,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		if (_isPopupAnimationPlaying)
 		{
 			if (TransitionState is DesktopFlyoutTransitionState.Opening)
+			{
 				_hideAfterOpen = false;
+			}
 			else
 			{
 				_showAfterClose = true;
@@ -224,7 +230,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		_showAfterClose = false;
 		_showAfterClosePosition = null;
 		if (!position.TryResolveTrayIcon(out var anchorPosition))
+		{
 			return;
+		}
 
 		_requestedPosition = position;
 		position = anchorPosition;
@@ -251,7 +259,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		SetTransitionState(DesktopFlyoutTransitionState.Opening);
 		var shouldActivateOnOpen = ShouldActivateOnOpen();
 		if (!shouldActivateOnOpen)
+		{
 			_host.PreserveActivationState();
+		}
 
 		_host.SetActivationMode(ActivationMode);
 #if !HAS_UNO
@@ -268,7 +278,9 @@ public partial class DesktopFlyout : Control, IDisposable
 #endif
 		{
 			if (_disposed)
+			{
 				return;
+			}
 
 			RefreshPlacement();
 #if !HAS_UNO
@@ -279,14 +291,18 @@ public partial class DesktopFlyout : Control, IDisposable
 			UpdateLayout();
 			await Task.Delay(1);
 			if (_disposed)
+			{
 				return;
+			}
 
 			ApplyResolvedFlyoutSize();
 
 			UpdateLayout();
 			await Task.Delay(1);
 			if (_disposed)
+			{
 				return;
+			}
 
 			UpdateFlyoutTheme();
 			UpdateFocusSuppression();
@@ -298,14 +314,20 @@ public partial class DesktopFlyout : Control, IDisposable
 			UpdateLayout();
 			await Task.Delay(1);
 			if (_disposed)
+			{
 				return;
+			}
 
 			await _host.UpdateWindowVisibility(true, shouldActivateOnOpen);
 			if (_disposed)
+			{
 				return;
+			}
 
 			if (!shouldActivateOnOpen)
+			{
 				RestartRestoreActivationTimer();
+			}
 
 			if (AreTransitionAnimationsEnabled)
 			{
@@ -338,7 +360,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	internal SystemBackdrop? CreateIslandSystemBackdrop(ElementTheme islandTheme, SystemBackdrop? currentBackdrop)
 	{
 		if (BackdropKind is DesktopFlyoutBackdropKind.None)
+		{
 			return null;
+		}
 
 		var useLightTheme = islandTheme switch
 		{
@@ -371,12 +395,16 @@ public partial class DesktopFlyout : Control, IDisposable
 		ResetSwipeDismissTracking();
 
 		if (_disposed || RootGrid is null)
+		{
 			return;
+		}
 
 		if (_isPopupAnimationPlaying)
 		{
 			if (TransitionState is DesktopFlyoutTransitionState.Opening)
+			{
 				_hideAfterOpen = true;
+			}
 			else
 			{
 				_showAfterClose = false;
@@ -397,7 +425,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		_isPopupAnimationPlaying = true;
 		SetTransitionState(DesktopFlyoutTransitionState.Closing);
 		if (!closeFromCurrentTransform)
+		{
 			SetOpenTransform();
+		}
 
 		if (AreTransitionAnimationsEnabled)
 		{
@@ -447,7 +477,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		RequestedTheme = requestedTheme;
 
 		foreach (var island in Islands)
+		{
 			island.RequestedTheme = requestedTheme;
+		}
 
 		UpdateIslandBackdrops(forceBackdropUpdate);
 	}
@@ -456,10 +488,14 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 #if WASDK && !HAS_UNO
 		foreach (var island in Islands)
+		{
 			island.UpdateOwnerBackdrop(forceUpdate);
+		}
 #elif UWP
 		foreach (var island in Islands)
+		{
 			island.UpdateOwnerBackdrop(forceUpdate);
+		}
 #endif
 	}
 
@@ -470,12 +506,16 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void UpdateIslands()
 	{
 		if (IslandsItemsControl is null)
+		{
 			return;
+		}
 
 		for (var index = 0; index < Islands.Count; index++)
 		{
 			if (Islands[index] is DesktopFlyoutIsland island)
+			{
 				island.SetOwner(this);
+			}
 		}
 
 		IslandsItemsControl.InvalidateMeasure();
@@ -484,7 +524,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private DesktopFlyoutPopupDirection UpdateFlyoutRegion(bool activateHost = false)
 	{
 		if (_host?.DesktopWindowXamlSource is null || IslandsItemsControl is null)
+		{
 			return _activePopupDirection;
+		}
 
 #if !HAS_UNO
 		UpdateHostBounds(activateHost);
@@ -568,7 +610,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void CancelOpenFlyoutLayoutUpdate()
 	{
 		if (!_isOpenFlyoutLayoutUpdateQueued)
+		{
 			return;
+		}
 
 		CompositionTarget.Rendering -= OpenFlyoutLayout_Rendering;
 		_isOpenFlyoutLayoutUpdateQueued = false;
@@ -609,13 +653,17 @@ public partial class DesktopFlyout : Control, IDisposable
 		}
 
 		if (_placementUpdatePending)
+		{
 			UpdateOpenFlyoutLayout();
+		}
 	}
 
 	private void ResetResolvedFlyoutSize()
 	{
 		if (RootGrid is null)
+		{
 			return;
+		}
 
 		RootGrid.Width = double.NaN;
 		RootGrid.Height = double.NaN;
@@ -624,7 +672,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void ApplyResolvedFlyoutSize()
 	{
 		if (RootGrid is null || _host is null)
+		{
 			return;
+		}
 
 		var (availableWidth, availableHeight) = GetAvailableFlyoutSizeInDips();
 		RootGrid.Width = ResolveFlyoutLength(FlyoutWidth, availableWidth, HasStarIslandWidth());
@@ -634,7 +684,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void MeasureRootGridForAvailableFlyoutSize()
 	{
 		if (RootGrid is null)
+		{
 			return;
+		}
 
 		var (availableWidth, availableHeight) = GetAvailableFlyoutSizeInDips();
 		RootGrid.Measure(new(availableWidth, availableHeight));
@@ -643,7 +695,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private (double Width, double Height) GetAvailableFlyoutSizeInDips()
 	{
 		if (_host is null)
+		{
 			return (0, 0);
+		}
 
 		var scale = _host.XamlIslandRasterizationScale;
 		var workArea = _activeWorkArea;
@@ -658,7 +712,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		foreach (var item in Islands)
 		{
 			if (item is DesktopFlyoutIsland island && IsIslandVisible(island) && island.IslandWidth.IsStar)
+			{
 				return true;
+			}
 		}
 
 		return false;
@@ -669,7 +725,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		foreach (var item in Islands)
 		{
 			if (item is DesktopFlyoutIsland island && IsIslandVisible(island) && island.IslandHeight.IsStar)
+			{
 				return true;
+			}
 		}
 
 		return false;
@@ -683,13 +741,17 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void OpenAnimationStoryboard_Completed(object? sender, object e)
 	{
 		if (sender is not Storyboard storyboard || !ReferenceEquals(_transitionStoryboard, storyboard))
+		{
 			return;
+		}
 
 		storyboard.Completed -= OpenAnimationStoryboard_Completed;
 		_transitionStoryboard = null;
 		storyboard.Stop();
 		if (_disposed)
+		{
 			return;
+		}
 
 		CompleteOpen();
 	}
@@ -697,13 +759,17 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void CloseAnimationStoryboard_Completed(object? sender, object e)
 	{
 		if (sender is not Storyboard storyboard || !ReferenceEquals(_transitionStoryboard, storyboard))
+		{
 			return;
+		}
 
 		storyboard.Completed -= CloseAnimationStoryboard_Completed;
 		_transitionStoryboard = null;
 		storyboard.Stop();
 		if (_disposed)
+		{
 			return;
+		}
 
 		CompleteClose();
 	}
@@ -711,7 +777,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void StopTransitionStoryboard()
 	{
 		if (_transitionStoryboard is null)
+		{
 			return;
+		}
 
 		var storyboard = _transitionStoryboard;
 		_transitionStoryboard = null;
@@ -736,13 +804,20 @@ public partial class DesktopFlyout : Control, IDisposable
 
 		IsOpen = true;
 		if (ShouldActivateOnOpen())
+		{
 			PrepareInitialFocus();
+		}
 		else
+		{
 			RestartRestoreActivationTimer();
+		}
+
 		RestartAutoCloseTimer();
 		SetTransitionState(DesktopFlyoutTransitionState.Open);
 		if (_placementUpdatePending)
+		{
 			UpdateOpenFlyoutLayout();
+		}
 	}
 
 	private void CompleteClose()
@@ -767,13 +842,17 @@ public partial class DesktopFlyout : Control, IDisposable
 		SetTransitionState(DesktopFlyoutTransitionState.Closed);
 
 		if (_showAfterClose)
+		{
 			QueueShowAfterClose();
+		}
 	}
 
 	private void PrepareInitialFocus()
 	{
 		if (_host is null)
+		{
 			return;
+		}
 
 		IsTabStop = true;
 		_host.NavigateFocus(XamlSourceFocusNavigationReason.Programmatic);
@@ -787,7 +866,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		StopAutoCloseTimer();
 
 		if (_disposed || !IsOpen || AutoCloseDelay <= TimeSpan.Zero)
+		{
 			return;
+		}
 
 		_autoCloseTimer = new() { Interval = AutoCloseDelay };
 		_autoCloseTimer.Tick += AutoCloseTimer_Tick;
@@ -797,7 +878,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void StopAutoCloseTimer()
 	{
 		if (_autoCloseTimer is null)
+		{
 			return;
+		}
 
 		_autoCloseTimer.Stop();
 		_autoCloseTimer.Tick -= AutoCloseTimer_Tick;
@@ -809,7 +892,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		StopRestoreActivationTimer();
 
 		if (_disposed || ShouldActivateOnOpen())
+		{
 			return;
+		}
 
 		_restoreActivationTickCount = 0;
 		_host?.RestoreActivationState();
@@ -821,7 +906,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void StopRestoreActivationTimer()
 	{
 		if (_restoreActivationTimer is null)
+		{
 			return;
+		}
 
 		_restoreActivationTimer.Stop();
 		_restoreActivationTimer.Tick -= RestoreActivationTimer_Tick;
@@ -834,7 +921,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		StopAutoCloseTimer();
 
 		if (IsOpen && !_isPopupAnimationPlaying)
+		{
 			Hide();
+		}
 	}
 
 	private void RestoreActivationTimer_Tick(object? sender, object e)
@@ -843,13 +932,17 @@ public partial class DesktopFlyout : Control, IDisposable
 		_restoreActivationTickCount++;
 
 		if (_restoreActivationTickCount >= 8)
+		{
 			StopRestoreActivationTimer();
+		}
 	}
 
 	private void RootGrid_GettingFocus(UIElement sender, GettingFocusEventArgs args)
 	{
 		if (ActivationMode is not DesktopFlyoutActivationMode.NeverActivate)
+		{
 			return;
+		}
 
 		args.Cancel = true;
 		args.Handled = true;
@@ -859,10 +952,14 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void FocusManager_GettingFocus(object? sender, GettingFocusEventArgs args)
 	{
 		if (ActivationMode is not DesktopFlyoutActivationMode.NeverActivate || args.NewFocusedElement is not DependencyObject newFocusedElement)
+		{
 			return;
+		}
 
 		if (!IsFlyoutElement(newFocusedElement))
+		{
 			return;
+		}
 
 		args.Cancel = true;
 		args.Handled = true;
@@ -873,16 +970,22 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 		var rootGrid = RootGrid;
 		if (rootGrid is null)
+		{
 			return false;
+		}
 
 		if (ReferenceEquals(element, this) || ReferenceEquals(element, rootGrid))
+		{
 			return true;
+		}
 
 		var current = element;
 		while (current is not null)
 		{
 			if (ReferenceEquals(current, this) || ReferenceEquals(current, rootGrid))
+			{
 				return true;
+			}
 
 			current = VisualTreeHelper.GetParent(current);
 		}
@@ -895,18 +998,24 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
 	{
 		if (RootGrid is null || _isPopupAnimationPlaying)
+		{
 			return;
+		}
 
 		var isPressedScaleEnabled = IsPressedScaleEnabled();
 		var isSwipeDismissEnabled = CanStartSwipeDismiss();
 		if (!isPressedScaleEnabled && !isSwipeDismissEnabled)
+		{
 			return;
+		}
 
 		StopSwipeDismissRestoreStoryboard();
 		RootGrid.CapturePointer(e.Pointer);
 
 		if (isSwipeDismissEnabled)
+		{
 			StartSwipeDismiss(e);
+		}
 
 		if (isPressedScaleEnabled)
 		{
@@ -918,7 +1027,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e)
 	{
 		if (UpdateSwipeDismiss(e))
+		{
 			e.Handled = true;
+		}
 	}
 
 	private void RootGrid_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -926,10 +1037,14 @@ public partial class DesktopFlyout : Control, IDisposable
 		var dismissedBySwipe = CompleteSwipeDismiss(e);
 
 		if (RootGrid is not null)
+		{
 			RootGrid.ReleasePointerCapture(e.Pointer);
+		}
 
 		if (!dismissedBySwipe)
+		{
 			RestorePressedScale();
+		}
 	}
 
 	private void RootGrid_PointerCanceled(object sender, PointerRoutedEventArgs e)
@@ -947,7 +1062,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void RootGrid_PointerExited(object sender, PointerRoutedEventArgs e)
 	{
 		if (!_isSwipeDismissDragging)
+		{
 			RestorePressedScale();
+		}
 	}
 
 	private bool CanStartSwipeDismiss()
@@ -961,7 +1078,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void StartSwipeDismiss(PointerRoutedEventArgs e)
 	{
 		if (RootGrid is null)
+		{
 			return;
+		}
 
 		_swipeDismissPointerId = e.Pointer.PointerId;
 		_swipeDismissStartPoint = e.GetCurrentPoint(RootGrid).Position;
@@ -972,14 +1091,18 @@ public partial class DesktopFlyout : Control, IDisposable
 	private bool UpdateSwipeDismiss(PointerRoutedEventArgs e)
 	{
 		if (!_isSwipeDismissTracking || RootGrid is null || e.Pointer.PointerId != _swipeDismissPointerId)
+		{
 			return false;
+		}
 
 		var currentPoint = e.GetCurrentPoint(RootGrid).Position;
 		var deltaX = currentPoint.X - _swipeDismissStartPoint.X;
 		var deltaY = currentPoint.Y - _swipeDismissStartPoint.Y;
 
 		if (!TryGetSwipeDismissTranslation(deltaX, deltaY, out var translateX, out var translateY))
+		{
 			return false;
+		}
 
 		if (!_isSwipeDismissDragging)
 		{
@@ -990,7 +1113,9 @@ public partial class DesktopFlyout : Control, IDisposable
 
 		var transform = GetRootTransform();
 		if (transform is null)
+		{
 			return false;
+		}
 
 		transform.TranslateX = translateX;
 		transform.TranslateY = translateY;
@@ -1000,7 +1125,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private bool CompleteSwipeDismiss(PointerRoutedEventArgs e)
 	{
 		if (!_isSwipeDismissTracking || e.Pointer.PointerId != _swipeDismissPointerId)
+		{
 			return false;
+		}
 
 		var shouldDismiss = _isSwipeDismissDragging && GetSwipeDismissDistance() >= GetResolvedSwipeDismissThreshold();
 		var shouldRestore = _isSwipeDismissDragging && !shouldDismiss;
@@ -1014,7 +1141,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		}
 
 		if (shouldRestore)
+		{
 			AnimateSwipeDismissRestore();
+		}
 
 		return false;
 	}
@@ -1025,7 +1154,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		ResetSwipeDismissTracking();
 
 		if (shouldRestore)
+		{
 			AnimateSwipeDismissRestore();
+		}
 	}
 
 	private void ResetSwipeDismissTracking()
@@ -1045,7 +1176,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		{
 			var primaryDistance = Math.Max(0, Math.Sign(closedX) * deltaX);
 			if (!CanStartSwipeDismissDrag(primaryDistance, Math.Abs(deltaY)))
+			{
 				return false;
+			}
 
 			translateX = Math.Sign(closedX) * Math.Min(primaryDistance, Math.Abs(closedX));
 			return true;
@@ -1053,11 +1186,15 @@ public partial class DesktopFlyout : Control, IDisposable
 
 		var closedY = GetClosedYOffset(_activePopupDirection);
 		if (closedY == 0)
+		{
 			return false;
+		}
 
 		var verticalPrimaryDistance = Math.Max(0, Math.Sign(closedY) * deltaY);
 		if (!CanStartSwipeDismissDrag(verticalPrimaryDistance, Math.Abs(deltaX)))
+		{
 			return false;
+		}
 
 		translateY = Math.Sign(closedY) * Math.Min(verticalPrimaryDistance, Math.Abs(closedY));
 		return true;
@@ -1066,10 +1203,14 @@ public partial class DesktopFlyout : Control, IDisposable
 	private bool CanStartSwipeDismissDrag(double primaryDistance, double secondaryDistance)
 	{
 		if (_isSwipeDismissDragging)
+		{
 			return true;
+		}
 
 		if (primaryDistance < SwipeDismissDragStartThreshold)
+		{
 			return false;
+		}
 
 		return primaryDistance >= secondaryDistance * SwipeDismissAxisDominanceRatio;
 	}
@@ -1078,11 +1219,15 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 		var transform = GetRootTransform();
 		if (transform is null)
+		{
 			return 0;
+		}
 
 		var closedX = GetClosedXOffset(_activePopupDirection);
 		if (closedX != 0)
+		{
 			return Math.Max(0, Math.Sign(closedX) * transform.TranslateX);
+		}
 
 		var closedY = GetClosedYOffset(_activePopupDirection);
 		return closedY == 0
@@ -1094,7 +1239,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 		var closedX = GetClosedXOffset(_activePopupDirection);
 		if (closedX != 0)
+		{
 			return Math.Abs(closedX);
+		}
 
 		return Math.Abs(GetClosedYOffset(_activePopupDirection));
 	}
@@ -1102,7 +1249,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private double GetResolvedSwipeDismissThreshold()
 	{
 		if (double.IsNaN(SwipeDismissThreshold) || double.IsInfinity(SwipeDismissThreshold))
+		{
 			return Math.Min(80.0D, Math.Max(1.0D, GetSwipeDismissMaxDistance()));
+		}
 
 		return Clamp(SwipeDismissThreshold, 1.0D, Math.Max(1.0D, GetSwipeDismissMaxDistance()));
 	}
@@ -1126,7 +1275,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void StopSwipeDismissRestoreStoryboard()
 	{
 		if (_swipeDismissRestoreStoryboard is null)
+		{
 			return;
+		}
 
 		_swipeDismissRestoreStoryboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
 		_swipeDismissRestoreStoryboard.Stop();
@@ -1136,13 +1287,17 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void SwipeDismissRestoreStoryboard_Completed(object? sender, object e)
 	{
 		if (sender is not Storyboard storyboard || !ReferenceEquals(_swipeDismissRestoreStoryboard, storyboard))
+		{
 			return;
+		}
 
 		storyboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
 		_swipeDismissRestoreStoryboard = null;
 		storyboard.Stop();
 		if (_disposed)
+		{
 			return;
+		}
 
 		SetOpenTransform();
 		RestartAutoCloseTimer();
@@ -1151,7 +1306,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void RestorePressedScale()
 	{
 		if (!_isPressAnimationActive)
+		{
 			return;
+		}
 
 		_isPressAnimationActive = false;
 		AnimatePressedScale(1.0D, TimeSpan.FromMilliseconds(240));
@@ -1166,7 +1323,9 @@ public partial class DesktopFlyout : Control, IDisposable
 
 		var transform = GetRootTransform();
 		if (transform is null)
+		{
 			return;
+		}
 
 		transform.ScaleX = 1.0D;
 		transform.ScaleY = 1.0D;
@@ -1176,7 +1335,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 		var transform = GetRootTransform();
 		if (transform is null)
+		{
 			return;
+		}
 
 		if (!AreSystemAnimationsEnabled)
 		{
@@ -1207,7 +1368,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void StopPressedScaleStoryboard()
 	{
 		if (_pressScaleStoryboard is null)
+		{
 			return;
+		}
 
 		_pressScaleStoryboard.Completed -= PressScaleStoryboard_Completed;
 		_pressScaleStoryboard.Stop();
@@ -1217,13 +1380,17 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void PressScaleStoryboard_Completed(object? sender, object e)
 	{
 		if (!ReferenceEquals(sender, _pressScaleStoryboard))
+		{
 			return;
+		}
 
 		StopPressedScaleStoryboard();
 
 		var transform = GetRootTransform();
 		if (transform is null)
+		{
 			return;
+		}
 
 		transform.ScaleX = _pressScaleTargetScale;
 		transform.ScaleY = _pressScaleTargetScale;
@@ -1237,7 +1404,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private double GetResolvedPressedScale()
 	{
 		if (double.IsNaN(PressedScale) || double.IsInfinity(PressedScale))
+		{
 			return 1.0D;
+		}
 
 		return Clamp(PressedScale, 0.1D, 2.0D);
 	}
@@ -1245,15 +1414,21 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void UpdateFocusSuppression()
 	{
 		if (ActivationMode is DesktopFlyoutActivationMode.NeverActivate)
+		{
 			SuppressFocus();
+		}
 		else
+		{
 			RestoreFocusSuppression();
+		}
 	}
 
 	private void SuppressFocus()
 	{
 		if (RootGrid is null)
+		{
 			return;
+		}
 
 		RestoreFocusSuppression();
 		SuppressFocus(RootGrid);
@@ -1275,16 +1450,22 @@ public partial class DesktopFlyout : Control, IDisposable
 
 		var childCount = VisualTreeHelper.GetChildrenCount(element);
 		for (var index = 0; index < childCount; index++)
+		{
 			SuppressFocus(VisualTreeHelper.GetChild(element, index));
+		}
 	}
 
 	private void RestoreFocusSuppression()
 	{
 		foreach (var (element, allowFocusOnInteraction) in _suppressedInteractionFocusStates)
+		{
 			element.AllowFocusOnInteraction = allowFocusOnInteraction;
+		}
 
 		foreach (var (control, isTabStop) in _suppressedTabStopStates)
+		{
 			control.IsTabStop = isTabStop;
+		}
 
 		_suppressedInteractionFocusStates.Clear();
 		_suppressedTabStopStates.Clear();
@@ -1312,7 +1493,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 		var transform = GetRootTransform();
 		if (transform is null)
+		{
 			return;
+		}
 
 		transform.TranslateX = 0;
 		transform.TranslateY = 0;
@@ -1322,7 +1505,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 		var transform = GetRootTransform();
 		if (transform is null)
+		{
 			return;
+		}
 
 		transform.TranslateX = GetClosedXOffset(popupDirection);
 		transform.TranslateY = GetClosedYOffset(popupDirection);
@@ -1331,7 +1516,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private CompositeTransform? GetRootTransform()
 	{
 		if (RootGrid is null)
+		{
 			return null;
+		}
 
 		return EnsureRootTransform();
 	}
@@ -1341,7 +1528,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		var rootGrid = RootGrid ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
 
 		if (rootGrid.RenderTransform is CompositeTransform compositeTransform)
+		{
 			return compositeTransform;
+		}
 
 		var transform = new CompositeTransform()
 		{
@@ -1396,13 +1585,19 @@ public partial class DesktopFlyout : Control, IDisposable
 	private static double ResolveCurrentFlyoutLength(double explicitLength, double desiredLength, double actualLength, double fallbackLength)
 	{
 		if (!double.IsNaN(explicitLength) && !double.IsInfinity(explicitLength))
+		{
 			return explicitLength;
+		}
 
 		if (desiredLength > 0)
+		{
 			return desiredLength;
+		}
 
 		if (actualLength > 0)
+		{
 			return actualLength;
+		}
 
 		return fallbackLength;
 	}
@@ -1410,10 +1605,14 @@ public partial class DesktopFlyout : Control, IDisposable
 	private static double ResolveFlyoutLength(GridLength length, double availableLength, bool stretchWhenAuto)
 	{
 		if (length.IsAuto)
+		{
 			return stretchWhenAuto ? availableLength : double.NaN;
+		}
 
 		if (length.IsStar)
+		{
 			return availableLength;
+		}
 
 		return Clamp(length.Value, 0, availableLength);
 	}
@@ -1459,7 +1658,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void SetTransitionState(DesktopFlyoutTransitionState transitionState)
 	{
 		if (TransitionState == transitionState)
+		{
 			return;
+		}
 
 		TransitionState = transitionState;
 		TransitionStateChanged?.Invoke(this, EventArgs.Empty);
@@ -1477,7 +1678,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void ShowAfterClose()
 	{
 		if (_disposed || TransitionState is not DesktopFlyoutTransitionState.Closed || !_showAfterClose || _showAfterClosePosition is null)
+		{
 			return;
+		}
 
 		var position = _showAfterClosePosition!;
 		_showAfterClose = false;
@@ -1492,7 +1695,9 @@ public partial class DesktopFlyout : Control, IDisposable
 			? monitorBounds
 			: _activeWorkArea;
 		if (_hostBounds == bounds)
+		{
 			return;
+		}
 
 		_host?.Maximize(bounds, activate);
 		_hostBounds = bounds;
@@ -1541,7 +1746,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void EnsureTaskbarFlyoutVisibilityLease(Rectangle anchorBounds)
 	{
 		if (_taskbarFlyoutVisibilityLease?.IsForAnchor(anchorBounds) == true)
+		{
 			return;
+		}
 
 		var newLease = TaskbarFlyoutVisibilityLease.TryAcquire(anchorBounds);
 		var previousLease = _taskbarFlyoutVisibilityLease;
@@ -1572,7 +1779,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void InvalidatePlacement()
 	{
 		if (_disposed || _requestedPosition is null)
+		{
 			return;
+		}
 
 		_placementUpdatePending = true;
 		UpdateOpenFlyoutLayout();
@@ -1617,18 +1826,24 @@ public partial class DesktopFlyout : Control, IDisposable
 	private void EnvironmentTimer_Tick(object? sender, object e)
 	{
 		if (!_disposed && RefreshPlacement(apply: false))
+		{
 			InvalidatePlacement();
+		}
 	}
 
 	private bool RefreshPlacement(bool apply = true)
 	{
 		if (_disposed || _requestedPosition is null || _host?.DesktopWindowXamlSource is null)
+		{
 			return false;
+		}
 
 		if (!_requestedPosition.TryResolveTrayIcon(out var position))
 		{
 			if (_lastTrayIconBounds is not Rectangle lastBounds)
+			{
 				return false;
+			}
 
 			position = DesktopFlyoutPosition.FromTaskbarBounds(lastBounds);
 		}
@@ -1644,10 +1859,14 @@ public partial class DesktopFlyout : Control, IDisposable
 		_barWindows = windows;
 		_taskbarLayoutMonitor?.SetWindows(windows);
 		if (taskbarBounds is Rectangle taskbar)
+		{
 			taskbarEdge = WindowHelpers.GetTaskbarEdge(taskbar, monitorBounds);
+		}
 
 		if (_taskbarOverflowFlyoutMonitor?.TryGetBounds(out var overflow) == true && overflow.IntersectsWith(monitorBounds))
+		{
 			overflowBounds = overflow;
+		}
 
 		if (trayBounds is Rectangle trayIcon && overflowBounds is null && taskbarBounds is Rectangle bar)
 		{
@@ -1657,9 +1876,14 @@ public partial class DesktopFlyout : Control, IDisposable
 #else
 		workArea = WindowHelpers.GetFlyoutWorkAreaRect(position, _monitorReferenceBounds.Location);
 		if (!WindowHelpers.TryGetMonitorScreenRect(reference, out monitorBounds))
+		{
 			monitorBounds = workArea;
+		}
+
 		if (trayBounds is Rectangle trayIcon && WindowHelpers.TryGetTaskbarInfoForBounds(trayIcon, out _, out var edge))
+		{
 			taskbarEdge = edge;
+		}
 #endif
 		position = position.ResolveTaskbarAnchor(taskbarEdge, monitorBounds, overflowBounds);
 #if !HAS_UNO
@@ -1693,7 +1917,9 @@ public partial class DesktopFlyout : Control, IDisposable
 			_lastTrayIconBounds = trayBounds;
 #if !HAS_UNO
 			if (trayBounds is Rectangle currentTray)
+			{
 				EnsureTaskbarFlyoutVisibilityLease(currentTray);
+			}
 #endif
 		}
 
@@ -1702,13 +1928,18 @@ public partial class DesktopFlyout : Control, IDisposable
 
 	private void HostWindow_Inactivated(object? sender, EventArgs e)
 	{
-		if (HideOnLostFocus) Hide();
+		if (HideOnLostFocus)
+		{
+			Hide();
+		}
 	}
 
 	private void HostWindow_SystemSettingsChanged(object? sender, EventArgs e)
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 #if (UWP || WASDK) && !HAS_UNO
 		_systemAnimationsEnabled = _uiSettings.AnimationsEnabled;
@@ -1722,7 +1953,9 @@ public partial class DesktopFlyout : Control, IDisposable
 		void UpdateSystemAnimationsEnabled()
 		{
 			if (!_disposed)
+			{
 				_systemAnimationsEnabled = sender.AnimationsEnabled;
+			}
 		}
 
 #if UWP
@@ -1737,7 +1970,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 		CancelOpenFlyoutLayoutUpdate();
@@ -1763,7 +1998,9 @@ public partial class DesktopFlyout : Control, IDisposable
 #endif
 #if (UWP || WASDK) && !HAS_UNO
 		if (_isAnimationsEnabledChangedSubscribed)
+		{
 			_uiSettings.AnimationsEnabledChanged -= UISettings_AnimationsEnabledChanged;
+		}
 #endif
 		RootGrid?.GettingFocus -= RootGrid_GettingFocus;
 		RootGrid?.PointerPressed -= RootGrid_PointerPressed;
@@ -1774,10 +2011,14 @@ public partial class DesktopFlyout : Control, IDisposable
 		RootGrid?.PointerExited -= RootGrid_PointerExited;
 #if WASDK && !HAS_UNO
 		foreach (var island in Islands)
+		{
 			island.ClearOwnerBackdrop();
+		}
 #endif
 		if (IslandsItemsControl is not null)
+		{
 			IslandsItemsControl.ItemsSource = null;
+		}
 
 		if (_isFocusManagerGettingFocusSubscribed)
 		{

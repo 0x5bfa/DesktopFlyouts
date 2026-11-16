@@ -46,7 +46,10 @@ public sealed class DesktopFlyoutBackdropEffectTests
 
 					Assert.AreEqual(backdrop, brush.GetSourceParameter(useMica ? "BlurredWallpaperBackdrop" : "Backdrop"));
 					if (!useMica)
+					{
 						Assert.AreEqual(noise, brush.GetSourceParameter("Noise"));
+					}
+
 					completion.SetResult();
 				}
 				catch (Exception exception)

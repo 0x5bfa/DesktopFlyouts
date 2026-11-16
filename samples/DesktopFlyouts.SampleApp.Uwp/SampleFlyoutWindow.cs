@@ -54,9 +54,14 @@ internal sealed class SampleFlyoutWindow<T> where T : Control, IDisposable
 		});
 
 		if (failure is not null)
+		{
 			ExceptionDispatchInfo.Capture(failure).Throw();
+		}
+
 		if (!invoked)
+		{
 			throw new InvalidOperationException("The flyout dispatcher stopped before handling the request.");
+		}
 	}
 
 	internal Task DisposeAsync()

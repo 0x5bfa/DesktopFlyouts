@@ -54,7 +54,9 @@ internal sealed unsafe class TaskbarLayoutMonitor : IDisposable
 	internal void SetWindows(IEnumerable<HWND> windows)
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_windows.Clear();
 		_windows.UnionWith(windows);
@@ -67,17 +69,23 @@ internal sealed unsafe class TaskbarLayoutMonitor : IDisposable
 			|| (eventType != PInvoke.EVENT_OBJECT_CREATE && eventType != PInvoke.EVENT_OBJECT_DESTROY
 				&& eventType != PInvoke.EVENT_OBJECT_SHOW && eventType != PInvoke.EVENT_OBJECT_HIDE
 				&& eventType != PInvoke.EVENT_OBJECT_LOCATIONCHANGE))
+		{
 			return;
+		}
 
 		_queued = true;
 		if (!_tryDispatch(NotifyChanged))
+		{
 			Dispose();
+		}
 	}
 
 	private void NotifyChanged()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_queued = false;
 		_onChanged();
@@ -86,7 +94,9 @@ internal sealed unsafe class TaskbarLayoutMonitor : IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 		if (!_hook.IsNull)

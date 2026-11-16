@@ -116,11 +116,15 @@ public class SystemTrayIcon : IDisposable
 		set
 		{
 			if (_isDisposed)
+			{
 				throw new ObjectDisposedException(nameof(SystemTrayIcon));
+			}
 
 			_tooltip = value;
 			if (_sniHandler?.Connection is not null)
+			{
 				_sniHandler.SetTitleAndTooltip(value ?? "");
+			}
 		}
 	}
 
@@ -167,11 +171,15 @@ public class SystemTrayIcon : IDisposable
 	public void Show()
 	{
 		if (_isDisposed)
+		{
 			throw new ObjectDisposedException(nameof(SystemTrayIcon));
+		}
 
 		_isVisible = true;
 		if (_serviceConnected)
+		{
 			_ = CreateTrayIconAsync();
+		}
 	}
 
 	/// <summary>
@@ -184,7 +192,9 @@ public class SystemTrayIcon : IDisposable
 	public void Destroy()
 	{
 		if (_isDisposed)
+		{
 			throw new ObjectDisposedException(nameof(SystemTrayIcon));
+		}
 
 		_isVisible = false;
 		DestroyTrayIcon();
@@ -201,7 +211,9 @@ public class SystemTrayIcon : IDisposable
 	public void Dispose()
 	{
 		if (_isDisposed)
+		{
 			return;
+		}
 
 		_isDisposed = true;
 		_isVisible = false;
@@ -236,8 +248,14 @@ public class SystemTrayIcon : IDisposable
 		get => _isVisible;
 		set
 		{
-			if (value) Show();
-			else Destroy();
+			if (value)
+			{
+				Show();
+			}
+			else
+			{
+				Destroy();
+			}
 		}
 	}
 
@@ -287,7 +305,9 @@ public class SystemTrayIcon : IDisposable
 	async Task InitializeAsync(CancellationToken cancellationToken = default)
 	{
 		if (_isDisposed)
+		{
 			throw new ObjectDisposedException(nameof(SystemTrayIcon));
+		}
 
 		_connection = new DBusConnection(DBusAddress.Session!);
 		await _connection.ConnectAsync();
@@ -307,7 +327,9 @@ public class SystemTrayIcon : IDisposable
 				change =>
 				{
 					if (change.A0 == "org.kde.StatusNotifierWatcher")
+					{
 						OnNameChange(change.A0, change.A2);
+					}
 				},
 				emitOnCapturedContext: false);
 
@@ -326,7 +348,9 @@ public class SystemTrayIcon : IDisposable
 	void OnNameChange(string name, string? newOwner)
 	{
 		if (_isDisposed || _connection is null || name != "org.kde.StatusNotifierWatcher")
+		{
 			return;
+		}
 
 		if (!_serviceConnected && !string.IsNullOrEmpty(newOwner))
 		{
@@ -341,7 +365,9 @@ public class SystemTrayIcon : IDisposable
 			_connection.AddMethodHandler(_sniHandler);
 
 			if (_isVisible)
+			{
 				_ = CreateTrayIconAsync();
+			}
 		}
 		else if (_serviceConnected && string.IsNullOrEmpty(newOwner))
 		{
@@ -353,7 +379,9 @@ public class SystemTrayIcon : IDisposable
 	async Task CreateTrayIconAsync()
 	{
 		if (_connection is null || !_serviceConnected || _isDisposed || _statusNotifierWatcher is null)
+		{
 			return;
+		}
 
 		try
 		{
@@ -392,18 +420,24 @@ public class SystemTrayIcon : IDisposable
 		{
 			await Task.Delay(GnomeShellInitialDelayMs);
 			if (!_isDisposed && _sniHandler?.Connection is not null)
+			{
 				_sniHandler.SetIcon(_currentIcon);
+			}
 
 			await Task.Delay(GnomeShellSecondDelayMs);
 			if (!_isDisposed && _sniHandler?.Connection is not null)
+			{
 				_sniHandler.SetIcon(_currentIcon);
+			}
 		});
 	}
 
 	void DestroyTrayIcon()
 	{
 		if (_sniHandler is null)
+		{
 			return;
+		}
 
 		try
 		{
@@ -419,12 +453,16 @@ public class SystemTrayIcon : IDisposable
 	void UpdateIcon(string iconPath)
 	{
 		if (_isDisposed)
+		{
 			throw new ObjectDisposedException(nameof(SystemTrayIcon));
+		}
 
 		_currentIcon = RenderIcon(iconPath);
 
 		if (_sniHandler?.Connection is not null)
+		{
 			_sniHandler.SetIcon(_currentIcon);
+		}
 	}
 
 	// ─── Icon Rendering ───────────────────────────────────────────
@@ -432,7 +470,9 @@ public class SystemTrayIcon : IDisposable
 	static (int width, int height, byte[] argbData) RenderIcon(string path, int size = 48)
 	{
 		if (!File.Exists(path))
+		{
 			throw new FileNotFoundException($"Icon file not found: {path}");
+		}
 
 		try
 		{

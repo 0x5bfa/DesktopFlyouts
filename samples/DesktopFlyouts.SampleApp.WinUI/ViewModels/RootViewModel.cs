@@ -178,7 +178,9 @@ internal partial class RootViewModel : ObservableObject
 	private void ApplyDefaultFlyoutSettings()
 	{
 		if (!IsDefaultFlyoutSelected())
+		{
 			return;
+		}
 
 		var flyout = TrayIconManager.Default.DesktopFlyout!;
 		flyout.BackdropKind = SystemBackdrops.ElementAt(SelectedSystemBackdropIndex).Key;

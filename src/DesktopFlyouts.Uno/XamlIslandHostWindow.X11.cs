@@ -42,7 +42,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 		get
 		{
 			if (_display is 0 || _x11Window is 0)
+			{
 				return default;
+			}
 
 			var attrs = new XWindowAttributes();
 			XGetWindowAttributes(_display, _x11Window, ref attrs);
@@ -64,13 +66,17 @@ internal partial class XamlIslandHostWindow : IDisposable
 		{
 			_windowInactivated += value;
 			if (_windowVisible)
+			{
 				StartFocusMonitoring();
+			}
 		}
 		remove
 		{
 			_windowInactivated -= value;
 			if (_windowInactivated is null)
+			{
 				StopFocusMonitoring();
+			}
 		}
 	}
 	internal event EventHandler? SystemSettingsChanged;
@@ -86,13 +92,17 @@ internal partial class XamlIslandHostWindow : IDisposable
 
 		var nativeWindow = (X11NativeWindow)Uno.UI.Xaml.WindowHelper.GetNativeWindow(_window);
 		if ((_display = XOpenDisplay(0)) is 0)
+		{
 			throw new InvalidOperationException("Failed to open X11 display.");
+		}
 
 		_x11Window = nativeWindow.WindowId;
 
 		managedWindows = new(2) { _x11Window };
 		if (TryGetTopWindow(_display, _x11Window, out var topWindow))
+		{
 			managedWindows.Add(topWindow);
+		}
 
 		// Cache atoms.
 		_netWmStateAtom = XInternAtom(_display, "_NET_WM_STATE", false);
@@ -130,13 +140,17 @@ internal partial class XamlIslandHostWindow : IDisposable
 	private void ConfigureWindow()
 	{
 		if (_display is 0 || _x11Window is 0)
+		{
 			return;
+		}
 
 		// Set override_redirect on BOTH windows so the WM doesn't reposition or decorate them.
 		// Uno creates two windows (RootX11Window + TopX11Window child) and maps both in ShowCore().
 		// Both need override_redirect to prevent KWin from grabbing and repositioning.
 		foreach (var window in managedWindows)
+		{
 			SetOverrideRedirect(window, true);
+		}
 
 		// Remove window decorations by setting Motif WM hints (no title, no resize, no close).
 		var motifHints = new byte[5 * 4]; // 5 x uint32
@@ -194,7 +208,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 	{
 		// On X11, restore activation by raising the window.
 		if (_display is 0 || _x11Window is 0)
+		{
 			return;
+		}
 
 		XRaiseWindow(_display, _x11Window);
 		XFlush(_display);
@@ -203,7 +219,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 	internal void MoveAndResize(RectInt32 rect, bool activate = true)
 	{
 		if (_display is 0 || _x11Window is 0)
+		{
 			return;
+		}
 
 		// Ensure the window has a minimum size of 1x1 — X11 rejects 0-dimension windows with BadValue.
 		var safeWidth = Math.Max(1, rect.Width);
@@ -283,12 +301,16 @@ internal partial class XamlIslandHostWindow : IDisposable
 	internal void SetHWndRectRegion(RectInt32 rect)
 	{
 		if (_display is 0 || _x11Window is 0)
+		{
 			return;
+		}
 
 		// Create a rectangular region and apply it to the window shape.
 		var region = XCreateRegion();
 		if (region is 0)
+		{
 			return;
+		}
 
 		var xRect = new XRegionRectangle
 		{
@@ -325,14 +347,21 @@ internal partial class XamlIslandHostWindow : IDisposable
 			// (between XMapWindow and Skia's first presented frame).
 			SetWindowOpacity(_x11Window, 0);
 			foreach (var wnd in managedWindows)
+			{
 				if (wnd != _x11Window)
+				{
 					SetWindowOpacity(wnd, 0);
+				}
+			}
+
 			XFlush(_display);
 
 			// Re-apply override_redirect immediately before map on BOTH windows.
 			// Uno's ShowCore() maps both windows; KWin grabs TopX11Window if it lacks override_redirect.
 			foreach (var window in managedWindows)
+			{
 				SetOverrideRedirect(window, true);
+			}
 
 			// Capture current position so we can re-apply it after map.
 			var currentAttrs = new XWindowAttributes();
@@ -342,8 +371,10 @@ internal partial class XamlIslandHostWindow : IDisposable
 
 			// Map both RootX11Window and TopX11Window (child where Skia renders).
 			foreach (var wnd in managedWindows)
+			{
 				XMapWindow(_display, wnd);
-			
+			}
+
 			// Re-apply position after map — KWin overrides our position during XMapWindow.
 			XMoveWindow(_display, _x11Window, savedX, savedY);
 
@@ -390,7 +421,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 	private async ValueTask RestoreOpacityAfterDelay()
 	{
 		if (_opacityRestoring)
+		{
 			return;
+		}
 
 		_opacityRestoring = true;
 		try
@@ -399,12 +432,19 @@ internal partial class XamlIslandHostWindow : IDisposable
 			await Task.Delay(32); // ~2 frames at 60fps
 
 			if (_disposed)
+			{
 				return;
+			}
 
 			SetWindowOpacity(_x11Window, 0xFFFFFFFF);
 			foreach (var wnd in managedWindows)
+			{
 				if (wnd != _x11Window)
+				{
 					SetWindowOpacity(wnd, 0xFFFFFFFF);
+				}
+			}
+
 			XFlush(_display);
 		}
 		finally
@@ -417,7 +457,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 	{
 		topWindow = 0;
 		if (XQueryTree(display, rootWindow, out _, out _, out var children, out var nchildren) == 0)
+		{
 			return false;
+		}
 
 		try
 		{
@@ -430,7 +472,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 		finally
 		{
 			if (children is not 0)
+			{
 				XFree(children);
+			}
 		}
 		return false;
 	}
@@ -440,11 +484,16 @@ internal partial class XamlIslandHostWindow : IDisposable
 		_activationMode = activationMode;
 
 		if (_display is 0 || _x11Window is 0)
+		{
 			return;
+		}
 
 		// For NeverActivate, we set override_redirect so the WM doesn't manage focus.
 		foreach (var window in managedWindows)
+		{
 			SetOverrideRedirect(window, activationMode == DesktopFlyoutActivationMode.NeverActivate);
+		}
+
 		XFlush(_display);
 	}
 
@@ -453,7 +502,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 		// On X11, focus navigation is handled by the window manager.
 		// Attempt to set input focus to the flyout window.
 		if (_display is 0 || _x11Window is 0)
+		{
 			return false;
+		}
 
 		XSetInputFocus(_display, _x11Window, 1 /* RevertToParent */, 0 /* CurrentTime */);
 		XFlush(_display);
@@ -470,7 +521,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 
@@ -507,7 +560,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 	internal void StartFocusMonitoring()
 	{
 		if (_focusMonitoring || _disposed || _display is 0 || _x11Window is 0 || _windowInactivated is null)
+		{
 			return;
+		}
 
 		_focusMonitoring = true;
 
@@ -523,7 +578,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 	{
 		var rootWindow = XDefaultRootWindow(_display);
 		if (rootWindow is 0)
+		{
 			return false;
+		}
 
 		var status = XGetWindowProperty(
 			_display,
@@ -536,7 +593,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 			out var prop);
 
 		if (status != 0 || actualType is not 33 /* XA_WINDOW */ || nItems < 1 || prop is 0)
+		{
 			return false;
+		}
 
 		try
 		{
@@ -552,7 +611,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 	internal void StopFocusMonitoring()
 	{
 		if (!_focusMonitoring)
+		{
 			return;
+		}
 
 		_focusMonitoring = false;
 		try { _focusTimer.Stop(); } catch { }
@@ -570,7 +631,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 		{
 			var rootWindow = XDefaultRootWindow(_display);
 			if (rootWindow is 0)
+			{
 				return;
+			}
 
 			// Read _NET_ACTIVE_WINDOW from the root window (type WINDOW, 32-bit).
 			// AnyPropertyType (0) = return data regardless of the property's actual type.
@@ -585,7 +648,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 				out var prop);
 
 			if (status != 0 || actualType is not 33 /* XA_WINDOW */ || nItems < 1 || prop is 0)
+			{
 				return;
+			}
 
 			try
 			{
@@ -594,7 +659,9 @@ internal partial class XamlIslandHostWindow : IDisposable
 				_focused = activeWindow == _x11Window;
 
 				if (wasFocused && !_focused)
+				{
 					_windowInactivated?.Invoke(this, EventArgs.Empty);
+				}
 			}
 			finally
 			{

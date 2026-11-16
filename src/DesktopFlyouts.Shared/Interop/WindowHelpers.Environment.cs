@@ -30,11 +30,15 @@ internal unsafe static partial class WindowHelpers
 		void AddBar(HWND window)
 		{
 			if (window.IsNull || !seen.Add(window))
+			{
 				return;
+			}
 
 			windows.Add(window);
 			if (PInvoke.IsWindowVisible(window) && TryGetBarBounds(window, out var bounds))
+			{
 				workArea = ExcludeTaskbarFromWorkArea(workArea, bounds, monitor);
+			}
 		}
 
 		foreach (var className in new[] { "Shell_TrayWnd", "Shell_SecondaryTrayWnd" })
@@ -45,7 +49,10 @@ internal unsafe static partial class WindowHelpers
 				if (PInvoke.MonitorFromWindow(window, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST) == monitorHandle)
 				{
 					if (taskbar is null && TryGetBarBounds(window, out var bounds))
+					{
 						taskbar = bounds;
+					}
+
 					AddBar(window);
 				}
 
@@ -72,7 +79,9 @@ internal unsafe static partial class WindowHelpers
 		bounds = default;
 		RECT rect;
 		if (!PInvoke.GetWindowRect(window, &rect) || rect.right <= rect.left || rect.bottom <= rect.top)
+		{
 			return false;
+		}
 
 		bounds = Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
 		return true;
@@ -81,7 +90,9 @@ internal unsafe static partial class WindowHelpers
 	private static HWND FindDesktopBarWindow(string className, HWND after)
 	{
 		fixed (char* name = className)
+		{
 			return PInvoke.FindWindowEx(HWND.Null, after, (PCWSTR)name, default);
+		}
 	}
 }
 #endif

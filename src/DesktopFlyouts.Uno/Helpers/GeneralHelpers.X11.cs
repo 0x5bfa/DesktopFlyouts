@@ -47,7 +47,9 @@ internal static class GeneralHelpers
 		{
 			var sessionAddress = DBusAddress.Session;
 			if (sessionAddress is null)
+			{
 				return;
+			}
 
 			var connection = new DBusConnection(sessionAddress);
 			await connection.ConnectAsync();
@@ -57,7 +59,9 @@ internal static class GeneralHelpers
 
 			var version = await settings.GetVersionAsync();
 			if (version < 2)
+			{
 				return;
+			}
 
 			var result = await settings.ReadOneAsync("org.freedesktop.appearance", "color-scheme");
 			var colorScheme = result.GetUInt32();

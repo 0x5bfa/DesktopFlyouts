@@ -48,11 +48,15 @@ internal unsafe static partial class WindowHelpers
 	internal static Rectangle GetFlyoutWorkAreaRect(Point? anchorPoint = null)
 	{
 		if (TryGetMonitorWorkAreaRect(anchorPoint ?? Point.Empty, out var monitorWorkArea))
+		{
 			return monitorWorkArea;
+		}
 
 		var workArea = GetSystemWorkAreaRect();
 		if (!TryGetTaskbarInfo(out var taskbarRect, out var edge))
+		{
 			return workArea;
+		}
 
 		return edge switch
 		{
@@ -146,13 +150,17 @@ internal unsafe static partial class WindowHelpers
 	internal static bool TryGetTaskbarInfoForBounds(Rectangle bounds, out Rectangle rect, out TaskbarEdge edge)
 	{
 		if (!TryGetTaskbarInfo(out rect, out edge))
+		{
 			return false;
+		}
 
 		const int tolerance = 8;
 		var taskbarSearchBounds = rect;
 		taskbarSearchBounds.Inflate(tolerance, tolerance);
 		if (taskbarSearchBounds.IntersectsWith(bounds))
+		{
 			return true;
+		}
 
 		rect = default;
 		edge = default;

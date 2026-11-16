@@ -116,7 +116,9 @@ internal partial class RootViewModel : ObservableObject
 	{
 		base.OnPropertyChanged(e);
 		if (_initializing)
+		{
 			return;
+		}
 
 		try
 		{
@@ -130,7 +132,10 @@ internal partial class RootViewModel : ObservableObject
 					break;
 				case nameof(SelectedFlyoutExampleIndex):
 					if (SelectedFlyoutExampleIndex < 0 || SelectedFlyoutExampleIndex >= FlyoutExamples.Count)
+					{
 						return;
+					}
+
 					var example = FlyoutExamples.ElementAt(SelectedFlyoutExampleIndex).Key;
 					IsModifiable = example is DesktopFlyoutSampleKind.Customizable;
 					TrayIconManager.Default.SwitchFlyout(example, GetSettings());
@@ -144,7 +149,10 @@ internal partial class RootViewModel : ObservableObject
 				case nameof(FlyoutHeightValue):
 				case nameof(SelectedSystemBackdropIndex):
 					if (IsModifiable)
+					{
 						TrayIconManager.Default.UpdateSettings(GetSettings());
+					}
+
 					break;
 			}
 		}
@@ -170,7 +178,9 @@ internal partial class RootViewModel : ObservableObject
     private void ExecuteToggleFlyoutOpenCommand()
 	{
 		if (SelectedPositionIndex >= 0 && SelectedPositionIndex < FlyoutPositions.Count)
+		{
 			TrayIconManager.Default.ToggleFlyout(FlyoutPositions.ElementAt(SelectedPositionIndex).Key);
+		}
 	}
 
 	private void ShowError(string message)

@@ -139,10 +139,14 @@ public sealed class DesktopFlyoutPosition
 	{
 		position = this;
 		if (_getTrayIconBounds is null)
+		{
 			return true;
+		}
 
 		if (_getTrayIconBounds() is not Rectangle bounds || bounds.Width <= 0 || bounds.Height <= 0)
+		{
 			return false;
+		}
 
 		position = FromTaskbarBounds(bounds);
 		return true;
@@ -175,7 +179,9 @@ public sealed class DesktopFlyoutPosition
 
 		var side = DesktopFlyoutPositionResolver.ResolveTaskbarAnchorSide(overflowBounds ?? anchor, monitorBounds, taskbarEdge);
 		if (overflowBounds is Rectangle overflow)
+		{
 			anchor = DesktopFlyoutPositionResolver.GetOverflowAnchor(anchor, overflow, side);
+		}
 
 		return ForAnchor(anchor, side, AnchorAlignment, TransitionDirection);
 	}

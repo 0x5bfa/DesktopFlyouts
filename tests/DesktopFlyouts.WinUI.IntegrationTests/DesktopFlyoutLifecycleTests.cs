@@ -164,7 +164,7 @@ public sealed class DesktopFlyoutLifecycleTests
 		var reads = 0;
 		var request = CreateTrayRequest(() => { reads++; return bounds; });
 		var openings = 0;
-		flyout.TransitionStateChanged += (_, _) => { if (flyout.TransitionState is DesktopFlyoutTransitionState.Opening) openings++; };
+		flyout.TransitionStateChanged += (_, _) => { if (flyout.TransitionState is DesktopFlyoutTransitionState.Opening) { openings++; } };
 		flyout.Show(request);
 		await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
 		var container = (FrameworkElement)VisualTreeHelper.GetParent(flyout);
@@ -229,12 +229,16 @@ public sealed class DesktopFlyoutLifecycleTests
 	private static SystemBackdropElement? FindBackdropElement(DependencyObject root)
 	{
 		if (root is SystemBackdropElement element)
+		{
 			return element;
+		}
 
 		for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
 		{
 			if (FindBackdropElement(VisualTreeHelper.GetChild(root, i)) is { } child)
+			{
 				return child;
+			}
 		}
 
 		return null;
@@ -252,7 +256,9 @@ public sealed class DesktopFlyoutLifecycleTests
 		private void OnFirstChanceException(object? sender, FirstChanceExceptionEventArgs args)
 		{
 			if (args.Exception.HResult == unchecked((int)0x8001010E))
+			{
 				_errors.Enqueue($"Thread {Environment.CurrentManagedThreadId}: {args.Exception}");
+			}
 		}
 
         internal void AssertNone()

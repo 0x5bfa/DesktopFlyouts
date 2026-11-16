@@ -19,7 +19,9 @@ internal static partial class WindowHelpers
 		// only its actual overlap, so a taskbar already excluded from rcWork is not counted twice.
 		var overlap = Rectangle.Intersect(workArea, taskbarBounds);
 		if (overlap.Width <= 0 || overlap.Height <= 0)
+		{
 			return workArea;
+		}
 
 		var edge = GetTaskbarEdge(taskbarBounds, monitorBounds);
 

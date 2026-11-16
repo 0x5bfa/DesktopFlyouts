@@ -75,7 +75,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		base.OnItemsChanged(e);
 
 		if (_disposed)
+		{
 			return;
+		}
 
 		EnsurePresenter();
 	}
@@ -91,11 +93,17 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	private void SubscribeItemClicks()
 	{
 		if (_presenter is null)
+		{
 			return;
+		}
 
 		foreach (var item in _presenter.Items)
+		{
 			if (item is MenuFlyoutItemBase mfib)
+			{
 				CollectClickableItems(mfib);
+			}
+		}
 	}
 
 	private void CollectClickableItems(MenuFlyoutItemBase item)
@@ -111,19 +119,25 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		if (item is MenuFlyoutSubItem mfsi)
 		{
 			foreach (var child in mfsi.Items)
+			{
 				CollectClickableItems(child);
+			}
 		}
 		else if (item is SplitMenuFlyoutItem smfi)
 		{
 			foreach (var child in smfi.Items)
+			{
 				CollectClickableItems(child);
+			}
 		}
 	}
 
 	private void UnsubscribeItemClicks()
 	{
 		foreach (var mfi in _subscribedItems)
+		{
 			mfi.Click -= OnMenuItemClicked;
+		}
 
 		_subscribedItems.Clear();
 	}
@@ -144,11 +158,15 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	public void Show(Point point)
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		// If a previous show is still pending its deferred layout, hide first.
 		if (_isShowPending || IsOpen)
+		{
 			HideImmediate();
+		}
 
 		EnsurePresenter();
 		SubscribeItemClicks();
@@ -248,7 +266,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	public void Hide()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_isShowPending = false;
 		HideImmediate();
@@ -269,7 +289,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	private void HostWindow_SystemSettingsChanged(object? sender, EventArgs e)
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		UpdateFlyoutTheme();
 	}
@@ -277,7 +299,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	private void HostWindow_Inactivated(object? sender, EventArgs e)
 	{
 		if (_disposed || !IsOpen)
+		{
 			return;
+		}
 
 		Hide();
 	}
@@ -306,8 +330,16 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 
 	private static double Clamp(double value, double min, double max)
 	{
-		if (value < min) return min;
-		if (value > max) return max;
+		if (value < min)
+		{
+			return min;
+		}
+
+		if (value > max)
+		{
+			return max;
+		}
+
 		return value;
 	}
 
@@ -315,7 +347,9 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 		_isShowPending = false;

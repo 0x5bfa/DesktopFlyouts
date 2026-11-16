@@ -39,20 +39,28 @@ internal sealed class TrayIconManager
 			if (_flyout is not null && _selectedExample == example)
 			{
 				if (example is DesktopFlyoutSampleKind.Customizable)
+				{
 					await _flyout.InvokeAsync(settings.Apply);
+				}
+
 				return;
 			}
 
 			var old = _flyout;
 			_flyout = null;
 			if (old is not null)
+			{
 				await old.DisposeAsync();
+			}
 
 			_flyout = await SampleFlyoutWindow<DesktopFlyout>.CreateAsync(() =>
 			{
 				var flyout = CreateFlyout(example);
 				if (example is DesktopFlyoutSampleKind.Customizable)
+				{
 					settings.Apply(flyout);
+				}
+
 				return flyout;
 			});
 			_selectedExample = example;
@@ -64,7 +72,9 @@ internal sealed class TrayIconManager
 		QueueOperation(async () =>
 		{
 			if (_flyout is not null && _selectedExample is DesktopFlyoutSampleKind.Customizable)
+			{
 				await _flyout.InvokeAsync(settings.Apply);
+			}
 		});
 	}
 
@@ -73,7 +83,9 @@ internal sealed class TrayIconManager
 		QueueOperation(async () =>
 		{
 			if (_flyout is not null)
+			{
 				await _flyout.InvokeAsync(flyout => Toggle(flyout, position));
+			}
 		});
 	}
 
@@ -86,9 +98,13 @@ internal sealed class TrayIconManager
     private static void Toggle(DesktopFlyout flyout, DesktopFlyoutPosition position)
 	{
 		if (flyout.TransitionState is not DesktopFlyoutTransitionState.Closed)
+		{
 			flyout.Hide();
+		}
 		else
+		{
 			flyout.Show(position);
+		}
 	}
 
 	private void TrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
@@ -106,26 +122,36 @@ internal sealed class TrayIconManager
 		QueueOperation(async () =>
 		{
 			if (_menu is not null)
+			{
 				await _menu.InvokeAsync(menu =>
 				{
 					if (menu.IsOpen)
+					{
 						menu.Hide();
+					}
+
 					menu.Show(point);
 				});
+			}
 		});
 	}
 
 	private void QueueOperation(Func<Task> operation)
 	{
 		if (!_closing)
+		{
 			_operations = RunOperationAsync(_operations, operation);
+		}
 	}
 
 	private async Task RunOperationAsync(Task previous, Func<Task> operation)
 	{
 		await previous;
 		if (_closing)
+		{
 			return;
+		}
+
 		try
 		{
 			await operation();
@@ -151,12 +177,17 @@ internal sealed class TrayIconManager
 		try
 		{
 			if (_flyout is not null)
+			{
 				await _flyout.DisposeAsync();
+			}
 		}
 		finally
 		{
 			if (_menu is not null)
+			{
 				await _menu.DisposeAsync();
+			}
+
 			_flyout = null;
 			_menu = null;
 		}

@@ -38,11 +38,15 @@ internal sealed unsafe partial class TaskbarFlyoutVisibilityLease : IDisposable
 	{
 		taskbarBounds = default;
 		if (!IsCurrentTaskbarWindow(_taskbarWindow, _taskbarProcessId))
+		{
 			return false;
+		}
 
 		RECT windowBounds;
 		if (!PInvoke.GetWindowRect(_taskbarWindow, &windowBounds))
+		{
 			return false;
+		}
 
 		taskbarBounds = Rectangle.FromLTRB(
 			windowBounds.left,
@@ -62,14 +66,20 @@ internal sealed unsafe partial class TaskbarFlyoutVisibilityLease : IDisposable
 	{
 		var taskbarWindow = FindTaskbarWindowForAnchor(anchorBounds);
 		if (taskbarWindow.IsNull)
+		{
 			return null;
+		}
 
 		uint taskbarProcessId = 0;
 		if (PInvoke.GetWindowThreadProcessId(taskbarWindow, &taskbarProcessId) == 0 || taskbarProcessId == 0)
+		{
 			return null;
+		}
 
 		if (!PInvoke.PostMessage(taskbarWindow, WM_TASKBAR_FLYOUT_VISIBILITY_CHANGE, (WPARAM)(nuint)1, (LPARAM)0))
+		{
 			return null;
+		}
 
 		return new TaskbarFlyoutVisibilityLease(taskbarWindow, taskbarProcessId);
 	}
@@ -77,12 +87,16 @@ internal sealed unsafe partial class TaskbarFlyoutVisibilityLease : IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 
 		if (!IsCurrentTaskbarWindow(_taskbarWindow, _taskbarProcessId))
+		{
 			return;
+		}
 
 		PInvoke.PostMessage(_taskbarWindow, WM_TASKBAR_FLYOUT_VISIBILITY_CHANGE, (WPARAM)0, (LPARAM)0);
 	}
@@ -98,7 +112,9 @@ internal sealed unsafe partial class TaskbarFlyoutVisibilityLease : IDisposable
 		};
 		var anchorMonitor = PInvoke.MonitorFromRect(&anchorRect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
 		if (anchorMonitor.IsNull)
+		{
 			return HWND.Null;
+		}
 
 		foreach (var className in TaskbarWindowClassNames)
 		{
@@ -106,7 +122,9 @@ internal sealed unsafe partial class TaskbarFlyoutVisibilityLease : IDisposable
 			while (!taskbarWindow.IsNull)
 			{
 				if (PInvoke.MonitorFromWindow(taskbarWindow, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST) == anchorMonitor)
+				{
 					return taskbarWindow;
+				}
 
 				taskbarWindow = FindWindowByClass(className, taskbarWindow);
 			}
@@ -118,7 +136,9 @@ internal sealed unsafe partial class TaskbarFlyoutVisibilityLease : IDisposable
 	private static bool IsCurrentTaskbarWindow(HWND taskbarWindow, uint taskbarProcessId)
 	{
 		if (!PInvoke.IsWindow(taskbarWindow))
+		{
 			return false;
+		}
 
 		uint currentProcessId = 0;
 		if (PInvoke.GetWindowThreadProcessId(taskbarWindow, &currentProcessId) == 0
@@ -133,7 +153,9 @@ internal sealed unsafe partial class TaskbarFlyoutVisibilityLease : IDisposable
 			while (!candidate.IsNull)
 			{
 				if (candidate == taskbarWindow)
+				{
 					return true;
+				}
 
 				candidate = FindWindowByClass(className, candidate);
 			}

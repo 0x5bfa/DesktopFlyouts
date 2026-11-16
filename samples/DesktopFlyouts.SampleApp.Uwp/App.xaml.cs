@@ -57,7 +57,10 @@ public partial class App : Application
 	private static async Task ShutdownAsync()
 	{
 		if (_closing)
+		{
 			return;
+		}
+
 		_closing = true;
 
 		try

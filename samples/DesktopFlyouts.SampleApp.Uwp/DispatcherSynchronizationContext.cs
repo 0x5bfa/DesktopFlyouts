@@ -17,7 +17,9 @@ internal sealed class DispatcherSynchronizationContext(CoreDispatcher dispatcher
 	public override void Send(SendOrPostCallback callback, object? state)
 	{
 		if (!dispatcher.HasThreadAccess)
+		{
 			throw new NotSupportedException("Cross-thread synchronous dispatch is not supported.");
+		}
 
 		callback(state);
 	}

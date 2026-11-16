@@ -35,7 +35,9 @@ internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
 		foreach (var target in targets)
 		{
 			if (!_targets.ContainsKey(target))
+			{
 				target.As<IDisposable>().Dispose();
+			}
 		}
 	}
 
@@ -44,14 +46,18 @@ internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
 		base.OnTargetConnected(target, xamlRoot);
 
 		if (_targets.ContainsKey(target))
+		{
 			return;
+		}
 
 		var configuration = CreateConfiguration(target, xamlRoot);
 		var controller = TryCreateController(configuration);
 		// Keep the link available for UI-thread cleanup even if the material is unsupported.
 		_targets[target] = new(controller, configuration);
 		if (controller is null)
+		{
 			return;
+		}
 
 		controller.SetSystemBackdropConfiguration(configuration);
 		controller.AddSystemBackdropTarget(target);
@@ -62,12 +68,16 @@ internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
 		base.OnTargetDisconnected(target);
 
 		if (!_targets.Remove(target, out var state))
+		{
 			return;
+		}
 
 		state.Controller?.RemoveSystemBackdropTarget(target);
 
 		if (state.Controller is IDisposable disposable)
+		{
 			disposable.Dispose();
+		}
 	}
 
 	protected override void OnDefaultSystemBackdropConfigurationChanged(ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
@@ -75,7 +85,9 @@ internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
 		base.OnDefaultSystemBackdropConfigurationChanged(target, xamlRoot);
 
 		if (!_targets.TryGetValue(target, out var state))
+		{
 			return;
+		}
 
 		ApplyConfiguration(state.Configuration, target, xamlRoot);
 		state.Controller?.SetSystemBackdropConfiguration(state.Configuration);

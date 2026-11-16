@@ -119,13 +119,17 @@ internal static partial class WindowHelpers
 
 		var display = OpenDisplay();
 		if (display == IntPtr.Zero)
+		{
 			return false;
+		}
 
 		try
 		{
 			var rootWindow = XDefaultRootWindow(display);
 			if (rootWindow == IntPtr.Zero)
+			{
 				return false;
+			}
 
 			return TryReadScreenDimensions(display, out screenBounds);
 		}
@@ -144,13 +148,17 @@ internal static partial class WindowHelpers
 
 		var display = OpenDisplay();
 		if (display == IntPtr.Zero)
+		{
 			return false;
+		}
 
 		try
 		{
 			var rootWindow = XDefaultRootWindow(display);
 			if (rootWindow == IntPtr.Zero || !TryReadScreenDimensions(display, out var screenRect))
+			{
 				return false;
+			}
 
 			// EWMH struts identify panels that reserve screen space. Third-party panels that
 			// do not publish these properties cannot be detected here.
@@ -211,12 +219,16 @@ internal static partial class WindowHelpers
 		const int tolerance = 8;
 
 		if (XQueryTree(display, rootWindow, out _, out _, out var children, out var nchildren) == 0)
+		{
 			return false;
+		}
 
 		try
 		{
 			if (nchildren == 0 || children == IntPtr.Zero)
+			{
 				return false;
+			}
 
 			var netWmStrutPartial = XInternAtom(display, "_NET_WM_STRUT_PARTIAL", false);
 			var netWmStrut = XInternAtom(display, "_NET_WM_STRUT", false);
@@ -340,7 +352,9 @@ internal static partial class WindowHelpers
 		finally
 		{
 			if (children != IntPtr.Zero)
+			{
 				XFree(children);
+			}
 		}
 
 		return false;
@@ -365,7 +379,9 @@ internal static partial class WindowHelpers
 			out var nItems, out _, out var prop);
 
 		if (result != 0 || actualType is 0 || nItems is 0 || prop is 0)
+		{
 			return false;
+		}
 
 		try
 		{

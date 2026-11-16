@@ -112,7 +112,9 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		foreach (var item in items)
 		{
 			if (!item.Length.IsStar)
+			{
 				continue;
+			}
 
 			var allocatedLength = hasFiniteLength
 				? GetWeightedLength(remainingLength, item.Length, starWeight)
@@ -185,7 +187,9 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		foreach (var child in Children)
 		{
 			if (child is not UIElement element)
+			{
 				continue;
+			}
 
 			var island = GetIsland(element);
 			if (island is null || island.Visibility is Visibility.Visible)
@@ -210,11 +214,15 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		foreach (var child in Children)
 		{
 			if (child is not UIElement element)
+			{
 				continue;
+			}
 
 			var island = GetIsland(element);
 			if (island is not null && island.Visibility is not Visibility.Visible)
+			{
 				element.Arrange(new(0, 0, 0, 0));
+			}
 		}
 	}
 
@@ -230,7 +238,9 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		while (current is not null)
 		{
 			if (current is DesktopFlyout flyout)
+			{
 				return flyout;
+			}
 
 			current = VisualTreeHelper.GetParent(current);
 		}
@@ -294,7 +304,9 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 	private static void OnLayoutPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
 	{
 		if (dependencyObject is not DesktopFlyoutIslandsPanel panel)
+		{
 			return;
+		}
 
 		panel.InvalidateMeasure();
 	}

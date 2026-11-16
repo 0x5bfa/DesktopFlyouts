@@ -229,7 +229,9 @@ public sealed unsafe class TaskbarOverflowFlyoutMonitorTests
 		thread.Start();
 		Assert.IsTrue(thread.Join(TimeSpan.FromSeconds(5)), "The STA test thread did not finish in time.");
 		if (failure is not null)
+		{
 			Assert.Fail($"STA integration test failed: {failure}");
+		}
 	}
 
 	private sealed class DeferredDispatcher
@@ -247,7 +249,9 @@ public sealed unsafe class TaskbarOverflowFlyoutMonitorTests
 		internal void Drain()
 		{
 			while (_pending.TryDequeue(out var callback))
+			{
 				callback();
+			}
 		}
 	}
 
@@ -330,7 +334,10 @@ public sealed unsafe class TaskbarOverflowFlyoutMonitorTests
 		{
 			var stopwatch = Stopwatch.StartNew();
 			while (!predicate() && stopwatch.Elapsed < TimeSpan.FromSeconds(2))
+			{
 				PumpOnce();
+			}
+
 			Assert.IsTrue(predicate(), "Timed out while waiting for a WinEvent callback.");
 		}
 
@@ -338,7 +345,9 @@ public sealed unsafe class TaskbarOverflowFlyoutMonitorTests
 		{
 			var stopwatch = Stopwatch.StartNew();
 			while (stopwatch.Elapsed < duration)
+			{
 				PumpOnce();
+			}
 		}
 
 		private void PumpOnce()
@@ -365,12 +374,16 @@ public sealed unsafe class TaskbarOverflowFlyoutMonitorTests
 			foreach (var window in _windows)
 			{
 				if (PInvoke.IsWindow(window))
+				{
 					PInvoke.DestroyWindow(window);
+				}
 			}
 
 			PumpFor(TimeSpan.FromMilliseconds(30));
 			fixed (char* className = OverflowWindowClass)
+			{
 				PInvoke.UnregisterClass((PCWSTR)className, _instance);
+			}
 		}
 	}
 

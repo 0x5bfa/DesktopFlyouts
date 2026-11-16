@@ -14,10 +14,14 @@ internal static class BackdropControllerHelpers
 	internal static DesktopAcrylicController? GetAcrylicController(bool useLightTheme)
 	{
 		if (!DesktopAcrylicController.IsSupported())
+		{
 			return null;
+		}
 
 		if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
+		{
 			return GetAccentedAcrylicController();
+		}
 
 		return useLightTheme
 			? GetLightAcrylicController()
@@ -27,10 +31,14 @@ internal static class BackdropControllerHelpers
 	internal static MicaController? GetMicaController(bool useLightTheme)
 	{
 		if (!MicaController.IsSupported())
+		{
 			return null;
+		}
 
 		if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
+		{
 			return GetAccentedMicaController();
+		}
 
 		return useLightTheme
 			? GetLightMicaController()

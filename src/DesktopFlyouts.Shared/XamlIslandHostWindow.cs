@@ -14,6 +14,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
+using System.Threading;
 
 #if UWP
 using System.Runtime.InteropServices.Marshalling;
@@ -37,7 +38,7 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 {
 	private const string WindowClassNamePrefix = "DesktopFlyoutHostClass";
 	private const string WindowName = "DesktopFlyoutHostWindow";
-	private static readonly object s_cbtHookTargetsLock = new();
+	private static readonly Lock s_cbtHookTargetsLock = new();
 	private static readonly Dictionary<uint, List<XamlIslandHostWindow>> s_cbtHookTargetsByThread = [];
 
 	private readonly WNDPROC _wndProc;
@@ -131,7 +132,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	internal void SetContent(UIElement content)
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		DesktopWindowXamlSource!.Content = content;
 		ApplyActivationModeToWindows();
@@ -140,7 +143,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	internal void PreserveActivationState()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_preservedForegroundHWnd = PInvoke.GetForegroundWindow();
 		_preservedActiveHWnd = PInvoke.GetActiveWindow();
@@ -150,22 +155,32 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	internal void RestoreActivationState()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		if (!_preservedForegroundHWnd.IsNull)
+		{
 			PInvoke.SetForegroundWindow(_preservedForegroundHWnd);
+		}
 
 		if (!_preservedActiveHWnd.IsNull)
+		{
 			PInvoke.SetActiveWindow(_preservedActiveHWnd);
+		}
 
 		if (!_preservedFocusHWnd.IsNull)
+		{
 			PInvoke.SetFocus(_preservedFocusHWnd);
+		}
 	}
 
 	internal void MoveAndResize(RectInt32 rect, bool activate = true)
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		RECT currentBounds;
 		if (PInvoke.GetWindowRect(HWnd, &currentBounds)
@@ -190,19 +205,25 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	internal void SetHWndRectRegion(RectInt32 rect)
 	{
 		if (_disposed || _windowRegion?.Equals(rect) == true)
+		{
 			return;
+		}
 
 		var hostUpdated = SetWindowRectRegion(HWnd, rect);
 		var islandUpdated = SetWindowRectRegion(_xamlHwnd, rect);
 		if (hostUpdated && islandUpdated)
+		{
 			_windowRegion = rect;
+		}
 	}
 
 	private static bool SetWindowRectRegion(HWND hWnd, RectInt32 rect)
 	{
 		HRGN region = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
 		if (region.IsNull)
+		{
 			return false;
+		}
 
 		if (PInvoke.SetWindowRgn(hWnd, region, false) == 0)
 		{
@@ -216,7 +237,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	internal ValueTask UpdateWindowVisibility(bool isVisible, bool activate = true)
 	{
 		if (_disposed)
+		{
 			return default;
+		}
 
 		var command = isVisible
 			? activate ? SHOW_WINDOW_CMD.SW_SHOW : SHOW_WINDOW_CMD.SW_SHOWNOACTIVATE
@@ -229,9 +252,13 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 		if (isVisible)
 		{
 			if (activate)
+			{
 				DesktopWindowXamlSource?.SiteBridge.Show();
+			}
 			else
+			{
 				PInvoke.ShowWindow(_xamlHwnd, command);
+			}
 		}
 		else
 		{
@@ -244,7 +271,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 			ApplyActivationModeToWindows();
 
 			if (activate)
+			{
 				PInvoke.SetForegroundWindow(HWnd);
+			}
 		}
 
 		return default;
@@ -253,7 +282,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	internal void SetActivationMode(DesktopFlyoutActivationMode activationMode)
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_activationMode = activationMode;
 		ApplyActivationModeToWindows();
@@ -264,15 +295,21 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 		var neverActivate = _activationMode is DesktopFlyoutActivationMode.NeverActivate;
 		UpdateCbtHook(neverActivate);
 		if (neverActivate)
+		{
 			RefreshXamlIslandWindowSubclasses();
+		}
 
 		SetNoActivateStyle(HWnd, neverActivate);
 
 		foreach (var hWnd in _subclassedXamlWndProcs.Keys)
+		{
 			SetNoActivateStyle((HWND)hWnd, neverActivate);
+		}
 
 		if (!neverActivate)
+		{
 			UnsubclassXamlIslandWindows();
+		}
 	}
 
 	private void UpdateCbtHook(bool enabled)
@@ -289,7 +326,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	private void EnsureCbtHook()
 	{
 		if (_cbtHook != HHOOK.Null)
+		{
 			return;
+		}
 
 		_cbtHookThreadId = PInvoke.GetCurrentThreadId();
 		_cbtHook = PInvoke.SetWindowsHookEx(
@@ -299,13 +338,17 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 			_cbtHookThreadId);
 
 		if (_cbtHook != HHOOK.Null)
+		{
 			RegisterCbtHookTarget(_cbtHookThreadId);
+		}
 	}
 
 	private void RemoveCbtHook()
 	{
 		if (_cbtHook == HHOOK.Null)
+		{
 			return;
+		}
 
 		PInvoke.UnhookWindowsHookEx(_cbtHook);
 		_cbtHook = default;
@@ -324,23 +367,31 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 			}
 
 			if (!targets.Contains(this))
+			{
 				targets.Add(this);
+			}
 		}
 	}
 
 	private void UnregisterCbtHookTarget(uint threadId)
 	{
 		if (threadId == 0)
+		{
 			return;
+		}
 
 		lock (s_cbtHookTargetsLock)
 		{
 			if (!s_cbtHookTargetsByThread.TryGetValue(threadId, out var targets))
+			{
 				return;
+			}
 
 			targets.Remove(this);
 			if (targets.Count == 0)
+			{
 				s_cbtHookTargetsByThread.Remove(threadId);
+			}
 		}
 	}
 
@@ -368,7 +419,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	internal bool NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
 	{
 		if (_disposed || _xamlHwnd.IsNull || _activationMode is DesktopFlyoutActivationMode.NeverActivate)
+		{
 			return false;
+		}
 
 		PInvoke.SetFocus(_xamlHwnd);
 
@@ -379,7 +432,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	private static void SetNoActivateStyle(HWND hWnd, bool enabled)
 	{
 		if (hWnd.IsNull)
+		{
 			return;
+		}
 
 		var exStyle = (WINDOW_EX_STYLE)PInvoke.GetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
 		exStyle = enabled
@@ -404,7 +459,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	private void RefreshXamlIslandWindowSubclasses()
 	{
 		if (_xamlHwnd.IsNull)
+		{
 			return;
+		}
 
 		SubclassXamlIslandWindow(_xamlHwnd);
 		SubclassChildWindows(HWnd);
@@ -425,7 +482,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	private void SubclassXamlIslandWindow(HWND hWnd)
 	{
 		if (hWnd.IsNull || _subclassedXamlWndProcs.ContainsKey((nint)hWnd.Value))
+		{
 			return;
+		}
 
 		var previousWndProc = (nint)PInvoke.SetWindowLongPtr(
 			hWnd,
@@ -441,7 +500,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 		{
 			var hWnd = (HWND)item.Key;
 			if (hWnd.IsNull)
+			{
 				continue;
+			}
 
 			PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC, item.Value);
 		}
@@ -514,10 +575,14 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 					var y = HIWORD(lParam);
 
 					if (_xamlHwnd != default)
+					{
 						PInvoke.SetWindowPos(_xamlHwnd, HWND.Null, 0, 0, x, y, SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
+					}
 
 					if (_coreHwnd != default)
+					{
 						PInvoke.SendMessage(_coreHwnd, PInvoke.WM_SIZE, (WPARAM)(nuint)x, y);
+					}
 				}
 				break;
 #endif
@@ -527,13 +592,19 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 #if UWP
 					// Process CoreWindow message
 					if (_coreHwnd != default)
+					{
 						PInvoke.SendMessage(_coreHwnd, uMsg, wParam, lParam);
+					}
 #endif
 					if (uMsg == PInvoke.WM_SETTINGCHANGE)
+					{
 						DisplayAreaChanged?.Invoke(this, EventArgs.Empty);
+					}
 
 					if (uMsg != PInvoke.WM_SETTINGCHANGE || (uint)(nuint)wParam != (uint)Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETWORKAREA)
+					{
 						SystemSettingsChanged?.Invoke(this, EventArgs.Empty);
+					}
 				}
 				break;
 			case PInvoke.WM_DISPLAYCHANGE:
@@ -550,7 +621,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 
 #if UWP
 					if (_xamlHwnd != default)
+					{
 						PInvoke.SetFocus(_xamlHwnd);
+					}
 
 					return (LRESULT)0;
 #else
@@ -560,7 +633,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 			case PInvoke.WM_ACTIVATE:
 				{
 					if (LOWORD((nint)(nuint)wParam) == PInvoke.WA_INACTIVE)
+					{
 						WindowInactivated?.Invoke(this, EventArgs.Empty);
+					}
 				}
 				break;
 			case PInvoke.WM_MOUSEACTIVATE:
@@ -633,23 +708,35 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	private bool IsFlyoutWindow(HWND hWnd)
 	{
 		if (hWnd.IsNull)
+		{
 			return false;
+		}
 
 		if (hWnd == HWnd || hWnd == _xamlHwnd)
+		{
 			return true;
+		}
 
 		if (_subclassedXamlWndProcs.ContainsKey((nint)hWnd.Value))
+		{
 			return true;
+		}
 
 		if (!HWnd.IsNull && PInvoke.IsChild(HWnd, hWnd))
+		{
 			return true;
+		}
 
 		if (!_xamlHwnd.IsNull && PInvoke.IsChild(_xamlHwnd, hWnd))
+		{
 			return true;
+		}
 
 		var rootHWnd = PInvoke.GetAncestor(hWnd, GET_ANCESTOR_FLAGS.GA_ROOT);
 		if (rootHWnd == HWnd || rootHWnd == _xamlHwnd)
+		{
 			return true;
+		}
 
 		var rootOwnerHWnd = PInvoke.GetAncestor(hWnd, GET_ANCESTOR_FLAGS.GA_ROOTOWNER);
 		return rootOwnerHWnd == HWnd || rootOwnerHWnd == _xamlHwnd;
@@ -658,7 +745,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	private LRESULT CallPreviousXamlWndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		if (!_subclassedXamlWndProcs.TryGetValue((nint)hWnd.Value, out var previousWndProc) || previousWndProc == 0)
+		{
 			return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
+		}
 
 		return PInvoke.CallWindowProc(
 			(delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)(void*)previousWndProc,
@@ -671,7 +760,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 
@@ -680,7 +771,9 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 			RemoveCbtHook();
 			UnsubclassXamlIslandWindows();
 			if (DesktopWindowXamlSource is not null)
+			{
 				DesktopWindowXamlSource.Content = null;
+			}
 
 			DesktopWindowXamlSource?.Dispose();
 		}

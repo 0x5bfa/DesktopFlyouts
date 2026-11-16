@@ -41,12 +41,16 @@ internal sealed unsafe class TaskbarOverflowFlyoutMonitor : IDisposable
 	internal static TaskbarOverflowFlyoutMonitor? TryCreate(Rectangle anchorBounds, Func<Action, bool> tryDispatch, Action onClosed)
 	{
 		if (!WindowHelpers.TryGetTaskbarOverflowWindowForBounds(anchorBounds, out var overflowWindow))
+		{
 			return null;
+		}
 
 		uint processId = 0;
 		var threadId = PInvoke.GetWindowThreadProcessId(overflowWindow, &processId);
 		if (threadId == 0 || processId == 0)
+		{
 			return null;
+		}
 
 		var monitor = new TaskbarOverflowFlyoutMonitor(overflowWindow, tryDispatch, onClosed);
 		monitor._eventHook = PInvoke.SetWinEventHook(
@@ -67,7 +71,9 @@ internal sealed unsafe class TaskbarOverflowFlyoutMonitor : IDisposable
 
 		// Cover a close between finding the visible window and installing the hook.
 		if (!PInvoke.IsWindow(overflowWindow) || !PInvoke.IsWindowVisible(overflowWindow))
+		{
 			monitor.QueueClosed();
+		}
 
 		return monitor;
 	}
@@ -76,11 +82,15 @@ internal sealed unsafe class TaskbarOverflowFlyoutMonitor : IDisposable
 	{
 		bounds = default;
 		if (_disposed || !PInvoke.IsWindowVisible(_overflowWindow))
+		{
 			return false;
+		}
 
 		RECT rect;
 		if (!PInvoke.GetWindowRect(_overflowWindow, &rect) || rect.right <= rect.left || rect.bottom <= rect.top)
+		{
 			return false;
+		}
 
 		bounds = Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
 		return true;
@@ -89,7 +99,9 @@ internal sealed unsafe class TaskbarOverflowFlyoutMonitor : IDisposable
 	public void Dispose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		_disposed = true;
 		if (!_eventHook.IsNull)
@@ -119,17 +131,23 @@ internal sealed unsafe class TaskbarOverflowFlyoutMonitor : IDisposable
 	private void QueueClosed()
 	{
 		if (_disposed || _closeQueued)
+		{
 			return;
+		}
 
 		_closeQueued = true;
 		if (!_tryDispatch(CompleteClose))
+		{
 			Dispose();
+		}
 	}
 
 	private void CompleteClose()
 	{
 		if (_disposed)
+		{
 			return;
+		}
 
 		Debug.WriteLine($"[DesktopFlyout] Notification-area overflow closed; hwnd=0x{(nint)_overflowWindow.Value:X}.");
 		Dispose();

@@ -208,24 +208,32 @@ public partial class DesktopFlyout
 	private static void OnFlyoutSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
 	{
 		if (dependencyObject is DesktopFlyout flyout)
+		{
 			flyout.UpdateOpenFlyoutLayout();
+		}
 	}
 
 	private static void OnAutoCloseDelayPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
 	{
 		if (dependencyObject is DesktopFlyout flyout)
+		{
 			flyout.RestartAutoCloseTimer();
+		}
 	}
 
 	partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		if (e.NewValue is not IEnumerable<DesktopFlyoutIsland> newIslands)
+		{
 			return;
+		}
 
 		Islands.Clear();
 
 		foreach (var island in newIslands)
+		{
 			Islands.Add(island);
+		}
 
 		UpdateIslands();
 	}
@@ -233,7 +241,9 @@ public partial class DesktopFlyout
 	partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		if (ReferenceEquals(e.NewValue, e.OldValue))
+		{
 			return;
+		}
 
 		UpdateIslands();
 		UpdateOpenFlyoutLayout();
@@ -242,7 +252,9 @@ public partial class DesktopFlyout
 	partial void OnBackdropKindPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		if ((DesktopFlyoutBackdropKind)e.NewValue == (DesktopFlyoutBackdropKind)e.OldValue)
+		{
 			return;
+		}
 
 		UpdateIslandBackdrops();
 	}
@@ -250,7 +262,9 @@ public partial class DesktopFlyout
 	partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		if ((DesktopFlyoutActivationMode)e.NewValue == (DesktopFlyoutActivationMode)e.OldValue)
+		{
 			return;
+		}
 
 		_host?.SetActivationMode((DesktopFlyoutActivationMode)e.NewValue);
 		UpdateFocusSuppression();
@@ -259,12 +273,18 @@ public partial class DesktopFlyout
 	partial void OnHideOnLostFocusPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		if (_host is null || _disposed)
+		{
 			return;
+		}
 
 		if ((bool)e.NewValue)
+		{
 			_host.WindowInactivated += HostWindow_Inactivated;
+		}
 		else
+		{
 			_host.WindowInactivated -= HostWindow_Inactivated;
+		}
 	}
 #endif
 }

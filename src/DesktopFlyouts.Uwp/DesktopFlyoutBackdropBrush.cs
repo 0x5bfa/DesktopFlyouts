@@ -50,7 +50,9 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 	protected override void OnConnected()
 	{
 		if (_connected)
+		{
 			return;
+		}
 
 		_connected = true;
 		_capabilities = CompositionCapabilities.GetForCurrentView();
@@ -92,7 +94,9 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 	private void UpdateBrush()
 	{
 		if (!_connected)
+		{
 			return;
+		}
 
 		UpdateFallbackColor();
 		ClearCompositionResources();
@@ -113,11 +117,15 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 			if (Kind is DesktopFlyoutBackdropKind.Mica)
 			{
 				if (!ApiInformation.IsMethodPresent("Windows.UI.Composition.Compositor", "TryCreateBlurredWallpaperBackdropBrush"))
+				{
 					return;
+				}
 
 				_backdrop = compositor.TryCreateBlurredWallpaperBackdropBrush();
 				if (_backdrop is null)
+				{
 					return;
+				}
 
 				CompositionBrush = DesktopFlyoutMicaEffect.Create(
 					compositor, _backdrop, tintColor, tintOpacity, luminosityOpacity);
@@ -184,7 +192,9 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 	private void QueueRefresh()
 	{
 		if (_connected)
+		{
 			_ = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, UpdateBrush);
+		}
 	}
 
 	private void Capabilities_Changed(CompositionCapabilities sender, object args)

@@ -338,6 +338,7 @@ public unsafe partial class SystemTrayIcon : IDisposable
 		{
 			return;
 		}
+
 		NOTIFYICONDATAW data = GetNotifyIconData();
 		if (!PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, &data))
 		{
@@ -360,21 +361,20 @@ public unsafe partial class SystemTrayIcon : IDisposable
 		data.szTip = Tooltip ?? string.Empty;
 		data.dwState = _IsVisible ? 0U : NOTIFY_ICON_STATE.NIS_HIDDEN;
 		data.uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE | NOTIFY_ICON_DATA_FLAGS.NIF_ICON | NOTIFY_ICON_DATA_FLAGS.NIF_TIP | NOTIFY_ICON_DATA_FLAGS.NIF_STATE | NOTIFY_ICON_DATA_FLAGS.NIF_GUID | NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP;
+
 		return data;
 	}
 
 	private static HICON LoadIconFromPath(string iconPath)
 	{
 		if (!File.Exists(iconPath))
+		{
 			throw new FileNotFoundException($"Icon file not found: {iconPath}", iconPath);
+		}
 
 		HICON hIcon = (HICON)(void*)PInvoke.LoadImage(
-			HINSTANCE.Null,
-			(PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in iconPath.GetPinnableReference())),
-			GDI_IMAGE_TYPE.IMAGE_ICON,
-			cx: 0, cy: 0,
-			IMAGE_FLAGS.LR_LOADFROMFILE | IMAGE_FLAGS.LR_DEFAULTSIZE);
-
+			HINSTANCE.Null, (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in iconPath.GetPinnableReference())),
+			GDI_IMAGE_TYPE.IMAGE_ICON, cx: 0, cy: 0, IMAGE_FLAGS.LR_LOADFROMFILE | IMAGE_FLAGS.LR_DEFAULTSIZE);
 		if (hIcon.IsNull)
 		{
 			throw new ArgumentOutOfRangeException(nameof(iconPath), $"LoadImage failed with 0x{Marshal.GetLastWin32Error():X8}");
