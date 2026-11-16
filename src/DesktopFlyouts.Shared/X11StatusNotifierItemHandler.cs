@@ -55,13 +55,17 @@ class X11StatusNotifierItemHandler : DBusHandler, IStatusNotifierItemHandler, IS
 		return default;
 	}
 
-	public ValueTask HandleGetPropertyAsync(IStatusNotifierItemHandler.GetPropertyContext context)
-		=> context.Handle(this);
+    public ValueTask HandleGetPropertyAsync(IStatusNotifierItemHandler.GetPropertyContext context)
+    {
+        return context.Handle(this);
+    }
 
-	public ValueTask HandleGetAllPropertiesAsync(IStatusNotifierItemHandler.GetAllPropertiesContext context)
-		=> context.Handle(this);
+    public ValueTask HandleGetAllPropertiesAsync(IStatusNotifierItemHandler.GetAllPropertiesContext context)
+    {
+        return context.Handle(this);
+    }
 
-	public void SetIcon((int, int, byte[]) dbusPixmap)
+    public void SetIcon((int, int, byte[]) dbusPixmap)
 	{
 		IconPixmap = new[] { dbusPixmap };
 		IconName = "";

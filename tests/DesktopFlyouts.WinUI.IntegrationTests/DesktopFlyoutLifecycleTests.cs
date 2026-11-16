@@ -255,8 +255,14 @@ public sealed class DesktopFlyoutLifecycleTests
 				_errors.Enqueue($"Thread {Environment.CurrentManagedThreadId}: {args.Exception}");
 		}
 
-		internal void AssertNone() => Assert.IsTrue(_errors.IsEmpty, string.Join(Environment.NewLine, _errors));
+        internal void AssertNone()
+        {
+            Assert.IsTrue(_errors.IsEmpty, string.Join(Environment.NewLine, _errors));
+        }
 
-		public void Dispose() => AppDomain.CurrentDomain.FirstChanceException -= OnFirstChanceException;
-	}
+        public void Dispose()
+        {
+            AppDomain.CurrentDomain.FirstChanceException -= OnFirstChanceException;
+        }
+    }
 }

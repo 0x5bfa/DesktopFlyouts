@@ -177,27 +177,36 @@ public sealed class DesktopFlyoutPositionResolverTests
 		Assert.IsTrue(workArea.Contains(resolved.Bounds));
 	}
 
-	private static int VisualContact(Rectangle frame, DesktopFlyoutAnchorSide side, int ownMargin) => side switch
-	{
-		DesktopFlyoutAnchorSide.Above => frame.Bottom - ownMargin,
-		DesktopFlyoutAnchorSide.Below => frame.Top + ownMargin,
-		DesktopFlyoutAnchorSide.Left => frame.Right - ownMargin,
-		_ => frame.Left + ownMargin,
-	};
+    private static int VisualContact(Rectangle frame, DesktopFlyoutAnchorSide side, int ownMargin)
+    {
+        return side switch
+        {
+            DesktopFlyoutAnchorSide.Above => frame.Bottom - ownMargin,
+            DesktopFlyoutAnchorSide.Below => frame.Top + ownMargin,
+            DesktopFlyoutAnchorSide.Left => frame.Right - ownMargin,
+            _ => frame.Left + ownMargin,
+        };
+    }
 
-	private static int ContactCoordinate(Rectangle anchor, DesktopFlyoutAnchorSide side) => side switch
-	{
-		DesktopFlyoutAnchorSide.Above => anchor.Top,
-		DesktopFlyoutAnchorSide.Below => anchor.Bottom,
-		DesktopFlyoutAnchorSide.Left => anchor.Left,
-		_ => anchor.Right,
-	};
+    private static int ContactCoordinate(Rectangle anchor, DesktopFlyoutAnchorSide side)
+    {
+        return side switch
+        {
+            DesktopFlyoutAnchorSide.Above => anchor.Top,
+            DesktopFlyoutAnchorSide.Below => anchor.Bottom,
+            DesktopFlyoutAnchorSide.Left => anchor.Left,
+            _ => anchor.Right,
+        };
+    }
 
-	private static int ShellVisualEdge(Rectangle overflow, DesktopFlyoutAnchorSide side, int shellInset) => side switch
-	{
-		DesktopFlyoutAnchorSide.Above => overflow.Top + shellInset,
-		DesktopFlyoutAnchorSide.Below => overflow.Bottom - shellInset,
-		DesktopFlyoutAnchorSide.Left => overflow.Left + shellInset,
-		_ => overflow.Right - shellInset,
-	};
+    private static int ShellVisualEdge(Rectangle overflow, DesktopFlyoutAnchorSide side, int shellInset)
+    {
+        return side switch
+        {
+            DesktopFlyoutAnchorSide.Above => overflow.Top + shellInset,
+            DesktopFlyoutAnchorSide.Below => overflow.Bottom - shellInset,
+            DesktopFlyoutAnchorSide.Left => overflow.Left + shellInset,
+            _ => overflow.Right - shellInset,
+        };
+    }
 }

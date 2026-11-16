@@ -301,10 +301,12 @@ public sealed unsafe class TaskbarOverflowFlyoutMonitorTests
 			return window;
 		}
 
-		internal TaskbarOverflowFlyoutMonitor CreateMonitor(HWND window, DeferredDispatcher dispatcher, Action onClosed) =>
-			CreateMonitor(window, dispatcher.TryEnqueue, onClosed);
+        internal TaskbarOverflowFlyoutMonitor CreateMonitor(HWND window, DeferredDispatcher dispatcher, Action onClosed)
+        {
+            return CreateMonitor(window, dispatcher.TryEnqueue, onClosed);
+        }
 
-		internal TaskbarOverflowFlyoutMonitor CreateMonitor(HWND window, Func<Action, bool> tryDispatch, Action onClosed)
+        internal TaskbarOverflowFlyoutMonitor CreateMonitor(HWND window, Func<Action, bool> tryDispatch, Action onClosed)
 		{
 			var bounds = GetBounds(window);
 			var monitor = TaskbarOverflowFlyoutMonitor.TryCreate(bounds, tryDispatch, onClosed);
@@ -372,7 +374,9 @@ public sealed unsafe class TaskbarOverflowFlyoutMonitorTests
 		}
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-	private static LRESULT WindowProcedure(HWND window, uint message, WPARAM wParam, LPARAM lParam) =>
-		PInvoke.DefWindowProc(window, message, wParam, lParam);
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+    private static LRESULT WindowProcedure(HWND window, uint message, WPARAM wParam, LPARAM lParam)
+    {
+        return PInvoke.DefWindowProc(window, message, wParam, lParam);
+    }
 }

@@ -30,6 +30,9 @@ internal sealed record FlyoutSettings(
 		flyout.BackdropKind = BackdropKind;
 	}
 
-	private static GridLength ToGridLength(double value) => double.IsFinite(value) && value > 0
-		? new GridLength(value) : GridLength.Auto;
+    private static GridLength ToGridLength(double value)
+    {
+        return double.IsFinite(value) && value > 0
+        ? new GridLength(value) : GridLength.Auto;
+    }
 }

@@ -22,5 +22,8 @@ internal sealed class DispatcherSynchronizationContext(CoreDispatcher dispatcher
 		callback(state);
 	}
 
-	public override SynchronizationContext CreateCopy() => new DispatcherSynchronizationContext(dispatcher);
+    public override SynchronizationContext CreateCopy()
+    {
+        return new DispatcherSynchronizationContext(dispatcher);
+    }
 }

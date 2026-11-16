@@ -119,9 +119,12 @@ public sealed class TaskbarLayoutMonitorTests
 		return window;
 	}
 
-	private static HWND GetHandle(Window window) => (HWND)WinRT.Interop.WindowNative.GetWindowHandle(window);
+    private static HWND GetHandle(Window window)
+    {
+        return (HWND)WinRT.Interop.WindowNative.GetWindowHandle(window);
+    }
 
-	private static void Move(HWND hwnd, int x)
+    private static void Move(HWND hwnd, int x)
 	{
 		Assert.IsTrue(PInvoke.SetWindowPos(hwnd, HWND.Null, x, -32000, 240, 80,
 			SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE));

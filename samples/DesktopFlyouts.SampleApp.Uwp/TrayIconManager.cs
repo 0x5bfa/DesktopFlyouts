@@ -77,11 +77,13 @@ internal sealed class TrayIconManager
 		});
 	}
 
-	internal bool TryPreTranslateMessage(nint message) =>
-		(_flyout?.TryPreTranslateMessage(message) ?? false) ||
-		(_menu?.TryPreTranslateMessage(message) ?? false);
+    internal bool TryPreTranslateMessage(nint message)
+    {
+        return (_flyout?.TryPreTranslateMessage(message) ?? false) ||
+        (_menu?.TryPreTranslateMessage(message) ?? false);
+    }
 
-	private static void Toggle(DesktopFlyout flyout, DesktopFlyoutPosition position)
+    private static void Toggle(DesktopFlyout flyout, DesktopFlyoutPosition position)
 	{
 		if (flyout.TransitionState is not DesktopFlyoutTransitionState.Closed)
 			flyout.Hide();
@@ -160,15 +162,18 @@ internal sealed class TrayIconManager
 		}
 	}
 
-	private static DesktopFlyout CreateFlyout(DesktopFlyoutSampleKind example) => example switch
-	{
-		DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
-		DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
-		DesktopFlyoutSampleKind.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
-		DesktopFlyoutSampleKind.StartMenuStyle => new StartMenuStyleFlyout(),
-		DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
-		DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
-		DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
-		_ => new CustomizableFlyout(),
-	};
+    private static DesktopFlyout CreateFlyout(DesktopFlyoutSampleKind example)
+    {
+        return example switch
+        {
+            DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
+            DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
+            DesktopFlyoutSampleKind.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
+            DesktopFlyoutSampleKind.StartMenuStyle => new StartMenuStyleFlyout(),
+            DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
+            DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
+            DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
+            _ => new CustomizableFlyout(),
+        };
+    }
 }

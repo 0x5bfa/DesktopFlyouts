@@ -27,14 +27,17 @@ internal sealed class SampleFlyoutWindow<T> where T : Control, IDisposable
 		return Task.FromResult(new SampleFlyoutWindow<T>(factory()));
 	}
 
-	internal bool TryPreTranslateMessage(nint message) => _content switch
-	{
-		DesktopFlyout flyout => flyout.TryPreTranslateMessage(message),
-		DesktopMenuFlyout menu => menu.TryPreTranslateMessage(message),
-		_ => false,
-	};
+    internal bool TryPreTranslateMessage(nint message)
+    {
+        return _content switch
+        {
+            DesktopFlyout flyout => flyout.TryPreTranslateMessage(message),
+            DesktopMenuFlyout menu => menu.TryPreTranslateMessage(message),
+            _ => false,
+        };
+    }
 
-	internal async Task InvokeAsync(Action<T> action)
+    internal async Task InvokeAsync(Action<T> action)
 	{
 		Exception? failure = null;
 		var invoked = false;
@@ -57,5 +60,8 @@ internal sealed class SampleFlyoutWindow<T> where T : Control, IDisposable
 			throw new InvalidOperationException("The flyout dispatcher stopped before handling the request.");
 	}
 
-	internal Task DisposeAsync() => InvokeAsync(content => content.Dispose());
+    internal Task DisposeAsync()
+    {
+        return InvokeAsync(content => content.Dispose());
+    }
 }

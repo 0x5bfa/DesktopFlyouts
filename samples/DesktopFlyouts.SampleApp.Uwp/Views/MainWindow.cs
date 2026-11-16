@@ -100,9 +100,12 @@ internal sealed unsafe class MainWindow : IDisposable
 		ResizeXamlWindow();
 	}
 
-	internal void Show() => PInvoke.ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);
+    internal void Show()
+    {
+        PInvoke.ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);
+    }
 
-	internal bool TryPreTranslateMessage(nint message)
+    internal bool TryPreTranslateMessage(nint message)
 	{
 		BOOL result = false;
 		_desktopWindowXamlSourceNative.PreTranslateMessage((MSG*)message, &result);

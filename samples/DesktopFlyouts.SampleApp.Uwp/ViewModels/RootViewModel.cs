@@ -154,17 +154,20 @@ internal partial class RootViewModel : ObservableObject
 		}
 	}
 
-	private FlyoutSettings GetSettings() => new(
-		HideOnLostFocus, IsSwipeToDismissEnabled,
-		double.IsFinite(SwipeDismissThresholdValue) && SwipeDismissThresholdValue > 0 ? SwipeDismissThresholdValue : 80,
-		SelectedActivationModeIndex >= 0 && SelectedActivationModeIndex < ActivationModes.Count
-			? ActivationModes.ElementAt(SelectedActivationModeIndex).Key : DesktopFlyoutActivationMode.Activate,
-		AutoCloseDelaySecondsValue, FlyoutWidthValue, FlyoutHeightValue,
-		SelectedSystemBackdropIndex >= 0 && SelectedSystemBackdropIndex < SystemBackdrops.Count
-			? SystemBackdrops.ElementAt(SelectedSystemBackdropIndex).Key
-			: DesktopFlyoutBackdropKind.DesktopAcrylic);
+    private FlyoutSettings GetSettings()
+    {
+        return new(
+        HideOnLostFocus, IsSwipeToDismissEnabled,
+        double.IsFinite(SwipeDismissThresholdValue) && SwipeDismissThresholdValue > 0 ? SwipeDismissThresholdValue : 80,
+        SelectedActivationModeIndex >= 0 && SelectedActivationModeIndex < ActivationModes.Count
+            ? ActivationModes.ElementAt(SelectedActivationModeIndex).Key : DesktopFlyoutActivationMode.Activate,
+        AutoCloseDelaySecondsValue, FlyoutWidthValue, FlyoutHeightValue,
+        SelectedSystemBackdropIndex >= 0 && SelectedSystemBackdropIndex < SystemBackdrops.Count
+            ? SystemBackdrops.ElementAt(SelectedSystemBackdropIndex).Key
+            : DesktopFlyoutBackdropKind.DesktopAcrylic);
+    }
 
-	private void ExecuteToggleFlyoutOpenCommand()
+    private void ExecuteToggleFlyoutOpenCommand()
 	{
 		if (SelectedPositionIndex >= 0 && SelectedPositionIndex < FlyoutPositions.Count)
 			TrayIconManager.Default.ToggleFlyout(FlyoutPositions.ElementAt(SelectedPositionIndex).Key);

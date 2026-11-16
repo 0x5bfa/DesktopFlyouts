@@ -65,8 +65,7 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 	protected override void OnDisconnected()
 	{
 		_connected = false;
-		if (_capabilities is not null)
-			_capabilities.Changed -= Capabilities_Changed;
+        _capabilities?.Changed -= Capabilities_Changed;
 		_capabilities = null;
 		_uiSettings.AdvancedEffectsEnabledChanged -= UISettings_AdvancedEffectsEnabledChanged;
 		_uiSettings.ColorValuesChanged -= UISettings_ColorValuesChanged;
@@ -188,15 +187,33 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 			_ = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, UpdateBrush);
 	}
 
-	private void Capabilities_Changed(CompositionCapabilities sender, object args) => QueueRefresh();
+	private void Capabilities_Changed(CompositionCapabilities sender, object args)
+	{
+		QueueRefresh();
+	}
 
-	private void UISettings_AdvancedEffectsEnabledChanged(UISettings sender, object args) => QueueRefresh();
+	private void UISettings_AdvancedEffectsEnabledChanged(UISettings sender, object args)
+	{
+		QueueRefresh();
+	}
 
-	private void UISettings_ColorValuesChanged(UISettings sender, object args) => QueueRefresh();
+	private void UISettings_ColorValuesChanged(UISettings sender, object args)
+	{
+		QueueRefresh();
+	}
 
-	private void AccessibilitySettings_HighContrastChanged(AccessibilitySettings sender, object args) => QueueRefresh();
+	private void AccessibilitySettings_HighContrastChanged(AccessibilitySettings sender, object args)
+	{
+		QueueRefresh();
+	}
 
-	private void PowerManager_EnergySaverStatusChanged(object? sender, object args) => QueueRefresh();
+	private void PowerManager_EnergySaverStatusChanged(object? sender, object args)
+	{
+		QueueRefresh();
+	}
 
-	private void NoiseGraphicsDevice_RenderingDeviceReplaced(CompositionGraphicsDevice sender, RenderingDeviceReplacedEventArgs args) => QueueRefresh();
+	private void NoiseGraphicsDevice_RenderingDeviceReplaced(CompositionGraphicsDevice sender, RenderingDeviceReplacedEventArgs args)
+	{
+		QueueRefresh();
+	}
 }
