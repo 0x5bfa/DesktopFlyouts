@@ -218,15 +218,21 @@ _flyout.AutoCloseDelay = TimeSpan.FromSeconds(4);
     SwipeDismissThreshold="80" />
 ```
 
-The Windows App SDK package applies Desktop Acrylic or Mica to islands. UWP uses shell-matched
-in-app Acrylic brushes, including the accent brush when taskbar color prevalence is enabled, or
-WinUI 2's Mica backdrop when `BackdropKind="Mica"`:
+The Windows App SDK package applies Desktop Acrylic or Mica to islands. On Windows 11 and later,
+UWP uses a per-island Composition Acrylic effect, including accent tint when taskbar color
+prevalence is enabled. The UWP package includes the Win2D dependency used to build the effect:
 
 ```xml
 <desktop:DesktopFlyout IsBackdropEnabled="True" BackdropKind="DesktopAcrylic" />
 ```
 
-Use `BackdropKind="Mica"` for Mica. Uno does not apply these Windows materials. See the
+Use `BackdropKind="Mica"` for Mica on WinUI. On UWP, Mica uses a solid theme-aware fallback:
+WinUI 2's Mica targets `Window.Current` and cannot apply to the flyout's `DesktopWindowXamlSource`.
+UWP Acrylic remains active when the flyout loses activation, including `NoActivateOnOpen` and
+`NeverActivate`. It uses a solid fallback on older Windows versions, when transparency is disabled,
+in high contrast or energy saver mode, or when Composition effects are unavailable.
+Locally set island `Background` values are preserved.
+Uno does not apply these Windows materials. See the
 [API reference](api-reference.md#desktopflyout) for defaults and property behavior.
 
 ## Position requests

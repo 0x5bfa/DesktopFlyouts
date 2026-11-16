@@ -1,6 +1,8 @@
 # Testing
 
-The repository has two MSTest projects. Unit tests source-link the platform-neutral helpers. WinUI integration tests reference the actual WinUI library and source-link the internal User32 overflow helpers.
+The repository has three MSTest projects. Unit tests source-link the platform-neutral helpers.
+UWP Composition tests validate the Acrylic effect graph without opening a window. WinUI integration
+tests reference the actual WinUI library and source-link the internal User32 overflow helpers.
 
 ## Unit tests
 
@@ -16,6 +18,20 @@ Build and run from the repository root:
 dotnet build tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj --configuration Debug
 dotnet test tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj --configuration Debug --no-build --no-restore
 ```
+
+## UWP Composition tests
+
+On Windows, these tests source-link the production Acrylic effect factory and create it on a
+dedicated Composition dispatcher. They verify that the native Compositor accepts the dark, light,
+and accent effect graphs and connects both backdrop and noise inputs. They do not create XAML
+content, open windows, or verify desktop pixels, host activation policy, or system fallback settings.
+The test project includes app-local Win2D and CRT forwarders so it needs no MSIX registration.
+
+```powershell
+dotnet test tests/DesktopFlyouts.Uwp.CompositionTests/DesktopFlyouts.Uwp.CompositionTests.csproj --configuration Debug -p:Platform=x64 /p:AppxBundle=Never
+```
+
+The UWP library also requires an explicit build platform, for example `-p:Platform=x64`.
 
 ## WinUI integration tests
 

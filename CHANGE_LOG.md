@@ -22,10 +22,11 @@ belong in **Unreleased** until the next release is tagged.
 
 ### Added
 
-- Add shell-matched Acrylic and WinUI 2 Mica backdrop support for UWP flyout islands.
+- Add per-island Composition Acrylic on Windows 11+ and a solid theme-aware Mica fallback for
+  UWP flyout islands.
 - Add the WinUI sample's settings screen and all eight flyout examples to the UWP sample. Marshal
   settings and tray operations to the XAML thread, serialize example replacement, and release
-  flyout/menu hosts before closing the settings window. Expose the UWP Acrylic and Mica settings.
+  flyout/menu hosts before closing the settings window. Expose UWP Acrylic and Mica fallback settings.
 
 - Consolidate the UWP sample executable, MSIX manifest, and assets in
   `samples/DesktopFlyouts.SampleApp.Uwp`; remove the separate tray host, packaging project,
@@ -40,6 +41,14 @@ belong in **Unreleased** until the next release is tagged.
 
 ### Fixed
 
+- Stop applying WinUI 2 Mica to `Window.Current` for UWP XAML-island flyouts. Keep the Mica
+  fallback on each island so switching to Acrylic does not leave a rectangular root background.
+  Replace shared in-app Acrylic resource aliases with per-island Composition effects and enable
+  host-backdrop sampling on the Win32 host, avoiding standard AcrylicBrush's activation fallback.
+  Add the Win2D UWP dependency, respect transparency/high contrast/energy saver settings, release
+  effect resources on disconnection, and preserve custom backgrounds. Default the UWP sample to
+  Acrylic. Older Windows versions use a solid fallback. Mica renders as a solid theme-aware
+  fallback on UWP; use the WinUI package for the Mica material.
 - Stop transition and gesture storyboards before disposing a flyout host so their completion
   callbacks cannot run against a torn-down XAML island.
 - Keep flyout opening and backdrop cleanup on the owning UI thread. Reuse system backdrops across

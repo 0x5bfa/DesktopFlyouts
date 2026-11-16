@@ -163,30 +163,47 @@ namespace DesktopFlyouts
                 TemplateSettings.SystemBackdrop = null;
         }
 #elif UWP
-        internal void UpdateOwnerBackdrop()
+        internal void UpdateOwnerBackdrop(bool forceUpdate = false)
         {
+            var localBackground = ReadLocalValue(BackgroundProperty);
+            if (!ReferenceEquals(localBackground, DependencyProperty.UnsetValue)
+                && (!_hasOwnerBackground || !ReferenceEquals(localBackground, _ownerBackground)))
+            {
+                return;
+            }
+
             Brush? background = null;
             if (_owner is not null
                 && _owner.TryGetTarget(out var owner)
                 && owner.IsBackdropEnabled
-                && owner.BackdropKind is not DesktopFlyoutBackdropKind.Mica
                 && GetTemplateChild("PART_RootGrid") is Grid templateRoot)
             {
-                var themeKey = new AccessibilitySettings().HighContrast
-                    ? "HighContrast"
-                    : RequestedTheme switch
-                    {
-                        ElementTheme.Light => "Light",
-                        ElementTheme.Dark => "Default",
-                        _ => GeneralHelpers.IsTaskbarLight() ? "Light" : "Default",
-                    };
-                var brushKey = GeneralHelpers.IsTaskbarColorPrevalenceEnabled()
-                    ? "SystemControlAcrylicAccentElementBrush"
-                    : "ShellSurfaceBackgroundBrush";
-                var themeResources = (ResourceDictionary)templateRoot.Resources.ThemeDictionaries[themeKey];
+                var useLightTheme = RequestedTheme switch
+                {
+                    ElementTheme.Light => true,
+                    ElementTheme.Dark => false,
+                    _ => GeneralHelpers.IsTaskbarLight(),
+                };
+                var useAccent = GeneralHelpers.IsTaskbarColorPrevalenceEnabled();
+                if (owner.BackdropKind is not DesktopFlyoutBackdropKind.Mica)
+                {
+                    background = !forceUpdate && _ownerBackground is DesktopFlyoutAcrylicBrush acrylic
+                        && acrylic.UseLightTheme == useLightTheme && acrylic.UseAccent == useAccent
+                        ? acrylic
+                        : new DesktopFlyoutAcrylicBrush(useLightTheme, useAccent, owner.IsHostBackdropBrushEnabled);
+                }
+                else
+                {
+                    var themeKey = new AccessibilitySettings().HighContrast
+                        ? "HighContrast"
+                        : useLightTheme ? "Light" : "Default";
+                    // WinUI 2 BackdropMaterial targets Window.Current, not DesktopWindowXamlSource.
+                    // Keep its Mica fallback local to each island instead of changing the shared window.
+                    var themeResources = (ResourceDictionary)templateRoot.Resources.ThemeDictionaries[themeKey];
 
-                background = themeResources[brushKey] as Brush
-                    ?? throw new InvalidOperationException($"Could not find {brushKey} in the {themeKey} theme.");
+                    background = themeResources["MicaFallbackBackgroundBrush"] as Brush
+                        ?? throw new InvalidOperationException($"Could not find MicaFallbackBackgroundBrush in the {themeKey} theme.");
+                }
             }
 
             if (background is null)
@@ -195,12 +212,8 @@ namespace DesktopFlyouts
                 return;
             }
 
-            var localBackground = ReadLocalValue(BackgroundProperty);
-            if (!ReferenceEquals(localBackground, DependencyProperty.UnsetValue)
-                && (!_hasOwnerBackground || !ReferenceEquals(localBackground, _ownerBackground)))
-            {
+            if (ReferenceEquals(background, _ownerBackground))
                 return;
-            }
 
             Background = background;
             _ownerBackground = background;

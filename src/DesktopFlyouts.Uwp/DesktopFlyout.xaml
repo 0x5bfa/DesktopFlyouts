@@ -82,16 +82,13 @@
                             <ResourceDictionary>
                                 <ResourceDictionary.ThemeDictionaries>
                                     <ResourceDictionary x:Key="Default">
-                                        <StaticResource x:Key="ShellSurfaceBackgroundBrush" ResourceKey="AcrylicInAppFillColorBaseBrush" />
-                                        <StaticResource x:Key="SystemControlAcrylicAccentElementBrush" ResourceKey="AccentAcrylicInAppFillColorBaseBrush" />
+                                        <SolidColorBrush x:Key="MicaFallbackBackgroundBrush" Color="#FF202020" />
                                     </ResourceDictionary>
                                     <ResourceDictionary x:Key="Light">
-                                        <StaticResource x:Key="ShellSurfaceBackgroundBrush" ResourceKey="AcrylicInAppFillColorBaseBrush" />
-                                        <StaticResource x:Key="SystemControlAcrylicAccentElementBrush" ResourceKey="AccentAcrylicInAppFillColorBaseBrush" />
+                                        <SolidColorBrush x:Key="MicaFallbackBackgroundBrush" Color="#FFF3F3F3" />
                                     </ResourceDictionary>
                                     <ResourceDictionary x:Key="HighContrast">
-                                        <StaticResource x:Key="ShellSurfaceBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
-                                        <SolidColorBrush x:Key="SystemControlAcrylicAccentElementBrush" Color="{ThemeResource SystemColorWindowColor}" />
+                                        <SolidColorBrush x:Key="MicaFallbackBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
                                     </ResourceDictionary>
                                 </ResourceDictionary.ThemeDictionaries>
                             </ResourceDictionary>

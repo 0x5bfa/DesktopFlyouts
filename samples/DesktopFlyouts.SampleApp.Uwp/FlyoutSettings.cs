@@ -16,7 +16,7 @@ namespace DesktopFlyouts
         double Width = 360,
         double Height = double.NaN,
         bool IsBackdropEnabled = true,
-        DesktopFlyoutBackdropKind BackdropKind = DesktopFlyoutBackdropKind.Mica)
+        DesktopFlyoutBackdropKind BackdropKind = DesktopFlyoutBackdropKind.DesktopAcrylic)
     {
         internal void Apply(DesktopFlyout flyout)
         {

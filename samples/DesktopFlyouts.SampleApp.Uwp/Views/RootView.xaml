@@ -61,7 +61,7 @@
                         Command="{x:Bind ViewModel.ToggleFlyoutOpenCommand}"
                         Content="Toggle open" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Enable backdrop" Description="UWP uses shell-matched Acrylic or WinUI 2 Mica.">
+                <wctcontrols:SettingsCard Header="Enable backdrop" Description="UWP uses host-backdrop Acrylic. Mica uses a solid theme-aware fallback.">
                     <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Position request">

@@ -59,6 +59,8 @@ namespace DesktopFlyouts
         private CoreWindow? _coreWindow = null;
 
         private IDesktopWindowXamlSourceNative2 _pdwxsn2 = null!;
+
+        internal bool IsHostBackdropBrushEnabled { get; private set; }
 #endif
 
         internal HWND HWnd
@@ -465,6 +467,16 @@ namespace DesktopFlyouts
             // Set the base HWND and get the XAML island HWND
             _pdwxsn2.AttachToWindow(HWnd);
             _pdwxsn2.get_WindowHandle((HWND*)Unsafe.AsPointer(ref _xamlHwnd));
+
+            // DesktopWindowXamlSource is hosted by a Win32 window. Opt that window into
+            // Composition host backdrop sampling (Windows 11+); XAML transparency alone
+            // does not enable it. This does not paint a backdrop across the whole host.
+            BOOL enableHostBackdrop = true;
+            IsHostBackdropBrushEnabled = SUCCEEDED(PInvoke.DwmSetWindowAttribute(
+                HWnd,
+                Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_USE_HOSTBACKDROPBRUSH,
+                &enableHostBackdrop,
+                (uint)sizeof(BOOL)));
 
             RECT wRect;
             PInvoke.GetClientRect(HWnd, &wRect);

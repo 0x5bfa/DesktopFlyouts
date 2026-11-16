@@ -39,9 +39,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Labs.Uwp.DependencyPropertyGenerator" />
-		<PackageReference Include="Microsoft.UI.Xaml" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
 		<PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
+		<PackageReference Include="Win2D.uwp" />
 	</ItemGroup>
 
 	<Import Project="..\DesktopFlyouts.Shared\DesktopFlyouts.Shared.projitems" Label="Shared" />
