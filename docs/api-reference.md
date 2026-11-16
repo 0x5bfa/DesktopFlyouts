@@ -67,8 +67,8 @@ the instance until `Dispose()` is called.
 | `PressedScale` | `double` | `1.0` | Get/set, DP | Effective press scale is clamped to `0.1` through `2.0`. `1.0`, NaN, or infinity disables the effect. |
 | `IsSwipeToDismissEnabled` | `bool` | `false` | Get/set, DP | Enables dismissal by swiping opposite the active popup direction. |
 | `SwipeDismissThreshold` | `double` | `80.0` | Get/set, DP | Required distance in DIPs, constrained by the available dismiss distance. NaN or infinity uses a distance-based default. |
-| `IsBackdropEnabled` | `bool` | `true` | Get/set, DP | Enables library-owned island backdrops on WinUI. UWP and Uno do not create Windows App SDK system backdrops. |
-| `BackdropKind` | `DesktopFlyoutBackdropKind` | `DesktopAcrylic` | Get/set, DP | Chooses Desktop Acrylic or Mica for WinUI island backdrops. |
+| `IsBackdropEnabled` | `bool` | `true` | Get/set, DP | Enables library-owned island backdrops. WinUI uses system backdrops; UWP uses shell-matched Acrylic or WinUI 2 Mica. Uno does not apply these Windows materials. |
+| `BackdropKind` | `DesktopFlyoutBackdropKind` | `DesktopAcrylic` | Get/set, DP | Chooses Desktop Acrylic or Mica for WinUI, or Acrylic brushes or WinUI 2 Mica for UWP. |
 | `MenuFlyout` | `MenuFlyout?` | `null` | Get/set, DP | Optional reference for application code. The control does not show this menu automatically. |
 
 ### Methods
@@ -378,8 +378,10 @@ request is shown.
 
 ### DesktopFlyoutBackdropKind
 
-`DesktopAcrylic = 0` selects Desktop Acrylic; `Mica = 1` selects base Mica. These materials are
-created by the WinUI package.
+`DesktopAcrylic = 0` selects the Desktop Acrylic system backdrop on WinUI or the shell-matched
+in-app Acrylic brush on UWP. `Mica = 1` selects base Mica on WinUI or the WinUI 2
+`BackdropMaterial.ApplyToRootOrPageBackground` material on UWP. Uno does not apply these Windows
+materials.
 
 ### DesktopFlyoutTransitionState
 

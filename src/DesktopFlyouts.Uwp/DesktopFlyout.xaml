@@ -45,9 +45,7 @@
                                 TranslateY="0" />
                         </Grid.RenderTransform>
 
-                        <ItemsControl
-                            x:Name="PART_IslandsItemsControl"
-                            IsTabStop="False">
+                        <ItemsControl x:Name="PART_IslandsItemsControl" IsTabStop="False">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <local:DesktopFlyoutIslandsPanel Spacing="12" />
@@ -80,6 +78,24 @@
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
                         Translation="0,0,36">
+                        <Grid.Resources>
+                            <ResourceDictionary>
+                                <ResourceDictionary.ThemeDictionaries>
+                                    <ResourceDictionary x:Key="Default">
+                                        <StaticResource x:Key="ShellSurfaceBackgroundBrush" ResourceKey="AcrylicInAppFillColorBaseBrush" />
+                                        <StaticResource x:Key="SystemControlAcrylicAccentElementBrush" ResourceKey="AccentAcrylicInAppFillColorBaseBrush" />
+                                    </ResourceDictionary>
+                                    <ResourceDictionary x:Key="Light">
+                                        <StaticResource x:Key="ShellSurfaceBackgroundBrush" ResourceKey="AcrylicInAppFillColorBaseBrush" />
+                                        <StaticResource x:Key="SystemControlAcrylicAccentElementBrush" ResourceKey="AccentAcrylicInAppFillColorBaseBrush" />
+                                    </ResourceDictionary>
+                                    <ResourceDictionary x:Key="HighContrast">
+                                        <StaticResource x:Key="ShellSurfaceBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
+                                        <SolidColorBrush x:Key="SystemControlAcrylicAccentElementBrush" Color="{ThemeResource SystemColorWindowColor}" />
+                                    </ResourceDictionary>
+                                </ResourceDictionary.ThemeDictionaries>
+                            </ResourceDictionary>
+                        </Grid.Resources>
                         <Grid.Shadow>
                             <ThemeShadow />
                         </Grid.Shadow>

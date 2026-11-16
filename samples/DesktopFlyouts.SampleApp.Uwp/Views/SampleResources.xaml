@@ -10,7 +10,6 @@
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
-            <AcrylicBrush x:Key="FlyoutIslandBackgroundBrush" BackgroundSource="HostBackdrop" TintColor="#FF202020" TintOpacity="0.85" FallbackColor="#FF202020" />
             <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#0DFFFFFF" />
             <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#C5FFFFFF" />
             <SolidColorBrush x:Key="TextFillColorInverseBrush" Color="#FF000000" />
@@ -28,7 +27,6 @@
             <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#FFFF99A4" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Light">
-            <AcrylicBrush x:Key="FlyoutIslandBackgroundBrush" BackgroundSource="HostBackdrop" TintColor="#FFF3F3F3" TintOpacity="0.85" FallbackColor="#FFF3F3F3" />
             <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#B3FFFFFF" />
             <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#9E000000" />
             <SolidColorBrush x:Key="TextFillColorInverseBrush" Color="#FFFFFFFF" />
@@ -46,7 +44,6 @@
             <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#FFC42B1C" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="HighContrast">
-            <SolidColorBrush x:Key="FlyoutIslandBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
             <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{ThemeResource SystemColorWindowColor}" />
             <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
             <SolidColorBrush x:Key="TextFillColorInverseBrush" Color="{ThemeResource SystemColorWindowTextColor}" />

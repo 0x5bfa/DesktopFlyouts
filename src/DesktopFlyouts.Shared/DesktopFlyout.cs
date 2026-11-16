@@ -20,6 +20,10 @@ using Microsoft.UI.Composition.SystemBackdrops;
 #endif
 
 #if UWP
+using MuxcBackdropMaterial = Microsoft.UI.Xaml.Controls.BackdropMaterial;
+#endif
+
+#if UWP
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -457,6 +461,13 @@ namespace DesktopFlyouts
 #if WASDK && !HAS_UNO
             foreach (var island in Islands)
                 island.UpdateOwnerBackdrop(forceUpdate);
+#elif UWP
+            MuxcBackdropMaterial.SetApplyToRootOrPageBackground(
+                this,
+                IsBackdropEnabled && BackdropKind is DesktopFlyoutBackdropKind.Mica);
+
+            foreach (var island in Islands)
+                island.UpdateOwnerBackdrop();
 #endif
         }
 

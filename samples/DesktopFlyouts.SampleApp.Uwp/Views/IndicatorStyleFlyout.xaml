@@ -17,7 +17,7 @@
     </local:DesktopFlyout.Resources>
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland Background="{ThemeResource FlyoutIslandBackgroundBrush}">
+        <local:DesktopFlyoutIsland>
             <TextBlock Margin="32,16" Text="Lorem ipsum dolor sit amet, consectetur adipiscing elit..." />
         </local:DesktopFlyoutIsland>
     </local:DesktopFlyout.Islands>

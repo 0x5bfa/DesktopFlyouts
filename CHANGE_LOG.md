@@ -22,10 +22,10 @@ belong in **Unreleased** until the next release is tagged.
 
 ### Added
 
+- Add shell-matched Acrylic and WinUI 2 Mica backdrop support for UWP flyout islands.
 - Add the WinUI sample's settings screen and all eight flyout examples to the UWP sample. Marshal
-  settings and tray operations to the XAML thread, serialize example replacement, and
-  release flyout/menu hosts before closing the settings window. Use UWP theme resources and
-  disable the Windows App SDK-only system backdrop settings.
+  settings and tray operations to the XAML thread, serialize example replacement, and release
+  flyout/menu hosts before closing the settings window. Expose the UWP Acrylic and Mica settings.
 
 - Consolidate the UWP sample executable, MSIX manifest, and assets in
   `samples/DesktopFlyouts.SampleApp.Uwp`; remove the separate tray host, packaging project,

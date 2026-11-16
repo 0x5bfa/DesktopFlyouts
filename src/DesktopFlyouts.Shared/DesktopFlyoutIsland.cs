@@ -5,8 +5,10 @@ using System;
 using Windows.Foundation;
 
 #if UWP
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 #elif WASDK
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -34,6 +36,10 @@ namespace DesktopFlyouts
         private Size _lastActualSize;
         private Size _lastDesiredSize;
         private bool _hasLayoutSnapshot;
+#if UWP
+        private Brush? _ownerBackground;
+        private bool _hasOwnerBackground;
+#endif
 
         /// <summary>
         /// Gets an object that provides calculated values that can be referenced from the island template.
@@ -65,6 +71,9 @@ namespace DesktopFlyouts
             _propertyChangedCallbackTokenForCornerRadiusProperty = RegisterPropertyChangedCallback(CornerRadiusProperty, (s, e) => ((DesktopFlyoutIsland)s).OnCornerRadiusChanged());
 
             UpdateTemplateSettings();
+#if UWP
+            UpdateOwnerBackdrop();
+#endif
         }
 
         internal void SetOwner(DesktopFlyout owner)
@@ -72,6 +81,8 @@ namespace DesktopFlyouts
             _owner = new(owner);
 
 #if WASDK && !HAS_UNO
+            UpdateOwnerBackdrop();
+#elif UWP
             UpdateOwnerBackdrop();
 #endif
         }
@@ -150,6 +161,59 @@ namespace DesktopFlyouts
                 backdrop.ClearFrom(TemplateSettings);
             else
                 TemplateSettings.SystemBackdrop = null;
+        }
+#elif UWP
+        internal void UpdateOwnerBackdrop()
+        {
+            Brush? background = null;
+            if (_owner is not null
+                && _owner.TryGetTarget(out var owner)
+                && owner.IsBackdropEnabled
+                && owner.BackdropKind is not DesktopFlyoutBackdropKind.Mica
+                && GetTemplateChild("PART_RootGrid") is Grid templateRoot)
+            {
+                var themeKey = new AccessibilitySettings().HighContrast
+                    ? "HighContrast"
+                    : RequestedTheme switch
+                    {
+                        ElementTheme.Light => "Light",
+                        ElementTheme.Dark => "Default",
+                        _ => GeneralHelpers.IsTaskbarLight() ? "Light" : "Default",
+                    };
+                var brushKey = GeneralHelpers.IsTaskbarColorPrevalenceEnabled()
+                    ? "SystemControlAcrylicAccentElementBrush"
+                    : "ShellSurfaceBackgroundBrush";
+                var themeResources = (ResourceDictionary)templateRoot.Resources.ThemeDictionaries[themeKey];
+
+                background = themeResources[brushKey] as Brush
+                    ?? throw new InvalidOperationException($"Could not find {brushKey} in the {themeKey} theme.");
+            }
+
+            if (background is null)
+            {
+                ClearOwnerBackground();
+                return;
+            }
+
+            var localBackground = ReadLocalValue(BackgroundProperty);
+            if (!ReferenceEquals(localBackground, DependencyProperty.UnsetValue)
+                && (!_hasOwnerBackground || !ReferenceEquals(localBackground, _ownerBackground)))
+            {
+                return;
+            }
+
+            Background = background;
+            _ownerBackground = background;
+            _hasOwnerBackground = true;
+        }
+
+        private void ClearOwnerBackground()
+        {
+            if (_hasOwnerBackground && ReferenceEquals(ReadLocalValue(BackgroundProperty), _ownerBackground))
+                ClearValue(BackgroundProperty);
+
+            _ownerBackground = null;
+            _hasOwnerBackground = false;
         }
 #endif
 

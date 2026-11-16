@@ -20,7 +20,7 @@
     </local:DesktopFlyout.Resources>
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland Background="{ThemeResource FlyoutIslandBackgroundBrush}">
+        <local:DesktopFlyoutIsland>
             <!--<TextBlock Margin="32,16" Text="Lorem ipsum dolor sit amet, consectetur adipiscing elit..." />-->
             <Grid Padding="16,16,16,24" RowSpacing="24">
                 <Grid.RowDefinitions>

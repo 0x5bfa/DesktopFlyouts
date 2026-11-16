@@ -46,8 +46,8 @@ namespace DesktopFlyouts
         /// </summary>
         /// <value><see langword="true"/> to enable island backdrops; otherwise, <see langword="false"/>. The default is <see langword="true"/>.</value>
         /// <remarks>
-        /// Backdrops are applied by the Windows App SDK package. UWP builds keep the property for API
-        /// compatibility, but do not create a Windows App SDK system backdrop.
+        /// WinUI builds use library-owned system backdrops. UWP uses shell-matched Acrylic on each
+        /// island or WinUI 2 Mica on the flyout root. Uno does not apply Windows backdrop materials.
         /// </remarks>
         [GeneratedDependencyProperty(DefaultValue = true)]
         public partial bool IsBackdropEnabled { get; set; }
@@ -208,9 +208,9 @@ namespace DesktopFlyouts
         /// <value>The backdrop material used by flyout islands. The default is <see cref="DesktopFlyoutBackdropKind.DesktopAcrylic"/>.</value>
         /// <remarks>
         /// Windows App SDK builds create library-owned system backdrop instances from this value.
-        /// UWP builds keep the property for API compatibility, but do not create a Windows App SDK
-        /// system backdrop. Custom <c>SystemBackdrop</c> instances are intentionally not exposed so
-        /// flyout islands can keep a stable transient surface when the host window loses activation.
+        /// UWP builds use shell-matched Acrylic or WinUI 2 Mica. Custom <c>SystemBackdrop</c>
+        /// instances are intentionally not exposed so flyout islands can keep a stable transient
+        /// surface when the host window loses activation.
         /// </remarks>
         [GeneratedDependencyProperty(DefaultValue = DesktopFlyoutBackdropKind.DesktopAcrylic)]
         public partial DesktopFlyoutBackdropKind BackdropKind { get; set; }

@@ -61,8 +61,8 @@
                         Command="{x:Bind ViewModel.ToggleFlyoutOpenCommand}"
                         Content="Toggle open" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Enable backdrop" Description="Windows App SDK system backdrops are available in the WinUI sample.">
-                    <ToggleSwitch IsEnabled="False" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
+                <wctcontrols:SettingsCard Header="Enable backdrop" Description="UWP uses shell-matched Acrylic or WinUI 2 Mica.">
+                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Position request">
                     <ComboBox
@@ -129,7 +129,7 @@
                 <wctcontrols:SettingsCard Header="System backdrop">
                     <ComboBox
                         Width="150"
-                        IsEnabled="False"
+                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
                         ItemsSource="{x:Bind ViewModel.SystemBackdrops.Values}"
                         SelectedIndex="{x:Bind ViewModel.SelectedSystemBackdropIndex, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>

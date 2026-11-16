@@ -15,7 +15,7 @@
     </local:DesktopFlyout.Resources>
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland Background="{ThemeResource FlyoutIslandBackgroundBrush}" x:Name="FirstIsland" IslandHeight="*">
+        <local:DesktopFlyoutIsland x:Name="FirstIsland" IslandHeight="*">
             <Grid>
                 <Button
                     HorizontalAlignment="Center"
@@ -37,7 +37,7 @@
                     Content="Collapse" />
             </Grid>
         </local:DesktopFlyoutIsland>
-        <local:DesktopFlyoutIsland Background="{ThemeResource FlyoutIslandBackgroundBrush}" x:Name="SecondIsland" IslandHeight="300">
+        <local:DesktopFlyoutIsland x:Name="SecondIsland" IslandHeight="300">
             <Grid>
                 <TextBlock
                     HorizontalAlignment="Center"
@@ -51,7 +51,7 @@
                     Content="Collapse" />
             </Grid>
         </local:DesktopFlyoutIsland>
-        <local:DesktopFlyoutIsland Background="{ThemeResource FlyoutIslandBackgroundBrush}" x:Name="ThirdIsland" IslandHeight="300">
+        <local:DesktopFlyoutIsland x:Name="ThirdIsland" IslandHeight="300">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />

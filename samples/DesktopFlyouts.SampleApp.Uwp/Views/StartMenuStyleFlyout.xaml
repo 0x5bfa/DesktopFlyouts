@@ -16,7 +16,7 @@
     </local:DesktopFlyout.Resources>
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland Background="{ThemeResource FlyoutIslandBackgroundBrush}" IslandWidth="640">
+        <local:DesktopFlyoutIsland IslandWidth="640">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -398,7 +398,7 @@
             </Grid>
         </local:DesktopFlyoutIsland>
 
-        <local:DesktopFlyoutIsland Background="{ThemeResource FlyoutIslandBackgroundBrush}" IslandWidth="210">
+        <local:DesktopFlyoutIsland IslandWidth="210">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
