@@ -1,50 +1,49 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+/// <summary>
+/// Specifies the direction used for flyout placement and transition animations.
+/// </summary>
+/// <remarks>
+/// <see cref="Auto"/>, <see cref="Vertical"/>, and <see cref="Horizontal"/> are resolved from
+/// the final flyout region when the flyout opens.
+/// </remarks>
+public enum DesktopFlyoutPopupDirection
 {
     /// <summary>
-    /// Specifies the direction used for flyout placement and transition animations.
+    /// Opens upward from the bottom edge.
     /// </summary>
-    /// <remarks>
-    /// <see cref="Auto"/>, <see cref="Vertical"/>, and <see cref="Horizontal"/> are resolved from
-    /// the final flyout region when the flyout opens.
-    /// </remarks>
-    public enum DesktopFlyoutPopupDirection
-    {
-        /// <summary>
-        /// Opens upward from the bottom edge.
-        /// </summary>
-        BottomToTop,
+    BottomToTop,
 
-        /// <summary>
-        /// Opens downward from the top edge.
-        /// </summary>
-        TopToBottom,
+    /// <summary>
+    /// Opens downward from the top edge.
+    /// </summary>
+    TopToBottom,
 
-        /// <summary>
-        /// Chooses a vertical direction based on placement.
-        /// </summary>
-        Vertical,
+    /// <summary>
+    /// Chooses a vertical direction based on placement.
+    /// </summary>
+    Vertical,
 
-        /// <summary>
-        /// Opens rightward from the left edge.
-        /// </summary>
-        LeftToRight,
+    /// <summary>
+    /// Opens rightward from the left edge.
+    /// </summary>
+    LeftToRight,
 
-        /// <summary>
-        /// Opens leftward from the right edge.
-        /// </summary>
-        RightToLeft,
+    /// <summary>
+    /// Opens leftward from the right edge.
+    /// </summary>
+    RightToLeft,
 
-        /// <summary>
-        /// Chooses a horizontal direction based on placement.
-        /// </summary>
-        Horizontal,
+    /// <summary>
+    /// Chooses a horizontal direction based on placement.
+    /// </summary>
+    Horizontal,
 
-        /// <summary>
-        /// Resolves the transition from the final placement.
-        /// </summary>
-        Auto,
-    }
+    /// <summary>
+    /// Resolves the transition from the final placement.
+    /// </summary>
+    Auto,
 }

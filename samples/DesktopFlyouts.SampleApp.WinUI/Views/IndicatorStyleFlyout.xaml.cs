@@ -3,19 +3,17 @@
 
 using Microsoft.UI.Xaml.Controls;
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+public sealed partial class IndicatorStyleFlyout : DesktopFlyout
 {
-    public sealed partial class IndicatorStyleFlyout : DesktopFlyout
+    public IndicatorStyleFlyout()
     {
-        public IndicatorStyleFlyout()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
+}
 
-    public sealed partial class Something : ItemsRepeater
-    {
-
-    }
+public sealed partial class Something : ItemsRepeater
+{
 
 }

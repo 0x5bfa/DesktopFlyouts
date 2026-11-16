@@ -1,13 +1,12 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+public sealed partial class ButtonFlyout : DesktopFlyout
 {
-    public sealed partial class ButtonFlyout : DesktopFlyout
+    public ButtonFlyout()
     {
-        public ButtonFlyout()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

@@ -1,13 +1,12 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+public sealed partial class SeverityFlyout : DesktopFlyout
 {
-    public sealed partial class SeverityFlyout : DesktopFlyout
+    public SeverityFlyout()
     {
-        public SeverityFlyout()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

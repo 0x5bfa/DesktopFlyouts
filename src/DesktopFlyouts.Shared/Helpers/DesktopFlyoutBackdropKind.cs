@@ -1,26 +1,25 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+/// <summary>
+/// Specifies the backdrop behavior used by a <see cref="DesktopFlyout"/>.
+/// </summary>
+public enum DesktopFlyoutBackdropKind
 {
     /// <summary>
-    /// Specifies the backdrop behavior used by a <see cref="DesktopFlyout"/>.
+    /// Uses the Desktop Acrylic material.
     /// </summary>
-    public enum DesktopFlyoutBackdropKind
-    {
-        /// <summary>
-        /// Uses the Desktop Acrylic material.
-        /// </summary>
-        DesktopAcrylic = 0,
+    DesktopAcrylic = 0,
 
-        /// <summary>
-        /// Uses the base Mica material.
-        /// </summary>
-        Mica = 1,
+    /// <summary>
+    /// Uses the base Mica material.
+    /// </summary>
+    Mica = 1,
 
-        /// <summary>
-        /// Does not apply a library-owned backdrop.
-        /// </summary>
-        None = 2,
-    }
+    /// <summary>
+    /// Does not apply a library-owned backdrop.
+    /// </summary>
+    None = 2,
 }

@@ -1,13 +1,12 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+internal enum TaskbarEdge
 {
-    internal enum TaskbarEdge
-    {
-        Left,
-        Top,
-        Right,
-        Bottom,
-    }
+    Left,
+    Top,
+    Right,
+    Bottom,
 }

@@ -5,131 +5,130 @@ using System;
 using DesktopFlyouts.SampleApp.Shared;
 using Windows.Foundation;
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+internal partial class TrayIconManager : IDisposable
 {
-    internal partial class TrayIconManager : IDisposable
+    private static readonly Lazy<TrayIconManager> _default = new(() => new TrayIconManager());
+    internal static TrayIconManager Default => _default.Value;
+
+    internal SystemTrayIcon? SystemTrayIcon { get; set; }
+    internal DesktopFlyout? DesktopFlyout { get; set; }
+    internal DesktopMenuFlyout? DesktopMenuFlyout { get; set; }
+    internal DesktopFlyoutSampleKind SelectedFlyoutExample { get; private set; }
+
+    private bool _disposed;
+
+    private TrayIconManager() { }
+
+    internal void Initialize(SystemTrayIcon trayIcon)
     {
-        private static readonly Lazy<TrayIconManager> _default = new(() => new TrayIconManager());
-        internal static TrayIconManager Default => _default.Value;
+        DesktopFlyout = CreateFlyout(SelectedFlyoutExample);
+        DesktopMenuFlyout = new MainDesktopMenuFlyout();
 
-        internal SystemTrayIcon? SystemTrayIcon { get; set; }
-        internal DesktopFlyout? DesktopFlyout { get; set; }
-        internal DesktopMenuFlyout? DesktopMenuFlyout { get; set; }
-        internal DesktopFlyoutSampleKind SelectedFlyoutExample { get; private set; }
+        SystemTrayIcon = trayIcon;
+        SystemTrayIcon.Show();
+        SystemTrayIcon.LeftClicked += SystemTrayIcon_LeftClicked;
+        SystemTrayIcon.RightClicked += SystemTrayIcon_RightClicked;
+    }
 
-        private bool _disposed;
+    internal void SwitchFlyout(DesktopFlyoutSampleKind example)
+    {
+        if (_disposed || (DesktopFlyout is not null && SelectedFlyoutExample == example))
+            return;
 
-        private TrayIconManager() { }
+        var oldFlyout = DesktopFlyout;
+        var newFlyout = CreateFlyout(example);
 
-        internal void Initialize(SystemTrayIcon trayIcon)
+        DesktopFlyout = newFlyout;
+        SelectedFlyoutExample = example;
+        oldFlyout?.Dispose();
+    }
+
+    private static DesktopFlyout CreateFlyout(DesktopFlyoutSampleKind example)
+    {
+        return example switch
         {
-            DesktopFlyout = CreateFlyout(SelectedFlyoutExample);
-            DesktopMenuFlyout = new MainDesktopMenuFlyout();
+            DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
+            DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
+            DesktopFlyoutSampleKind.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
+            DesktopFlyoutSampleKind.StartMenuStyle => new StartMenuStyleFlyout(),
+            DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
+            DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
+            DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
+            _ => new CustomizableFlyout(),
+        };
+    }
 
-            SystemTrayIcon = trayIcon;
-            SystemTrayIcon.Show();
-            SystemTrayIcon.LeftClicked += SystemTrayIcon_LeftClicked;
-            SystemTrayIcon.RightClicked += SystemTrayIcon_RightClicked;
-        }
+    internal void ToggleFlyout(DesktopFlyoutPosition? position = null)
+    {
+        if (DesktopFlyout is null)
+            return;
 
-        internal void SwitchFlyout(DesktopFlyoutSampleKind example)
+        if (DesktopFlyout.TransitionState is
+            DesktopFlyoutTransitionState.Open or
+            DesktopFlyoutTransitionState.Opening or
+            DesktopFlyoutTransitionState.Closing)
         {
-            if (_disposed || (DesktopFlyout is not null && SelectedFlyoutExample == example))
-                return;
-
-            var oldFlyout = DesktopFlyout;
-            var newFlyout = CreateFlyout(example);
-
-            DesktopFlyout = newFlyout;
-            SelectedFlyoutExample = example;
-            oldFlyout?.Dispose();
+            DesktopFlyout.Hide();
         }
-
-        private static DesktopFlyout CreateFlyout(DesktopFlyoutSampleKind example)
+        else
         {
-            return example switch
-            {
-                DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
-                DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
-                DesktopFlyoutSampleKind.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
-                DesktopFlyoutSampleKind.StartMenuStyle => new StartMenuStyleFlyout(),
-                DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
-                DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
-                DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
-                _ => new CustomizableFlyout(),
-            };
+            DesktopFlyout.Show(position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
         }
+    }
 
-        internal void ToggleFlyout(DesktopFlyoutPosition? position = null)
+    private void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
+    {
+        if (DesktopFlyout is null)
+            return;
+
+        if (DesktopFlyout.TransitionState is
+            DesktopFlyoutTransitionState.Open or
+            DesktopFlyoutTransitionState.Opening or
+            DesktopFlyoutTransitionState.Closing)
         {
-            if (DesktopFlyout is null)
-                return;
-
-            if (DesktopFlyout.TransitionState is
-                DesktopFlyoutTransitionState.Open or
-                DesktopFlyoutTransitionState.Opening or
-                DesktopFlyoutTransitionState.Closing)
-            {
-                DesktopFlyout.Hide();
-            }
-            else
-            {
-                DesktopFlyout.Show(position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
-            }
+            DesktopFlyout.Hide();
         }
-
-        private void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
+        else if (SystemTrayIcon?.TryGetBounds(out _) == true)
         {
-            if (DesktopFlyout is null)
-                return;
-
-            if (DesktopFlyout.TransitionState is
-                DesktopFlyoutTransitionState.Open or
-                DesktopFlyoutTransitionState.Opening or
-                DesktopFlyoutTransitionState.Closing)
-            {
-                DesktopFlyout.Hide();
-            }
-            else if (SystemTrayIcon?.TryGetBounds(out _) == true)
-            {
-                DesktopFlyout.Show(DesktopFlyoutPosition.ForTrayIcon(SystemTrayIcon));
-            }
-            else
-            {
-                var anchor = new System.Drawing.Rectangle((int)e.Point.X, (int)e.Point.Y, 0, 0);
-                DesktopFlyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
-            }
+            DesktopFlyout.Show(DesktopFlyoutPosition.ForTrayIcon(SystemTrayIcon));
         }
-
-        private void SystemTrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)
+        else
         {
-            if (DesktopMenuFlyout is null)
-                return;
-
-            if (DesktopMenuFlyout.IsOpen)
-                DesktopMenuFlyout.Hide();
-
-            DesktopMenuFlyout.Show(new(e.Point.X, e.Point.Y - 32));
+            var anchor = new System.Drawing.Rectangle((int)e.Point.X, (int)e.Point.Y, 0, 0);
+            DesktopFlyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
         }
+    }
 
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
+    private void SystemTrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e)
+    {
+        if (DesktopMenuFlyout is null)
+            return;
 
-            _disposed = true;
+        if (DesktopMenuFlyout.IsOpen)
+            DesktopMenuFlyout.Hide();
 
-            SystemTrayIcon?.LeftClicked -= SystemTrayIcon_LeftClicked;
-            SystemTrayIcon?.RightClicked -= SystemTrayIcon_RightClicked;
-            SystemTrayIcon?.Dispose();
-            DesktopFlyout?.Dispose();
-            DesktopMenuFlyout?.Dispose();
+        DesktopMenuFlyout.Show(new(e.Point.X, e.Point.Y - 32));
+    }
 
-            SystemTrayIcon = null;
-            DesktopFlyout = null;
-            DesktopMenuFlyout = null;
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
 
-            GC.SuppressFinalize(this);
-        }
+        _disposed = true;
+
+        SystemTrayIcon?.LeftClicked -= SystemTrayIcon_LeftClicked;
+        SystemTrayIcon?.RightClicked -= SystemTrayIcon_RightClicked;
+        SystemTrayIcon?.Dispose();
+        DesktopFlyout?.Dispose();
+        DesktopMenuFlyout?.Dispose();
+
+        SystemTrayIcon = null;
+        DesktopFlyout = null;
+        DesktopMenuFlyout = null;
+
+        GC.SuppressFinalize(this);
     }
 }

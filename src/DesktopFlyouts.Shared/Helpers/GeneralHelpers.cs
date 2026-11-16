@@ -4,26 +4,25 @@
 
 using Microsoft.Win32;
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+internal static class GeneralHelpers
 {
-    internal static class GeneralHelpers
+    internal static bool IsTaskbarLight()
     {
-        internal static bool IsTaskbarLight()
-        {
-            const string keyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
-            using var key = Registry.CurrentUser.OpenSubKey(keyPath);
-            var value = key?.GetValue("SystemUsesLightTheme");
-            return value is int v && v != 0;
-        }
-
-        internal static bool IsTaskbarColorPrevalenceEnabled()
-        {
-            const string keyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
-            using var key = Registry.CurrentUser.OpenSubKey(keyPath);
-            var value = key?.GetValue("ColorPrevalence");
-            return value is int v && v != 0;
-        }
-
+        const string keyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+        using var key = Registry.CurrentUser.OpenSubKey(keyPath);
+        var value = key?.GetValue("SystemUsesLightTheme");
+        return value is int v && v != 0;
     }
+
+    internal static bool IsTaskbarColorPrevalenceEnabled()
+    {
+        const string keyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+        using var key = Registry.CurrentUser.OpenSubKey(keyPath);
+        var value = key?.GetValue("ColorPrevalence");
+        return value is int v && v != 0;
+    }
+
 }
 #endif

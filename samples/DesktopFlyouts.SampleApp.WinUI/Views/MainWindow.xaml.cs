@@ -3,17 +3,16 @@
 
 using Microsoft.UI.Xaml;
 
-namespace DesktopFlyouts
-{
-    public sealed partial class MainWindow : Window
-    {
-        public MainWindow()
-        {
-            InitializeComponent();
+namespace DesktopFlyouts;
 
-            AppWindow.Resize(new(600, 900));
-            ExtendsContentIntoTitleBar = true;
-            Content = new RootView();
-        }
+public sealed partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        AppWindow.Resize(new(600, 900));
+        ExtendsContentIntoTitleBar = true;
+        Content = new RootView();
     }
 }

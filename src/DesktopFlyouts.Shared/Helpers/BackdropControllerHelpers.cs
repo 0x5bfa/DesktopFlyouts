@@ -9,108 +9,107 @@ using Microsoft.UI.Composition.SystemBackdrops;
 using Windows.UI.ViewManagement;
 #endif
 
-namespace DesktopFlyouts
-{
+namespace DesktopFlyouts;
+
 #if WASDK
-    internal static class BackdropControllerHelpers
+internal static class BackdropControllerHelpers
+{
+    private static UISettings UISettings => field ??= new UISettings();
+
+    internal static DesktopAcrylicController? GetAcrylicController(bool useLightTheme)
     {
-        private static UISettings UISettings => field ??= new UISettings();
+        if (!DesktopAcrylicController.IsSupported())
+            return null;
 
-        internal static DesktopAcrylicController? GetAcrylicController(bool useLightTheme)
-        {
-            if (!DesktopAcrylicController.IsSupported())
-                return null;
+        if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
+            return GetAccentedAcrylicController();
 
-            if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
-                return GetAccentedAcrylicController();
-
-            return useLightTheme
-                ? GetLightAcrylicController()
-                : GetDarkAcrylicController();
-        }
-
-        internal static MicaController? GetMicaController(bool useLightTheme)
-        {
-            if (!MicaController.IsSupported())
-                return null;
-
-            if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
-                return GetAccentedMicaController();
-
-            return useLightTheme
-                ? GetLightMicaController()
-                : GetDarkMicaController();
-        }
-
-        internal static DesktopAcrylicController? GetDarkAcrylicController()
-        {
-            return new DesktopAcrylicController()
-            {
-                FallbackColor = Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1C),
-                LuminosityOpacity = 0.96F,
-                TintColor = Color.FromArgb(0xFF, 0x20, 0x20, 0x20),
-                TintOpacity = 0.5F,
-            };
-        }
-
-        internal static DesktopAcrylicController? GetLightAcrylicController()
-        {
-            return new DesktopAcrylicController()
-            {
-                FallbackColor = Color.FromArgb(0xFF, 0xEE, 0xEE, 0xEE),
-                LuminosityOpacity = 0.9F,
-                TintColor = Color.FromArgb(0xFF, 0xF3, 0xF3, 0xF3),
-                TintOpacity = 0.0F,
-            };
-        }
-
-        internal static DesktopAcrylicController? GetAccentedAcrylicController()
-        {
-            var systemAccentColorDark2 = UISettings.GetColorValue(UIColorType.AccentDark2);
-            return new DesktopAcrylicController()
-            {
-                FallbackColor = systemAccentColorDark2,
-                LuminosityOpacity = 0.8F,
-                TintColor = systemAccentColorDark2,
-                TintOpacity = 0.8F,
-            };
-        }
-
-        internal static MicaController? GetDarkMicaController()
-        {
-            return new MicaController()
-            {
-                FallbackColor = Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1C),
-                LuminosityOpacity = 0.96F,
-                TintColor = Color.FromArgb(0xFF, 0x20, 0x20, 0x20),
-                TintOpacity = 0.5F,
-            };
-        }
-
-        internal static MicaController? GetLightMicaController()
-        {
-            return new MicaController()
-            {
-                FallbackColor = Color.FromArgb(0xFF, 0xEE, 0xEE, 0xEE),
-                LuminosityOpacity = 0.9F,
-                TintColor = Color.FromArgb(0xFF, 0xF3, 0xF3, 0xF3),
-                TintOpacity = 0.0F,
-            };
-        }
-
-        internal static MicaController? GetAccentedMicaController()
-        {
-            var systemAccentColorDark2 = UISettings.GetColorValue(UIColorType.AccentDark2);
-            return new MicaController()
-            {
-                FallbackColor = systemAccentColorDark2,
-                LuminosityOpacity = 0.8F,
-                TintColor = systemAccentColorDark2,
-                TintOpacity = 0.8F,
-            };
-        }
-
+        return useLightTheme
+            ? GetLightAcrylicController()
+            : GetDarkAcrylicController();
     }
-#endif
+
+    internal static MicaController? GetMicaController(bool useLightTheme)
+    {
+        if (!MicaController.IsSupported())
+            return null;
+
+        if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
+            return GetAccentedMicaController();
+
+        return useLightTheme
+            ? GetLightMicaController()
+            : GetDarkMicaController();
+    }
+
+    internal static DesktopAcrylicController? GetDarkAcrylicController()
+    {
+        return new DesktopAcrylicController()
+        {
+            FallbackColor = Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1C),
+            LuminosityOpacity = 0.96F,
+            TintColor = Color.FromArgb(0xFF, 0x20, 0x20, 0x20),
+            TintOpacity = 0.5F,
+        };
+    }
+
+    internal static DesktopAcrylicController? GetLightAcrylicController()
+    {
+        return new DesktopAcrylicController()
+        {
+            FallbackColor = Color.FromArgb(0xFF, 0xEE, 0xEE, 0xEE),
+            LuminosityOpacity = 0.9F,
+            TintColor = Color.FromArgb(0xFF, 0xF3, 0xF3, 0xF3),
+            TintOpacity = 0.0F,
+        };
+    }
+
+    internal static DesktopAcrylicController? GetAccentedAcrylicController()
+    {
+        var systemAccentColorDark2 = UISettings.GetColorValue(UIColorType.AccentDark2);
+        return new DesktopAcrylicController()
+        {
+            FallbackColor = systemAccentColorDark2,
+            LuminosityOpacity = 0.8F,
+            TintColor = systemAccentColorDark2,
+            TintOpacity = 0.8F,
+        };
+    }
+
+    internal static MicaController? GetDarkMicaController()
+    {
+        return new MicaController()
+        {
+            FallbackColor = Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1C),
+            LuminosityOpacity = 0.96F,
+            TintColor = Color.FromArgb(0xFF, 0x20, 0x20, 0x20),
+            TintOpacity = 0.5F,
+        };
+    }
+
+    internal static MicaController? GetLightMicaController()
+    {
+        return new MicaController()
+        {
+            FallbackColor = Color.FromArgb(0xFF, 0xEE, 0xEE, 0xEE),
+            LuminosityOpacity = 0.9F,
+            TintColor = Color.FromArgb(0xFF, 0xF3, 0xF3, 0xF3),
+            TintOpacity = 0.0F,
+        };
+    }
+
+    internal static MicaController? GetAccentedMicaController()
+    {
+        var systemAccentColorDark2 = UISettings.GetColorValue(UIColorType.AccentDark2);
+        return new MicaController()
+        {
+            FallbackColor = systemAccentColorDark2,
+            LuminosityOpacity = 0.8F,
+            TintColor = systemAccentColorDark2,
+            TintOpacity = 0.8F,
+        };
+    }
+
 }
+#endif
 #endif

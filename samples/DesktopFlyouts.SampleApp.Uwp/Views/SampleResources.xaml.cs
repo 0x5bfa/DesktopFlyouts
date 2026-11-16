@@ -3,13 +3,12 @@
 
 using Windows.UI.Xaml;
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+public sealed partial class SampleResources : ResourceDictionary
 {
-    public sealed partial class SampleResources : ResourceDictionary
+    public SampleResources()
     {
-        public SampleResources()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

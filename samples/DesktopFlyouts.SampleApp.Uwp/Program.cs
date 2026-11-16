@@ -5,8 +5,8 @@ using System;
 using Windows.Win32;
 using Windows.Win32.System.WinRT;
 
-namespace DesktopFlyouts
-{
+namespace DesktopFlyouts;
+
 	public class Program
 	{
 		[STAThread]
@@ -16,4 +16,3 @@ namespace DesktopFlyouts
 			_ = new App();
 		}
 	}
-}

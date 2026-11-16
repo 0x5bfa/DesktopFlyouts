@@ -4,16 +4,15 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+public partial class DesktopMenuFlyout
 {
-    public partial class DesktopMenuFlyout
+    public partial bool IsOpen
     {
-        public partial bool IsOpen
-        {
-            get => (bool)GetValue(IsOpenProperty);
-            private set => SetValue(IsOpenProperty, value);
-        }
-        public static readonly DependencyProperty IsOpenProperty =
-            DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(DesktopMenuFlyout), new PropertyMetadata(false));
+        get => (bool)GetValue(IsOpenProperty);
+        private set => SetValue(IsOpenProperty, value);
     }
+    public static readonly DependencyProperty IsOpenProperty =
+        DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(DesktopMenuFlyout), new PropertyMetadata(false));
 }

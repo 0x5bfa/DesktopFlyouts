@@ -17,180 +17,179 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Markup;
 #endif
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+/// <summary>
+/// Displays a menu flyout in an independent XAML island window.
+/// </summary>
+/// <remarks>
+/// Use <see cref="DesktopMenuFlyout"/> when a context menu must be opened at a physical screen
+/// point, such as a tray icon click. Add <see cref="MenuFlyoutItemBase"/> items as children and
+/// call the point-based show overload to display the menu.
+/// </remarks>
+[ContentProperty(Name = nameof(Items))]
+public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 {
+    private const string PART_MenuFlyoutTargetControl = "PART_MenuFlyoutTargetControl";
+
+    private readonly XamlIslandHostWindow? _host;
+    private MenuFlyout? _menuFlyout;
+    private bool _disposed;
+
+    private Border? MenuFlyoutTargetControl;
+
     /// <summary>
-    /// Displays a menu flyout in an independent XAML island window.
+    /// Gets whether the menu flyout is currently open.
+    /// </summary>
+    /// <value><see langword="true"/> while the hosted menu is open; otherwise, <see langword="false"/>.</value>
+    [GeneratedDependencyProperty]
+    public partial bool IsOpen { get; private set; }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="DesktopMenuFlyout"/>.
     /// </summary>
     /// <remarks>
-    /// Use <see cref="DesktopMenuFlyout"/> when a context menu must be opened at a physical screen
-    /// point, such as a tray icon click. Add <see cref="MenuFlyoutItemBase"/> items as children and
-    /// call the point-based show overload to display the menu.
+    /// The constructor creates the hidden desktop host window used to display the menu.
     /// </remarks>
-    [ContentProperty(Name = nameof(Items))]
-    public partial class DesktopMenuFlyout : ItemsControl, IDisposable
+    public DesktopMenuFlyout()
     {
-        private const string PART_MenuFlyoutTargetControl = "PART_MenuFlyoutTargetControl";
+        DefaultStyleKey = typeof(DesktopMenuFlyout);
 
-        private readonly XamlIslandHostWindow? _host;
-        private MenuFlyout? _menuFlyout;
-        private bool _disposed;
+        _host = new XamlIslandHostWindow();
+        _host.SetContent(this);
+        _ = _host.UpdateWindowVisibility(false);
+        _host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
+    }
 
-        private Border? MenuFlyoutTargetControl;
+    /// <inheritdoc/>
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
 
-        /// <summary>
-        /// Gets whether the menu flyout is currently open.
-        /// </summary>
-        /// <value><see langword="true"/> while the hosted menu is open; otherwise, <see langword="false"/>.</value>
-        [GeneratedDependencyProperty]
-        public partial bool IsOpen { get; private set; }
+        MenuFlyoutTargetControl = GetTemplateChild(PART_MenuFlyoutTargetControl) as Border
+            ?? throw new MissingFieldException($"Could not find {PART_MenuFlyoutTargetControl} in the given {nameof(DesktopMenuFlyout)}'s style.");
+    }
 
-        /// <summary>
-        /// Initializes a new instance of <see cref="DesktopMenuFlyout"/>.
-        /// </summary>
-        /// <remarks>
-        /// The constructor creates the hidden desktop host window used to display the menu.
-        /// </remarks>
-        public DesktopMenuFlyout()
+    /// <inheritdoc/>
+    protected override void OnItemsChanged(object e)
+    {
+        base.OnItemsChanged(e);
+
+        if (_disposed)
+            return;
+
+        if (_menuFlyout is null)
         {
-            DefaultStyleKey = typeof(DesktopMenuFlyout);
-
-            _host = new XamlIslandHostWindow();
-            _host.SetContent(this);
-            _ = _host.UpdateWindowVisibility(false);
-            _host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
+            _menuFlyout = new MenuFlyout();
+            _menuFlyout.Closed += MenuFlyout_Closed;
         }
 
-        /// <inheritdoc/>
-        protected override void OnApplyTemplate()
-        {
-            base.OnApplyTemplate();
+        _menuFlyout.Items.Clear();
 
-            MenuFlyoutTargetControl = GetTemplateChild(PART_MenuFlyoutTargetControl) as Border
-                ?? throw new MissingFieldException($"Could not find {PART_MenuFlyoutTargetControl} in the given {nameof(DesktopMenuFlyout)}'s style.");
-        }
+        foreach (var item in Items)
+            _menuFlyout.Items.Add((MenuFlyoutItemBase)item);
+    }
 
-        /// <inheritdoc/>
-        protected override void OnItemsChanged(object e)
-        {
-            base.OnItemsChanged(e);
+    /// <summary>
+    /// Opens the menu flyout at the specified screen point.
+    /// </summary>
+    /// <param name="point">The physical screen pixel where the menu host should be positioned.</param>
+    /// <remarks>
+    /// The menu is built from the current <see cref="ItemsControl.Items"/> collection. Items must
+    /// derive from <see cref="MenuFlyoutItemBase"/>.
+    /// </remarks>
+    public void Show(Point point)
+    {
+        if (_disposed || _menuFlyout is null)
+            return;
 
-            if (_disposed)
-                return;
+        UpdateFlyoutTheme();
 
-            if (_menuFlyout is null)
-            {
-                _menuFlyout = new MenuFlyout();
-                _menuFlyout.Closed += MenuFlyout_Closed;
-            }
+        _host?.MoveAndResize(new RectInt32() { X = point.X, Y = point.Y });
+        _host?.SetHWndRectRegion(new RectInt32() { Width = 1, Height = 1 });
+        _ = _host?.UpdateWindowVisibility(true);
 
-            _menuFlyout.Items.Clear();
+        _menuFlyout.ShowAt(MenuFlyoutTargetControl);
 
-            foreach (var item in Items)
-                _menuFlyout.Items.Add((MenuFlyoutItemBase)item);
-        }
+        IsOpen = true;
+    }
 
-        /// <summary>
-        /// Opens the menu flyout at the specified screen point.
-        /// </summary>
-        /// <param name="point">The physical screen pixel where the menu host should be positioned.</param>
-        /// <remarks>
-        /// The menu is built from the current <see cref="ItemsControl.Items"/> collection. Items must
-        /// derive from <see cref="MenuFlyoutItemBase"/>.
-        /// </remarks>
-        public void Show(Point point)
-        {
-            if (_disposed || _menuFlyout is null)
-                return;
+    /// <summary>
+    /// Closes the menu flyout.
+    /// </summary>
+    /// <remarks>
+    /// This also hides the desktop host window.
+    /// </remarks>
+    public void Hide()
+    {
+        if (_disposed)
+            return;
 
-            UpdateFlyoutTheme();
+        _ = _host?.UpdateWindowVisibility(false);
 
-            _host?.MoveAndResize(new RectInt32() { X = point.X, Y = point.Y });
-            _host?.SetHWndRectRegion(new RectInt32() { Width = 1, Height = 1 });
-            _ = _host?.UpdateWindowVisibility(true);
+        _menuFlyout?.Hide();
 
-            _menuFlyout.ShowAt(MenuFlyoutTargetControl);
+        IsOpen = false;
+    }
 
-            IsOpen = true;
-        }
+    private void MenuFlyout_Closed(object? sender, object e)
+    {
+        _ = _host?.UpdateWindowVisibility(false);
+        IsOpen = false;
+    }
 
-        /// <summary>
-        /// Closes the menu flyout.
-        /// </summary>
-        /// <remarks>
-        /// This also hides the desktop host window.
-        /// </remarks>
-        public void Hide()
-        {
-            if (_disposed)
-                return;
+    private void HostWindow_SystemSettingsChanged(object? sender, EventArgs e)
+    {
+        if (_disposed)
+            return;
 
-            _ = _host?.UpdateWindowVisibility(false);
-
-            _menuFlyout?.Hide();
-
-            IsOpen = false;
-        }
-
-        private void MenuFlyout_Closed(object? sender, object e)
-        {
-            _ = _host?.UpdateWindowVisibility(false);
-            IsOpen = false;
-        }
-
-        private void HostWindow_SystemSettingsChanged(object? sender, EventArgs e)
-        {
-            if (_disposed)
-                return;
-
-            UpdateFlyoutTheme();
-        }
+        UpdateFlyoutTheme();
+    }
 
 #if UWP
-        /// <summary>
-        /// Lets the XAML island process a native keyboard message before dispatch.
-        /// </summary>
-        /// <param name="message">A pointer to the native MSG structure.</param>
-        /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
-        /// <remarks>
-        /// UWP desktop-host scenarios should call this from their native message loop so keyboard
-        /// navigation and accelerator processing can reach the hosted XAML island.
-        /// </remarks>
-        public bool TryPreTranslateMessage(nint message)
-        {
-            return _host?.TryPreTranslateMessage(message) ?? false;
-        }
+    /// <summary>
+    /// Lets the XAML island process a native keyboard message before dispatch.
+    /// </summary>
+    /// <param name="message">A pointer to the native MSG structure.</param>
+    /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
+    /// <remarks>
+    /// UWP desktop-host scenarios should call this from their native message loop so keyboard
+    /// navigation and accelerator processing can reach the hosted XAML island.
+    /// </remarks>
+    public bool TryPreTranslateMessage(nint message)
+    {
+        return _host?.TryPreTranslateMessage(message) ?? false;
+    }
 #endif
 
-        private void UpdateFlyoutTheme()
+    private void UpdateFlyoutTheme()
+    {
+        RequestedTheme = GeneralHelpers.IsTaskbarLight() ? ElementTheme.Light : ElementTheme.Dark;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        if (_menuFlyout is not null)
         {
-            RequestedTheme = GeneralHelpers.IsTaskbarLight() ? ElementTheme.Light : ElementTheme.Dark;
+            _menuFlyout.Closed -= MenuFlyout_Closed;
+            if (IsOpen)
+                _menuFlyout.Hide();
+
+            _menuFlyout.Items.Clear();
+            _menuFlyout = null;
         }
 
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
+        _host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
+        _host?.Dispose();
+        IsOpen = false;
 
-            _disposed = true;
-
-            if (_menuFlyout is not null)
-            {
-                _menuFlyout.Closed -= MenuFlyout_Closed;
-                if (IsOpen)
-                    _menuFlyout.Hide();
-
-                _menuFlyout.Items.Clear();
-                _menuFlyout = null;
-            }
-
-            _host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
-            _host?.Dispose();
-            IsOpen = false;
-
-            GC.SuppressFinalize(this);
-        }
+        GC.SuppressFinalize(this);
     }
 }
 

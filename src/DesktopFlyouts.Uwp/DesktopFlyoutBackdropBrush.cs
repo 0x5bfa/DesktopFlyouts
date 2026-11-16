@@ -16,188 +16,187 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+// Each island owns its material brush rather than targeting Window.Current with BackdropMaterial.
+// Acrylic samples the host backdrop; Mica samples only the desktop wallpaper.
+internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushBase
 {
-    // Each island owns its material brush rather than targeting Window.Current with BackdropMaterial.
-    // Acrylic samples the host backdrop; Mica samples only the desktop wallpaper.
-    internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushBase
+    private readonly bool _canUseHostBackdrop;
+    private readonly CoreDispatcher _dispatcher;
+    private readonly UISettings _uiSettings = new();
+    private readonly AccessibilitySettings _accessibilitySettings = new();
+    private CompositionCapabilities? _capabilities;
+    private CompositionBackdropBrush? _backdrop;
+    private CompositionSurfaceBrush? _noiseBrush;
+    private CompositionDrawingSurface? _noiseSurface;
+    private CompositionGraphicsDevice? _noiseGraphicsDevice;
+    private volatile bool _connected;
+
+    internal bool UseLightTheme { get; }
+    internal bool UseAccent { get; }
+    internal DesktopFlyoutBackdropKind Kind { get; }
+
+    internal DesktopFlyoutBackdropBrush(DesktopFlyoutBackdropKind kind, bool useLightTheme, bool useAccent, bool canUseHostBackdrop)
     {
-        private readonly bool _canUseHostBackdrop;
-        private readonly CoreDispatcher _dispatcher;
-        private readonly UISettings _uiSettings = new();
-        private readonly AccessibilitySettings _accessibilitySettings = new();
-        private CompositionCapabilities? _capabilities;
-        private CompositionBackdropBrush? _backdrop;
-        private CompositionSurfaceBrush? _noiseBrush;
-        private CompositionDrawingSurface? _noiseSurface;
-        private CompositionGraphicsDevice? _noiseGraphicsDevice;
-        private volatile bool _connected;
-
-        internal bool UseLightTheme { get; }
-        internal bool UseAccent { get; }
-        internal DesktopFlyoutBackdropKind Kind { get; }
-
-        internal DesktopFlyoutBackdropBrush(DesktopFlyoutBackdropKind kind, bool useLightTheme, bool useAccent, bool canUseHostBackdrop)
-        {
-            Kind = kind;
-            UseLightTheme = useLightTheme;
-            UseAccent = useAccent;
-            _canUseHostBackdrop = canUseHostBackdrop;
-            _dispatcher = Dispatcher;
-            UpdateFallbackColor();
-        }
-
-        protected override void OnConnected()
-        {
-            if (_connected)
-                return;
-
-            _connected = true;
-            _capabilities = CompositionCapabilities.GetForCurrentView();
-            _capabilities.Changed += Capabilities_Changed;
-            _uiSettings.AdvancedEffectsEnabledChanged += UISettings_AdvancedEffectsEnabledChanged;
-            _uiSettings.ColorValuesChanged += UISettings_ColorValuesChanged;
-            _accessibilitySettings.HighContrastChanged += AccessibilitySettings_HighContrastChanged;
-            PowerManager.EnergySaverStatusChanged += PowerManager_EnergySaverStatusChanged;
-            UpdateBrush();
-        }
-
-        protected override void OnDisconnected()
-        {
-            _connected = false;
-            if (_capabilities is not null)
-                _capabilities.Changed -= Capabilities_Changed;
-            _capabilities = null;
-            _uiSettings.AdvancedEffectsEnabledChanged -= UISettings_AdvancedEffectsEnabledChanged;
-            _uiSettings.ColorValuesChanged -= UISettings_ColorValuesChanged;
-            _accessibilitySettings.HighContrastChanged -= AccessibilitySettings_HighContrastChanged;
-            PowerManager.EnergySaverStatusChanged -= PowerManager_EnergySaverStatusChanged;
-            ClearCompositionResources();
-        }
-
-        private Color GetTintColor()
-        {
-            return UseAccent
-                ? _uiSettings.GetColorValue(UIColorType.AccentDark2)
-                : UseLightTheme ? Color.FromArgb(255, 243, 243, 243) : Color.FromArgb(255, 32, 32, 32);
-        }
-
-        private void UpdateFallbackColor()
-        {
-            FallbackColor = _accessibilitySettings.HighContrast
-                ? _uiSettings.GetColorValue(UIColorType.Background)
-                : UseAccent ? GetTintColor()
-                : UseLightTheme ? Color.FromArgb(255, 238, 238, 238) : Color.FromArgb(255, 28, 28, 28);
-        }
-
-        private void UpdateBrush()
-        {
-            if (!_connected)
-                return;
-
-            UpdateFallbackColor();
-            ClearCompositionResources();
-            if ((Kind is not DesktopFlyoutBackdropKind.Mica && !_canUseHostBackdrop)
-                || _accessibilitySettings.HighContrast || !_uiSettings.AdvancedEffectsEnabled
-                || PowerManager.EnergySaverStatus is EnergySaverStatus.On
-                || _capabilities?.AreEffectsSupported() != true || !_capabilities.AreEffectsFast())
-            {
-                return;
-            }
-
-            try
-            {
-                var compositor = Window.Current.Compositor;
-                var tintColor = GetTintColor();
-                var luminosityOpacity = UseAccent ? 0.8 : UseLightTheme ? 0.9 : 0.96;
-                var tintOpacity = UseAccent ? 0.8 : UseLightTheme ? 0.0 : 0.5;
-                if (Kind is DesktopFlyoutBackdropKind.Mica)
-                {
-                    if (!ApiInformation.IsMethodPresent("Windows.UI.Composition.Compositor", "TryCreateBlurredWallpaperBackdropBrush"))
-                        return;
-
-                    _backdrop = compositor.TryCreateBlurredWallpaperBackdropBrush();
-                    if (_backdrop is null)
-                        return;
-
-                    CompositionBrush = DesktopFlyoutMicaEffect.Create(
-                        compositor, _backdrop, tintColor, tintOpacity, luminosityOpacity);
-                }
-                else
-                {
-                    _backdrop = compositor.CreateHostBackdropBrush();
-                    CreateNoiseBrush(compositor);
-                    CompositionBrush = DesktopFlyoutAcrylicEffect.Create(
-                        compositor, _backdrop, _noiseBrush!, tintColor, tintOpacity, luminosityOpacity);
-                }
-            }
-            catch (COMException exception)
-            {
-                Debug.WriteLine($"Could not create the UWP {Kind} effect: 0x{exception.HResult:X8}.");
-                ClearCompositionResources();
-            }
-        }
-
-        private void CreateNoiseBrush(Compositor compositor)
-        {
-            _noiseGraphicsDevice = CanvasComposition.CreateCompositionGraphicsDevice(compositor, CanvasDevice.GetSharedDevice());
-            _noiseGraphicsDevice.RenderingDeviceReplaced += NoiseGraphicsDevice_RenderingDeviceReplaced;
-            _noiseSurface = _noiseGraphicsDevice.CreateDrawingSurface(
-                new Size(64, 64), DirectXPixelFormat.B8G8R8A8UIntNormalized, DirectXAlphaMode.Premultiplied);
-            using (var drawing = CanvasComposition.CreateDrawingSession(_noiseSurface))
-            {
-                uint random = 0x5BFA;
-                for (var y = 0; y < 64; y++)
-                {
-                    for (var x = 0; x < 64; x++)
-                    {
-                        random ^= random << 13;
-                        random ^= random >> 17;
-                        random ^= random << 5;
-                        var value = (byte)random;
-                        drawing.FillRectangle(x, y, 1, 1, Color.FromArgb(255, value, value, value));
-                    }
-                }
-            }
-            _noiseBrush = compositor.CreateSurfaceBrush(_noiseSurface);
-            _noiseBrush.Stretch = CompositionStretch.None;
-        }
-
-        private void ClearCompositionResources()
-        {
-            var brush = CompositionBrush;
-            CompositionBrush = null;
-            brush?.Dispose();
-            _backdrop?.Dispose();
-            _backdrop = null;
-            _noiseBrush?.Dispose();
-            _noiseBrush = null;
-            _noiseSurface?.Dispose();
-            _noiseSurface = null;
-            if (_noiseGraphicsDevice is not null)
-            {
-                _noiseGraphicsDevice.RenderingDeviceReplaced -= NoiseGraphicsDevice_RenderingDeviceReplaced;
-                _noiseGraphicsDevice.Dispose();
-            }
-            _noiseGraphicsDevice = null;
-        }
-
-        private void QueueRefresh()
-        {
-            if (_connected)
-                _ = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, UpdateBrush);
-        }
-
-        private void Capabilities_Changed(CompositionCapabilities sender, object args) => QueueRefresh();
-
-        private void UISettings_AdvancedEffectsEnabledChanged(UISettings sender, object args) => QueueRefresh();
-
-        private void UISettings_ColorValuesChanged(UISettings sender, object args) => QueueRefresh();
-
-        private void AccessibilitySettings_HighContrastChanged(AccessibilitySettings sender, object args) => QueueRefresh();
-
-        private void PowerManager_EnergySaverStatusChanged(object? sender, object args) => QueueRefresh();
-
-        private void NoiseGraphicsDevice_RenderingDeviceReplaced(CompositionGraphicsDevice sender, RenderingDeviceReplacedEventArgs args) => QueueRefresh();
+        Kind = kind;
+        UseLightTheme = useLightTheme;
+        UseAccent = useAccent;
+        _canUseHostBackdrop = canUseHostBackdrop;
+        _dispatcher = Dispatcher;
+        UpdateFallbackColor();
     }
+
+    protected override void OnConnected()
+    {
+        if (_connected)
+            return;
+
+        _connected = true;
+        _capabilities = CompositionCapabilities.GetForCurrentView();
+        _capabilities.Changed += Capabilities_Changed;
+        _uiSettings.AdvancedEffectsEnabledChanged += UISettings_AdvancedEffectsEnabledChanged;
+        _uiSettings.ColorValuesChanged += UISettings_ColorValuesChanged;
+        _accessibilitySettings.HighContrastChanged += AccessibilitySettings_HighContrastChanged;
+        PowerManager.EnergySaverStatusChanged += PowerManager_EnergySaverStatusChanged;
+        UpdateBrush();
+    }
+
+    protected override void OnDisconnected()
+    {
+        _connected = false;
+        if (_capabilities is not null)
+            _capabilities.Changed -= Capabilities_Changed;
+        _capabilities = null;
+        _uiSettings.AdvancedEffectsEnabledChanged -= UISettings_AdvancedEffectsEnabledChanged;
+        _uiSettings.ColorValuesChanged -= UISettings_ColorValuesChanged;
+        _accessibilitySettings.HighContrastChanged -= AccessibilitySettings_HighContrastChanged;
+        PowerManager.EnergySaverStatusChanged -= PowerManager_EnergySaverStatusChanged;
+        ClearCompositionResources();
+    }
+
+    private Color GetTintColor()
+    {
+        return UseAccent
+            ? _uiSettings.GetColorValue(UIColorType.AccentDark2)
+            : UseLightTheme ? Color.FromArgb(255, 243, 243, 243) : Color.FromArgb(255, 32, 32, 32);
+    }
+
+    private void UpdateFallbackColor()
+    {
+        FallbackColor = _accessibilitySettings.HighContrast
+            ? _uiSettings.GetColorValue(UIColorType.Background)
+            : UseAccent ? GetTintColor()
+            : UseLightTheme ? Color.FromArgb(255, 238, 238, 238) : Color.FromArgb(255, 28, 28, 28);
+    }
+
+    private void UpdateBrush()
+    {
+        if (!_connected)
+            return;
+
+        UpdateFallbackColor();
+        ClearCompositionResources();
+        if ((Kind is not DesktopFlyoutBackdropKind.Mica && !_canUseHostBackdrop)
+            || _accessibilitySettings.HighContrast || !_uiSettings.AdvancedEffectsEnabled
+            || PowerManager.EnergySaverStatus is EnergySaverStatus.On
+            || _capabilities?.AreEffectsSupported() != true || !_capabilities.AreEffectsFast())
+        {
+            return;
+        }
+
+        try
+        {
+            var compositor = Window.Current.Compositor;
+            var tintColor = GetTintColor();
+            var luminosityOpacity = UseAccent ? 0.8 : UseLightTheme ? 0.9 : 0.96;
+            var tintOpacity = UseAccent ? 0.8 : UseLightTheme ? 0.0 : 0.5;
+            if (Kind is DesktopFlyoutBackdropKind.Mica)
+            {
+                if (!ApiInformation.IsMethodPresent("Windows.UI.Composition.Compositor", "TryCreateBlurredWallpaperBackdropBrush"))
+                    return;
+
+                _backdrop = compositor.TryCreateBlurredWallpaperBackdropBrush();
+                if (_backdrop is null)
+                    return;
+
+                CompositionBrush = DesktopFlyoutMicaEffect.Create(
+                    compositor, _backdrop, tintColor, tintOpacity, luminosityOpacity);
+            }
+            else
+            {
+                _backdrop = compositor.CreateHostBackdropBrush();
+                CreateNoiseBrush(compositor);
+                CompositionBrush = DesktopFlyoutAcrylicEffect.Create(
+                    compositor, _backdrop, _noiseBrush!, tintColor, tintOpacity, luminosityOpacity);
+            }
+        }
+        catch (COMException exception)
+        {
+            Debug.WriteLine($"Could not create the UWP {Kind} effect: 0x{exception.HResult:X8}.");
+            ClearCompositionResources();
+        }
+    }
+
+    private void CreateNoiseBrush(Compositor compositor)
+    {
+        _noiseGraphicsDevice = CanvasComposition.CreateCompositionGraphicsDevice(compositor, CanvasDevice.GetSharedDevice());
+        _noiseGraphicsDevice.RenderingDeviceReplaced += NoiseGraphicsDevice_RenderingDeviceReplaced;
+        _noiseSurface = _noiseGraphicsDevice.CreateDrawingSurface(
+            new Size(64, 64), DirectXPixelFormat.B8G8R8A8UIntNormalized, DirectXAlphaMode.Premultiplied);
+        using (var drawing = CanvasComposition.CreateDrawingSession(_noiseSurface))
+        {
+            uint random = 0x5BFA;
+            for (var y = 0; y < 64; y++)
+            {
+                for (var x = 0; x < 64; x++)
+                {
+                    random ^= random << 13;
+                    random ^= random >> 17;
+                    random ^= random << 5;
+                    var value = (byte)random;
+                    drawing.FillRectangle(x, y, 1, 1, Color.FromArgb(255, value, value, value));
+                }
+            }
+        }
+        _noiseBrush = compositor.CreateSurfaceBrush(_noiseSurface);
+        _noiseBrush.Stretch = CompositionStretch.None;
+    }
+
+    private void ClearCompositionResources()
+    {
+        var brush = CompositionBrush;
+        CompositionBrush = null;
+        brush?.Dispose();
+        _backdrop?.Dispose();
+        _backdrop = null;
+        _noiseBrush?.Dispose();
+        _noiseBrush = null;
+        _noiseSurface?.Dispose();
+        _noiseSurface = null;
+        if (_noiseGraphicsDevice is not null)
+        {
+            _noiseGraphicsDevice.RenderingDeviceReplaced -= NoiseGraphicsDevice_RenderingDeviceReplaced;
+            _noiseGraphicsDevice.Dispose();
+        }
+        _noiseGraphicsDevice = null;
+    }
+
+    private void QueueRefresh()
+    {
+        if (_connected)
+            _ = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, UpdateBrush);
+    }
+
+    private void Capabilities_Changed(CompositionCapabilities sender, object args) => QueueRefresh();
+
+    private void UISettings_AdvancedEffectsEnabledChanged(UISettings sender, object args) => QueueRefresh();
+
+    private void UISettings_ColorValuesChanged(UISettings sender, object args) => QueueRefresh();
+
+    private void AccessibilitySettings_HighContrastChanged(AccessibilitySettings sender, object args) => QueueRefresh();
+
+    private void PowerManager_EnergySaverStatusChanged(object? sender, object args) => QueueRefresh();
+
+    private void NoiseGraphicsDevice_RenderingDeviceReplaced(CompositionGraphicsDevice sender, RenderingDeviceReplacedEventArgs args) => QueueRefresh();
 }

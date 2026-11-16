@@ -10,194 +10,193 @@ using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace DesktopFlyouts
+namespace DesktopFlyouts;
+
+internal unsafe static partial class WindowHelpers
 {
-    internal unsafe static partial class WindowHelpers
+    internal static Point GetCursorPosition()
     {
-        internal static Point GetCursorPosition()
+        Point point = default;
+        return PInvoke.GetCursorPos(&point)
+            ? point
+            : Point.Empty;
+    }
+
+    internal static Rectangle GetFlyoutWorkAreaRect(DesktopFlyoutPosition position, Point? cursorPosition = null)
+    {
+        if (position.Anchor is Rectangle anchor)
         {
-            Point point = default;
-            return PInvoke.GetCursorPos(&point)
-                ? point
-                : Point.Empty;
+            return GetFlyoutWorkAreaRect(new Point(anchor.Left + (anchor.Width / 2), anchor.Top + (anchor.Height / 2)));
         }
 
-        internal static Rectangle GetFlyoutWorkAreaRect(DesktopFlyoutPosition position, Point? cursorPosition = null)
+        if (position.MonitorSelection is DesktopFlyoutMonitorSelection.Cursor)
         {
-            if (position.Anchor is Rectangle anchor)
-            {
-                return GetFlyoutWorkAreaRect(new Point(anchor.Left + (anchor.Width / 2), anchor.Top + (anchor.Height / 2)));
-            }
-
-            if (position.MonitorSelection is DesktopFlyoutMonitorSelection.Cursor)
-            {
-                return GetFlyoutWorkAreaRect(cursorPosition ?? GetCursorPosition());
-            }
-
-            return GetFlyoutWorkAreaRect();
+            return GetFlyoutWorkAreaRect(cursorPosition ?? GetCursorPosition());
         }
 
-        internal static Point GetBottomRightCornerPoint()
-        {
-            var rect = GetFlyoutWorkAreaRect();
+        return GetFlyoutWorkAreaRect();
+    }
 
-            return new(rect.Right, rect.Bottom);
+    internal static Point GetBottomRightCornerPoint()
+    {
+        var rect = GetFlyoutWorkAreaRect();
+
+        return new(rect.Right, rect.Bottom);
+    }
+
+    internal static Rectangle GetFlyoutWorkAreaRect(Point? anchorPoint = null)
+    {
+        if (TryGetMonitorWorkAreaRect(anchorPoint ?? Point.Empty, out var monitorWorkArea))
+            return monitorWorkArea;
+
+        var workArea = GetSystemWorkAreaRect();
+        if (!TryGetTaskbarInfo(out var taskbarRect, out var edge))
+            return workArea;
+
+        return edge switch
+        {
+            TaskbarEdge.Left => Rectangle.FromLTRB(
+                Math.Max(workArea.Left, taskbarRect.Right),
+                workArea.Top,
+                workArea.Right,
+                workArea.Bottom),
+            TaskbarEdge.Top => Rectangle.FromLTRB(
+                workArea.Left,
+                Math.Max(workArea.Top, taskbarRect.Bottom),
+                workArea.Right,
+                workArea.Bottom),
+            TaskbarEdge.Right => Rectangle.FromLTRB(
+                workArea.Left,
+                workArea.Top,
+                Math.Min(workArea.Right, taskbarRect.Left),
+                workArea.Bottom),
+            TaskbarEdge.Bottom => Rectangle.FromLTRB(
+                workArea.Left,
+                workArea.Top,
+                workArea.Right,
+                Math.Min(workArea.Bottom, taskbarRect.Top)),
+            _ => workArea,
+        };
+    }
+
+    private static bool TryGetMonitorWorkAreaRect(Point point, out Rectangle workArea)
+    {
+        RECT anchorRect = new()
+        {
+            left = point.X,
+            top = point.Y,
+            right = point.X + 1,
+            bottom = point.Y + 1,
+        };
+        var monitor = PInvoke.MonitorFromRect(&anchorRect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        if (monitor.IsNull)
+        {
+            workArea = default;
+            return false;
         }
 
-        internal static Rectangle GetFlyoutWorkAreaRect(Point? anchorPoint = null)
+        MONITORINFO monitorInfo = new() { cbSize = (uint)sizeof(MONITORINFO) };
+        if (!PInvoke.GetMonitorInfo(monitor, &monitorInfo))
         {
-            if (TryGetMonitorWorkAreaRect(anchorPoint ?? Point.Empty, out var monitorWorkArea))
-                return monitorWorkArea;
-
-            var workArea = GetSystemWorkAreaRect();
-            if (!TryGetTaskbarInfo(out var taskbarRect, out var edge))
-                return workArea;
-
-            return edge switch
-            {
-                TaskbarEdge.Left => Rectangle.FromLTRB(
-                    Math.Max(workArea.Left, taskbarRect.Right),
-                    workArea.Top,
-                    workArea.Right,
-                    workArea.Bottom),
-                TaskbarEdge.Top => Rectangle.FromLTRB(
-                    workArea.Left,
-                    Math.Max(workArea.Top, taskbarRect.Bottom),
-                    workArea.Right,
-                    workArea.Bottom),
-                TaskbarEdge.Right => Rectangle.FromLTRB(
-                    workArea.Left,
-                    workArea.Top,
-                    Math.Min(workArea.Right, taskbarRect.Left),
-                    workArea.Bottom),
-                TaskbarEdge.Bottom => Rectangle.FromLTRB(
-                    workArea.Left,
-                    workArea.Top,
-                    workArea.Right,
-                    Math.Min(workArea.Bottom, taskbarRect.Top)),
-                _ => workArea,
-            };
+            workArea = default;
+            return false;
         }
 
-        private static bool TryGetMonitorWorkAreaRect(Point point, out Rectangle workArea)
+        workArea = Rectangle.FromLTRB(
+            monitorInfo.rcWork.left,
+            monitorInfo.rcWork.top,
+            monitorInfo.rcWork.right,
+            monitorInfo.rcWork.bottom);
+
+        return true;
+    }
+
+    internal static bool TryGetMonitorScreenRect(Rectangle anchor, out Rectangle screenBounds)
+    {
+        RECT anchorRect = new()
         {
-            RECT anchorRect = new()
-            {
-                left = point.X,
-                top = point.Y,
-                right = point.X + 1,
-                bottom = point.Y + 1,
-            };
-            var monitor = PInvoke.MonitorFromRect(&anchorRect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
-            if (monitor.IsNull)
-            {
-                workArea = default;
-                return false;
-            }
+            left = anchor.Left,
+            top = anchor.Top,
+            right = Math.Max(anchor.Right, anchor.Left + 1),
+            bottom = Math.Max(anchor.Bottom, anchor.Top + 1),
+        };
+        var monitor = PInvoke.MonitorFromRect(&anchorRect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        if (monitor.IsNull)
+        {
+            screenBounds = default;
+            return false;
+        }
 
-            MONITORINFO monitorInfo = new() { cbSize = (uint)sizeof(MONITORINFO) };
-            if (!PInvoke.GetMonitorInfo(monitor, &monitorInfo))
-            {
-                workArea = default;
-                return false;
-            }
+        MONITORINFO monitorInfo = new() { cbSize = (uint)sizeof(MONITORINFO) };
+        if (!PInvoke.GetMonitorInfo(monitor, &monitorInfo))
+        {
+            screenBounds = default;
+            return false;
+        }
 
-            workArea = Rectangle.FromLTRB(
-                monitorInfo.rcWork.left,
-                monitorInfo.rcWork.top,
-                monitorInfo.rcWork.right,
-                monitorInfo.rcWork.bottom);
+        screenBounds = Rectangle.FromLTRB(
+            monitorInfo.rcMonitor.left,
+            monitorInfo.rcMonitor.top,
+            monitorInfo.rcMonitor.right,
+            monitorInfo.rcMonitor.bottom);
+        return true;
+    }
 
+    internal static bool TryGetTaskbarInfoForBounds(Rectangle bounds, out Rectangle rect, out TaskbarEdge edge)
+    {
+        if (!TryGetTaskbarInfo(out rect, out edge))
+            return false;
+
+        const int tolerance = 8;
+        var taskbarSearchBounds = rect;
+        taskbarSearchBounds.Inflate(tolerance, tolerance);
+        if (taskbarSearchBounds.IntersectsWith(bounds))
             return true;
-        }
 
-        internal static bool TryGetMonitorScreenRect(Rectangle anchor, out Rectangle screenBounds)
+        rect = default;
+        edge = default;
+        return false;
+    }
+
+    private static Rectangle GetSystemWorkAreaRect()
+    {
+        RECT rect;
+        PInvoke.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_GETWORKAREA, 0, &rect, 0);
+
+        return Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
+    }
+
+    private static bool TryGetTaskbarInfo(out Rectangle rect, out TaskbarEdge edge)
+    {
+        APPBARDATA data = default;
+        data.cbSize = (uint)sizeof(APPBARDATA);
+
+        if (PInvoke.SHAppBarMessage(PInvoke.ABM_GETTASKBARPOS, &data) == 0U)
         {
-            RECT anchorRect = new()
-            {
-                left = anchor.Left,
-                top = anchor.Top,
-                right = Math.Max(anchor.Right, anchor.Left + 1),
-                bottom = Math.Max(anchor.Bottom, anchor.Top + 1),
-            };
-            var monitor = PInvoke.MonitorFromRect(&anchorRect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
-            if (monitor.IsNull)
-            {
-                screenBounds = default;
-                return false;
-            }
-
-            MONITORINFO monitorInfo = new() { cbSize = (uint)sizeof(MONITORINFO) };
-            if (!PInvoke.GetMonitorInfo(monitor, &monitorInfo))
-            {
-                screenBounds = default;
-                return false;
-            }
-
-            screenBounds = Rectangle.FromLTRB(
-                monitorInfo.rcMonitor.left,
-                monitorInfo.rcMonitor.top,
-                monitorInfo.rcMonitor.right,
-                monitorInfo.rcMonitor.bottom);
-            return true;
-        }
-
-        internal static bool TryGetTaskbarInfoForBounds(Rectangle bounds, out Rectangle rect, out TaskbarEdge edge)
-        {
-            if (!TryGetTaskbarInfo(out rect, out edge))
-                return false;
-
-            const int tolerance = 8;
-            var taskbarSearchBounds = rect;
-            taskbarSearchBounds.Inflate(tolerance, tolerance);
-            if (taskbarSearchBounds.IntersectsWith(bounds))
-                return true;
-
             rect = default;
             edge = default;
             return false;
         }
 
-        private static Rectangle GetSystemWorkAreaRect()
+        var taskbarEdge = data.uEdge switch
         {
-            RECT rect;
-            PInvoke.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_GETWORKAREA, 0, &rect, 0);
+            PInvoke.ABE_LEFT => TaskbarEdge.Left,
+            PInvoke.ABE_TOP => TaskbarEdge.Top,
+            PInvoke.ABE_RIGHT => TaskbarEdge.Right,
+            PInvoke.ABE_BOTTOM => TaskbarEdge.Bottom,
+            _ => (TaskbarEdge?)null,
+        };
 
-            return Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
+        rect = Rectangle.FromLTRB(data.rc.left, data.rc.top, data.rc.right, data.rc.bottom);
+        if (taskbarEdge is null || rect.Width <= 0 || rect.Height <= 0)
+        {
+            rect = default;
+            edge = default;
+            return false;
         }
 
-        private static bool TryGetTaskbarInfo(out Rectangle rect, out TaskbarEdge edge)
-        {
-            APPBARDATA data = default;
-            data.cbSize = (uint)sizeof(APPBARDATA);
-
-            if (PInvoke.SHAppBarMessage(PInvoke.ABM_GETTASKBARPOS, &data) == 0U)
-            {
-                rect = default;
-                edge = default;
-                return false;
-            }
-
-            var taskbarEdge = data.uEdge switch
-            {
-                PInvoke.ABE_LEFT => TaskbarEdge.Left,
-                PInvoke.ABE_TOP => TaskbarEdge.Top,
-                PInvoke.ABE_RIGHT => TaskbarEdge.Right,
-                PInvoke.ABE_BOTTOM => TaskbarEdge.Bottom,
-                _ => (TaskbarEdge?)null,
-            };
-
-            rect = Rectangle.FromLTRB(data.rc.left, data.rc.top, data.rc.right, data.rc.bottom);
-            if (taskbarEdge is null || rect.Width <= 0 || rect.Height <= 0)
-            {
-                rect = default;
-                edge = default;
-                return false;
-            }
-
-            edge = taskbarEdge.Value;
-            return true;
-        }
+        edge = taskbarEdge.Value;
+        return true;
     }
 }
 #endif
