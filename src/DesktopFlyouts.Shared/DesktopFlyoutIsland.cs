@@ -5,7 +5,6 @@ using System;
 using Windows.Foundation;
 
 #if UWP
-using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -176,7 +175,7 @@ namespace DesktopFlyouts
             if (_owner is not null
                 && _owner.TryGetTarget(out var owner)
                 && owner.IsBackdropEnabled
-                && GetTemplateChild("PART_RootGrid") is Grid templateRoot)
+                && GetTemplateChild("PART_RootGrid") is Grid)
             {
                 var useLightTheme = RequestedTheme switch
                 {
@@ -185,25 +184,11 @@ namespace DesktopFlyouts
                     _ => GeneralHelpers.IsTaskbarLight(),
                 };
                 var useAccent = GeneralHelpers.IsTaskbarColorPrevalenceEnabled();
-                if (owner.BackdropKind is not DesktopFlyoutBackdropKind.Mica)
-                {
-                    background = !forceUpdate && _ownerBackground is DesktopFlyoutAcrylicBrush acrylic
-                        && acrylic.UseLightTheme == useLightTheme && acrylic.UseAccent == useAccent
-                        ? acrylic
-                        : new DesktopFlyoutAcrylicBrush(useLightTheme, useAccent, owner.IsHostBackdropBrushEnabled);
-                }
-                else
-                {
-                    var themeKey = new AccessibilitySettings().HighContrast
-                        ? "HighContrast"
-                        : useLightTheme ? "Light" : "Default";
-                    // WinUI 2 BackdropMaterial targets Window.Current, not DesktopWindowXamlSource.
-                    // Keep its Mica fallback local to each island instead of changing the shared window.
-                    var themeResources = (ResourceDictionary)templateRoot.Resources.ThemeDictionaries[themeKey];
-
-                    background = themeResources["MicaFallbackBackgroundBrush"] as Brush
-                        ?? throw new InvalidOperationException($"Could not find MicaFallbackBackgroundBrush in the {themeKey} theme.");
-                }
+                background = !forceUpdate && _ownerBackground is DesktopFlyoutBackdropBrush backdrop
+                    && backdrop.Kind == owner.BackdropKind
+                    && backdrop.UseLightTheme == useLightTheme && backdrop.UseAccent == useAccent
+                    ? backdrop
+                    : new DesktopFlyoutBackdropBrush(owner.BackdropKind, useLightTheme, useAccent, owner.IsHostBackdropBrushEnabled);
             }
 
             if (background is null)

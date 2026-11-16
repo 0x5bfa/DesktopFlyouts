@@ -106,7 +106,7 @@ namespace DesktopFlyouts
             SelectedPositionIndex = FlyoutPositions.Count - 2;
 
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.DesktopAcrylic, "Acrylic");
-            SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica (solid fallback)");
+            SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica");
             SelectedSystemBackdropIndex = 0;
 
             ToggleFlyoutOpenCommand = new RelayCommand(ExecuteToggleFlyoutOpenCommand);

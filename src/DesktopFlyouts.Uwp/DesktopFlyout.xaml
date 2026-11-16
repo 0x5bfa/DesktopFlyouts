@@ -78,21 +78,6 @@
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
                         Translation="0,0,36">
-                        <Grid.Resources>
-                            <ResourceDictionary>
-                                <ResourceDictionary.ThemeDictionaries>
-                                    <ResourceDictionary x:Key="Default">
-                                        <SolidColorBrush x:Key="MicaFallbackBackgroundBrush" Color="#FF202020" />
-                                    </ResourceDictionary>
-                                    <ResourceDictionary x:Key="Light">
-                                        <SolidColorBrush x:Key="MicaFallbackBackgroundBrush" Color="#FFF3F3F3" />
-                                    </ResourceDictionary>
-                                    <ResourceDictionary x:Key="HighContrast">
-                                        <SolidColorBrush x:Key="MicaFallbackBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
-                                    </ResourceDictionary>
-                                </ResourceDictionary.ThemeDictionaries>
-                            </ResourceDictionary>
-                        </Grid.Resources>
                         <Grid.Shadow>
                             <ThemeShadow />
                         </Grid.Shadow>

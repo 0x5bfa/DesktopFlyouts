@@ -17,6 +17,7 @@
 
     <ItemGroup>
         <Compile Include="../../src/DesktopFlyouts.Uwp/DesktopFlyoutAcrylicEffect.cs" Link="Production/DesktopFlyoutAcrylicEffect.cs" />
+        <Compile Include="../../src/DesktopFlyouts.Uwp/DesktopFlyoutMicaEffect.cs" Link="Production/DesktopFlyoutMicaEffect.cs" />
         <!-- VSTest has no MSIX activation context. Keep Win2D beside the test host for CsWinRT activation. -->
         <Content Include="$(PkgWin2D_uwp)/runtimes/win-$(Platform)/native/Microsoft.Graphics.Canvas.dll"
                  Link="Microsoft.Graphics.Canvas.dll" CopyToOutputDirectory="PreserveNewest" />

@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI.Composition;
 using Windows.Foundation;
+using Windows.Foundation.Metadata;
 using Windows.Graphics.DirectX;
 using Windows.System.Power;
 using Windows.UI;
@@ -17,9 +18,9 @@ using Windows.UI.Xaml.Media;
 
 namespace DesktopFlyouts
 {
-    // Uses a host backdrop directly rather than AcrylicBrush's CoreWindow/island activation policy.
-    // Each XAML island owns its brush; the host HWND must opt into host backdrop sampling first.
-    internal sealed partial class DesktopFlyoutAcrylicBrush : XamlCompositionBrushBase
+    // Each island owns its material brush rather than targeting Window.Current with BackdropMaterial.
+    // Acrylic samples the host backdrop; Mica samples only the desktop wallpaper.
+    internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushBase
     {
         private readonly bool _canUseHostBackdrop;
         private readonly CoreDispatcher _dispatcher;
@@ -34,9 +35,11 @@ namespace DesktopFlyouts
 
         internal bool UseLightTheme { get; }
         internal bool UseAccent { get; }
+        internal DesktopFlyoutBackdropKind Kind { get; }
 
-        internal DesktopFlyoutAcrylicBrush(bool useLightTheme, bool useAccent, bool canUseHostBackdrop)
+        internal DesktopFlyoutBackdropBrush(DesktopFlyoutBackdropKind kind, bool useLightTheme, bool useAccent, bool canUseHostBackdrop)
         {
+            Kind = kind;
             UseLightTheme = useLightTheme;
             UseAccent = useAccent;
             _canUseHostBackdrop = canUseHostBackdrop;
@@ -94,7 +97,8 @@ namespace DesktopFlyouts
 
             UpdateFallbackColor();
             ClearCompositionResources();
-            if (!_canUseHostBackdrop || _accessibilitySettings.HighContrast || !_uiSettings.AdvancedEffectsEnabled
+            if ((Kind is not DesktopFlyoutBackdropKind.Mica && !_canUseHostBackdrop)
+                || _accessibilitySettings.HighContrast || !_uiSettings.AdvancedEffectsEnabled
                 || PowerManager.EnergySaverStatus is EnergySaverStatus.On
                 || _capabilities?.AreEffectsSupported() != true || !_capabilities.AreEffectsFast())
             {
@@ -104,18 +108,32 @@ namespace DesktopFlyouts
             try
             {
                 var compositor = Window.Current.Compositor;
-                _backdrop = compositor.CreateHostBackdropBrush();
-                CreateNoiseBrush(compositor);
-
                 var tintColor = GetTintColor();
                 var luminosityOpacity = UseAccent ? 0.8 : UseLightTheme ? 0.9 : 0.96;
                 var tintOpacity = UseAccent ? 0.8 : UseLightTheme ? 0.0 : 0.5;
-                CompositionBrush = DesktopFlyoutAcrylicEffect.Create(
-                    compositor, _backdrop, _noiseBrush!, tintColor, tintOpacity, luminosityOpacity);
+                if (Kind is DesktopFlyoutBackdropKind.Mica)
+                {
+                    if (!ApiInformation.IsMethodPresent("Windows.UI.Composition.Compositor", "TryCreateBlurredWallpaperBackdropBrush"))
+                        return;
+
+                    _backdrop = compositor.TryCreateBlurredWallpaperBackdropBrush();
+                    if (_backdrop is null)
+                        return;
+
+                    CompositionBrush = DesktopFlyoutMicaEffect.Create(
+                        compositor, _backdrop, tintColor, tintOpacity, luminosityOpacity);
+                }
+                else
+                {
+                    _backdrop = compositor.CreateHostBackdropBrush();
+                    CreateNoiseBrush(compositor);
+                    CompositionBrush = DesktopFlyoutAcrylicEffect.Create(
+                        compositor, _backdrop, _noiseBrush!, tintColor, tintOpacity, luminosityOpacity);
+                }
             }
             catch (COMException exception)
             {
-                Debug.WriteLine($"Could not create the UWP Acrylic effect: 0x{exception.HResult:X8}.");
+                Debug.WriteLine($"Could not create the UWP {Kind} effect: 0x{exception.HResult:X8}.");
                 ClearCompositionResources();
             }
         }
