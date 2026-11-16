@@ -40,6 +40,8 @@ belong in **Unreleased** until the next release is tagged.
 
 ### Fixed
 
+- Stop transition and gesture storyboards before disposing a flyout host so their completion
+  callbacks cannot run against a torn-down XAML island.
 - Keep flyout opening and backdrop cleanup on the owning UI thread. Reuse system backdrops across
   open/close cycles and dispose detached `ContentExternalBackdropLink` instances on that thread,
   preventing owning-thread errors during rapid toggles and garbage collection. Cancel queued

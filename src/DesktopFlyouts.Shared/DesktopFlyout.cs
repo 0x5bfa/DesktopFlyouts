@@ -90,6 +90,7 @@ namespace DesktopFlyouts
         private DesktopFlyoutPopupDirection _activePopupDirection = DesktopFlyoutPopupDirection.BottomToTop;
         private DispatcherTimer? _autoCloseTimer;
         private DispatcherTimer? _restoreActivationTimer;
+        private Storyboard? _transitionStoryboard;
         private Storyboard? _pressScaleStoryboard;
         private Storyboard? _swipeDismissRestoreStoryboard;
         private FoundationPoint _swipeDismissStartPoint;
@@ -309,6 +310,7 @@ namespace DesktopFlyouts
                 if (AreTransitionAnimationsEnabled)
                 {
                     var storyboard = GetOpenStoryboard(_activePopupDirection);
+                    _transitionStoryboard = storyboard;
                     storyboard.Completed += OpenAnimationStoryboard_Completed;
                     storyboard.Begin();
                 }
@@ -400,6 +402,7 @@ namespace DesktopFlyouts
             if (AreTransitionAnimationsEnabled)
             {
                 var storyboard = GetCloseStoryboard(_activePopupDirection, closeFromCurrentTransform);
+                _transitionStoryboard = storyboard;
                 storyboard.Completed += CloseAnimationStoryboard_Completed;
                 storyboard.Begin();
             }
@@ -672,22 +675,42 @@ namespace DesktopFlyouts
 
         private void OpenAnimationStoryboard_Completed(object? sender, object e)
         {
-            if (sender is not Storyboard storyboard)
+            if (sender is not Storyboard storyboard || !ReferenceEquals(_transitionStoryboard, storyboard))
                 return;
 
             storyboard.Completed -= OpenAnimationStoryboard_Completed;
+            _transitionStoryboard = null;
             storyboard.Stop();
+            if (_disposed)
+                return;
+
             CompleteOpen();
         }
 
         private void CloseAnimationStoryboard_Completed(object? sender, object e)
         {
-            if (sender is not Storyboard storyboard)
+            if (sender is not Storyboard storyboard || !ReferenceEquals(_transitionStoryboard, storyboard))
                 return;
 
             storyboard.Completed -= CloseAnimationStoryboard_Completed;
+            _transitionStoryboard = null;
             storyboard.Stop();
+            if (_disposed)
+                return;
+
             CompleteClose();
+        }
+
+        private void StopTransitionStoryboard()
+        {
+            if (_transitionStoryboard is null)
+                return;
+
+            var storyboard = _transitionStoryboard;
+            _transitionStoryboard = null;
+            storyboard.Completed -= OpenAnimationStoryboard_Completed;
+            storyboard.Completed -= CloseAnimationStoryboard_Completed;
+            storyboard.Stop();
         }
 
         private void CompleteOpen()
@@ -1105,14 +1128,14 @@ namespace DesktopFlyouts
 
         private void SwipeDismissRestoreStoryboard_Completed(object? sender, object e)
         {
-            if (sender is not Storyboard storyboard)
+            if (sender is not Storyboard storyboard || !ReferenceEquals(_swipeDismissRestoreStoryboard, storyboard))
                 return;
 
             storyboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
+            _swipeDismissRestoreStoryboard = null;
             storyboard.Stop();
-
-            if (ReferenceEquals(_swipeDismissRestoreStoryboard, storyboard))
-                _swipeDismissRestoreStoryboard = null;
+            if (_disposed)
+                return;
 
             SetOpenTransform();
             RestartAutoCloseTimer();
@@ -1711,6 +1734,12 @@ namespace DesktopFlyouts
 
             _disposed = true;
             CancelOpenFlyoutLayoutUpdate();
+            StopTransitionStoryboard();
+            StopSwipeDismissRestoreStoryboard();
+            ResetSwipeDismissTracking();
+            ResetPressedScale();
+            _isPopupAnimationPlaying = false;
+            _hideAfterOpen = false;
             StopEnvironmentMonitoring();
             _requestedPosition = null;
             StopAutoCloseTimer();
