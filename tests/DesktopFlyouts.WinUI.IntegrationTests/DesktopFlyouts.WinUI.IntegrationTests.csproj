@@ -29,8 +29,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="../../src/DesktopFlyouts.Shared/TaskbarOverflowFlyoutMonitor.cs" Link="Production/TaskbarOverflowFlyoutMonitor.cs" />
-		<Compile Include="../../src/DesktopFlyouts.Shared/TaskbarLayoutMonitor.cs" Link="Production/TaskbarLayoutMonitor.cs" />
-		<Compile Include="../../src/DesktopFlyouts.Shared/Helpers/WindowHelpers.Overflow.cs" Link="Production/WindowHelpers.Overflow.cs" />
+		<Compile Include="../../src/DesktopFlyouts.Shared/Interop/TaskbarOverflowFlyoutMonitor.cs" Link="Production/TaskbarOverflowFlyoutMonitor.cs" />
+		<Compile Include="../../src/DesktopFlyouts.Shared/Interop/TaskbarLayoutMonitor.cs" Link="Production/TaskbarLayoutMonitor.cs" />
+		<Compile Include="../../src/DesktopFlyouts.Shared/Interop/WindowHelpers.Overflow.cs" Link="Production/WindowHelpers.Overflow.cs" />
 	</ItemGroup>
 </Project>

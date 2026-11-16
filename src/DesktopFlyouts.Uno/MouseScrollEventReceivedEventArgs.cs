@@ -1,11 +1,5 @@
 namespace DesktopFlyouts;
 
-public enum MouseScrollOrientation
-{
-	Vertical,
-	Horizontal
-}
-
 public class MouseScrollEventReceivedEventArgs : EventArgs
 {
 	public int Delta { get; }
