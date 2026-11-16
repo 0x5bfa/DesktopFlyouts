@@ -6,10 +6,6 @@ using System.Drawing;
 
 namespace DesktopFlyouts;
 
-internal readonly record struct DesktopFlyoutPositionResult(
-	Rectangle Bounds,
-	DesktopFlyoutPopupDirection TransitionDirection);
-
 /// <summary>
 /// Resolves positions using only supplied coordinates and sizes. Platform-specific monitor and
 /// taskbar information is collected by <see cref="WindowHelpers"/> before calling this class.

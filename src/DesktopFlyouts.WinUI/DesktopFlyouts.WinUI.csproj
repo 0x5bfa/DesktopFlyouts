@@ -8,6 +8,7 @@
 
 		<UseWinUI>true</UseWinUI>
 		<WinUISDKReferences>false</WinUISDKReferences>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
 		<Deterministic>true</Deterministic>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>

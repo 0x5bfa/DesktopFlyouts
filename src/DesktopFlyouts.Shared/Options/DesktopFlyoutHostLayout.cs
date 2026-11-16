@@ -48,5 +48,3 @@ internal readonly record struct DesktopFlyoutHostLayout(
 				relative.Height / rasterizationScale));
 	}
 }
-
-internal readonly record struct DesktopFlyoutDipRegion(double X, double Y, double Width, double Height);

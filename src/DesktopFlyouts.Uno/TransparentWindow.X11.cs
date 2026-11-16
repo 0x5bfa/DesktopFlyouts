@@ -1,3 +1,6 @@
+// Copyright (c) 0x5BFA. All rights reserved.
+// Licensed under the MIT license.
+
 using Uno.UI.Xaml;
 using System.Reflection;
 using Microsoft.UI.Xaml;

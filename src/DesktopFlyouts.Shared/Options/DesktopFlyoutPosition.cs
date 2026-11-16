@@ -7,36 +7,6 @@ using System.Drawing;
 namespace DesktopFlyouts;
 
 /// <summary>
-/// Specifies the side of an anchor where a flyout is placed.
-/// </summary>
-public enum DesktopFlyoutAnchorSide
-{
-	Above,
-	Below,
-	Left,
-	Right,
-}
-
-/// <summary>
-/// Specifies how a flyout aligns with the anchor on its perpendicular axis.
-/// </summary>
-public enum DesktopFlyoutAnchorAlignment
-{
-	Start,
-	Center,
-	End,
-}
-
-/// <summary>
-/// Specifies which monitor work area to use for an unanchored position.
-/// </summary>
-public enum DesktopFlyoutMonitorSelection
-{
-	Primary,
-	Cursor,
-}
-
-/// <summary>
 /// Describes where a <see cref="DesktopFlyout"/> should appear for one call to
 /// <see cref="DesktopFlyout.Show(DesktopFlyoutPosition)"/>.
 /// </summary>

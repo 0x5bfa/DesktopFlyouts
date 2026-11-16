@@ -1,3 +1,6 @@
+// Copyright (c) 0x5BFA. All rights reserved.
+// Licensed under the MIT license.
+
 // Polyfill for ManualDefinitions.
 // The real implementation provides Win32 helper definitions and global usings.
 // This stub provides the minimum API surface needed by shared code compilation.

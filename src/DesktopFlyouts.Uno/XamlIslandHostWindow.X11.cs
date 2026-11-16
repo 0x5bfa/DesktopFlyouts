@@ -1,3 +1,6 @@
+// Copyright (c) 0x5BFA. All rights reserved.
+// Licensed under the MIT license.
+
 // X11 implementation of XamlIslandHostWindow.
 // Uses Microsoft.UI.Xaml.Window for XAML rendering and raw X11 P/Invoke
 // for window property manipulation (borderless, override_redirect, positioning).

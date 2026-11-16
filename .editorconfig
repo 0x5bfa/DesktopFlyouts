@@ -12,5 +12,9 @@ indent_style = tab
 indent_size = 4
 tab_width = 4
 
+[src/**/*.cs]
+file_header_template = Copyright (c) 0x5BFA. All rights reserved.\nLicensed under the MIT license.
+dotnet_diagnostic.IDE0073.severity = error
+
 [*.appxmanifest]
 charset = utf-8-bom

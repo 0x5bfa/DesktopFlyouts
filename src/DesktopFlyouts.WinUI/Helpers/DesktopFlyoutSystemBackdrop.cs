@@ -100,33 +100,3 @@ internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
 
 	private sealed record TargetState(ISystemBackdropControllerWithTargets? Controller, SystemBackdropConfiguration Configuration);
 }
-
-internal sealed partial class DesktopFlyoutAcrylicBackdrop : DesktopFlyoutSystemBackdrop
-{
-	internal DesktopFlyoutAcrylicBackdrop(bool useLightTheme)
-		: base(useLightTheme)
-	{
-	}
-
-	protected override ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration)
-	{
-		return BackdropControllerHelpers.GetAcrylicController(configuration.Theme is SystemBackdropTheme.Light);
-	}
-}
-
-internal sealed partial class DesktopFlyoutMicaBackdrop : DesktopFlyoutSystemBackdrop
-{
-	internal DesktopFlyoutMicaBackdrop(bool useLightTheme)
-		: base(useLightTheme)
-	{
-	}
-
-	protected override ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration)
-	{
-		var controller = BackdropControllerHelpers.GetMicaController(configuration.Theme is SystemBackdropTheme.Light);
-		if (controller is not null)
-			controller.Kind = MicaKind.Base;
-
-		return controller;
-	}
-}

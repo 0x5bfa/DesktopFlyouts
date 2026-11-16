@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- Copyright (c) 0x5BFA. All rights reserved. Licensed under the MIT license. -->
+
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
   <interface name="org.freedesktop.DBus">
 	<method name="NameHasOwner">

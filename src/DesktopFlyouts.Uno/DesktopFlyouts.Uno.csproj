@@ -11,6 +11,7 @@
 		<GenerateLibraryLayout>true</GenerateLibraryLayout>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<!--  UnoFeatures let's you quickly add and manage implicit package references based on the features you want to use. https://aka.platform.uno/singleproject-features  -->
 		<UnoFeatures>SkiaRenderer;</UnoFeatures>
 		<DefineConstants>$(DefineConstants);WASDK</DefineConstants>

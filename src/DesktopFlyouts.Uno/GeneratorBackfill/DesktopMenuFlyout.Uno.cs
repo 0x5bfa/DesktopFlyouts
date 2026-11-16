@@ -1,3 +1,6 @@
+// Copyright (c) 0x5BFA. All rights reserved.
+// Licensed under the MIT license.
+
 // Manual dependency property implementation for Uno.
 // The GeneratedDependencyProperty source generator does not run under Uno.Sdk.
 

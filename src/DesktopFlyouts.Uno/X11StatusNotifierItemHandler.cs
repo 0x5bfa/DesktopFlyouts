@@ -1,3 +1,6 @@
+// Copyright (c) 0x5BFA. All rights reserved.
+// Licensed under the MIT license.
+
 using Tmds.DBus.Protocol;
 using DesktopFlyouts.DBus;
 
@@ -54,17 +57,17 @@ class X11StatusNotifierItemHandler : DBusHandler, IStatusNotifierItemHandler, IS
 		return default;
 	}
 
-    public ValueTask HandleGetPropertyAsync(IStatusNotifierItemHandler.GetPropertyContext context)
-    {
-        return context.Handle(this);
-    }
+	public ValueTask HandleGetPropertyAsync(IStatusNotifierItemHandler.GetPropertyContext context)
+	{
+		return context.Handle(this);
+	}
 
-    public ValueTask HandleGetAllPropertiesAsync(IStatusNotifierItemHandler.GetAllPropertiesContext context)
-    {
-        return context.Handle(this);
-    }
+	public ValueTask HandleGetAllPropertiesAsync(IStatusNotifierItemHandler.GetAllPropertiesContext context)
+	{
+		return context.Handle(this);
+	}
 
-    public void SetIcon((int, int, byte[]) dbusPixmap)
+	public void SetIcon((int, int, byte[]) dbusPixmap)
 	{
 		IconPixmap = new[] { dbusPixmap };
 		IconName = "";

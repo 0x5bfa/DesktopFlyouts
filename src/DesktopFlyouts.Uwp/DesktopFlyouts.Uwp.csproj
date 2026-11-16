@@ -8,6 +8,7 @@
 
 		<UseUwp>true</UseUwp>
 		<DisableEmbeddedXbf>false</DisableEmbeddedXbf>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
 		<Deterministic>true</Deterministic>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>

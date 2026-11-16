@@ -1,6 +1,7 @@
-#if !HAS_UNO
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
+
+#if !HAS_UNO
 
 using System;
 using System.Diagnostics;
