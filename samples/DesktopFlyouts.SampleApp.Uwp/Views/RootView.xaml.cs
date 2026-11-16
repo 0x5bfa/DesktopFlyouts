@@ -5,8 +5,8 @@ namespace DesktopFlyouts;
 
 internal sealed partial class RootView : Windows.UI.Xaml.Controls.UserControl
 {
-    public RootView()
-    {
-        InitializeComponent();
-    }
+	public RootView()
+	{
+		InitializeComponent();
+	}
 }

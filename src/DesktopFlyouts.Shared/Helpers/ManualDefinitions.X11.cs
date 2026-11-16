@@ -7,9 +7,9 @@ namespace Windows.Win32;
 
 internal static partial class ManualDefinitions
 {
-    internal static bool SUCCEEDED(int hr) => hr >= 0;
-    internal static bool FAILED(int hr) => hr < 0;
-    internal static int LOWORD(nint value) => (int)(short)(value & 0xFFFF);
-    internal static int HIWORD(nint value) => (int)(short)((value >> 16) & 0xFFFF);
+	internal static bool SUCCEEDED(int hr) => hr >= 0;
+	internal static bool FAILED(int hr) => hr < 0;
+	internal static int LOWORD(nint value) => (int)(short)(value & 0xFFFF);
+	internal static int HIWORD(nint value) => (int)(short)((value >> 16) & 0xFFFF);
 }
 #endif

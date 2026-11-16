@@ -7,12 +7,12 @@ namespace DesktopFlyouts;
 
 public sealed partial class MainWindow : Window
 {
-    public MainWindow()
-    {
-        InitializeComponent();
+	public MainWindow()
+	{
+		InitializeComponent();
 
-        AppWindow.Resize(new(600, 900));
-        ExtendsContentIntoTitleBar = true;
-        Content = new RootView();
-    }
+		AppWindow.Resize(new(600, 900));
+		ExtendsContentIntoTitleBar = true;
+		Content = new RootView();
+	}
 }

@@ -13,49 +13,49 @@ namespace DesktopFlyouts;
 // Creates flyout controls and dispatches their operations on the application's XAML thread.
 internal sealed class SampleFlyoutWindow<T> where T : Control, IDisposable
 {
-    private readonly T _content;
-    private readonly CoreDispatcher _dispatcher;
+	private readonly T _content;
+	private readonly CoreDispatcher _dispatcher;
 
-    private SampleFlyoutWindow(T content)
-    {
-        _content = content;
-        _dispatcher = content.Dispatcher;
-    }
+	private SampleFlyoutWindow(T content)
+	{
+		_content = content;
+		_dispatcher = content.Dispatcher;
+	}
 
-    internal static Task<SampleFlyoutWindow<T>> CreateAsync(Func<T> factory)
-    {
-        return Task.FromResult(new SampleFlyoutWindow<T>(factory()));
-    }
+	internal static Task<SampleFlyoutWindow<T>> CreateAsync(Func<T> factory)
+	{
+		return Task.FromResult(new SampleFlyoutWindow<T>(factory()));
+	}
 
-    internal bool TryPreTranslateMessage(nint message) => _content switch
-    {
-        DesktopFlyout flyout => flyout.TryPreTranslateMessage(message),
-        DesktopMenuFlyout menu => menu.TryPreTranslateMessage(message),
-        _ => false,
-    };
+	internal bool TryPreTranslateMessage(nint message) => _content switch
+	{
+		DesktopFlyout flyout => flyout.TryPreTranslateMessage(message),
+		DesktopMenuFlyout menu => menu.TryPreTranslateMessage(message),
+		_ => false,
+	};
 
-    internal async Task InvokeAsync(Action<T> action)
-    {
-        Exception? failure = null;
-        var invoked = false;
-        await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-        {
-            invoked = true;
-            try
-            {
-                action(_content);
-            }
-            catch (Exception exception)
-            {
-                failure = exception;
-            }
-        });
+	internal async Task InvokeAsync(Action<T> action)
+	{
+		Exception? failure = null;
+		var invoked = false;
+		await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+		{
+			invoked = true;
+			try
+			{
+				action(_content);
+			}
+			catch (Exception exception)
+			{
+				failure = exception;
+			}
+		});
 
-        if (failure is not null)
-            ExceptionDispatchInfo.Capture(failure).Throw();
-        if (!invoked)
-            throw new InvalidOperationException("The flyout dispatcher stopped before handling the request.");
-    }
+		if (failure is not null)
+			ExceptionDispatchInfo.Capture(failure).Throw();
+		if (!invoked)
+			throw new InvalidOperationException("The flyout dispatcher stopped before handling the request.");
+	}
 
-    internal Task DisposeAsync() => InvokeAsync(content => content.Dispose());
+	internal Task DisposeAsync() => InvokeAsync(content => content.Dispose());
 }

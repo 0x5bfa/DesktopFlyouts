@@ -7,13 +7,13 @@ namespace DesktopFlyouts;
 
 public sealed partial class MainDesktopMenuFlyout : DesktopMenuFlyout
 {
-    public MainDesktopMenuFlyout()
-    {
-        InitializeComponent();
-    }
+	public MainDesktopMenuFlyout()
+	{
+		InitializeComponent();
+	}
 
-    private void Exit_Click(object sender, RoutedEventArgs e)
-    {
-        App.ExitApplication();
-    }
+	private void Exit_Click(object sender, RoutedEventArgs e)
+	{
+		App.ExitApplication();
+	}
 }

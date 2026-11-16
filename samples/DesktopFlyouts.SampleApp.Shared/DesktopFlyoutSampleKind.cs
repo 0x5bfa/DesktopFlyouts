@@ -5,22 +5,22 @@ namespace DesktopFlyouts.SampleApp.Shared;
 
 public enum DesktopFlyoutSampleKind
 {
-    /// <summary>
-    /// The customizable flyout. When selected, the flyout will be shown with all the features enabled and being customizable.
-    /// </summary>
-    Customizable,
+	/// <summary>
+	/// The customizable flyout. When selected, the flyout will be shown with all the features enabled and being customizable.
+	/// </summary>
+	Customizable,
 
-    Button,
+	Button,
 
-    IndicatorStyle,
+	IndicatorStyle,
 
-    NotificationCenterStyle,
+	NotificationCenterStyle,
 
-    StartMenuStyle,
+	StartMenuStyle,
 
-    StickySmallStyle,
+	StickySmallStyle,
 
-    WidgetStyle,
+	WidgetStyle,
 
-    Severity,
+	Severity,
 }

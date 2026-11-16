@@ -8,5 +8,5 @@ namespace CommunityToolkit.WinUI;
 [AttributeUsage(AttributeTargets.Property)]
 internal sealed class GeneratedDependencyPropertyAttribute : Attribute
 {
-    public object? DefaultValue { get; set; }
+	public object? DefaultValue { get; set; }
 }

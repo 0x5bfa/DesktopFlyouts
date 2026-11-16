@@ -14,14 +14,14 @@ namespace DesktopFlyouts;
 /// </remarks>
 public class MouseEventReceivedEventArgs : EventArgs
 {
-    /// <summary>
-    /// Gets the screen point associated with the mouse event.
-    /// </summary>
-    /// <value>The screen point in physical pixels.</value>
-    public Point Point { get; }
+	/// <summary>
+	/// Gets the screen point associated with the mouse event.
+	/// </summary>
+	/// <value>The screen point in physical pixels.</value>
+	public Point Point { get; }
 
-    internal MouseEventReceivedEventArgs(Point point)
-    {
-        Point = point;
-    }
+	internal MouseEventReceivedEventArgs(Point point)
+	{
+		Point = point;
+	}
 }

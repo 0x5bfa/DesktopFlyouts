@@ -5,8 +5,8 @@ namespace DesktopFlyouts;
 
 internal enum TaskbarEdge
 {
-    Left,
-    Top,
-    Right,
-    Bottom,
+	Left,
+	Top,
+	Right,
+	Bottom,
 }

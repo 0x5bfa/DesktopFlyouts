@@ -9,24 +9,24 @@ namespace DesktopFlyouts;
 
 public partial class TransparentWindow : Window
 {
-    public TransparentWindow()
-    {
-        WindowHelper.SetBackground(this, new SolidColorBrush(Microsoft.UI.Colors.Transparent));
+	public TransparentWindow()
+	{
+		WindowHelper.SetBackground(this, new SolidColorBrush(Microsoft.UI.Colors.Transparent));
 
-        if (typeof(Window).GetProperty("RootElement", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(this) is Panel root)
-        {
-            root.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+		if (typeof(Window).GetProperty("RootElement", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(this) is Panel root)
+		{
+			root.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
 
-            root.ActualThemeChanged += delegate
-            {
-                root.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-            };
+			root.ActualThemeChanged += delegate
+			{
+				root.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+			};
 
-            CompositionTarget.Rendering += delegate {
-                if (root.Background is not SolidColorBrush s || s.Color != Microsoft.UI.Colors.Transparent)
-                    root.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-            };
-        }
-    }
+			CompositionTarget.Rendering += delegate {
+				if (root.Background is not SolidColorBrush s || s.Color != Microsoft.UI.Colors.Transparent)
+					root.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+			};
+		}
+	}
 }
 #endif

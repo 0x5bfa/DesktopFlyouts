@@ -12,38 +12,38 @@ namespace DesktopFlyouts;
 /// </remarks>
 public enum DesktopFlyoutPopupDirection
 {
-    /// <summary>
-    /// Opens upward from the bottom edge.
-    /// </summary>
-    BottomToTop,
+	/// <summary>
+	/// Opens upward from the bottom edge.
+	/// </summary>
+	BottomToTop,
 
-    /// <summary>
-    /// Opens downward from the top edge.
-    /// </summary>
-    TopToBottom,
+	/// <summary>
+	/// Opens downward from the top edge.
+	/// </summary>
+	TopToBottom,
 
-    /// <summary>
-    /// Chooses a vertical direction based on placement.
-    /// </summary>
-    Vertical,
+	/// <summary>
+	/// Chooses a vertical direction based on placement.
+	/// </summary>
+	Vertical,
 
-    /// <summary>
-    /// Opens rightward from the left edge.
-    /// </summary>
-    LeftToRight,
+	/// <summary>
+	/// Opens rightward from the left edge.
+	/// </summary>
+	LeftToRight,
 
-    /// <summary>
-    /// Opens leftward from the right edge.
-    /// </summary>
-    RightToLeft,
+	/// <summary>
+	/// Opens leftward from the right edge.
+	/// </summary>
+	RightToLeft,
 
-    /// <summary>
-    /// Chooses a horizontal direction based on placement.
-    /// </summary>
-    Horizontal,
+	/// <summary>
+	/// Chooses a horizontal direction based on placement.
+	/// </summary>
+	Horizontal,
 
-    /// <summary>
-    /// Resolves the transition from the final placement.
-    /// </summary>
-    Auto,
+	/// <summary>
+	/// Resolves the transition from the final placement.
+	/// </summary>
+	Auto,
 }

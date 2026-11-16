@@ -8,12 +8,12 @@ namespace DesktopFlyouts;
 /// </summary>
 public enum DesktopFlyoutWorkAreaPosition
 {
-    TopLeft,
-    TopCenter,
-    TopRight,
-    LeftCenter,
-    RightCenter,
-    BottomLeft,
-    BottomCenter,
-    BottomRight,
+	TopLeft,
+	TopCenter,
+	TopRight,
+	LeftCenter,
+	RightCenter,
+	BottomLeft,
+	BottomCenter,
+	BottomRight,
 }

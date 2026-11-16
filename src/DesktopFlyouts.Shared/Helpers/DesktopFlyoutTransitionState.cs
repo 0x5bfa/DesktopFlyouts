@@ -8,15 +8,15 @@ namespace DesktopFlyouts;
 /// </summary>
 public enum DesktopFlyoutTransitionState
 {
-    /// <summary>The flyout is closed and no transition is running.</summary>
-    Closed,
+	/// <summary>The flyout is closed and no transition is running.</summary>
+	Closed,
 
-    /// <summary>The flyout is opening.</summary>
-    Opening,
+	/// <summary>The flyout is opening.</summary>
+	Opening,
 
-    /// <summary>The flyout is open and no transition is running.</summary>
-    Open,
+	/// <summary>The flyout is open and no transition is running.</summary>
+	Open,
 
-    /// <summary>The flyout is closing.</summary>
-    Closing,
+	/// <summary>The flyout is closing.</summary>
+	Closing,
 }

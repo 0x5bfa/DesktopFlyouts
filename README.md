@@ -45,44 +45,44 @@ This project provides `DesktopFlyout` for lightweight desktop panels and `Deskto
 
 ```xml
 <me:DesktopFlyout
-    x:Class="..."
-    xmlns:me="using:DesktopFlyouts"
-    FlyoutWidth="360">
+	x:Class="..."
+	xmlns:me="using:DesktopFlyouts"
+	FlyoutWidth="360">
 
-    <me:DesktopFlyoutIsland IslandHeight="300">
-        <!-- Put elements here -->
-    </me:DesktopFlyoutIsland>
-    <me:DesktopFlyoutIsland IslandHeight="300">
-        <!-- Put elements here -->
-    </me:DesktopFlyoutIsland>
+	<me:DesktopFlyoutIsland IslandHeight="300">
+		<!-- Put elements here -->
+	</me:DesktopFlyoutIsland>
+	<me:DesktopFlyoutIsland IslandHeight="300">
+		<!-- Put elements here -->
+	</me:DesktopFlyoutIsland>
 
 </me:DesktopFlyout>
 ```
 
 ```cs
 if (_desktopFlyout.TransitionState is not DesktopFlyoutTransitionState.Closed)
-    _desktopFlyout.Hide();
+	_desktopFlyout.Hide();
 else
-    _desktopFlyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
+	_desktopFlyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 ```
 
 ### DesktopMenuFlyout
 
 ```xml
 <me:DesktopMenuFlyout
-    x:Class="..."
-    xmlns:me="using:DesktopFlyouts">
+	x:Class="..."
+	xmlns:me="using:DesktopFlyouts">
 
-    <MenuFlyoutItem Text="Theme" />
-    <MenuFlyoutItem Text="Language" />
-    <MenuFlyoutItem Text="Settings" />
+	<MenuFlyoutItem Text="Theme" />
+	<MenuFlyoutItem Text="Language" />
+	<MenuFlyoutItem Text="Settings" />
 
 </me:DesktopMenuFlyout>
 ```
 
 ```cs
 if (_desktopMenuFlyout.IsOpen)
-    _desktopMenuFlyout.Hide();
+	_desktopMenuFlyout.Hide();
 
 _desktopMenuFlyout.Show(e.Point);
 ```

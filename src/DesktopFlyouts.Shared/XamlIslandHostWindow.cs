@@ -34,665 +34,665 @@ namespace DesktopFlyouts;
 
 internal unsafe partial class XamlIslandHostWindow : IDisposable
 {
-    private const string WindowClassNamePrefix = "DesktopFlyoutHostClass";
-    private const string WindowName = "DesktopFlyoutHostWindow";
-    private static readonly object s_cbtHookTargetsLock = new();
-    private static readonly Dictionary<uint, List<XamlIslandHostWindow>> s_cbtHookTargetsByThread = [];
+	private const string WindowClassNamePrefix = "DesktopFlyoutHostClass";
+	private const string WindowName = "DesktopFlyoutHostWindow";
+	private static readonly object s_cbtHookTargetsLock = new();
+	private static readonly Dictionary<uint, List<XamlIslandHostWindow>> s_cbtHookTargetsByThread = [];
 
-    private readonly WNDPROC _wndProc;
-    private readonly WNDPROC _xamlWndProc;
-    private readonly string _windowClassName = $"{WindowClassNamePrefix}.{Guid.NewGuid():N}";
+	private readonly WNDPROC _wndProc;
+	private readonly WNDPROC _xamlWndProc;
+	private readonly string _windowClassName = $"{WindowClassNamePrefix}.{Guid.NewGuid():N}";
 
-    private HWND _xamlHwnd = default;
-    private HHOOK _cbtHook = default;
-    private uint _cbtHookThreadId;
-    private HWND _preservedForegroundHWnd = default;
-    private HWND _preservedActiveHWnd = default;
-    private HWND _preservedFocusHWnd = default;
-    private readonly Dictionary<nint, nint> _subclassedXamlWndProcs = [];
-    private RectInt32? _windowRegion;
-    private bool _disposed;
-    private DesktopFlyoutActivationMode _activationMode = DesktopFlyoutActivationMode.Activate;
+	private HWND _xamlHwnd = default;
+	private HHOOK _cbtHook = default;
+	private uint _cbtHookThreadId;
+	private HWND _preservedForegroundHWnd = default;
+	private HWND _preservedActiveHWnd = default;
+	private HWND _preservedFocusHWnd = default;
+	private readonly Dictionary<nint, nint> _subclassedXamlWndProcs = [];
+	private RectInt32? _windowRegion;
+	private bool _disposed;
+	private DesktopFlyoutActivationMode _activationMode = DesktopFlyoutActivationMode.Activate;
 
 #if UWP
-    private HWND _coreHwnd = default;
-    private CoreWindow? _coreWindow = null;
+	private HWND _coreHwnd = default;
+	private CoreWindow? _coreWindow = null;
 
-    private IDesktopWindowXamlSourceNative2 _pdwxsn2 = null!;
+	private IDesktopWindowXamlSourceNative2 _pdwxsn2 = null!;
 
-    internal bool IsHostBackdropBrushEnabled { get; private set; }
+	internal bool IsHostBackdropBrushEnabled { get; private set; }
 #endif
 
-    internal HWND HWnd
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private set;
-    }
+	internal HWND HWnd
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private set;
+	}
 
-    internal DesktopWindowXamlSource? DesktopWindowXamlSource
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private set;
-    }
+	internal DesktopWindowXamlSource? DesktopWindowXamlSource
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private set;
+	}
 
-    internal Rect WindowSize
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            RECT rect;
-            PInvoke.GetWindowRect(HWnd, &rect);
-            return new(rect.X, rect.Y, rect.Width, rect.Height);
-        }
-    }
+	internal Rect WindowSize
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get
+		{
+			RECT rect;
+			PInvoke.GetWindowRect(HWnd, &rect);
+			return new(rect.X, rect.Y, rect.Width, rect.Height);
+		}
+	}
 
-    internal double XamlIslandRasterizationScale
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
+	internal double XamlIslandRasterizationScale
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get
+		{
 #if UWP
-            return 1.0D;
+			return 1.0D;
 #else
-            return DesktopWindowXamlSource?.SiteBridge.SiteView.RasterizationScale ?? 1.0D;
+			return DesktopWindowXamlSource?.SiteBridge.SiteView.RasterizationScale ?? 1.0D;
 #endif
-        }
-    }
+		}
+	}
 
-    internal event EventHandler? WindowInactivated;
-    internal event EventHandler? SystemSettingsChanged;
-    internal event EventHandler? DisplayAreaChanged;
+	internal event EventHandler? WindowInactivated;
+	internal event EventHandler? SystemSettingsChanged;
+	internal event EventHandler? DisplayAreaChanged;
 
-    internal XamlIslandHostWindow()
-    {
-        _wndProc = new(WndProc);
-        _xamlWndProc = new(XamlWndProc);
+	internal XamlIslandHostWindow()
+	{
+		_wndProc = new(WndProc);
+		_xamlWndProc = new(XamlWndProc);
 
-        WNDCLASSW wndClass = default;
-        wndClass.lpfnWndProc = (delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)Marshal.GetFunctionPointerForDelegate(_wndProc);
-        wndClass.hInstance = PInvoke.GetModuleHandle(null);
-        wndClass.lpszClassName = (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in _windowClassName.GetPinnableReference()));
-        PInvoke.RegisterClass(&wndClass);
+		WNDCLASSW wndClass = default;
+		wndClass.lpfnWndProc = (delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)Marshal.GetFunctionPointerForDelegate(_wndProc);
+		wndClass.hInstance = PInvoke.GetModuleHandle(null);
+		wndClass.lpszClassName = (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in _windowClassName.GetPinnableReference()));
+		PInvoke.RegisterClass(&wndClass);
 
-        HWnd = PInvoke.CreateWindowEx(
-            WINDOW_EX_STYLE.WS_EX_NOREDIRECTIONBITMAP | WINDOW_EX_STYLE.WS_EX_TOOLWINDOW | WINDOW_EX_STYLE.WS_EX_TOPMOST,
-            (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in _windowClassName.GetPinnableReference())),
-            (PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in WindowName.GetPinnableReference())),
-            WINDOW_STYLE.WS_POPUP, 0, 0, 0, 0, HWND.Null, HMENU.Null, wndClass.hInstance, null);
+		HWnd = PInvoke.CreateWindowEx(
+			WINDOW_EX_STYLE.WS_EX_NOREDIRECTIONBITMAP | WINDOW_EX_STYLE.WS_EX_TOOLWINDOW | WINDOW_EX_STYLE.WS_EX_TOPMOST,
+			(PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in _windowClassName.GetPinnableReference())),
+			(PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in WindowName.GetPinnableReference())),
+			WINDOW_STYLE.WS_POPUP, 0, 0, 0, 0, HWND.Null, HMENU.Null, wndClass.hInstance, null);
 
-        InitializeDesktopWindowXamlSource();
-    }
+		InitializeDesktopWindowXamlSource();
+	}
 
-    internal void SetContent(UIElement content)
-    {
-        if (_disposed)
-            return;
+	internal void SetContent(UIElement content)
+	{
+		if (_disposed)
+			return;
 
-        DesktopWindowXamlSource!.Content = content;
-        ApplyActivationModeToWindows();
-    }
+		DesktopWindowXamlSource!.Content = content;
+		ApplyActivationModeToWindows();
+	}
 
-    internal void PreserveActivationState()
-    {
-        if (_disposed)
-            return;
+	internal void PreserveActivationState()
+	{
+		if (_disposed)
+			return;
 
-        _preservedForegroundHWnd = PInvoke.GetForegroundWindow();
-        _preservedActiveHWnd = PInvoke.GetActiveWindow();
-        _preservedFocusHWnd = PInvoke.GetFocus();
-    }
+		_preservedForegroundHWnd = PInvoke.GetForegroundWindow();
+		_preservedActiveHWnd = PInvoke.GetActiveWindow();
+		_preservedFocusHWnd = PInvoke.GetFocus();
+	}
 
-    internal void RestoreActivationState()
-    {
-        if (_disposed)
-            return;
+	internal void RestoreActivationState()
+	{
+		if (_disposed)
+			return;
 
-        if (!_preservedForegroundHWnd.IsNull)
-            PInvoke.SetForegroundWindow(_preservedForegroundHWnd);
+		if (!_preservedForegroundHWnd.IsNull)
+			PInvoke.SetForegroundWindow(_preservedForegroundHWnd);
 
-        if (!_preservedActiveHWnd.IsNull)
-            PInvoke.SetActiveWindow(_preservedActiveHWnd);
+		if (!_preservedActiveHWnd.IsNull)
+			PInvoke.SetActiveWindow(_preservedActiveHWnd);
 
-        if (!_preservedFocusHWnd.IsNull)
-            PInvoke.SetFocus(_preservedFocusHWnd);
-    }
+		if (!_preservedFocusHWnd.IsNull)
+			PInvoke.SetFocus(_preservedFocusHWnd);
+	}
 
-    internal void MoveAndResize(RectInt32 rect, bool activate = true)
-    {
-        if (_disposed)
-            return;
+	internal void MoveAndResize(RectInt32 rect, bool activate = true)
+	{
+		if (_disposed)
+			return;
 
-        RECT currentBounds;
-        if (PInvoke.GetWindowRect(HWnd, &currentBounds)
-            && currentBounds.left == rect.X
-            && currentBounds.top == rect.Y
-            && currentBounds.right - currentBounds.left == rect.Width
-            && currentBounds.bottom - currentBounds.top == rect.Height)
-        {
-            return;
-        }
+		RECT currentBounds;
+		if (PInvoke.GetWindowRect(HWnd, &currentBounds)
+			&& currentBounds.left == rect.X
+			&& currentBounds.top == rect.Y
+			&& currentBounds.right - currentBounds.left == rect.Width
+			&& currentBounds.bottom - currentBounds.top == rect.Height)
+		{
+			return;
+		}
 
-        // Size the island through WinUI's site bridge (or WM_SIZE for UWP) only.
-        var flags = activate ? 0 : SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
-        PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, rect.X, rect.Y, rect.Width, rect.Height, flags);
-    }
+		// Size the island through WinUI's site bridge (or WM_SIZE for UWP) only.
+		var flags = activate ? 0 : SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
+		PInvoke.SetWindowPos(HWnd, HWND.HWND_TOP, rect.X, rect.Y, rect.Width, rect.Height, flags);
+	}
 
-    internal void Maximize(System.Drawing.Rectangle workArea, bool activate = true)
-    {
-        MoveAndResize(new RectInt32 { X = workArea.X, Y = workArea.Y, Width = workArea.Width, Height = workArea.Height }, activate);
-    }
+	internal void Maximize(System.Drawing.Rectangle workArea, bool activate = true)
+	{
+		MoveAndResize(new RectInt32 { X = workArea.X, Y = workArea.Y, Width = workArea.Width, Height = workArea.Height }, activate);
+	}
 
-    internal void SetHWndRectRegion(RectInt32 rect)
-    {
-        if (_disposed || _windowRegion?.Equals(rect) == true)
-            return;
+	internal void SetHWndRectRegion(RectInt32 rect)
+	{
+		if (_disposed || _windowRegion?.Equals(rect) == true)
+			return;
 
-        var hostUpdated = SetWindowRectRegion(HWnd, rect);
-        var islandUpdated = SetWindowRectRegion(_xamlHwnd, rect);
-        if (hostUpdated && islandUpdated)
-            _windowRegion = rect;
-    }
+		var hostUpdated = SetWindowRectRegion(HWnd, rect);
+		var islandUpdated = SetWindowRectRegion(_xamlHwnd, rect);
+		if (hostUpdated && islandUpdated)
+			_windowRegion = rect;
+	}
 
-    private static bool SetWindowRectRegion(HWND hWnd, RectInt32 rect)
-    {
-        HRGN region = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
-        if (region.IsNull)
-            return false;
+	private static bool SetWindowRectRegion(HWND hWnd, RectInt32 rect)
+	{
+		HRGN region = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
+		if (region.IsNull)
+			return false;
 
-        if (PInvoke.SetWindowRgn(hWnd, region, false) == 0)
-        {
-            PInvoke.DeleteObject(region);
-            return false;
-        }
+		if (PInvoke.SetWindowRgn(hWnd, region, false) == 0)
+		{
+			PInvoke.DeleteObject(region);
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    internal ValueTask UpdateWindowVisibility(bool isVisible, bool activate = true)
-    {
-        if (_disposed)
-            return default;
+	internal ValueTask UpdateWindowVisibility(bool isVisible, bool activate = true)
+	{
+		if (_disposed)
+			return default;
 
-        var command = isVisible
-            ? activate ? SHOW_WINDOW_CMD.SW_SHOW : SHOW_WINDOW_CMD.SW_SHOWNOACTIVATE
-            : SHOW_WINDOW_CMD.SW_HIDE;
+		var command = isVisible
+			? activate ? SHOW_WINDOW_CMD.SW_SHOW : SHOW_WINDOW_CMD.SW_SHOWNOACTIVATE
+			: SHOW_WINDOW_CMD.SW_HIDE;
 
-        PInvoke.ShowWindow(HWnd, command);
+		PInvoke.ShowWindow(HWnd, command);
 #if UWP
-        PInvoke.ShowWindow(_xamlHwnd, command);
+		PInvoke.ShowWindow(_xamlHwnd, command);
 #else
-        if (isVisible)
-        {
-            if (activate)
-                DesktopWindowXamlSource?.SiteBridge.Show();
-            else
-                PInvoke.ShowWindow(_xamlHwnd, command);
-        }
-        else
-        {
-            DesktopWindowXamlSource?.SiteBridge.Hide();
-        }
+		if (isVisible)
+		{
+			if (activate)
+				DesktopWindowXamlSource?.SiteBridge.Show();
+			else
+				PInvoke.ShowWindow(_xamlHwnd, command);
+		}
+		else
+		{
+			DesktopWindowXamlSource?.SiteBridge.Hide();
+		}
 #endif
 
-        if (isVisible)
-        {
-            ApplyActivationModeToWindows();
+		if (isVisible)
+		{
+			ApplyActivationModeToWindows();
 
-            if (activate)
-                PInvoke.SetForegroundWindow(HWnd);
-        }
+			if (activate)
+				PInvoke.SetForegroundWindow(HWnd);
+		}
 
-        return default;
-    }
+		return default;
+	}
 
-    internal void SetActivationMode(DesktopFlyoutActivationMode activationMode)
-    {
-        if (_disposed)
-            return;
+	internal void SetActivationMode(DesktopFlyoutActivationMode activationMode)
+	{
+		if (_disposed)
+			return;
 
-        _activationMode = activationMode;
-        ApplyActivationModeToWindows();
-    }
+		_activationMode = activationMode;
+		ApplyActivationModeToWindows();
+	}
 
-    private void ApplyActivationModeToWindows()
-    {
-        var neverActivate = _activationMode is DesktopFlyoutActivationMode.NeverActivate;
-        UpdateCbtHook(neverActivate);
-        if (neverActivate)
-            RefreshXamlIslandWindowSubclasses();
+	private void ApplyActivationModeToWindows()
+	{
+		var neverActivate = _activationMode is DesktopFlyoutActivationMode.NeverActivate;
+		UpdateCbtHook(neverActivate);
+		if (neverActivate)
+			RefreshXamlIslandWindowSubclasses();
 
-        SetNoActivateStyle(HWnd, neverActivate);
+		SetNoActivateStyle(HWnd, neverActivate);
 
-        foreach (var hWnd in _subclassedXamlWndProcs.Keys)
-            SetNoActivateStyle((HWND)hWnd, neverActivate);
+		foreach (var hWnd in _subclassedXamlWndProcs.Keys)
+			SetNoActivateStyle((HWND)hWnd, neverActivate);
 
-        if (!neverActivate)
-            UnsubclassXamlIslandWindows();
-    }
+		if (!neverActivate)
+			UnsubclassXamlIslandWindows();
+	}
 
-    private void UpdateCbtHook(bool enabled)
-    {
-        if (enabled)
-        {
-            EnsureCbtHook();
-            return;
-        }
+	private void UpdateCbtHook(bool enabled)
+	{
+		if (enabled)
+		{
+			EnsureCbtHook();
+			return;
+		}
 
-        RemoveCbtHook();
-    }
+		RemoveCbtHook();
+	}
 
-    private void EnsureCbtHook()
-    {
-        if (_cbtHook != HHOOK.Null)
-            return;
+	private void EnsureCbtHook()
+	{
+		if (_cbtHook != HHOOK.Null)
+			return;
 
-        _cbtHookThreadId = PInvoke.GetCurrentThreadId();
-        _cbtHook = PInvoke.SetWindowsHookEx(
-            WINDOWS_HOOK_ID.WH_CBT,
-            &CbtHookProc,
-            HINSTANCE.Null,
-            _cbtHookThreadId);
+		_cbtHookThreadId = PInvoke.GetCurrentThreadId();
+		_cbtHook = PInvoke.SetWindowsHookEx(
+			WINDOWS_HOOK_ID.WH_CBT,
+			&CbtHookProc,
+			HINSTANCE.Null,
+			_cbtHookThreadId);
 
-        if (_cbtHook != HHOOK.Null)
-            RegisterCbtHookTarget(_cbtHookThreadId);
-    }
+		if (_cbtHook != HHOOK.Null)
+			RegisterCbtHookTarget(_cbtHookThreadId);
+	}
 
-    private void RemoveCbtHook()
-    {
-        if (_cbtHook == HHOOK.Null)
-            return;
+	private void RemoveCbtHook()
+	{
+		if (_cbtHook == HHOOK.Null)
+			return;
 
-        PInvoke.UnhookWindowsHookEx(_cbtHook);
-        _cbtHook = default;
-        UnregisterCbtHookTarget(_cbtHookThreadId);
-        _cbtHookThreadId = 0;
-    }
+		PInvoke.UnhookWindowsHookEx(_cbtHook);
+		_cbtHook = default;
+		UnregisterCbtHookTarget(_cbtHookThreadId);
+		_cbtHookThreadId = 0;
+	}
 
-    private void RegisterCbtHookTarget(uint threadId)
-    {
-        lock (s_cbtHookTargetsLock)
-        {
-            if (!s_cbtHookTargetsByThread.TryGetValue(threadId, out var targets))
-            {
-                targets = [];
-                s_cbtHookTargetsByThread[threadId] = targets;
-            }
+	private void RegisterCbtHookTarget(uint threadId)
+	{
+		lock (s_cbtHookTargetsLock)
+		{
+			if (!s_cbtHookTargetsByThread.TryGetValue(threadId, out var targets))
+			{
+				targets = [];
+				s_cbtHookTargetsByThread[threadId] = targets;
+			}
 
-            if (!targets.Contains(this))
-                targets.Add(this);
-        }
-    }
+			if (!targets.Contains(this))
+				targets.Add(this);
+		}
+	}
 
-    private void UnregisterCbtHookTarget(uint threadId)
-    {
-        if (threadId == 0)
-            return;
+	private void UnregisterCbtHookTarget(uint threadId)
+	{
+		if (threadId == 0)
+			return;
 
-        lock (s_cbtHookTargetsLock)
-        {
-            if (!s_cbtHookTargetsByThread.TryGetValue(threadId, out var targets))
-                return;
+		lock (s_cbtHookTargetsLock)
+		{
+			if (!s_cbtHookTargetsByThread.TryGetValue(threadId, out var targets))
+				return;
 
-            targets.Remove(this);
-            if (targets.Count == 0)
-                s_cbtHookTargetsByThread.Remove(threadId);
-        }
-    }
+			targets.Remove(this);
+			if (targets.Count == 0)
+				s_cbtHookTargetsByThread.Remove(threadId);
+		}
+	}
 
-    private static XamlIslandHostWindow[] GetCbtHookTargets(uint threadId)
-    {
-        lock (s_cbtHookTargetsLock)
-        {
-            return s_cbtHookTargetsByThread.TryGetValue(threadId, out var targets)
-                ? [.. targets]
-                : [];
-        }
-    }
+	private static XamlIslandHostWindow[] GetCbtHookTargets(uint threadId)
+	{
+		lock (s_cbtHookTargetsLock)
+		{
+			return s_cbtHookTargetsByThread.TryGetValue(threadId, out var targets)
+				? [.. targets]
+				: [];
+		}
+	}
 
 #if UWP
-    public bool TryPreTranslateMessage(nint message)
-    {
-        BOOL result = false;
+	public bool TryPreTranslateMessage(nint message)
+	{
+		BOOL result = false;
 
-        _pdwxsn2.PreTranslateMessage((MSG*)message, &result);
+		_pdwxsn2.PreTranslateMessage((MSG*)message, &result);
 
-        return result;
-    }
+		return result;
+	}
 #endif
 
-    internal bool NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
-    {
-        if (_disposed || _xamlHwnd.IsNull || _activationMode is DesktopFlyoutActivationMode.NeverActivate)
-            return false;
+	internal bool NavigateFocus(XamlSourceFocusNavigationReason reason = XamlSourceFocusNavigationReason.Programmatic)
+	{
+		if (_disposed || _xamlHwnd.IsNull || _activationMode is DesktopFlyoutActivationMode.NeverActivate)
+			return false;
 
-        PInvoke.SetFocus(_xamlHwnd);
+		PInvoke.SetFocus(_xamlHwnd);
 
-        var result = DesktopWindowXamlSource?.NavigateFocus(new(reason));
-        return result?.WasFocusMoved ?? false;
-    }
+		var result = DesktopWindowXamlSource?.NavigateFocus(new(reason));
+		return result?.WasFocusMoved ?? false;
+	}
 
-    private static void SetNoActivateStyle(HWND hWnd, bool enabled)
-    {
-        if (hWnd.IsNull)
-            return;
+	private static void SetNoActivateStyle(HWND hWnd, bool enabled)
+	{
+		if (hWnd.IsNull)
+			return;
 
-        var exStyle = (WINDOW_EX_STYLE)PInvoke.GetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
-        exStyle = enabled
-            ? exStyle | WINDOW_EX_STYLE.WS_EX_NOACTIVATE
-            : exStyle & ~WINDOW_EX_STYLE.WS_EX_NOACTIVATE;
+		var exStyle = (WINDOW_EX_STYLE)PInvoke.GetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+		exStyle = enabled
+			? exStyle | WINDOW_EX_STYLE.WS_EX_NOACTIVATE
+			: exStyle & ~WINDOW_EX_STYLE.WS_EX_NOACTIVATE;
 
-        PInvoke.SetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (int)exStyle);
-        PInvoke.SetWindowPos(
-            hWnd,
-            HWND.Null,
-            0,
-            0,
-            0,
-            0,
-            SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
-            SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
-            SET_WINDOW_POS_FLAGS.SWP_NOZORDER |
-            SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE |
-            SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED);
-    }
+		PInvoke.SetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (int)exStyle);
+		PInvoke.SetWindowPos(
+			hWnd,
+			HWND.Null,
+			0,
+			0,
+			0,
+			0,
+			SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+			SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+			SET_WINDOW_POS_FLAGS.SWP_NOZORDER |
+			SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE |
+			SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED);
+	}
 
-    private void RefreshXamlIslandWindowSubclasses()
-    {
-        if (_xamlHwnd.IsNull)
-            return;
+	private void RefreshXamlIslandWindowSubclasses()
+	{
+		if (_xamlHwnd.IsNull)
+			return;
 
-        SubclassXamlIslandWindow(_xamlHwnd);
-        SubclassChildWindows(HWnd);
-        SubclassChildWindows(_xamlHwnd);
-    }
+		SubclassXamlIslandWindow(_xamlHwnd);
+		SubclassChildWindows(HWnd);
+		SubclassChildWindows(_xamlHwnd);
+	}
 
-    private void SubclassChildWindows(HWND parentHWnd)
-    {
-        for (var childHWnd = PInvoke.GetWindow(parentHWnd, GET_WINDOW_CMD.GW_CHILD);
-            !childHWnd.IsNull;
-            childHWnd = PInvoke.GetWindow(childHWnd, GET_WINDOW_CMD.GW_HWNDNEXT))
-        {
-            SubclassXamlIslandWindow(childHWnd);
-            SubclassChildWindows(childHWnd);
-        }
-    }
+	private void SubclassChildWindows(HWND parentHWnd)
+	{
+		for (var childHWnd = PInvoke.GetWindow(parentHWnd, GET_WINDOW_CMD.GW_CHILD);
+			!childHWnd.IsNull;
+			childHWnd = PInvoke.GetWindow(childHWnd, GET_WINDOW_CMD.GW_HWNDNEXT))
+		{
+			SubclassXamlIslandWindow(childHWnd);
+			SubclassChildWindows(childHWnd);
+		}
+	}
 
-    private void SubclassXamlIslandWindow(HWND hWnd)
-    {
-        if (hWnd.IsNull || _subclassedXamlWndProcs.ContainsKey((nint)hWnd.Value))
-            return;
+	private void SubclassXamlIslandWindow(HWND hWnd)
+	{
+		if (hWnd.IsNull || _subclassedXamlWndProcs.ContainsKey((nint)hWnd.Value))
+			return;
 
-        var previousWndProc = (nint)PInvoke.SetWindowLongPtr(
-            hWnd,
-            WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC,
-            Marshal.GetFunctionPointerForDelegate(_xamlWndProc));
+		var previousWndProc = (nint)PInvoke.SetWindowLongPtr(
+			hWnd,
+			WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC,
+			Marshal.GetFunctionPointerForDelegate(_xamlWndProc));
 
-        _subclassedXamlWndProcs[(nint)hWnd.Value] = previousWndProc;
-    }
+		_subclassedXamlWndProcs[(nint)hWnd.Value] = previousWndProc;
+	}
 
-    private void UnsubclassXamlIslandWindows()
-    {
-        foreach (var item in _subclassedXamlWndProcs)
-        {
-            var hWnd = (HWND)item.Key;
-            if (hWnd.IsNull)
-                continue;
+	private void UnsubclassXamlIslandWindows()
+	{
+		foreach (var item in _subclassedXamlWndProcs)
+		{
+			var hWnd = (HWND)item.Key;
+			if (hWnd.IsNull)
+				continue;
 
-            PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC, item.Value);
-        }
+			PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC, item.Value);
+		}
 
-        _subclassedXamlWndProcs.Clear();
-    }
+		_subclassedXamlWndProcs.Clear();
+	}
 
-    private void InitializeDesktopWindowXamlSource()
-    {
-        DesktopWindowXamlSource = new();
+	private void InitializeDesktopWindowXamlSource()
+	{
+		DesktopWindowXamlSource = new();
 
 #if UWP
-        // QI for IDesktopWindowXamlSourceNative2
-        void* ppv;
-        ((IUnknown*)((IWinRTObject)DesktopWindowXamlSource).NativeObject.ThisPtr)->QueryInterface(
-            (Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IID.IID_IDesktopWindowXamlSourceNative2)), &ppv);
+		// QI for IDesktopWindowXamlSourceNative2
+		void* ppv;
+		((IUnknown*)((IWinRTObject)DesktopWindowXamlSource).NativeObject.ThisPtr)->QueryInterface(
+			(Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IID.IID_IDesktopWindowXamlSourceNative2)), &ppv);
 
-        var sbcw = new StrategyBasedComWrappers();
-        _pdwxsn2 = (IDesktopWindowXamlSourceNative2)sbcw.GetOrCreateObjectForComInstance((nint)ppv, CreateObjectFlags.None);
+		var sbcw = new StrategyBasedComWrappers();
+		_pdwxsn2 = (IDesktopWindowXamlSourceNative2)sbcw.GetOrCreateObjectForComInstance((nint)ppv, CreateObjectFlags.None);
 
-        // For extra safety
-        GC.KeepAlive(DesktopWindowXamlSource);
+		// For extra safety
+		GC.KeepAlive(DesktopWindowXamlSource);
 
-        // Set the base HWND and get the XAML island HWND
-        _pdwxsn2.AttachToWindow(HWnd);
-        _pdwxsn2.get_WindowHandle((HWND*)Unsafe.AsPointer(ref _xamlHwnd));
+		// Set the base HWND and get the XAML island HWND
+		_pdwxsn2.AttachToWindow(HWnd);
+		_pdwxsn2.get_WindowHandle((HWND*)Unsafe.AsPointer(ref _xamlHwnd));
 
-        // DesktopWindowXamlSource is hosted by a Win32 window. Opt that window into
-        // Composition host backdrop sampling (Windows 11+); XAML transparency alone
-        // does not enable it. This does not paint a backdrop across the whole host.
-        BOOL enableHostBackdrop = true;
-        IsHostBackdropBrushEnabled = SUCCEEDED(PInvoke.DwmSetWindowAttribute(
-            HWnd,
-            Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_USE_HOSTBACKDROPBRUSH,
-            &enableHostBackdrop,
-            (uint)sizeof(BOOL)));
+		// DesktopWindowXamlSource is hosted by a Win32 window. Opt that window into
+		// Composition host backdrop sampling (Windows 11+); XAML transparency alone
+		// does not enable it. This does not paint a backdrop across the whole host.
+		BOOL enableHostBackdrop = true;
+		IsHostBackdropBrushEnabled = SUCCEEDED(PInvoke.DwmSetWindowAttribute(
+			HWnd,
+			Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_USE_HOSTBACKDROPBRUSH,
+			&enableHostBackdrop,
+			(uint)sizeof(BOOL)));
 
-        RECT wRect;
-        PInvoke.GetClientRect(HWnd, &wRect);
-        PInvoke.SetWindowPos(_xamlHwnd, HWND.Null, 0, 0, wRect.right - wRect.left, wRect.bottom - wRect.top, SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
+		RECT wRect;
+		PInvoke.GetClientRect(HWnd, &wRect);
+		PInvoke.SetWindowPos(_xamlHwnd, HWND.Null, 0, 0, wRect.right - wRect.left, wRect.bottom - wRect.top, SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
 
-        var xst = Window.Current.As<IXamlSourceTransparency>();
-        xst.set_IsBackgroundTransparent(true);
+		var xst = Window.Current.As<IXamlSourceTransparency>();
+		xst.set_IsBackgroundTransparent(true);
 
-        // Get CoreWindow and its HWND
-        _coreWindow = CoreWindow.GetForCurrentThread();
-        ((IUnknown*)((IWinRTObject)_coreWindow).NativeObject.ThisPtr)->QueryInterface(
-            (Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IID.IID_ICoreWindowInterop)), &ppv);
+		// Get CoreWindow and its HWND
+		_coreWindow = CoreWindow.GetForCurrentThread();
+		((IUnknown*)((IWinRTObject)_coreWindow).NativeObject.ThisPtr)->QueryInterface(
+			(Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IID.IID_ICoreWindowInterop)), &ppv);
 
-        var pcwi = (ICoreWindowInterop)sbcw.GetOrCreateObjectForComInstance((nint)ppv, CreateObjectFlags.None);
-        pcwi.get_WindowHandle((HWND*)Unsafe.AsPointer(ref _coreHwnd));
+		var pcwi = (ICoreWindowInterop)sbcw.GetOrCreateObjectForComInstance((nint)ppv, CreateObjectFlags.None);
+		pcwi.get_WindowHandle((HWND*)Unsafe.AsPointer(ref _coreHwnd));
 
 #elif WASDK
-        DesktopWindowXamlSource!.Initialize(Win32Interop.GetWindowIdFromWindow(HWnd));
-        DesktopWindowXamlSource.SiteBridge.ResizePolicy = ContentSizePolicy.ResizeContentToParentWindow;
-        _xamlHwnd = (HWND)Win32Interop.GetWindowFromWindowId(DesktopWindowXamlSource.SiteBridge.WindowId);
+		DesktopWindowXamlSource!.Initialize(Win32Interop.GetWindowIdFromWindow(HWnd));
+		DesktopWindowXamlSource.SiteBridge.ResizePolicy = ContentSizePolicy.ResizeContentToParentWindow;
+		_xamlHwnd = (HWND)Win32Interop.GetWindowFromWindowId(DesktopWindowXamlSource.SiteBridge.WindowId);
 #endif
 
-        ApplyActivationModeToWindows();
-    }
+		ApplyActivationModeToWindows();
+	}
 
-    private LRESULT WndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
-    {
-        switch (uMsg)
-        {
+	private LRESULT WndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		switch (uMsg)
+		{
 #if UWP
-            case PInvoke.WM_SIZE:
-                {
-                    var x = LOWORD(lParam);
-                    var y = HIWORD(lParam);
+			case PInvoke.WM_SIZE:
+				{
+					var x = LOWORD(lParam);
+					var y = HIWORD(lParam);
 
-                    if (_xamlHwnd != default)
-                        PInvoke.SetWindowPos(_xamlHwnd, HWND.Null, 0, 0, x, y, SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
+					if (_xamlHwnd != default)
+						PInvoke.SetWindowPos(_xamlHwnd, HWND.Null, 0, 0, x, y, SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
 
-                    if (_coreHwnd != default)
-                        PInvoke.SendMessage(_coreHwnd, PInvoke.WM_SIZE, (WPARAM)(nuint)x, y);
-                }
-                break;
+					if (_coreHwnd != default)
+						PInvoke.SendMessage(_coreHwnd, PInvoke.WM_SIZE, (WPARAM)(nuint)x, y);
+				}
+				break;
 #endif
-            case PInvoke.WM_SETTINGCHANGE:
-            case PInvoke.WM_THEMECHANGED:
-                {
+			case PInvoke.WM_SETTINGCHANGE:
+			case PInvoke.WM_THEMECHANGED:
+				{
 #if UWP
-                    // Process CoreWindow message
-                    if (_coreHwnd != default)
-                        PInvoke.SendMessage(_coreHwnd, uMsg, wParam, lParam);
+					// Process CoreWindow message
+					if (_coreHwnd != default)
+						PInvoke.SendMessage(_coreHwnd, uMsg, wParam, lParam);
 #endif
-                    if (uMsg == PInvoke.WM_SETTINGCHANGE)
-                        DisplayAreaChanged?.Invoke(this, EventArgs.Empty);
+					if (uMsg == PInvoke.WM_SETTINGCHANGE)
+						DisplayAreaChanged?.Invoke(this, EventArgs.Empty);
 
-                    if (uMsg != PInvoke.WM_SETTINGCHANGE || (uint)(nuint)wParam != (uint)Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETWORKAREA)
-                        SystemSettingsChanged?.Invoke(this, EventArgs.Empty);
-                }
-                break;
-            case PInvoke.WM_DISPLAYCHANGE:
-            case PInvoke.WM_DPICHANGED:
-                DisplayAreaChanged?.Invoke(this, EventArgs.Empty);
-                break;
-            case PInvoke.WM_SETFOCUS:
-                {
-                    if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
-                    {
-                        RestoreActivationState();
-                        return (LRESULT)0;
-                    }
+					if (uMsg != PInvoke.WM_SETTINGCHANGE || (uint)(nuint)wParam != (uint)Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETWORKAREA)
+						SystemSettingsChanged?.Invoke(this, EventArgs.Empty);
+				}
+				break;
+			case PInvoke.WM_DISPLAYCHANGE:
+			case PInvoke.WM_DPICHANGED:
+				DisplayAreaChanged?.Invoke(this, EventArgs.Empty);
+				break;
+			case PInvoke.WM_SETFOCUS:
+				{
+					if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
+					{
+						RestoreActivationState();
+						return (LRESULT)0;
+					}
 
 #if UWP
-                    if (_xamlHwnd != default)
-                        PInvoke.SetFocus(_xamlHwnd);
+					if (_xamlHwnd != default)
+						PInvoke.SetFocus(_xamlHwnd);
 
-                    return (LRESULT)0;
+					return (LRESULT)0;
 #else
-                    return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
+					return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
 #endif
-                }
-            case PInvoke.WM_ACTIVATE:
-                {
-                    if (LOWORD((nint)(nuint)wParam) == PInvoke.WA_INACTIVE)
-                        WindowInactivated?.Invoke(this, EventArgs.Empty);
-                }
-                break;
-            case PInvoke.WM_MOUSEACTIVATE:
-                {
-                    if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
-                    {
-                        RestoreActivationState();
-                        return (LRESULT)(int)PInvoke.MA_NOACTIVATE;
-                    }
+				}
+			case PInvoke.WM_ACTIVATE:
+				{
+					if (LOWORD((nint)(nuint)wParam) == PInvoke.WA_INACTIVE)
+						WindowInactivated?.Invoke(this, EventArgs.Empty);
+				}
+				break;
+			case PInvoke.WM_MOUSEACTIVATE:
+				{
+					if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
+					{
+						RestoreActivationState();
+						return (LRESULT)(int)PInvoke.MA_NOACTIVATE;
+					}
 
-                    return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
-                }
-            default:
-                {
-                    return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
-                }
-        }
+					return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
+				}
+			default:
+				{
+					return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
+				}
+		}
 
-        return (LRESULT)0;
-    }
+		return (LRESULT)0;
+	}
 
-    private LRESULT XamlWndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
-    {
-        switch (uMsg)
-        {
-            case PInvoke.WM_MOUSEACTIVATE:
-                {
-                    if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
-                    {
-                        RestoreActivationState();
-                        return (LRESULT)(int)PInvoke.MA_NOACTIVATE;
-                    }
+	private LRESULT XamlWndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		switch (uMsg)
+		{
+			case PInvoke.WM_MOUSEACTIVATE:
+				{
+					if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
+					{
+						RestoreActivationState();
+						return (LRESULT)(int)PInvoke.MA_NOACTIVATE;
+					}
 
-                    break;
-                }
-            case PInvoke.WM_SETFOCUS:
-                {
-                    if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
-                    {
-                        RestoreActivationState();
-                        return (LRESULT)0;
-                    }
+					break;
+				}
+			case PInvoke.WM_SETFOCUS:
+				{
+					if (_activationMode is DesktopFlyoutActivationMode.NeverActivate)
+					{
+						RestoreActivationState();
+						return (LRESULT)0;
+					}
 
-                    break;
-                }
-        }
+					break;
+				}
+		}
 
-        return CallPreviousXamlWndProc(hWnd, uMsg, wParam, lParam);
-    }
+		return CallPreviousXamlWndProc(hWnd, uMsg, wParam, lParam);
+	}
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-    private static LRESULT CbtHookProc(int code, WPARAM wParam, LPARAM lParam)
-    {
-        if (code >= 0 && (code == PInvoke.HCBT_ACTIVATE || code == PInvoke.HCBT_SETFOCUS))
-        {
-            var targetHWnd = (HWND)(nint)(nuint)wParam;
-            foreach (var target in GetCbtHookTargets(PInvoke.GetCurrentThreadId()))
-            {
-                if (target._activationMode is DesktopFlyoutActivationMode.NeverActivate && target.IsFlyoutWindow(targetHWnd))
-                {
-                    target.RestoreActivationState();
-                    return (LRESULT)1;
-                }
-            }
-        }
+	[UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+	private static LRESULT CbtHookProc(int code, WPARAM wParam, LPARAM lParam)
+	{
+		if (code >= 0 && (code == PInvoke.HCBT_ACTIVATE || code == PInvoke.HCBT_SETFOCUS))
+		{
+			var targetHWnd = (HWND)(nint)(nuint)wParam;
+			foreach (var target in GetCbtHookTargets(PInvoke.GetCurrentThreadId()))
+			{
+				if (target._activationMode is DesktopFlyoutActivationMode.NeverActivate && target.IsFlyoutWindow(targetHWnd))
+				{
+					target.RestoreActivationState();
+					return (LRESULT)1;
+				}
+			}
+		}
 
-        return PInvoke.CallNextHookEx(HHOOK.Null, code, wParam, lParam);
-    }
+		return PInvoke.CallNextHookEx(HHOOK.Null, code, wParam, lParam);
+	}
 
-    private bool IsFlyoutWindow(HWND hWnd)
-    {
-        if (hWnd.IsNull)
-            return false;
+	private bool IsFlyoutWindow(HWND hWnd)
+	{
+		if (hWnd.IsNull)
+			return false;
 
-        if (hWnd == HWnd || hWnd == _xamlHwnd)
-            return true;
+		if (hWnd == HWnd || hWnd == _xamlHwnd)
+			return true;
 
-        if (_subclassedXamlWndProcs.ContainsKey((nint)hWnd.Value))
-            return true;
+		if (_subclassedXamlWndProcs.ContainsKey((nint)hWnd.Value))
+			return true;
 
-        if (!HWnd.IsNull && PInvoke.IsChild(HWnd, hWnd))
-            return true;
+		if (!HWnd.IsNull && PInvoke.IsChild(HWnd, hWnd))
+			return true;
 
-        if (!_xamlHwnd.IsNull && PInvoke.IsChild(_xamlHwnd, hWnd))
-            return true;
+		if (!_xamlHwnd.IsNull && PInvoke.IsChild(_xamlHwnd, hWnd))
+			return true;
 
-        var rootHWnd = PInvoke.GetAncestor(hWnd, GET_ANCESTOR_FLAGS.GA_ROOT);
-        if (rootHWnd == HWnd || rootHWnd == _xamlHwnd)
-            return true;
+		var rootHWnd = PInvoke.GetAncestor(hWnd, GET_ANCESTOR_FLAGS.GA_ROOT);
+		if (rootHWnd == HWnd || rootHWnd == _xamlHwnd)
+			return true;
 
-        var rootOwnerHWnd = PInvoke.GetAncestor(hWnd, GET_ANCESTOR_FLAGS.GA_ROOTOWNER);
-        return rootOwnerHWnd == HWnd || rootOwnerHWnd == _xamlHwnd;
-    }
+		var rootOwnerHWnd = PInvoke.GetAncestor(hWnd, GET_ANCESTOR_FLAGS.GA_ROOTOWNER);
+		return rootOwnerHWnd == HWnd || rootOwnerHWnd == _xamlHwnd;
+	}
 
-    private LRESULT CallPreviousXamlWndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
-    {
-        if (!_subclassedXamlWndProcs.TryGetValue((nint)hWnd.Value, out var previousWndProc) || previousWndProc == 0)
-            return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
+	private LRESULT CallPreviousXamlWndProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		if (!_subclassedXamlWndProcs.TryGetValue((nint)hWnd.Value, out var previousWndProc) || previousWndProc == 0)
+			return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
 
-        return PInvoke.CallWindowProc(
-            (delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)(void*)previousWndProc,
-            hWnd,
-            uMsg,
-            wParam,
-            lParam);
-    }
+		return PInvoke.CallWindowProc(
+			(delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)(void*)previousWndProc,
+			hWnd,
+			uMsg,
+			wParam,
+			lParam);
+	}
 
-    public void Dispose()
-    {
-        if (_disposed)
-            return;
+	public void Dispose()
+	{
+		if (_disposed)
+			return;
 
-        _disposed = true;
+		_disposed = true;
 
-        try
-        {
-            RemoveCbtHook();
-            UnsubclassXamlIslandWindows();
-            if (DesktopWindowXamlSource is not null)
-                DesktopWindowXamlSource.Content = null;
+		try
+		{
+			RemoveCbtHook();
+			UnsubclassXamlIslandWindows();
+			if (DesktopWindowXamlSource is not null)
+				DesktopWindowXamlSource.Content = null;
 
-            DesktopWindowXamlSource?.Dispose();
-        }
-        catch { }
-        DesktopWindowXamlSource = null;
+			DesktopWindowXamlSource?.Dispose();
+		}
+		catch { }
+		DesktopWindowXamlSource = null;
 
-        PInvoke.DestroyWindow(HWnd);
-        PInvoke.UnregisterClass((PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in _windowClassName.GetPinnableReference())), PInvoke.GetModuleHandle(null));
+		PInvoke.DestroyWindow(HWnd);
+		PInvoke.UnregisterClass((PCWSTR)Unsafe.AsPointer(ref Unsafe.AsRef(in _windowClassName.GetPinnableReference())), PInvoke.GetModuleHandle(null));
 
-        HWnd = default;
-        _xamlHwnd = default;
+		HWnd = default;
+		_xamlHwnd = default;
 
-        GC.SuppressFinalize(this);
-    }
+		GC.SuppressFinalize(this);
+	}
 }
 #endif

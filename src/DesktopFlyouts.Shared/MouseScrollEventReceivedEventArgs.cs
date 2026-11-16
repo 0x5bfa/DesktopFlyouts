@@ -3,19 +3,19 @@ namespace DesktopFlyouts;
 
 public enum MouseScrollOrientation
 {
-    Vertical,
-    Horizontal
+	Vertical,
+	Horizontal
 }
 
 public class MouseScrollEventReceivedEventArgs : EventArgs
 {
-    public int Delta { get; }
-    public MouseScrollOrientation Orientation { get; }
+	public int Delta { get; }
+	public MouseScrollOrientation Orientation { get; }
 
-    internal MouseScrollEventReceivedEventArgs(int delta, MouseScrollOrientation orientation)
-    {
-        Delta = delta;
-        Orientation = orientation;
-    }
+	internal MouseScrollEventReceivedEventArgs(int delta, MouseScrollOrientation orientation)
+	{
+		Delta = delta;
+		Orientation = orientation;
+	}
 }
 #endif

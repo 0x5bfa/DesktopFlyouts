@@ -7,10 +7,10 @@ namespace DesktopFlyouts;
 
 public sealed partial class IndicatorStyleFlyout : DesktopFlyout
 {
-    public IndicatorStyleFlyout()
-    {
-        InitializeComponent();
-    }
+	public IndicatorStyleFlyout()
+	{
+		InitializeComponent();
+	}
 }
 
 public sealed partial class Something : ItemsRepeater

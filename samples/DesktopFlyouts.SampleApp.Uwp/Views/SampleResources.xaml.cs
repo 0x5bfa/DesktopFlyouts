@@ -7,8 +7,8 @@ namespace DesktopFlyouts;
 
 public sealed partial class SampleResources : ResourceDictionary
 {
-    public SampleResources()
-    {
-        InitializeComponent();
-    }
+	public SampleResources()
+	{
+		InitializeComponent();
+	}
 }

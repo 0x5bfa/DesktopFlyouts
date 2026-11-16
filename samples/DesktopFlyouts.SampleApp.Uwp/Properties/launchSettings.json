@@ -1,7 +1,7 @@
 {
   "profiles": {
-    "Run": {
-      "commandName": "MsixPackage"
-    }
+	"Run": {
+	  "commandName": "MsixPackage"
+	}
   }
 }

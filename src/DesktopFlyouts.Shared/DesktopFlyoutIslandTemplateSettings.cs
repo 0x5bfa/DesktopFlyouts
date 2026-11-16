@@ -21,18 +21,18 @@ namespace DesktopFlyouts;
 public partial class DesktopFlyoutIslandTemplateSettings : DependencyObject
 {
 #if WASDK && !HAS_UNO
-    /// <summary>
-    /// Gets the corner radius used by backdrop elements inside the island template.
-    /// </summary>
-    /// <value>The owner island's corner radius reduced for its inner backdrop surface.</value>
-    [GeneratedDependencyProperty]
-    public partial CornerRadius BackdropCornerRadius { get; internal set; }
+	/// <summary>
+	/// Gets the corner radius used by backdrop elements inside the island template.
+	/// </summary>
+	/// <value>The owner island's corner radius reduced for its inner backdrop surface.</value>
+	[GeneratedDependencyProperty]
+	public partial CornerRadius BackdropCornerRadius { get; internal set; }
 
-    /// <summary>
-    /// Gets the library-created system backdrop used by backdrop elements inside the island template.
-    /// </summary>
-    /// <value>The owning flyout's generated system backdrop for this island.</value>
-    [GeneratedDependencyProperty]
-    public partial SystemBackdrop? SystemBackdrop { get; internal set; }
+	/// <summary>
+	/// Gets the library-created system backdrop used by backdrop elements inside the island template.
+	/// </summary>
+	/// <value>The owning flyout's generated system backdrop for this island.</value>
+	[GeneratedDependencyProperty]
+	public partial SystemBackdrop? SystemBackdrop { get; internal set; }
 #endif
 }

@@ -8,11 +8,11 @@ namespace DesktopFlyouts;
 
 public partial class DesktopMenuFlyout
 {
-    public partial bool IsOpen
-    {
-        get => (bool)GetValue(IsOpenProperty);
-        private set => SetValue(IsOpenProperty, value);
-    }
-    public static readonly DependencyProperty IsOpenProperty =
-        DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(DesktopMenuFlyout), new PropertyMetadata(false));
+	public partial bool IsOpen
+	{
+		get => (bool)GetValue(IsOpenProperty);
+		private set => SetValue(IsOpenProperty, value);
+	}
+	public static readonly DependencyProperty IsOpenProperty =
+		DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(DesktopMenuFlyout), new PropertyMetadata(false));
 }

@@ -10,28 +10,28 @@ namespace DesktopFlyouts.WinUI.IntegrationTests;
 
 public partial class App : Application
 {
-    private Window? _window;
+	private Window? _window;
 
-    public App()
-    {
-        InitializeComponent();
-    }
+	public App()
+	{
+		InitializeComponent();
+	}
 
-    protected override async void OnLaunched(LaunchActivatedEventArgs args)
-    {
-        _window = new Window { Title = "DesktopFlyouts WinUI integration tests", Content = new Grid() };
-        _window.Activate();
-        _window.DispatcherQueue.EnsureSystemDispatcherQueue();
-        UITestMethodAttribute.DispatcherQueue = _window.DispatcherQueue;
+	protected override async void OnLaunched(LaunchActivatedEventArgs args)
+	{
+		_window = new Window { Title = "DesktopFlyouts WinUI integration tests", Content = new Grid() };
+		_window.Activate();
+		_window.DispatcherQueue.EnsureSystemDispatcherQueue();
+		UITestMethodAttribute.DispatcherQueue = _window.DispatcherQueue;
 
-        try
-        {
-            Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(Environment.GetCommandLineArgs()[1..]);
-        }
-        finally
-        {
-            _window.Close();
-            Exit();
-        }
-    }
+		try
+		{
+			Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(Environment.GetCommandLineArgs()[1..]);
+		}
+		finally
+		{
+			_window.Close();
+			Exit();
+		}
+	}
 }
