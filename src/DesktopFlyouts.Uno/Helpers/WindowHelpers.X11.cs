@@ -1,4 +1,3 @@
-#if HAS_UNO
 // Real implementation: detects work area and panel position via X11 EWMH properties.
 // _NET_WORKAREA gives the usable screen area excluding all panels.
 // _NET_WM_STRUT_PARTIAL on child windows identifies individual panel positions.
@@ -381,4 +380,3 @@ internal static partial class WindowHelpers
 		}
 	}
 }
-#endif

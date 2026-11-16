@@ -1,4 +1,3 @@
-#if HAS_UNO
 using Tmds.DBus.Protocol;
 using DesktopFlyouts.DBus;
 
@@ -113,4 +112,3 @@ class X11StatusNotifierItemHandler : DBusHandler, IStatusNotifierItemHandler, IS
 	public string AttentionMovieName { get; set; }
 	public (string, (int, int, byte[])[], string, string) ToolTip { get; set; }
 }
-#endif

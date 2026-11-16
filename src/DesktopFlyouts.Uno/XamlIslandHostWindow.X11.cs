@@ -1,4 +1,3 @@
-#if HAS_UNO
 // X11 implementation of XamlIslandHostWindow.
 // Uses Microsoft.UI.Xaml.Window for XAML rendering and raw X11 P/Invoke
 // for window property manipulation (borderless, override_redirect, positioning).
@@ -623,4 +622,3 @@ internal partial class XamlIslandHostWindow : IDisposable
 	}
 }
 
-#endif

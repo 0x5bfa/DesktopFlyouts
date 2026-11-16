@@ -1,4 +1,3 @@
-#if HAS_UNO
 using System;
 
 namespace DesktopFlyouts;
@@ -11,4 +10,3 @@ internal static class ThrowHelper
 			throw new PlatformNotSupportedException("DesktopFlyouts X11 APIs are only supported on Linux.");
 	}
 }
-#endif

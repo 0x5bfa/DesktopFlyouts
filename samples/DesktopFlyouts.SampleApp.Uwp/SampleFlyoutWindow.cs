@@ -4,7 +4,6 @@
 using System;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
-using DesktopFlyouts.Shared;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 
@@ -27,17 +26,17 @@ internal sealed class SampleFlyoutWindow<T> where T : Control, IDisposable
 		return Task.FromResult(new SampleFlyoutWindow<T>(factory()));
 	}
 
-    internal bool TryPreTranslateMessage(nint message)
-    {
-        return _content switch
-        {
-            DesktopFlyout flyout => flyout.TryPreTranslateMessage(message),
-            DesktopMenuFlyout menu => menu.TryPreTranslateMessage(message),
-            _ => false,
-        };
-    }
+	internal bool TryPreTranslateMessage(nint message)
+	{
+		return _content switch
+		{
+			DesktopFlyout flyout => flyout.TryPreTranslateMessage(message),
+			DesktopMenuFlyout menu => menu.TryPreTranslateMessage(message),
+			_ => false,
+		};
+	}
 
-    internal async Task InvokeAsync(Action<T> action)
+	internal async Task InvokeAsync(Action<T> action)
 	{
 		Exception? failure = null;
 		var invoked = false;
@@ -60,8 +59,8 @@ internal sealed class SampleFlyoutWindow<T> where T : Control, IDisposable
 			throw new InvalidOperationException("The flyout dispatcher stopped before handling the request.");
 	}
 
-    internal Task DisposeAsync()
-    {
-        return InvokeAsync(content => content.Dispose());
-    }
+	internal Task DisposeAsync()
+	{
+		return InvokeAsync(content => content.Dispose());
+	}
 }

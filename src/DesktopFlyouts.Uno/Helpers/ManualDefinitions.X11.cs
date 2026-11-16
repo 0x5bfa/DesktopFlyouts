@@ -1,4 +1,3 @@
-#if HAS_UNO
 // Polyfill for ManualDefinitions.
 // The real implementation provides Win32 helper definitions and global usings.
 // This stub provides the minimum API surface needed by shared code compilation.
@@ -27,4 +26,3 @@ internal static partial class ManualDefinitions
         return (int)(short)((value >> 16) & 0xFFFF);
     }
 }
-#endif

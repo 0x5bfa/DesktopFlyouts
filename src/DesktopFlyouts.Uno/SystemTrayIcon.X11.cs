@@ -1,4 +1,3 @@
-#if HAS_UNO
 using Tmds.DBus.Protocol;
 using DesktopFlyouts.DBus;
 using SkiaSharp;
@@ -499,4 +498,3 @@ public class SystemTrayIcon : IDisposable
 		return (width, height, argbData);
 	}
 }
-#endif

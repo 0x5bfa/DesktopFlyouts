@@ -1,4 +1,3 @@
-#if HAS_UNO
 using System.Runtime.InteropServices;
 
 namespace DesktopFlyouts;
@@ -185,4 +184,3 @@ partial class X11PInvoke
 	public const nint None = 0;			// no background — transparent under compositors
 	public const nint ParentRelative = 1;  // copy parent's background
 }
-#endif

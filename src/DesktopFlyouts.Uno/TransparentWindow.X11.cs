@@ -1,4 +1,3 @@
-#if HAS_UNO
 using Uno.UI.Xaml;
 using System.Reflection;
 using Microsoft.UI.Xaml;
@@ -29,4 +28,3 @@ public partial class TransparentWindow : Window
 		}
 	}
 }
-#endif

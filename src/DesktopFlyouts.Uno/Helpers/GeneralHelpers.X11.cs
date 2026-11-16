@@ -1,4 +1,3 @@
-#if HAS_UNO
 // Real implementation: detects system theme via D-Bus org.freedesktop.portal.Settings.
 // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Settings.html
 
@@ -88,4 +87,3 @@ internal static class GeneralHelpers
 		}
 	}
 }
-#endif

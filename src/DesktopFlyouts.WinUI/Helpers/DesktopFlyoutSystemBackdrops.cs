@@ -1,8 +1,6 @@
-#if !HAS_UNO
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-#if WASDK
 using Microsoft.UI.Composition;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
@@ -132,5 +130,3 @@ internal sealed partial class DesktopFlyoutMicaBackdrop : DesktopFlyoutSystemBac
 		return controller;
 	}
 }
-#endif
-#endif

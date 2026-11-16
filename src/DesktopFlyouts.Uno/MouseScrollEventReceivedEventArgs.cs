@@ -1,4 +1,3 @@
-#if HAS_UNO
 namespace DesktopFlyouts;
 
 public enum MouseScrollOrientation
@@ -18,4 +17,3 @@ public class MouseScrollEventReceivedEventArgs : EventArgs
 		Orientation = orientation;
 	}
 }
-#endif

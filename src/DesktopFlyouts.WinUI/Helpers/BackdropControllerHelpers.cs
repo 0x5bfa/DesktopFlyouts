@@ -1,17 +1,12 @@
-#if !HAS_UNO
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
 using Windows.UI;
-
-#if WASDK
 using Microsoft.UI.Composition.SystemBackdrops;
 using Windows.UI.ViewManagement;
-#endif
 
 namespace DesktopFlyouts;
 
-#if WASDK
 internal static class BackdropControllerHelpers
 {
 	private static UISettings UISettings => field ??= new UISettings();
@@ -111,5 +106,3 @@ internal static class BackdropControllerHelpers
 	}
 
 }
-#endif
-#endif
