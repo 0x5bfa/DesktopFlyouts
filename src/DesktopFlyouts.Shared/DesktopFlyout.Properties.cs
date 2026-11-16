@@ -42,18 +42,6 @@ namespace DesktopFlyouts
         public partial object? IslandsSource { get; set; }
 
         /// <summary>
-        /// Gets or sets whether island backdrops are enabled.
-        /// </summary>
-        /// <value><see langword="true"/> to enable island backdrops; otherwise, <see langword="false"/>. The default is <see langword="true"/>.</value>
-        /// <remarks>
-        /// WinUI builds use library-owned system backdrops. UWP uses per-island Composition Acrylic
-        /// or wallpaper-based Mica on Windows 11+, with solid fallbacks when unavailable.
-        /// Uno does not apply Windows backdrop materials.
-        /// </remarks>
-        [GeneratedDependencyProperty(DefaultValue = true)]
-        public partial bool IsBackdropEnabled { get; set; }
-
-        /// <summary>
         /// Gets whether the flyout is currently open.
         /// </summary>
         /// <value><see langword="true"/> after the open transition completes; otherwise, <see langword="false"/>.</value>
@@ -249,14 +237,6 @@ namespace DesktopFlyouts
 
             UpdateIslands();
             UpdateOpenFlyoutLayout();
-        }
-
-        partial void OnIsBackdropEnabledPropertyChanged(DependencyPropertyChangedEventArgs e)
-        {
-            if (ReferenceEquals(e.NewValue, e.OldValue))
-                return;
-
-            UpdateIslandBackdrops();
         }
 
         partial void OnBackdropKindPropertyChanged(DependencyPropertyChangedEventArgs e)

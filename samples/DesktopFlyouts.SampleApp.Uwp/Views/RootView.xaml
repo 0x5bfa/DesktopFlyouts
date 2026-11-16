@@ -4,8 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:DesktopFlyouts"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -20,8 +20,8 @@
 
             <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Tray icon sample (UWP)" />
             <muxc:InfoBar
-                IsOpen="{x:Bind ViewModel.HasError, Mode=TwoWay}"
                 IsClosable="True"
+                IsOpen="{x:Bind ViewModel.HasError, Mode=TwoWay}"
                 Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
                 Severity="Error" />
 
@@ -60,9 +60,6 @@
                         Width="150"
                         Command="{x:Bind ViewModel.ToggleFlyoutOpenCommand}"
                         Content="Toggle open" />
-                </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Enable backdrop" Description="Acrylic shows content behind the flyout. Mica uses the desktop wallpaper. Requires Windows 11 or later.">
-                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Position request">
                     <ComboBox

@@ -11,7 +11,6 @@ namespace DesktopFlyouts
     {
         partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e);
         partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e);
-        partial void OnIsBackdropEnabledPropertyChanged(DependencyPropertyChangedEventArgs e);
         partial void OnBackdropKindPropertyChanged(DependencyPropertyChangedEventArgs e);
         partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e);
         partial void OnHideOnLostFocusPropertyChanged(DependencyPropertyChangedEventArgs e);
@@ -23,14 +22,6 @@ namespace DesktopFlyouts
         }
         public static readonly DependencyProperty IslandsSourceProperty =
             DependencyProperty.Register(nameof(IslandsSource), typeof(object), typeof(DesktopFlyout), new PropertyMetadata(null, (d, e) => ((DesktopFlyout)d).OnIslandsSourcePropertyChanged(e)));
-
-        public partial bool IsBackdropEnabled
-        {
-            get => (bool)GetValue(IsBackdropEnabledProperty);
-            set => SetValue(IsBackdropEnabledProperty, value);
-        }
-        public static readonly DependencyProperty IsBackdropEnabledProperty =
-            DependencyProperty.Register(nameof(IsBackdropEnabled), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(true, (d, e) => ((DesktopFlyout)d).OnIsBackdropEnabledPropertyChanged(e)));
 
         public partial bool IsOpen
         {

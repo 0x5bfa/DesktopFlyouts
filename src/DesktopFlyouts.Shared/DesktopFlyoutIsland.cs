@@ -174,7 +174,7 @@ namespace DesktopFlyouts
             Brush? background = null;
             if (_owner is not null
                 && _owner.TryGetTarget(out var owner)
-                && owner.IsBackdropEnabled
+                && owner.BackdropKind is not DesktopFlyoutBackdropKind.None
                 && GetTemplateChild("PART_RootGrid") is Grid)
             {
                 var useLightTheme = RequestedTheme switch

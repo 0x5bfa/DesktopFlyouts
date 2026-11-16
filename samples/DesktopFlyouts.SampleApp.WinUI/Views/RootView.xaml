@@ -52,9 +52,6 @@
                         Command="{x:Bind ViewModel.ToggleFlyoutOpenCommand}"
                         Content="Toggle open" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="Enable backdrop">
-                    <ToggleSwitch IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}" IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
                 <wctcontrols:SettingsCard Header="Position request">
                     <ComboBox
                         Width="150"

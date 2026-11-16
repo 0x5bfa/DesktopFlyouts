@@ -337,7 +337,7 @@ namespace DesktopFlyouts
 #if WASDK && !HAS_UNO
         internal SystemBackdrop? CreateIslandSystemBackdrop(ElementTheme islandTheme, SystemBackdrop? currentBackdrop)
         {
-            if (!IsBackdropEnabled)
+            if (BackdropKind is DesktopFlyoutBackdropKind.None)
                 return null;
 
             var useLightTheme = islandTheme switch

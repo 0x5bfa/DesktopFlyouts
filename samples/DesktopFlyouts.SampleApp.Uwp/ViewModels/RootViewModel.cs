@@ -24,9 +24,6 @@ namespace DesktopFlyouts
         internal partial string? TooltipText { get; set; }
 
         [ObservableProperty]
-        internal partial bool IsBackdropEnabled { get; set; }
-
-        [ObservableProperty]
         internal partial bool HideOnLostFocus { get; set; }
 
         [ObservableProperty]
@@ -76,7 +73,6 @@ namespace DesktopFlyouts
             IconPath = TrayIconManager.Default.SystemTrayIcon?.IconPath;
             TooltipText = TrayIconManager.Default.SystemTrayIcon?.Tooltip;
 
-            IsBackdropEnabled = true;
             HideOnLostFocus = true;
 
             ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
@@ -107,6 +103,7 @@ namespace DesktopFlyouts
 
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.DesktopAcrylic, "Acrylic");
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica");
+            SystemBackdrops.Add(DesktopFlyoutBackdropKind.None, "None");
             SelectedSystemBackdropIndex = 0;
 
             ToggleFlyoutOpenCommand = new RelayCommand(ExecuteToggleFlyoutOpenCommand);
@@ -145,7 +142,6 @@ namespace DesktopFlyouts
                     case nameof(AutoCloseDelaySecondsValue):
                     case nameof(FlyoutWidthValue):
                     case nameof(FlyoutHeightValue):
-                    case nameof(IsBackdropEnabled):
                     case nameof(SelectedSystemBackdropIndex):
                         if (IsModifiable)
                             TrayIconManager.Default.UpdateSettings(GetSettings());
@@ -164,7 +160,6 @@ namespace DesktopFlyouts
             SelectedActivationModeIndex >= 0 && SelectedActivationModeIndex < ActivationModes.Count
                 ? ActivationModes.ElementAt(SelectedActivationModeIndex).Key : DesktopFlyoutActivationMode.Activate,
             AutoCloseDelaySecondsValue, FlyoutWidthValue, FlyoutHeightValue,
-            IsBackdropEnabled,
             SelectedSystemBackdropIndex >= 0 && SelectedSystemBackdropIndex < SystemBackdrops.Count
                 ? SystemBackdrops.ElementAt(SelectedSystemBackdropIndex).Key
                 : DesktopFlyoutBackdropKind.DesktopAcrylic);

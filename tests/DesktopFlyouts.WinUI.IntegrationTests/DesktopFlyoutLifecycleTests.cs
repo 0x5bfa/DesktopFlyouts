@@ -83,11 +83,11 @@ public sealed class DesktopFlyoutLifecycleTests
         Assert.AreNotSame(acrylic, mica);
         Assert.AreSame(mica, element.SystemBackdrop);
 
-        flyout.IsBackdropEnabled = false;
+        flyout.BackdropKind = DesktopFlyoutBackdropKind.None;
         Assert.IsNull(island.TemplateSettings.SystemBackdrop);
         Assert.IsNull(element.SystemBackdrop);
 
-        flyout.IsBackdropEnabled = true;
+        flyout.BackdropKind = DesktopFlyoutBackdropKind.Mica;
         var reenabled = island.TemplateSettings.SystemBackdrop;
         Assert.IsNotNull(reenabled);
         Assert.AreNotSame(mica, reenabled);
@@ -137,7 +137,6 @@ public sealed class DesktopFlyoutLifecycleTests
         var flyout = new DesktopFlyout
         {
             BackdropKind = kind,
-            IsBackdropEnabled = true,
             IsTransitionAnimationEnabled = false,
             HideOnLostFocus = false,
             ActivationMode = DesktopFlyoutActivationMode.NeverActivate,

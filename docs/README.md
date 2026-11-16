@@ -223,7 +223,7 @@ UWP uses per-island Composition Acrylic or Mica effects, including accent tint w
 prevalence is enabled. The UWP package includes the Win2D dependency used to build the effects:
 
 ```xml
-<desktop:DesktopFlyout IsBackdropEnabled="True" BackdropKind="DesktopAcrylic" />
+<desktop:DesktopFlyout BackdropKind="DesktopAcrylic" />
 ```
 
 Use `BackdropKind="Mica"` for Mica. On UWP, Mica samples the blurred desktop wallpaper rather
@@ -231,7 +231,8 @@ than other windows behind the flyout. Both UWP materials remain active when the 
 activation, including `NoActivateOnOpen` and `NeverActivate`. They use a solid fallback on older
 Windows versions, when transparency is disabled, in high contrast or energy saver mode, or when
 the required Composition effects or backdrop source are unavailable.
-Locally set island `Background` values are preserved.
+Use `BackdropKind="None"` to leave the island without a library-owned backdrop. Locally set island
+`Background` values are preserved.
 Uno does not apply these Windows materials. See the
 [API reference](api-reference.md#desktopflyout) for defaults and property behavior.
 

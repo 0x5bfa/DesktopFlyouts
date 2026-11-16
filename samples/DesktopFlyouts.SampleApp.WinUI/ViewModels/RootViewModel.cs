@@ -24,9 +24,6 @@ namespace DesktopFlyouts
         internal partial string? TooltipText { get; set; }
 
         [ObservableProperty]
-        internal partial bool IsBackdropEnabled { get; set; }
-
-        [ObservableProperty]
         internal partial bool HideOnLostFocus { get; set; }
 
         [ObservableProperty]
@@ -68,7 +65,6 @@ namespace DesktopFlyouts
             IconPath = TrayIconManager.Default.SystemTrayIcon?.IconPath;
             TooltipText = TrayIconManager.Default.SystemTrayIcon?.Tooltip;
 
-            IsBackdropEnabled = true;
             HideOnLostFocus = true;
 
             ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
@@ -99,6 +95,7 @@ namespace DesktopFlyouts
 
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica");
             SystemBackdrops.Add(DesktopFlyoutBackdropKind.DesktopAcrylic, "Desktop Acrylic");
+            SystemBackdrops.Add(DesktopFlyoutBackdropKind.None, "None");
             SelectedSystemBackdropIndex = 0;
 
             ToggleFlyoutOpenCommand = new RelayCommand(ExecuteToggleFlyoutOpenCommand);
@@ -112,12 +109,6 @@ namespace DesktopFlyouts
         partial void OnTooltipTextChanged(string? value)
         {
             TrayIconManager.Default.SystemTrayIcon?.Tooltip = value ?? string.Empty;
-        }
-
-        partial void OnIsBackdropEnabledChanged(bool value)
-        {
-            if (IsDefaultFlyoutSelected())
-                TrayIconManager.Default.DesktopFlyout?.IsBackdropEnabled = value;
         }
 
         partial void OnHideOnLostFocusChanged(bool value)
@@ -198,7 +189,6 @@ namespace DesktopFlyouts
             flyout.HideOnLostFocus = HideOnLostFocus;
             flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
             flyout.SwipeDismissThreshold = SwipeDismissThresholdValue;
-            flyout.IsBackdropEnabled = IsBackdropEnabled;
         }
 
         private static bool IsDefaultFlyoutSelected()

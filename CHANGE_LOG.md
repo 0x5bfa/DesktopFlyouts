@@ -19,6 +19,8 @@ belong in **Unreleased** until the next release is tagged.
   and `DesktopFlyoutPlacementMode`. Use `InWorkArea(DesktopFlyoutWorkAreaPosition, ...)` and replace
   each old enum member with the same named member of `DesktopFlyoutWorkAreaPosition`; their numeric
   values differ, so do not migrate by casting.
+- Remove `DesktopFlyout.IsBackdropEnabled`. Set `BackdropKind` to `None` to stop applying a
+  library-owned backdrop, or select `DesktopAcrylic` or `Mica` to apply one.
 
 ### Added
 

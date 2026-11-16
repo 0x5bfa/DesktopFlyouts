@@ -67,8 +67,7 @@ the instance until `Dispose()` is called.
 | `PressedScale` | `double` | `1.0` | Get/set, DP | Effective press scale is clamped to `0.1` through `2.0`. `1.0`, NaN, or infinity disables the effect. |
 | `IsSwipeToDismissEnabled` | `bool` | `false` | Get/set, DP | Enables dismissal by swiping opposite the active popup direction. |
 | `SwipeDismissThreshold` | `double` | `80.0` | Get/set, DP | Required distance in DIPs, constrained by the available dismiss distance. NaN or infinity uses a distance-based default. |
-| `IsBackdropEnabled` | `bool` | `true` | Get/set, DP | Enables library-owned island backdrops. WinUI uses system backdrops; UWP uses Composition Acrylic or Mica on Windows 11+, with solid fallbacks when unavailable. Uno does not apply these Windows materials. |
-| `BackdropKind` | `DesktopFlyoutBackdropKind` | `DesktopAcrylic` | Get/set, DP | Chooses Desktop Acrylic or Mica. UWP uses per-island Composition effects, with Mica sampling the blurred desktop wallpaper. |
+| `BackdropKind` | `DesktopFlyoutBackdropKind` | `DesktopAcrylic` | Get/set, DP | Chooses Desktop Acrylic, Mica, or no library-owned backdrop. UWP uses per-island Composition effects, with Mica sampling the blurred desktop wallpaper. |
 | `MenuFlyout` | `MenuFlyout?` | `null` | Get/set, DP | Optional reference for application code. The control does not show this menu automatically. |
 
 ### Methods
@@ -393,8 +392,10 @@ on each island. It samples the desktop wallpaper, not other windows, and adds no
 It shares Acrylic's theme/accent handling, activation-independent lifetime, and effect policy
 fallbacks. If the wallpaper API is absent or returns no brush, Mica uses a solid fallback.
 Both UWP kinds use the system window color in high contrast
-and preserve locally set island `Background` values. Disabling backdrops clears only the
-library-owned backgrounds. Uno does not apply these Windows materials.
+and preserve locally set island `Background` values.
+
+`None = 2` leaves the island without a library-owned backdrop and preserves locally set island
+`Background` values. Uno does not apply these Windows materials.
 
 ### DesktopFlyoutTransitionState
 

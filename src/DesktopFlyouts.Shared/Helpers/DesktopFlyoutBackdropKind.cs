@@ -4,18 +4,23 @@
 namespace DesktopFlyouts
 {
     /// <summary>
-    /// Specifies the backdrop material used by a <see cref="DesktopFlyout"/>.
+    /// Specifies the backdrop behavior used by a <see cref="DesktopFlyout"/>.
     /// </summary>
     public enum DesktopFlyoutBackdropKind
     {
         /// <summary>
         /// Uses the Desktop Acrylic material.
         /// </summary>
-        DesktopAcrylic,
+        DesktopAcrylic = 0,
 
         /// <summary>
         /// Uses the base Mica material.
         /// </summary>
-        Mica,
+        Mica = 1,
+
+        /// <summary>
+        /// Does not apply a library-owned backdrop.
+        /// </summary>
+        None = 2,
     }
 }

@@ -14,7 +14,6 @@ internal partial class RootViewModel : ObservableObject
     private bool _isModifiable = true;
     private string? _iconPath;
     private string? _tooltipText;
-    private bool _isBackdropEnabled;
     private bool _hideOnLostFocus;
     private bool _isSwipeToDismissEnabled;
     private double _swipeDismissThresholdValue = 80D;
@@ -49,16 +48,6 @@ internal partial class RootViewModel : ObservableObject
         {
             if (SetProperty(ref _tooltipText, value))
                 OnTooltipTextChanged(value);
-        }
-    }
-
-    internal bool IsBackdropEnabled
-    {
-        get => _isBackdropEnabled;
-        set
-        {
-            if (SetProperty(ref _isBackdropEnabled, value))
-                OnIsBackdropEnabledChanged(value);
         }
     }
 
@@ -173,7 +162,6 @@ internal partial class RootViewModel : ObservableObject
         IconPath = TrayIconManager.Default.SystemTrayIcon?.IconPath;
         TooltipText = TrayIconManager.Default.SystemTrayIcon?.Tooltip;
 
-        IsBackdropEnabled = true;
         HideOnLostFocus = true;
 
         ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
@@ -204,6 +192,7 @@ internal partial class RootViewModel : ObservableObject
 
         SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica");
         SystemBackdrops.Add(DesktopFlyoutBackdropKind.DesktopAcrylic, "Desktop Acrylic");
+        SystemBackdrops.Add(DesktopFlyoutBackdropKind.None, "None");
         SelectedSystemBackdropIndex = 0;
 
         ToggleFlyoutOpenCommand = new RelayCommand(ExecuteToggleFlyoutOpenCommand);
@@ -218,12 +207,6 @@ internal partial class RootViewModel : ObservableObject
     private void OnTooltipTextChanged(string? value)
     {
         TrayIconManager.Default.SystemTrayIcon?.Tooltip = value ?? string.Empty;
-    }
-
-    private void OnIsBackdropEnabledChanged(bool value)
-    {
-        if (IsDefaultFlyoutSelected())
-            TrayIconManager.Default.DesktopFlyout?.IsBackdropEnabled = value;
     }
 
     private void OnHideOnLostFocusChanged(bool value)
@@ -304,7 +287,6 @@ internal partial class RootViewModel : ObservableObject
         flyout.HideOnLostFocus = HideOnLostFocus;
         flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
         flyout.SwipeDismissThreshold = SwipeDismissThresholdValue;
-        flyout.IsBackdropEnabled = IsBackdropEnabled;
     }
 
     private static bool IsDefaultFlyoutSelected()

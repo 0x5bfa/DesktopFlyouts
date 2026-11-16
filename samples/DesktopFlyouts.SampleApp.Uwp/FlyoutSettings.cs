@@ -15,7 +15,6 @@ namespace DesktopFlyouts
         double AutoCloseDelaySeconds = 0,
         double Width = 360,
         double Height = double.NaN,
-        bool IsBackdropEnabled = true,
         DesktopFlyoutBackdropKind BackdropKind = DesktopFlyoutBackdropKind.DesktopAcrylic)
     {
         internal void Apply(DesktopFlyout flyout)
@@ -28,7 +27,6 @@ namespace DesktopFlyouts
                 ? TimeSpan.FromSeconds(AutoCloseDelaySeconds) : TimeSpan.Zero;
             flyout.FlyoutWidth = ToGridLength(Width);
             flyout.FlyoutHeight = ToGridLength(Height);
-            flyout.IsBackdropEnabled = IsBackdropEnabled;
             flyout.BackdropKind = BackdropKind;
         }
 

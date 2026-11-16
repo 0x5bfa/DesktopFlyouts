@@ -128,27 +128,6 @@
                         <TextBlock
                             VerticalAlignment="Center"
                             Style="{StaticResource BodyTextBlockStyle}"
-                            Text="Enable backdrop" />
-                        <ToggleSwitch
-                            Grid.Column="1"
-                            HorizontalAlignment="Left"
-                            IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                            IsOn="{x:Bind ViewModel.IsBackdropEnabled, Mode=TwoWay}" />
-                    </Grid>
-                </Border>
-
-                <Border
-                    Padding="16,12"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    CornerRadius="8">
-                    <Grid ColumnSpacing="16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            Style="{StaticResource BodyTextBlockStyle}"
                             Text="Position request" />
                         <ComboBox
                             Grid.Column="1"
