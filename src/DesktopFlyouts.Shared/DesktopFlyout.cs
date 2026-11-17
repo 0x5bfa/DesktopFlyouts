@@ -355,6 +355,11 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 				return;
 			}
 
+#if WASDK && !HAS_UNO
+			// Reconnect island backdrops after the host is visible so the backdrop target has a live XamlRoot.
+			Presenter.UpdateFlyoutTheme(forceBackdropUpdate: true);
+#endif
+
 			if (!shouldActivateOnOpen)
 			{
 				RestartRestoreActivationTimer();
@@ -484,13 +489,13 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 		var scale = _host.XamlIslandRasterizationScale;
 		var frame = _hostContainer.DesiredSize;
 		var workArea = GetVisualWorkArea(scale);
-		var shadow = Math.Ceiling(DesktopFlyoutChromeMetrics.ShadowInset * scale);
+		var shadow = Math.Ceiling(DesktopFlyoutChromeMetrics.ShadowMargin * scale);
 		var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(Math.Max(0, frame.Width * scale - 2 * shadow), workArea.Width)));
 		var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(Math.Max(0, frame.Height * scale - 2 * shadow), workArea.Height)));
 		var request = _position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight);
 		if (request.Anchor is Rectangle anchor && !_isOverflowAnchor)
 		{
-			var gap = (int)Math.Ceiling(DesktopFlyoutChromeMetrics.EdgeGap * scale);
+			var gap = (int)Math.Ceiling(DesktopFlyoutChromeMetrics.AnchorGap * scale);
 			anchor.Offset(request.AnchorSide switch { DesktopFlyoutAnchorSide.Left => -gap, DesktopFlyoutAnchorSide.Right => gap, _ => 0 },
 				request.AnchorSide switch { DesktopFlyoutAnchorSide.Above => -gap, DesktopFlyoutAnchorSide.Below => gap, _ => 0 });
 			request = DesktopFlyoutPosition.ForAnchor(anchor, request.AnchorSide, request.AnchorAlignment, request.TransitionDirection);
@@ -607,7 +612,7 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	{
 		var scale = _host?.XamlIslandRasterizationScale ?? 1.0D;
 		var area = GetVisualWorkArea(scale);
-		var shadow = Math.Ceiling(DesktopFlyoutChromeMetrics.ShadowInset * scale) / scale;
+		var shadow = Math.Ceiling(DesktopFlyoutChromeMetrics.ShadowMargin * scale) / scale;
 		_hostContainer.SetAvailableSize(new(area.Width / scale + 2 * shadow, area.Height / scale + 2 * shadow), new Thickness(shadow));
 		Presenter.ApplyTemplate();
 		_hostContainer.Measure(new(area.Width / scale + 2 * shadow, area.Height / scale + 2 * shadow));

@@ -63,8 +63,9 @@ All settable properties below are DPs. The collection reference itself is read-o
 
 Requested values and bindings are preserved when the viewport is constrained. Minimum constraints
 take precedence over maximum constraints, with the available work area as the hard presentation
-limit. Excess island content scrolls along the layout axis. Rendering and input geometry share the measured layout. Automatic parent
-dimensions do not become stretched merely because a child island uses stars.
+limit. The root island collection does not scroll, so content beyond the visible viewport is clipped.
+Rendering and input geometry share the measured layout. Automatic parent dimensions do not become
+stretched merely because a child island uses stars.
 
 | Property | Type | Default | Access / DP | Behavior |
 | --- | --- | --- | --- | --- |
@@ -79,7 +80,8 @@ dimensions do not become stretched merely because a child island uses stars.
 
 Background, border, corner radius, shadow, outer margin, presenter/container styles, and templates
 are not public configuration points. Library chrome uses a private dictionary, system theme and
-accessibility behavior, a 12-DIP visible screen-edge gap, and separately reserved shadow space.
+accessibility behavior, 12-DIP island spacing and outer insets, a 12-DIP visible screen-edge gap,
+and a separately reserved 12-DIP shadow margin.
 There are no inherited FrameworkElement dimensions, DataContext, Resources, or Style on this type.
 
 ### Methods

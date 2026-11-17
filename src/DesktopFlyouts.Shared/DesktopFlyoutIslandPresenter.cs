@@ -56,7 +56,7 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		IsTabStop = false;
 		Margin = new Thickness(0);
 		Padding = new Thickness(0);
-		Loaded += (_, _) => { UpdateChrome(); UpdateContentClip(); };
+		Loaded += (_, _) => { UpdateChrome(force: true); UpdateContentClip(); };
 		Unloaded += (_, _) => { ClearOwnerBackdrop(); ReleaseClip(); };
 		SizeChanged += (_, _) => _owner.OnIslandLayoutChanged();
 	}

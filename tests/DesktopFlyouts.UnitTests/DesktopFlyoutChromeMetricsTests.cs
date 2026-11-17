@@ -21,8 +21,8 @@ public sealed class DesktopFlyoutChromeMetricsTests
 		var area = DesktopFlyoutChromeMetrics.InsetWorkArea(monitor, scale);
 		var visual = new Rectangle(area.Right - 400, area.Bottom - 300, 400, 300);
 		var frame = DesktopFlyoutChromeMetrics.IncludeShadow(visual, monitor, scale);
-		var edge = (int)Math.Ceiling(12 * scale);
-		var shadow = (int)Math.Ceiling(8 * scale);
+		var edge = (int)Math.Ceiling(DesktopFlyoutChromeMetrics.ScreenEdgeGap * scale);
+		var shadow = (int)Math.Ceiling(DesktopFlyoutChromeMetrics.ShadowMargin * scale);
 		Assert.AreEqual(edge, monitor.Right - visual.Right);
 		Assert.AreEqual(edge, monitor.Bottom - visual.Bottom);
 		Assert.AreEqual(shadow, frame.Right - visual.Right);

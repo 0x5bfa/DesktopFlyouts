@@ -10,9 +10,17 @@ belong in **Unreleased** until the next release is tagged.
 - Generate WinRT collection interfaces for direct flyout islands and the sample data source.
   This prevents startup ArgumentException (0x80070057) when assigning ItemsSource with dynamic
   code support disabled, as in the samples' AOT configuration.
+- Reserve 12-DIP gaps between islands and 12-DIP outer insets in the islands panel so the
+  shadows have room without adding extra gaps. Expand the scroll clip into the host's shadow
+  allowance, keep the presenter at zero padding and margin, and reconnect WinUI backdrop
+  targets after the flyout host becomes visible.
+- Use the XAML island window's DPI when mapping flyout regions between physical pixels and DIPs,
+  including fractional display scales.
 
 ### Breaking changes
 
+- Disable scrolling of the root island collection. Content outside the visible viewport is clipped;
+  use a `ScrollViewer` inside an island for scrollable content.
 - Make `DesktopFlyout` a nonvisual `DependencyObject, IDisposable` for v3. Keep Show, Hide,
   navigation, state, activation, dismissal, and disposal on that type. The visual presenter is
   now internal and created by the flyout. Remove external presenter construction and styles.
@@ -33,9 +41,8 @@ belong in **Unreleased** until the next release is tagged.
   ContentTemplate. Direct Islands edits throw while IslandsSource is set; clear the source to
   restore direct items. Background, frame, and container-style overrides have no public API.
 - Bound the actual frame to the available work area while preserving requested dimensions and
-  bindings. Scroll overflowing islands along IslandsOrientation, and give scrollable island
-  content a finite measurement budget.
-- Fix the visible screen-edge gap at 12 DIPs and calculate shadow padding independently. Remove
+  bindings, and give scrollable island content a finite measurement budget.
+- Use a 12-DIP screen-edge gap and a separate 12-DIP shadow margin. Remove
   flyout Margin/PlacementMargin overrides. Move padding intended for content inside its UI tree.
   Construction is host-free; the first show with a resolvable position creates the native host.
 

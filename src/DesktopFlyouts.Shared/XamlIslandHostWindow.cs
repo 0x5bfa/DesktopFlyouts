@@ -97,10 +97,18 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get
 		{
+			var window = _xamlHwnd.IsNull ? HWnd : _xamlHwnd;
+			var dpi = PInvoke.GetDpiForWindow(window);
+			if (dpi > 0)
+			{
+				return dpi / 96.0D;
+			}
+
 #if UWP
 			return 1.0D;
 #else
-			return DesktopWindowXamlSource?.SiteBridge.SiteView.RasterizationScale ?? 1.0D;
+			var scale = DesktopWindowXamlSource?.SiteBridge.SiteView.RasterizationScale ?? 1.0D;
+			return double.IsFinite(scale) && scale > 0 ? scale : 1.0D;
 #endif
 		}
 	}

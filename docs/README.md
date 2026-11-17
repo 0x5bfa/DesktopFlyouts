@@ -225,15 +225,16 @@ corresponding alignment set to `Stretch` fills available space subject to min/ma
 
 An explicit dimension takes precedence over stretching. Requested dimensions and bindings are
 never overwritten during placement. The visible frame fits the work area even if a requested
-or minimum dimension exceeds it. Overflowing island collections scroll along the layout axis.
-Use a bounded `ScrollViewer` inside an island for its own scrollable content. Changes to dimensions, templates, items, visibility, and allocation
-update an open flyout without reopening it. Changes during opening are applied after the transition.
+or minimum dimension exceeds it. The root island collection does not scroll; content outside the
+visible viewport is clipped. Use a bounded `ScrollViewer` inside an island for scrollable content.
+Changes to dimensions, templates, items, visibility, and allocation update an open flyout without
+reopening it. Changes during opening are applied after the transition.
 
 ### Consistent outer appearance
 
 The library owns the background material, 1-DIP border, 8-DIP corner radius, shadow, 12-DIP island
-spacing, and 12-DIP visible screen-edge gap. Shadow padding is calculated separately from that
-visible gap. Presenter styles, container styles, custom frame templates, backdrop selection,
+spacing and outer inset, a 12-DIP shadow margin, and a 12-DIP visible screen-edge gap. Presenter
+styles, container styles, custom frame templates, backdrop selection,
 and outer margin overrides are not part of the public flyout API.
 
 Applications control the content inside each frame, including its padding and colors. Content is

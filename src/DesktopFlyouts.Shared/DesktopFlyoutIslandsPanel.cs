@@ -82,9 +82,13 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		var availableLength = GetLength(availableSize, isVertical);
 		if (GetOwnerFlyout() is DesktopFlyout owner)
 			availableLength = Math.Min(availableLength, owner.Presenter.GetMainAxisBudget(isVertical));
-		var availableCross = GetCrossLength(availableSize, isVertical);
+		var inset = items.Count > 0 ? GetResolvedOuterInset() : 0D;
+		var availableCross = Math.Max(0D, GetCrossLength(availableSize, isVertical) - 2D * inset);
 		var hasFiniteLength = !double.IsInfinity(availableLength);
 		var allocateStars = hasFiniteLength && GetOwnerFlyout()?.IsContentSized(isVertical) != true;
+		var itemAvailableLength = hasFiniteLength
+			? Math.Max(0D, availableLength - 2D * inset - spacingTotal)
+			: double.PositiveInfinity;
 		var fixedLength = 0D;
 		var autoLength = 0D;
 		var starLength = 0D;
@@ -101,7 +105,7 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 
 			if (item.Length.IsAuto)
 			{
-				item.Element.Measure(CreateSize(availableCross, availableLength, isVertical));
+				item.Element.Measure(CreateSize(availableCross, itemAvailableLength, isVertical));
 				autoLength += GetLength(item.Element.DesiredSize, isVertical);
 			}
 			else
@@ -115,7 +119,7 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		}
 
 		var remainingLength = hasFiniteLength
-			? Math.Max(0D, availableLength - fixedLength - autoLength - spacingTotal)
+			? Math.Max(0D, itemAvailableLength - fixedLength - autoLength)
 			: double.PositiveInfinity;
 
 		foreach (var item in items)
@@ -138,8 +142,8 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 			desiredCross = Math.Max(desiredCross, GetCrossLength(item.Element.DesiredSize, isVertical));
 		}
 
-		var desiredLength = fixedLength + autoLength + starLength + spacingTotal;
-		return CreateSize(desiredCross, desiredLength, isVertical);
+		var desiredLength = 2D * inset + fixedLength + autoLength + starLength + spacingTotal;
+		return CreateSize(desiredCross + 2D * inset, desiredLength, isVertical);
 	}
 
 	private Size ArrangeStack(Size finalSize, bool isVertical)
@@ -148,7 +152,8 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		var spacing = GetResolvedSpacing();
 		var spacingTotal = GetSpacingTotal(items.Count, spacing);
 		var finalLength = GetLength(finalSize, isVertical);
-		var finalCross = GetCrossLength(finalSize, isVertical);
+		var inset = items.Count > 0 ? GetResolvedOuterInset() : 0D;
+		var finalCross = Math.Max(0D, GetCrossLength(finalSize, isVertical) - 2D * inset);
 		var fixedLength = 0D;
 		var autoLength = 0D;
 		var starWeight = 0D;
@@ -169,8 +174,8 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 			}
 		}
 
-		var remainingLength = Math.Max(0D, finalLength - fixedLength - autoLength - spacingTotal);
-		var offset = 0D;
+		var remainingLength = Math.Max(0D, finalLength - 2D * inset - fixedLength - autoLength - spacingTotal);
+		var offset = inset;
 
 		foreach (var item in items)
 		{
@@ -180,7 +185,7 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 					? GetLength(item.Element.DesiredSize, isVertical)
 					: Math.Max(0D, item.Length.Value);
 
-			item.Element.Arrange(CreateRect(offset, finalCross, length, isVertical));
+			item.Element.Arrange(CreateRect(offset, inset, finalCross, length, isVertical));
 			offset += length + spacing;
 		}
 
@@ -282,6 +287,8 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 			: Math.Max(0D, Spacing);
 	}
 
+	private double GetResolvedOuterInset() => GetOwnerFlyout() is not null ? DesktopFlyoutChromeMetrics.IslandOuterInset : 0D;
+
 	private static double GetSpacingTotal(int count, double spacing)
 	{
 		return Math.Max(0, count - 1) * spacing;
@@ -304,11 +311,11 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 			: new(length, cross);
 	}
 
-	private static Rect CreateRect(double offset, double cross, double length, bool isVertical)
+	private static Rect CreateRect(double offset, double crossOffset, double cross, double length, bool isVertical)
 	{
 		return isVertical
-			? new(0, offset, cross, length)
-			: new(offset, 0, length, cross);
+			? new(crossOffset, offset, cross, length)
+			: new(offset, crossOffset, length, cross);
 	}
 
 	private static void OnLayoutPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)

@@ -61,9 +61,13 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 		if (GetTemplateChild("PART_ScrollViewer") is ScrollViewer scroll)
 		{
 			scroll.Style = new Style(typeof(ScrollViewer));
+			// Extend the viewport into the host's shadow allowance so island shadows
+			// remain visible beyond the panel's outer inset.
+			var shadowInset = DesktopFlyoutChromeMetrics.ShadowMargin;
+			scroll.Margin = new Thickness(-shadowInset);
+			scroll.Padding = new Thickness(0);
 			scroll.Background = null;
 			scroll.BorderThickness = new Thickness(0);
-			ConfigureScrolling(scroll);
 			IsolateScrollInfrastructure(scroll);
 		}
 		if (GetTemplateChild("PART_ItemsPresenter") is ItemsPresenter itemsPresenter)
@@ -81,7 +85,6 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 		Height = double.IsNaN(Owner.Height) ? double.NaN : Math.Clamp(Owner.Height, MinHeight, MaxHeight);
 		HorizontalAlignment = Owner.HorizontalAlignment;
 		VerticalAlignment = Owner.VerticalAlignment;
-		if (GetTemplateChild("PART_ScrollViewer") is ScrollViewer scroll) ConfigureScrolling(scroll);
 		ItemTemplate = Owner.IslandTemplate;
 		ItemTemplateSelector = Owner.IslandTemplateSelector;
 		var source = Owner.IslandsSource ?? Owner.Islands;
@@ -100,15 +103,6 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 	internal double GetMainAxisBudget(bool isVertical) => isVertical
 		? (double.IsNaN(Height) ? MaxHeight : Height)
 		: (double.IsNaN(Width) ? MaxWidth : Width);
-
-	private void ConfigureScrolling(ScrollViewer scroll)
-	{
-		var vertical = Owner.IslandsOrientation is Orientation.Vertical;
-		scroll.VerticalScrollMode = vertical ? ScrollMode.Auto : ScrollMode.Disabled;
-		scroll.VerticalScrollBarVisibility = vertical ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
-		scroll.HorizontalScrollMode = vertical ? ScrollMode.Disabled : ScrollMode.Auto;
-		scroll.HorizontalScrollBarVisibility = vertical ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
-	}
 
 	private static void IsolateScrollInfrastructure(DependencyObject element)
 	{

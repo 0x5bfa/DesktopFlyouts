@@ -6,8 +6,9 @@
 
 	<ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
 		<Grid x:Name="PART_RootGrid" RenderTransformOrigin="0.5,0.5" TabFocusNavigation="Cycle">
-			<ScrollViewer x:Name="PART_ScrollViewer" Margin="-8" Padding="8"
+			<ScrollViewer x:Name="PART_ScrollViewer"
 				ZoomMode="Disabled" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+				VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled"
 				HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
 				<ItemsPresenter x:Name="PART_ItemsPresenter" />
 			</ScrollViewer>
