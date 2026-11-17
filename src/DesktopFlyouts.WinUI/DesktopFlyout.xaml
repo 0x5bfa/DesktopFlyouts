@@ -1,59 +1,74 @@
-<!-- Copyright (c) 0x5BFA. All rights reserved. Licensed under the MIT license. -->
+<!--  Copyright (c) 0x5BFA. All rights reserved. Licensed under the MIT license.  -->
 <ResourceDictionary
-	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:local="using:DesktopFlyouts">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DesktopFlyouts">
 
-	<ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
-		<Grid x:Name="PART_RootGrid" RenderTransformOrigin="0.5,0.5" TabFocusNavigation="Cycle">
-			<ScrollViewer x:Name="PART_ScrollViewer"
-				ZoomMode="Disabled" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
-				VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled"
-				HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-				<ItemsPresenter x:Name="PART_ItemsPresenter" />
-			</ScrollViewer>
-		</Grid>
-	</ControlTemplate>
+    <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
+        <Grid
+            x:Name="PART_RootGrid"
+            RenderTransformOrigin="0.5,0.5"
+            TabFocusNavigation="Cycle">
+            <ScrollViewer
+                x:Name="PART_ScrollViewer"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                HorizontalScrollBarVisibility="Disabled"
+                HorizontalScrollMode="Disabled"
+                VerticalScrollBarVisibility="Disabled"
+                VerticalScrollMode="Disabled"
+                ZoomMode="Disabled">
+                <ItemsPresenter x:Name="PART_ItemsPresenter" />
+            </ScrollViewer>
+        </Grid>
+    </ControlTemplate>
 
-	<ItemsPanelTemplate x:Key="DesktopFlyoutItemsPanel">
-		<local:DesktopFlyoutIslandsPanel />
-	</ItemsPanelTemplate>
+    <ItemsPanelTemplate x:Key="DesktopFlyoutItemsPanel">
+        <local:DesktopFlyoutIslandsPanel />
+    </ItemsPanelTemplate>
 
-	<ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
-		<Grid x:Name="PART_RootGrid" CornerRadius="8" BorderThickness="1">
-			<ContentPresenter x:Name="PART_MainContentPresenter"
-				Margin="0" CornerRadius="7"
-				HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-				HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-				Content="{TemplateBinding Content}"
-				ContentTemplate="{TemplateBinding ContentTemplate}"
-				ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}" />
-		</Grid>
-	</ControlTemplate>
+    <ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
+        <Grid
+            x:Name="PART_RootGrid"
+            BorderThickness="1"
+            CornerRadius="8">
+            <ContentPresenter
+                x:Name="PART_MainContentPresenter"
+                Margin="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                Content="{TemplateBinding Content}"
+                ContentTemplate="{TemplateBinding ContentTemplate}"
+                ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                CornerRadius="7" />
+        </Grid>
+    </ControlTemplate>
 
-	<Style x:Key="DefaultWindows11DesktopMenuFlyoutStyle" TargetType="local:DesktopMenuFlyout">
-		<Setter Property="HorizontalAlignment" Value="Stretch" />
-		<Setter Property="VerticalAlignment" Value="Stretch" />
-		<Setter Property="Margin" Value="0" />
-		<Setter Property="BorderThickness" Value="0" />
-		<Setter Property="BorderBrush" Value="Transparent" />
-		<Setter Property="IsTabStop" Value="False" />
-		<Setter Property="Template">
-			<Setter.Value>
-				<ControlTemplate TargetType="local:DesktopMenuFlyout">
-					<Grid
-						x:Name="PART_RootGrid"
-						Background="Transparent"
-						BorderBrush="{TemplateBinding BorderBrush}"
-						BorderThickness="{TemplateBinding BorderThickness}">
-						<Border x:Name="PART_MenuFlyoutTargetControl" Background="Transparent" />
-					</Grid>
-				</ControlTemplate>
-			</Setter.Value>
-		</Setter>
-	</Style>
+    <Style x:Key="DefaultWindows11DesktopMenuFlyoutStyle" TargetType="local:DesktopMenuFlyout">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:DesktopMenuFlyout">
+                    <Grid
+                        x:Name="PART_RootGrid"
+                        Background="Transparent"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <Border x:Name="PART_MenuFlyoutTargetControl" Background="Transparent" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 
-	<Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
+    <Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
 
 </ResourceDictionary>
