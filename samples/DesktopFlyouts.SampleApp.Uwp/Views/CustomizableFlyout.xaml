@@ -7,12 +7,9 @@
 	xmlns:local="using:DesktopFlyouts"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-	FlyoutWidth="360"
+	Width="360"
+	VerticalAlignment="Stretch"
 	mc:Ignorable="d">
-
-	<local:DesktopFlyout.Resources>
-		<local:SampleResources />
-	</local:DesktopFlyout.Resources>
 
 	<local:DesktopFlyout.Islands>
 		<local:DesktopFlyoutIsland x:Name="FirstIsland" IslandHeight="*">

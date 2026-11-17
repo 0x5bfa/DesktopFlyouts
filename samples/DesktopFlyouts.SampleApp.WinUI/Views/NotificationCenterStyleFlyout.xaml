@@ -6,9 +6,8 @@
 	xmlns:local="using:DesktopFlyouts"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
-	FlyoutHeight="*"
-	FlyoutWidth="336"
-	HideOnLostFocus="False"
+	VerticalAlignment="Stretch"
+	Width="336"
 	IslandsOrientation="Vertical"
 	mc:Ignorable="d">
 

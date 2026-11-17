@@ -1,0 +1,19 @@
+<local:DesktopFlyout
+	x:Class="DesktopFlyouts.DataTemplateFlyout"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="using:DesktopFlyouts"
+	xmlns:data="using:DesktopFlyouts.SampleApp.Shared"
+	Width="360" MaxHeight="640">
+	<local:DesktopFlyout.IslandsSource>
+		<data:SampleIslandDataSource />
+	</local:DesktopFlyout.IslandsSource>
+	<local:DesktopFlyout.IslandTemplate>
+		<DataTemplate x:DataType="data:SampleIslandData">
+			<StackPanel Padding="16" Spacing="8">
+				<TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" />
+				<TextBlock Text="{x:Bind Detail}" TextWrapping="Wrap" />
+			</StackPanel>
+		</DataTemplate>
+	</local:DesktopFlyout.IslandTemplate>
+</local:DesktopFlyout>

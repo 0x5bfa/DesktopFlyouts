@@ -4,94 +4,31 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:local="using:DesktopFlyouts">
 
-	<ResourceDictionary.ThemeDictionaries>
-		<ResourceDictionary x:Key="Default">
-			<SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#26FFFFFF" />
-			<SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="#12FFFFFF" />
-		</ResourceDictionary>
-		<ResourceDictionary x:Key="Light">
-			<SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#14000000" />
-			<SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="#0F000000" />
-		</ResourceDictionary>
-		<ResourceDictionary x:Key="HighContrast">
-			<SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="White" />
-			<SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="White" />
-		</ResourceDictionary>
-	</ResourceDictionary.ThemeDictionaries>
+	<ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
+		<Grid x:Name="PART_RootGrid" RenderTransformOrigin="0.5,0.5" TabFocusNavigation="Cycle">
+			<ScrollViewer x:Name="PART_ScrollViewer" Margin="-8" Padding="8"
+				ZoomMode="Disabled" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+				HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+				<ItemsPresenter x:Name="PART_ItemsPresenter" />
+			</ScrollViewer>
+		</Grid>
+	</ControlTemplate>
 
-	<CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
+	<ItemsPanelTemplate x:Key="DesktopFlyoutItemsPanel">
+		<local:DesktopFlyoutIslandsPanel />
+	</ItemsPanelTemplate>
 
-	<Style x:Key="DefaultWindows11DesktopFlyoutStyle" TargetType="local:DesktopFlyout">
-		<Setter Property="HorizontalAlignment" Value="Right" />
-		<Setter Property="VerticalAlignment" Value="Bottom" />
-		<Setter Property="Margin" Value="12" />
-		<Setter Property="BorderThickness" Value="0" />
-		<Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
-		<Setter Property="AutomationProperties.LandmarkType" Value="Navigation" />
-		<Setter Property="IsTabStop" Value="False" />
-		<Setter Property="Template">
-			<Setter.Value>
-				<ControlTemplate TargetType="local:DesktopFlyout">
-					<Grid
-						x:Name="PART_RootGrid"
-						BorderBrush="{TemplateBinding BorderBrush}"
-						BorderThickness="{TemplateBinding BorderThickness}"
-						RenderTransformOrigin="0.5,0.5"
-						TabFocusNavigation="Cycle">
-						<Grid.RenderTransform>
-							<CompositeTransform
-								ScaleX="1"
-								ScaleY="1"
-								TranslateX="0"
-								TranslateY="0" />
-						</Grid.RenderTransform>
-
-						<ItemsControl x:Name="PART_IslandsItemsControl" IsTabStop="False">
-							<ItemsControl.ItemsPanel>
-								<ItemsPanelTemplate>
-									<local:DesktopFlyoutIslandsPanel Spacing="12" />
-								</ItemsPanelTemplate>
-							</ItemsControl.ItemsPanel>
-						</ItemsControl>
-					</Grid>
-				</ControlTemplate>
-			</Setter.Value>
-		</Setter>
-	</Style>
-
-	<Style x:Key="DefaultDesktopFlyoutIslandStyle" TargetType="local:DesktopFlyoutIsland">
-		<Setter Property="HorizontalAlignment" Value="Stretch" />
-		<Setter Property="VerticalAlignment" Value="Stretch" />
-		<Setter Property="HorizontalContentAlignment" Value="Stretch" />
-		<Setter Property="VerticalContentAlignment" Value="Stretch" />
-		<Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
-		<Setter Property="BorderThickness" Value="1" />
-		<Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
-		<Setter Property="AutomationProperties.LandmarkType" Value="Navigation" />
-		<Setter Property="IsTabStop" Value="False" />
-		<Setter Property="Template">
-			<Setter.Value>
-				<ControlTemplate TargetType="local:DesktopFlyoutIsland">
-					<Grid
-						x:Name="PART_RootGrid"
-						Background="{TemplateBinding Background}"
-						BorderBrush="{TemplateBinding BorderBrush}"
-						BorderThickness="{TemplateBinding BorderThickness}"
-						CornerRadius="{TemplateBinding CornerRadius}"
-						Translation="0,0,36">
-						<Grid.Shadow>
-							<ThemeShadow />
-						</Grid.Shadow>
-
-						<ContentPresenter
-							x:Name="PART_MainContentPresenter"
-							HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-							VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-					</Grid>
-				</ControlTemplate>
-			</Setter.Value>
-		</Setter>
-	</Style>
+	<ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
+		<Grid x:Name="PART_RootGrid" CornerRadius="8" BorderThickness="1">
+			<ContentPresenter x:Name="PART_MainContentPresenter"
+				Margin="0" CornerRadius="7"
+				HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+				HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+				Content="{TemplateBinding Content}"
+				ContentTemplate="{TemplateBinding ContentTemplate}"
+				ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}" />
+		</Grid>
+	</ControlTemplate>
 
 	<Style x:Key="DefaultWindows11DesktopMenuFlyoutStyle" TargetType="local:DesktopMenuFlyout">
 		<Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -114,9 +51,7 @@
 			</Setter.Value>
 		</Setter>
 	</Style>
-
-	<Style BasedOn="{StaticResource DefaultWindows11DesktopFlyoutStyle}" TargetType="local:DesktopFlyout" />
-	<Style BasedOn="{StaticResource DefaultDesktopFlyoutIslandStyle}" TargetType="local:DesktopFlyoutIsland" />
 	<Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
+
 
 </ResourceDictionary>

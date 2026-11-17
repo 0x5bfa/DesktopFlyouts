@@ -5,7 +5,7 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:local="using:DesktopFlyouts"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	FlyoutHeight="725"
+	Height="725"
 	IslandsOrientation="Horizontal"
 	mc:Ignorable="d">
 

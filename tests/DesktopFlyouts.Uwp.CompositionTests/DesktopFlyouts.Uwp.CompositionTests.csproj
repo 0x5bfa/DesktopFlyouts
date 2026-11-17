@@ -8,6 +8,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- Match the samples' AOT feature switch without creating a XAML application. -->
+		<RuntimeHostConfigurationOption Include="System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported" Value="false" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="MSTest.TestAdapter" />
 		<PackageReference Include="MSTest.TestFramework" />
@@ -16,6 +21,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="../../src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.csproj" />
+		<Compile Include="../../samples/DesktopFlyouts.SampleApp.Shared/SampleIslandData.cs" Link="Production/SampleIslandData.cs" />
 		<Compile Include="../../src/DesktopFlyouts.Uwp/DesktopFlyoutAcrylicEffect.cs" Link="Production/DesktopFlyoutAcrylicEffect.cs" />
 		<Compile Include="../../src/DesktopFlyouts.Uwp/DesktopFlyoutMicaEffect.cs" Link="Production/DesktopFlyoutMicaEffect.cs" />
 		<!-- VSTest has no MSIX activation context. Keep Win2D beside the test host for CsWinRT activation. -->

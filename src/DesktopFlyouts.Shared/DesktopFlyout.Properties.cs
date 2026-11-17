@@ -3,8 +3,8 @@
 
 using CommunityToolkit.WinUI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 #if UWP
 using Windows.UI.Xaml;
@@ -18,29 +18,6 @@ namespace DesktopFlyouts;
 
 public partial class DesktopFlyout
 {
-	private readonly ObservableCollection<DesktopFlyoutIsland> _islands = [];
-
-	/// <summary>
-	/// Gets the islands displayed in the flyout.
-	/// </summary>
-	/// <value>The ordered collection of <see cref="DesktopFlyoutIsland"/> sections.</value>
-	/// <remarks>
-	/// This is the XAML content collection for <see cref="DesktopFlyout"/>. Add islands directly
-	/// in XAML or populate the collection before opening the flyout.
-	/// </remarks>
-	public IList<DesktopFlyoutIsland> Islands => _islands;
-
-	/// <summary>
-	/// Gets or sets a source collection for flyout islands.
-	/// </summary>
-	/// <value>An <see cref="IEnumerable{T}"/> containing <see cref="DesktopFlyoutIsland"/> instances.</value>
-	/// <remarks>
-	/// Values that are not an <see cref="IEnumerable{T}"/> of <see cref="DesktopFlyoutIsland"/>
-	/// are ignored. Replacing the source clears the current <see cref="Islands"/> collection.
-	/// </remarks>
-	[GeneratedDependencyProperty]
-	public partial object? IslandsSource { get; set; }
-
 	/// <summary>
 	/// Gets whether the flyout is currently open.
 	/// </summary>
@@ -57,68 +34,8 @@ public partial class DesktopFlyout
 	/// </remarks>
 	public DesktopFlyoutTransitionState TransitionState { get; private set; } = DesktopFlyoutTransitionState.Closed;
 
-	/// <summary>
-	/// Occurs when <see cref="TransitionState"/> changes.
-	/// </summary>
+	/// <summary>Occurs when the flyout lifecycle state changes.</summary>
 	public event EventHandler? TransitionStateChanged;
-
-	/// <summary>
-	/// Identifies the <see cref="FlyoutWidth"/> dependency property.
-	/// </summary>
-	public static readonly DependencyProperty FlyoutWidthProperty =
-		DependencyProperty.Register(nameof(FlyoutWidth), typeof(GridLength), typeof(DesktopFlyout), new PropertyMetadata(GridLength.Auto, OnFlyoutSizePropertyChanged));
-
-	/// <summary>
-	/// Gets or sets the requested flyout width.
-	/// </summary>
-	/// <value>The desired flyout width. The default is <see cref="GridLength.Auto"/>.</value>
-	/// <remarks>
-	/// Use pixel, auto, or star sizing. Star sizing stretches to the available work-area width
-	/// after subtracting <see cref="FrameworkElement.Margin"/>.
-	/// </remarks>
-	public GridLength FlyoutWidth
-	{
-		get => (GridLength)GetValue(FlyoutWidthProperty);
-		set => SetValue(FlyoutWidthProperty, value);
-	}
-
-	/// <summary>
-	/// Identifies the <see cref="FlyoutHeight"/> dependency property.
-	/// </summary>
-	public static readonly DependencyProperty FlyoutHeightProperty =
-		DependencyProperty.Register(nameof(FlyoutHeight), typeof(GridLength), typeof(DesktopFlyout), new PropertyMetadata(GridLength.Auto, OnFlyoutSizePropertyChanged));
-
-	/// <summary>
-	/// Gets or sets the requested flyout height.
-	/// </summary>
-	/// <value>The desired flyout height. The default is <see cref="GridLength.Auto"/>.</value>
-	/// <remarks>
-	/// Use pixel, auto, or star sizing. Star sizing stretches to the available work-area height
-	/// after subtracting <see cref="FrameworkElement.Margin"/>.
-	/// </remarks>
-	public GridLength FlyoutHeight
-	{
-		get => (GridLength)GetValue(FlyoutHeightProperty);
-		set => SetValue(FlyoutHeightProperty, value);
-	}
-
-	/// <summary>
-	/// Gets or sets how islands are arranged.
-	/// </summary>
-	/// <value>The orientation used to arrange <see cref="Islands"/>. The default is <see cref="Orientation.Vertical"/>.</value>
-	[GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
-	public partial Orientation IslandsOrientation { get; set; }
-
-	/// <summary>
-	/// Gets or sets the menu flyout associated with the desktop flyout.
-	/// </summary>
-	/// <value>An optional XAML <see cref="MenuFlyout"/> reference for application code.</value>
-	/// <remarks>
-	/// <see cref="DesktopFlyout"/> does not display this menu automatically. Use
-	/// <see cref="DesktopMenuFlyout"/> when you need a menu hosted in a desktop island window.
-	/// </remarks>
-	[GeneratedDependencyProperty]
-	public partial MenuFlyout? MenuFlyout { get; set; }
 
 	/// <summary>
 	/// Gets or sets whether open and close transitions are enabled.
@@ -127,17 +44,6 @@ public partial class DesktopFlyout
 	/// <remarks>Windows hosts also respect the user's system animation setting, even when this property is <see langword="true"/>.</remarks>
 	[GeneratedDependencyProperty(DefaultValue = true)]
 	public partial bool IsTransitionAnimationEnabled { get; set; }
-
-	/// <summary>
-	/// Gets or sets the scale applied while the flyout is pressed. Set to 1.0 to disable press scaling.
-	/// </summary>
-	/// <value>The pressed scale factor. The default is <c>1.0</c>.</value>
-	/// <remarks>
-	/// Values are clamped to the range <c>0.1</c> through <c>2.0</c>. <see cref="double.NaN"/>
-	/// and infinity disable press scaling.
-	/// </remarks>
-	[GeneratedDependencyProperty(DefaultValue = 1.0D)]
-	public partial double PressedScale { get; set; }
 
 	/// <summary>
 	/// Gets or sets whether the flyout can be dismissed by swiping in the opposite direction of the active popup direction.
@@ -171,120 +77,127 @@ public partial class DesktopFlyout
 	[GeneratedDependencyProperty(DefaultValue = DesktopFlyoutActivationMode.Activate)]
 	public partial DesktopFlyoutActivationMode ActivationMode { get; set; }
 
-	/// <summary>
-	/// Identifies the <see cref="AutoCloseDelay"/> dependency property.
-	/// </summary>
+	/// <summary>Identifies the <see cref="AutoCloseDelay"/> dependency property.</summary>
 	public static readonly DependencyProperty AutoCloseDelayProperty =
 		DependencyProperty.Register(nameof(AutoCloseDelay), typeof(TimeSpan), typeof(DesktopFlyout), new PropertyMetadata(TimeSpan.Zero, OnAutoCloseDelayPropertyChanged));
 
-	/// <summary>
-	/// Gets or sets the delay before the flyout closes automatically.
-	/// </summary>
-	/// <value>The delay before automatic close. The default is <see cref="TimeSpan.Zero"/>.</value>
-	/// <remarks>
-	/// Set to <see cref="TimeSpan.Zero"/> or a negative value to disable automatic close. The
-	/// timer starts after the flyout has opened and restarts when the property changes while open.
-	/// </remarks>
+	/// <summary>Gets or sets the delay after opening before automatic close; zero disables it.</summary>
 	public TimeSpan AutoCloseDelay
 	{
 		get => (TimeSpan)GetValue(AutoCloseDelayProperty);
 		set => SetValue(AutoCloseDelayProperty, value);
 	}
 
-	/// <summary>
-	/// Gets or sets the backdrop material used by flyout islands.
-	/// </summary>
-	/// <value>The backdrop material used by flyout islands. The default is <see cref="DesktopFlyoutBackdropKind.DesktopAcrylic"/>.</value>
-	/// <remarks>
-	/// Windows App SDK builds create library-owned system backdrop instances from this value.
-	/// UWP builds use Composition Acrylic or wallpaper-based Mica on Windows 11+, with solid
-	/// fallbacks when unavailable. Custom <c>SystemBackdrop</c>
-	/// instances are intentionally not exposed so flyout islands can keep a stable transient
-	/// surface when the host window loses activation.
-	/// </remarks>
-	[GeneratedDependencyProperty(DefaultValue = DesktopFlyoutBackdropKind.DesktopAcrylic)]
-	public partial DesktopFlyoutBackdropKind BackdropKind { get; set; }
-
-	private static void OnFlyoutSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
-	{
-		if (dependencyObject is DesktopFlyout flyout)
-		{
-			flyout.UpdateOpenFlyoutLayout();
-		}
-	}
-
-	private static void OnAutoCloseDelayPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
-	{
-		if (dependencyObject is DesktopFlyout flyout)
-		{
-			flyout.RestartAutoCloseTimer();
-		}
-	}
-
-	partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e)
-	{
-		if (e.NewValue is not IEnumerable<DesktopFlyoutIsland> newIslands)
-		{
-			return;
-		}
-
-		Islands.Clear();
-
-		foreach (var island in newIslands)
-		{
-			Islands.Add(island);
-		}
-
-		UpdateIslands();
-	}
-
-	partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e)
-	{
-		if (ReferenceEquals(e.NewValue, e.OldValue))
-		{
-			return;
-		}
-
-		UpdateIslands();
-		UpdateOpenFlyoutLayout();
-	}
-
-	partial void OnBackdropKindPropertyChanged(DependencyPropertyChangedEventArgs e)
-	{
-		if ((DesktopFlyoutBackdropKind)e.NewValue == (DesktopFlyoutBackdropKind)e.OldValue)
-		{
-			return;
-		}
-
-		UpdateIslandBackdrops();
-	}
+	private static void OnAutoCloseDelayPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+		=> ((DesktopFlyout)sender).RestartAutoCloseTimer();
 
 	partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
-		if ((DesktopFlyoutActivationMode)e.NewValue == (DesktopFlyoutActivationMode)e.OldValue)
-		{
-			return;
-		}
-
 		_host?.SetActivationMode((DesktopFlyoutActivationMode)e.NewValue);
 		UpdateFocusSuppression();
 	}
-#if HAS_UNO
-	partial void OnHideOnLostFocusPropertyChanged(DependencyPropertyChangedEventArgs e)
-	{
-		if (_host is null || _disposed)
-		{
-			return;
-		}
 
-		if ((bool)e.NewValue)
+	private readonly DesktopFlyoutIslandCollection _islands;
+
+	/// <summary>Gets the directly supplied island definitions, UI elements, or data items.</summary>
+	/// <remarks>Mutation is prohibited while IslandsSource is non-null.</remarks>
+	public IList<object> Islands => _islands;
+
+	/// <summary>Gets or sets the external item source; null restores the direct Islands collection.</summary>
+	[GeneratedDependencyProperty]
+	public partial object? IslandsSource { get; set; }
+
+	partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		if (e.NewValue is not null && e.NewValue is not IEnumerable)
 		{
-			_host.WindowInactivated += HostWindow_Inactivated;
+			SetValue(IslandsSourceProperty, e.OldValue);
+			throw new ArgumentException("IslandsSource must be an enumerable collection.");
 		}
-		else
-		{
-			_host.WindowInactivated -= HostWindow_Inactivated;
-		}
+		OnConfigurationChanged();
 	}
-#endif
+
+	/// <summary>Gets or sets the template for item content inside the fixed island chrome.</summary>
+	[GeneratedDependencyProperty]
+	public partial DataTemplate? IslandTemplate { get; set; }
+
+	partial void OnIslandTemplatePropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+
+	/// <summary>Gets or sets the selector for item content templates.</summary>
+	[GeneratedDependencyProperty]
+	public partial DataTemplateSelector? IslandTemplateSelector { get; set; }
+
+	partial void OnIslandTemplateSelectorPropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+
+	/// <summary>Gets or sets the direction of island layout.</summary>
+	[GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
+	public partial Orientation IslandsOrientation { get; set; }
+
+	partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+
+	/// <summary>Gets or sets the requested width in DIPs; NaN means Auto.</summary>
+	[GeneratedDependencyProperty(DefaultValue = double.NaN)]
+	public partial double Width { get; set; }
+
+	partial void OnWidthPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(WidthProperty, e, true, false);
+
+	/// <summary>Gets or sets the requested height in DIPs; NaN means Auto.</summary>
+	[GeneratedDependencyProperty(DefaultValue = double.NaN)]
+	public partial double Height { get; set; }
+
+	partial void OnHeightPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(HeightProperty, e, true, false);
+
+	/// <summary>Gets or sets the minimum requested width in DIPs.</summary>
+	[GeneratedDependencyProperty(DefaultValue = 0D)]
+	public partial double MinWidth { get; set; }
+
+	partial void OnMinWidthPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(MinWidthProperty, e, false, false);
+
+	/// <summary>Gets or sets the minimum requested height in DIPs.</summary>
+	[GeneratedDependencyProperty(DefaultValue = 0D)]
+	public partial double MinHeight { get; set; }
+
+	partial void OnMinHeightPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(MinHeightProperty, e, false, false);
+
+	/// <summary>Gets or sets the maximum requested width in DIPs.</summary>
+	[GeneratedDependencyProperty(DefaultValue = double.PositiveInfinity)]
+	public partial double MaxWidth { get; set; }
+
+	partial void OnMaxWidthPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(MaxWidthProperty, e, false, true);
+
+	/// <summary>Gets or sets the maximum requested height in DIPs.</summary>
+	[GeneratedDependencyProperty(DefaultValue = double.PositiveInfinity)]
+	public partial double MaxHeight { get; set; }
+
+	partial void OnMaxHeightPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(MaxHeightProperty, e, false, true);
+
+	/// <summary>Gets or sets sizing alignment; Stretch fills an automatic width.</summary>
+	[GeneratedDependencyProperty(DefaultValue = HorizontalAlignment.Left)]
+	public partial HorizontalAlignment HorizontalAlignment { get; set; }
+
+	partial void OnHorizontalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+
+	/// <summary>Gets or sets sizing alignment; Stretch fills an automatic height.</summary>
+	[GeneratedDependencyProperty(DefaultValue = VerticalAlignment.Top)]
+	public partial VerticalAlignment VerticalAlignment { get; set; }
+
+	partial void OnVerticalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+
+	private void OnDimensionChanged(DependencyProperty property, DependencyPropertyChangedEventArgs e, bool allowAuto, bool allowInfinity)
+	{
+		var value = (double)e.NewValue;
+		if (value < 0 || (double.IsNaN(value) && !allowAuto) || (double.IsInfinity(value) && !allowInfinity))
+		{
+			SetValue(property, e.OldValue);
+			throw new ArgumentOutOfRangeException(nameof(value), "Invalid flyout dimension.");
+		}
+		OnConfigurationChanged();
+	}
+
+	private void OnConfigurationChanged()
+	{
+		if (_disposed) return;
+		Presenter.ApplyConfiguration();
+		Presenter_LayoutInvalidated(this, EventArgs.Empty);
+	}
 }

@@ -50,13 +50,9 @@ internal partial class RootViewModel : ObservableObject
 	[ObservableProperty]
 	internal partial double FlyoutHeightValue { get; set; } = double.NaN;
 
-	[ObservableProperty]
-	internal partial int SelectedSystemBackdropIndex { get; set; }
-
 	public Dictionary<DesktopFlyoutPosition, string> FlyoutPositions { get; private set; } = [];
 	public Dictionary<DesktopFlyoutActivationMode, string> ActivationModes { get; private set; } = [];
 	public Dictionary<DesktopFlyoutSampleKind, string> FlyoutExamples { get; private set; } = [];
-	public Dictionary<DesktopFlyoutBackdropKind, string> SystemBackdrops { get; private set; } = [];
 
 	public ICommand ToggleFlyoutOpenCommand { get; }
 
@@ -88,6 +84,7 @@ internal partial class RootViewModel : ObservableObject
 		FlyoutExamples.Add(DesktopFlyoutSampleKind.StickySmallStyle, "Sticky small");
 		FlyoutExamples.Add(DesktopFlyoutSampleKind.WidgetStyle, "Widget");
 		FlyoutExamples.Add(DesktopFlyoutSampleKind.Severity, "Severity");
+		FlyoutExamples.Add(DesktopFlyoutSampleKind.DataTemplate, "Data templates");
 		SelectedFlyoutExampleIndex = 0;
 
 		FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.TopLeft, DesktopFlyoutMonitorSelection.Cursor), "Top left");
@@ -101,10 +98,6 @@ internal partial class RootViewModel : ObservableObject
 		FlyoutPositions.Add(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight, DesktopFlyoutMonitorSelection.Cursor, DesktopFlyoutPopupDirection.RightToLeft), "Bottom right (from right)");
 		SelectedPositionIndex = FlyoutPositions.Count - 2;
 
-		SystemBackdrops.Add(DesktopFlyoutBackdropKind.DesktopAcrylic, "Acrylic");
-		SystemBackdrops.Add(DesktopFlyoutBackdropKind.Mica, "Mica");
-		SystemBackdrops.Add(DesktopFlyoutBackdropKind.None, "None");
-		SelectedSystemBackdropIndex = 0;
 
 		ToggleFlyoutOpenCommand = new RelayCommand(ExecuteToggleFlyoutOpenCommand);
 		_initializing = false;
@@ -147,7 +140,6 @@ internal partial class RootViewModel : ObservableObject
 				case nameof(AutoCloseDelaySecondsValue):
 				case nameof(FlyoutWidthValue):
 				case nameof(FlyoutHeightValue):
-				case nameof(SelectedSystemBackdropIndex):
 					if (IsModifiable)
 					{
 						TrayIconManager.Default.UpdateSettings(GetSettings());
@@ -169,10 +161,7 @@ internal partial class RootViewModel : ObservableObject
         double.IsFinite(SwipeDismissThresholdValue) && SwipeDismissThresholdValue > 0 ? SwipeDismissThresholdValue : 80,
         SelectedActivationModeIndex >= 0 && SelectedActivationModeIndex < ActivationModes.Count
             ? ActivationModes.ElementAt(SelectedActivationModeIndex).Key : DesktopFlyoutActivationMode.Activate,
-        AutoCloseDelaySecondsValue, FlyoutWidthValue, FlyoutHeightValue,
-        SelectedSystemBackdropIndex >= 0 && SelectedSystemBackdropIndex < SystemBackdrops.Count
-            ? SystemBackdrops.ElementAt(SelectedSystemBackdropIndex).Key
-            : DesktopFlyoutBackdropKind.DesktopAcrylic);
+        AutoCloseDelaySecondsValue, FlyoutWidthValue, FlyoutHeightValue);
     }
 
     private void ExecuteToggleFlyoutOpenCommand()

@@ -45,9 +45,9 @@ This project provides `DesktopFlyout` for lightweight desktop panels and `Deskto
 
 ```xml
 <me:DesktopFlyout
-	x:Class="..."
+	x:Class="MyApp.MainDesktopFlyout"
 	xmlns:me="using:DesktopFlyouts"
-	FlyoutWidth="360">
+	Width="360">
 
 	<me:DesktopFlyoutIsland IslandHeight="300">
 		<!-- Put elements here -->
@@ -59,7 +59,11 @@ This project provides `DesktopFlyout` for lightweight desktop panels and `Deskto
 </me:DesktopFlyout>
 ```
 
+Create and retain the flyout on the UI thread, and dispose it when no longer needed:
+
 ```cs
+private readonly MainDesktopFlyout _desktopFlyout = new();
+
 if (_desktopFlyout.TransitionState is not DesktopFlyoutTransitionState.Closed)
 	_desktopFlyout.Hide();
 else

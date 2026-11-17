@@ -7,14 +7,8 @@
 	xmlns:local="using:DesktopFlyouts"
 	xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	ActivationMode="NeverActivate"
-	AutoCloseDelay="0:0:1.5"
 	IslandsOrientation="Horizontal"
 	mc:Ignorable="d">
-
-	<local:DesktopFlyout.Resources>
-		<local:SampleResources />
-	</local:DesktopFlyout.Resources>
 
 	<local:DesktopFlyout.Islands>
 		<local:DesktopFlyoutIsland>

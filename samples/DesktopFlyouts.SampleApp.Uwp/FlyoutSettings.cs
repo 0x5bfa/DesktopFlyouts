@@ -6,7 +6,7 @@ using Windows.UI.Xaml;
 
 namespace DesktopFlyouts;
 
-// Only plain values cross XAML threads; GridLength and dependency properties stay on the owner.
+// Only plain values cross XAML threads; XAML layout and dependency properties stay on the owner.
 internal sealed record FlyoutSettings(
 	bool HideOnLostFocus = true,
 	bool IsSwipeToDismissEnabled = false,
@@ -14,8 +14,7 @@ internal sealed record FlyoutSettings(
 	DesktopFlyoutActivationMode ActivationMode = DesktopFlyoutActivationMode.Activate,
 	double AutoCloseDelaySeconds = 0,
 	double Width = 360,
-	double Height = double.NaN,
-	DesktopFlyoutBackdropKind BackdropKind = DesktopFlyoutBackdropKind.DesktopAcrylic)
+	double Height = double.NaN)
 {
 	internal void Apply(DesktopFlyout flyout)
 	{
@@ -25,14 +24,12 @@ internal sealed record FlyoutSettings(
 		flyout.ActivationMode = ActivationMode;
 		flyout.AutoCloseDelay = double.IsFinite(AutoCloseDelaySeconds) && AutoCloseDelaySeconds > 0
 			? TimeSpan.FromSeconds(AutoCloseDelaySeconds) : TimeSpan.Zero;
-		flyout.FlyoutWidth = ToGridLength(Width);
-		flyout.FlyoutHeight = ToGridLength(Height);
-		flyout.BackdropKind = BackdropKind;
+		flyout.Width = ToLength(Width);
+		flyout.Height = ToLength(Height);
 	}
 
-    private static GridLength ToGridLength(double value)
+    private static double ToLength(double value)
     {
-        return double.IsFinite(value) && value > 0
-        ? new GridLength(value) : GridLength.Auto;
+        return double.IsFinite(value) && value > 0 ? value : double.NaN;
     }
 }

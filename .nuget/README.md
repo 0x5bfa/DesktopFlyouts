@@ -6,9 +6,9 @@ DesktopFlyouts is a WinUI library for showing desktop flyouts from tray icons or
 
 ```xml
 <me:DesktopFlyout
-    x:Class="..."
+    x:Class="MyApp.MainDesktopFlyout"
     xmlns:me="using:DesktopFlyouts"
-    FlyoutWidth="360">
+    Width="360">
 
     <me:DesktopFlyoutIsland IslandHeight="300">
         <!-- Put elements here -->
@@ -20,7 +20,11 @@ DesktopFlyouts is a WinUI library for showing desktop flyouts from tray icons or
 </me:DesktopFlyout>
 ```
 
+Create and retain the flyout on the UI thread, and dispose it when no longer needed:
+
 ```cs
+private readonly MainDesktopFlyout _desktopFlyout = new();
+
 if (_desktopFlyout.TransitionState is not DesktopFlyoutTransitionState.Closed)
     _desktopFlyout.Hide();
 else

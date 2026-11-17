@@ -23,4 +23,6 @@ public enum DesktopFlyoutSampleKind
 	WidgetStyle,
 
 	Severity,
+
+	DataTemplate,
 }

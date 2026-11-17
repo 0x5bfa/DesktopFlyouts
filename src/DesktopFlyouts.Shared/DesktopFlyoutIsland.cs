@@ -2,254 +2,57 @@
 // Licensed under the MIT license.
 
 using System;
-using Windows.Foundation;
 
 #if UWP
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Markup;
 #elif WASDK
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Markup;
 #endif
 
 namespace DesktopFlyouts;
 
-/// <summary>
-/// Represents a content section inside a <see cref="DesktopFlyout"/>.
-/// </summary>
-/// <remarks>
-/// Islands are arranged by their owner flyout according to
-/// <see cref="DesktopFlyout.IslandsOrientation"/>. Put the XAML content for one visual section
-/// in each island.
-/// </remarks>
-#if WASDK && !HAS_UNO
-[WinRT.GeneratedBindableCustomProperty([nameof(TemplateSettings)], [])]
-#endif
-public partial class DesktopFlyoutIsland : ContentControl
+/// <summary>Defines the content and allocation of a section inside a desktop flyout.</summary>
+/// <remarks>The library owns the visual container, background, border, corners, and shadow.</remarks>
+[ContentProperty(Name = nameof(Content))]
+public partial class DesktopFlyoutIsland : DependencyObject
 {
-	private const double LayoutEpsilon = 0.5D;
+	private DesktopFlyoutIslandPresenter? _container;
+	internal event EventHandler? Changed;
 
-	private WeakReference<DesktopFlyout>? _owner;
-	private long _propertyChangedCallbackTokenForCornerRadiusProperty;
-	private Size _lastActualSize;
-	private Size _lastDesiredSize;
-	private bool _hasLayoutSnapshot;
-#if UWP
-	private Brush? _ownerBackground;
-	private bool _hasOwnerBackground;
-#endif
+	/// <summary>Identifies the <see cref="Content"/> dependency property.</summary>
+	public static readonly DependencyProperty ContentProperty = DependencyProperty.Register(
+		nameof(Content), typeof(object), typeof(DesktopFlyoutIsland), new PropertyMetadata(null, OnIslandSizePropertyChanged));
+	/// <summary>Gets or sets the UI element or data displayed inside the fixed chrome.</summary>
+	public object? Content { get => GetValue(ContentProperty); set => SetValue(ContentProperty, value); }
 
-	/// <summary>
-	/// Gets an object that provides calculated values that can be referenced from the island template.
-	/// </summary>
-	/// <value>The calculated template settings for this island.</value>
-	public DesktopFlyoutIslandTemplateSettings TemplateSettings { get; } = new();
+	/// <summary>Identifies the <see cref="ContentTemplate"/> dependency property.</summary>
+	public static readonly DependencyProperty ContentTemplateProperty = DependencyProperty.Register(
+		nameof(ContentTemplate), typeof(DataTemplate), typeof(DesktopFlyoutIsland), new PropertyMetadata(null, OnIslandSizePropertyChanged));
+	/// <summary>Gets or sets a template for this definition's content.</summary>
+	public DataTemplate? ContentTemplate { get => (DataTemplate?)GetValue(ContentTemplateProperty); set => SetValue(ContentTemplateProperty, value); }
 
-	/// <summary>
-	/// Initializes a new instance of <see cref="DesktopFlyoutIsland"/>.
-	/// </summary>
-	/// <remarks>
-	/// The island applies its default style when it is loaded by the owning XAML framework.
-	/// </remarks>
-	public DesktopFlyoutIsland()
+	/// <summary>Identifies the <see cref="Visibility"/> dependency property.</summary>
+	public static readonly DependencyProperty VisibilityProperty = DependencyProperty.Register(
+		nameof(Visibility), typeof(Visibility), typeof(DesktopFlyoutIsland), new PropertyMetadata(Visibility.Visible, OnIslandSizePropertyChanged));
+	/// <summary>Gets or sets whether this section occupies layout space.</summary>
+	public Visibility Visibility { get => (Visibility)GetValue(VisibilityProperty); set => SetValue(VisibilityProperty, value); }
+
+	internal void Attach(DesktopFlyoutIslandPresenter container)
 	{
-		DefaultStyleKey = typeof(DesktopFlyoutIsland);
-		RegisterPropertyChangedCallback(VisibilityProperty, (s, e) => ((DesktopFlyoutIsland)s).OnIslandVisibilityChanged());
-		LayoutUpdated += DesktopFlyoutIsland_LayoutUpdated;
-		UpdateTemplateSettings();
+		if (_container is not null && !ReferenceEquals(_container, container))
+			throw new InvalidOperationException("An island definition cannot be displayed in multiple containers simultaneously.");
+		_container = container;
 	}
 
-	/// <inheritdoc/>
-	protected override void OnApplyTemplate()
+	internal void Detach(DesktopFlyoutIslandPresenter container)
 	{
-		base.OnApplyTemplate();
-
-		Unloaded += DesktopFlyoutIsland_Unloaded;
-
-		_propertyChangedCallbackTokenForCornerRadiusProperty = RegisterPropertyChangedCallback(CornerRadiusProperty, (s, e) => ((DesktopFlyoutIsland)s).OnCornerRadiusChanged());
-
-		UpdateTemplateSettings();
-#if UWP
-		UpdateOwnerBackdrop();
-#endif
+		if (ReferenceEquals(_container, container)) _container = null;
 	}
 
-	internal void SetOwner(DesktopFlyout owner)
-	{
-		_owner = new(owner);
-
-#if WASDK && !HAS_UNO
-		UpdateOwnerBackdrop();
-#elif UWP
-		UpdateOwnerBackdrop();
-#endif
-	}
-
-	private static void OnIslandSizePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
-	{
-		if (dependencyObject is not DesktopFlyoutIsland island)
-		{
-			return;
-		}
-
-		if (island._owner is not null && island._owner.TryGetTarget(out var owner))
-		{
-			owner.OnIslandSizeChanged();
-		}
-	}
-
-	private void OnCornerRadiusChanged()
-	{
-		UpdateTemplateSettings();
-	}
-
-	private void OnIslandVisibilityChanged()
-	{
-		if (_owner is not null && _owner.TryGetTarget(out var owner))
-		{
-			owner.OnIslandVisibilityChanged();
-		}
-	}
-
-	private void DesktopFlyoutIsland_LayoutUpdated(object? sender, object e)
-	{
-		var actualSize = new Size(ActualWidth, ActualHeight);
-		var desiredSize = DesiredSize;
-		if (_hasLayoutSnapshot &&
-			AreClose(_lastActualSize, actualSize) &&
-			AreClose(_lastDesiredSize, desiredSize))
-		{
-			return;
-		}
-
-		_hasLayoutSnapshot = true;
-		_lastActualSize = actualSize;
-		_lastDesiredSize = desiredSize;
-
-		if (_owner is not null && _owner.TryGetTarget(out var owner))
-		{
-			owner.OnIslandLayoutChanged();
-		}
-	}
-
-	private void UpdateTemplateSettings()
-	{
-#if WASDK && !HAS_UNO
-		TemplateSettings.BackdropCornerRadius = new(
-			GetBackdropCornerRadius(CornerRadius.TopLeft),
-			GetBackdropCornerRadius(CornerRadius.TopRight),
-			GetBackdropCornerRadius(CornerRadius.BottomRight),
-			GetBackdropCornerRadius(CornerRadius.BottomLeft));
-#endif
-	}
-
-#if WASDK && !HAS_UNO
-	private static double GetBackdropCornerRadius(double cornerRadius)
-	{
-		return Math.Max(0D, cornerRadius > 0D ? cornerRadius - 1D : 0D);
-	}
-
-	internal void UpdateOwnerBackdrop(bool forceUpdate = false)
-	{
-		var backdrop = _owner is not null && _owner.TryGetTarget(out var owner)
-			? owner.CreateIslandSystemBackdrop(RequestedTheme, forceUpdate ? null : TemplateSettings.SystemBackdrop)
-			: null;
-
-		if (backdrop is null)
-		{
-			ClearOwnerBackdrop();
-		}
-		else
-		{
-			TemplateSettings.SystemBackdrop = backdrop;
-		}
-	}
-
-	internal void ClearOwnerBackdrop()
-	{
-		if (TemplateSettings.SystemBackdrop is DesktopFlyoutSystemBackdrop backdrop)
-		{
-			backdrop.ClearFrom(TemplateSettings);
-		}
-		else
-		{
-			TemplateSettings.SystemBackdrop = null;
-		}
-	}
-#elif UWP
-	internal void UpdateOwnerBackdrop(bool forceUpdate = false)
-	{
-		var localBackground = ReadLocalValue(BackgroundProperty);
-		if (!ReferenceEquals(localBackground, DependencyProperty.UnsetValue)
-			&& (!_hasOwnerBackground || !ReferenceEquals(localBackground, _ownerBackground)))
-		{
-			return;
-		}
-
-		Brush? background = null;
-		if (_owner is not null &&
-			_owner.TryGetTarget(out var owner) &&
-			owner.BackdropKind is not DesktopFlyoutBackdropKind.None &&
-			GetTemplateChild("PART_RootGrid") is Grid)
-		{
-			var useLightTheme = RequestedTheme switch
-			{
-				ElementTheme.Light => true,
-				ElementTheme.Dark => false,
-				_ => GeneralHelpers.IsTaskbarLight(),
-			};
-			var useAccent = GeneralHelpers.IsTaskbarColorPrevalenceEnabled();
-			background = !forceUpdate &&
-				_ownerBackground is DesktopFlyoutBackdropBrush backdrop &&
-				backdrop.Kind == owner.BackdropKind &&
-				backdrop.UseLightTheme == useLightTheme && backdrop.UseAccent == useAccent
-					? backdrop
-					: new DesktopFlyoutBackdropBrush(owner.BackdropKind, useLightTheme, useAccent, owner.IsHostBackdropBrushEnabled);
-		}
-
-		if (background is null)
-		{
-			ClearOwnerBackground();
-			return;
-		}
-
-		if (ReferenceEquals(background, _ownerBackground))
-		{
-			return;
-		}
-
-		Background = background;
-		_ownerBackground = background;
-		_hasOwnerBackground = true;
-	}
-
-	private void ClearOwnerBackground()
-	{
-		if (_hasOwnerBackground && ReferenceEquals(ReadLocalValue(BackgroundProperty), _ownerBackground))
-		{
-			ClearValue(BackgroundProperty);
-		}
-
-		_ownerBackground = null;
-		_hasOwnerBackground = false;
-	}
-#endif
-
-	private static bool AreClose(Size first, Size second)
-	{
-		return Math.Abs(first.Width - second.Width) < LayoutEpsilon &&
-			Math.Abs(first.Height - second.Height) < LayoutEpsilon;
-	}
-
-	private void DesktopFlyoutIsland_Unloaded(object sender, RoutedEventArgs e)
-	{
-#if WASDK && !HAS_UNO
-		ClearOwnerBackdrop();
-#endif
-
-		UnregisterPropertyChangedCallback(CornerRadiusProperty, _propertyChangedCallbackTokenForCornerRadiusProperty);
-
-		Unloaded -= DesktopFlyoutIsland_Unloaded;
-	}
+	private static void OnIslandSizePropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+		=> ((DesktopFlyoutIsland)sender).Changed?.Invoke(sender, EventArgs.Empty);
 }

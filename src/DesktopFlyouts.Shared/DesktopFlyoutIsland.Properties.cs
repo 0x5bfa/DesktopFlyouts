@@ -13,7 +13,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace DesktopFlyouts;
 
-public partial class DesktopFlyoutIsland : ContentControl
+public partial class DesktopFlyoutIsland
 {
 	/// <summary>
 	/// Identifies the <see cref="IslandWidth"/> dependency property.

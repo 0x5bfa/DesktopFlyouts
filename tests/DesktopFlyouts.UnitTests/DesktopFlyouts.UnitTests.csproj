@@ -15,6 +15,8 @@
 
 	<ItemGroup>
 		<Compile Include="**\*.cs" Exclude="obj\**;bin\**" />
+		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutSizeResolver.cs" Link="Production\DesktopFlyoutSizeResolver.cs" />
+		<Compile Include="..\..\src\DesktopFlyouts.Shared\Helpers\DesktopFlyoutChromeMetrics.cs" Link="Production\DesktopFlyoutChromeMetrics.cs" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Options\DesktopFlyoutHostLayout.cs" Link="Production\DesktopFlyoutHostLayout.cs" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Options\DesktopFlyoutDipRegion.cs" Link="Production\DesktopFlyoutDipRegion.cs" />
 		<Compile Include="..\..\src\DesktopFlyouts.Shared\Options\DesktopFlyoutWorkAreaPosition.cs" Link="Production\DesktopFlyoutWorkAreaPosition.cs" />

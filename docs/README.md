@@ -48,9 +48,7 @@ Define a flyout with one or more islands:
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:desktop="using:DesktopFlyouts"
-    FlyoutWidth="360"
-    ActivationMode="NoActivateOnOpen"
-    HideOnLostFocus="False">
+    Width="360">
 
     <desktop:DesktopFlyoutIsland IslandHeight="300">
         <Grid Padding="16">
@@ -76,7 +74,11 @@ public sealed partial class MainDesktopFlyout : DesktopFlyout
 Create the flyout once on the UI thread and reuse it:
 
 ```csharp
-private readonly MainDesktopFlyout _flyout = new();
+private readonly MainDesktopFlyout _flyout = new()
+{
+    ActivationMode = DesktopFlyoutActivationMode.NoActivateOnOpen,
+    HideOnLostFocus = false,
+};
 
 private void ToggleFlyout()
 {
@@ -118,7 +120,8 @@ internal static class Program
 ```
 
 In the `Application` constructor, initialize the XAML manager and create flyouts on that thread.
-Each flyout owns a `DesktopWindowXamlSource`; they can share the application thread:
+Each flyout creates its `DesktopWindowXamlSource` on first display; flyouts and menus can
+share the application thread:
 
 ```csharp
 WindowsXamlManager.InitializeForCurrentThread();
@@ -151,90 +154,109 @@ sample combines the executable, MSIX manifest, and tray assets in
 
 ## DesktopFlyout
 
-`DesktopFlyout` displays a panel in an independent desktop XAML island window. Its content is the
-`Islands` collection of `DesktopFlyoutIsland` controls.
+`DesktopFlyout : DependencyObject, IDisposable` is a nonvisual flyout definition and controller.
+It owns the items, opening and closing, placement, activation, and native host lifetime. The
+library creates its private `ItemsControl` presenter and island containers; applications do not
+construct, style, or replace those visuals. Construction creates no native window.
 
-### Islands and sizing
+### Islands and data templates
 
-Use `IslandsOrientation="Vertical"` for stacked sections and `Horizontal` for side-by-side sections.
-`IslandHeight` controls each island's size in vertical layouts; `IslandWidth` controls it in
-horizontal layouts. An island's inherited `Visibility` can be changed at runtime.
+`Islands` is the default XAML content collection and accepts island definitions, UI elements, or
+data items. A `DesktopFlyoutIsland` is a nonvisual definition of one section's content, visibility,
+and allocation. Every item is displayed inside a library-owned container:
 
 ```xml
-<desktop:DesktopFlyout IslandsOrientation="Horizontal">
-    <desktop:DesktopFlyoutIsland IslandWidth="320" />
-    <desktop:DesktopFlyoutIsland IslandWidth="240" />
+<desktop:DesktopFlyout Width="360">
+    <desktop:DesktopFlyoutIsland IslandHeight="300">
+        <Grid Padding="16">
+            <TextBlock Text="Content inside a consistent frame" />
+        </Grid>
+    </desktop:DesktopFlyoutIsland>
 </desktop:DesktopFlyout>
 ```
 
-Set `FlyoutWidth` and `FlyoutHeight` to request the overall size:
+Use `IslandsOrientation="Vertical"` for stacked sections and `Horizontal` for side-by-side sections.
+`IslandHeight` controls allocation in vertical layouts; `IslandWidth` controls it in horizontal
+layouts. These are `GridLength` values: a number for DIPs, `Auto` for desired size, or weighted
+stars such as `*` and `2*` for sharing the assigned space. Stars do not implicitly stretch an
+automatically sized parent. Set a definition's `Visibility="Collapsed"` to remove its layout space.
+
+For external data, set `IslandsSource` to an enumerable collection and supply `IslandTemplate`
+or `IslandTemplateSelector`. Each generated container displays the data through the selected
+template. A definition's own `ContentTemplate` takes precedence for that definition's content.
+The templates define content only; do not put another `DesktopFlyoutIsland` at a DataTemplate root.
 
 ```xml
-<desktop:DesktopFlyout FlyoutWidth="420" FlyoutHeight="Auto" />
+<desktop:DesktopFlyout Width="360" IslandsSource="{x:Bind ViewModel.Sections}">
+    <desktop:DesktopFlyout.IslandTemplate>
+        <DataTemplate x:DataType="local:Section">
+            <Grid Padding="16">
+                <TextBlock Text="{x:Bind Title}" />
+            </Grid>
+        </DataTemplate>
+    </desktop:DesktopFlyout.IslandTemplate>
+</desktop:DesktopFlyout>
 ```
 
-Flyout and island size properties are `GridLength` values. Use a numeric value for DIPs, `Auto` for
-desired size, or `*` to fill available space. Flyout star sizing uses the selected work area after
-subtracting `Margin`. To populate islands from code or binding, use `Islands` or set `IslandsSource`
-to an `IEnumerable<DesktopFlyoutIsland>`.
+Here `ViewModel.Sections` and `Section.Title` belong to the application. The Data templates example
+in each sample includes a complete compiled-binding example. Sources are connected directly;
+supported collection-change notifications update the visible items without a snapshot copy.
+Direct `Islands` mutation is prohibited while `IslandsSource` is non-null. Setting it to null
+restores the original direct collection. Use explicit binding sources or `x:Bind` for properties
+on the nonvisual flyout; it does not inherit a `DataContext` or expose `Resources`.
+
+### Overall dimensions
+
+Set the flyout's `Width`, `Height`, `MinWidth`, `MaxWidth`, `MinHeight`, and `MaxHeight` DPs directly:
+
+```xml
+<desktop:DesktopFlyout Width="420" MaxHeight="640" />
+```
+
+Dimensions use DIPs. Omit `Width` or `Height` in XAML for `Auto`; it is `double.NaN` in C#.
+Defaults follow content, with
+`HorizontalAlignment="Left"` and `VerticalAlignment="Top"`. These alignment properties control
+sizing, while `Show(position)` controls screen placement. An automatic dimension with the
+corresponding alignment set to `Stretch` fills available space subject to min/max constraints:
+
+```xml
+<desktop:DesktopFlyout Width="336" VerticalAlignment="Stretch" />
+```
+
+An explicit dimension takes precedence over stretching. Requested dimensions and bindings are
+never overwritten during placement. The visible frame fits the work area even if a requested
+or minimum dimension exceeds it. Overflowing island collections scroll along the layout axis.
+Use a bounded `ScrollViewer` inside an island for its own scrollable content. Changes to dimensions, templates, items, visibility, and allocation
+update an open flyout without reopening it. Changes during opening are applied after the transition.
+
+### Consistent outer appearance
+
+The library owns the background material, 1-DIP border, 8-DIP corner radius, shadow, 12-DIP island
+spacing, and 12-DIP visible screen-edge gap. Shadow padding is calculated separately from that
+visible gap. Presenter styles, container styles, custom frame templates, backdrop selection,
+and outer margin overrides are not part of the public flyout API.
+
+Applications control the content inside each frame, including its padding and colors. Content is
+clipped to the frame's interior. The outer chrome uses a private resource dictionary and fixed
+policy rather than application-overridable frame resources. Windows hosts use Desktop Acrylic
+with system theme and accessibility behavior; UWP uses its Composition implementation and
+solid fallbacks. Uno uses the library's theme-appropriate solid fallback.
 
 ### Closing and transitions
 
-`HideOnLostFocus` defaults to `True`. Set it to `False` when a flyout should remain open after the
-user returns to another window.
+`HideOnLostFocus` defaults to true. `ActivationMode`, `AutoCloseDelay`,
+`IsTransitionAnimationEnabled`, `IsSwipeToDismissEnabled`, and `SwipeDismissThreshold` configure
+behavior on `DesktopFlyout` itself.
 
-`TransitionState` reports `Closed`, `Opening`, `Open`, or `Closing`. `TransitionStateChanged` fires
-when the state changes. `IsOpen` becomes `true` after opening completes and becomes `false` after
-closing completes.
+`TransitionState` reports Closed, Opening, Open, or Closing. `TransitionStateChanged` fires when
+it changes. `IsOpen` becomes true after opening completes and false after closing completes.
 
-- `Hide` during opening requests a close after opening completes. A newer `Show` during opening
-  cancels that deferred close.
-- `Show` during closing queues reopening. A newer `Hide` during closing cancels that request.
+- `Hide` during opening defers closing; a newer `Show` cancels that deferred close.
+- `Show` during closing queues reopening; a newer `Hide` cancels it.
 
-Controllers that track flyout state should subscribe to `TransitionStateChanged` so native
-focus-loss dismissal is reflected in their state. Forward requests during transitions rather than
-buffering the same request in both the controller and the flyout.
-
-`IsTransitionAnimationEnabled` defaults to `True`. Windows hosts also respect the system animation
-setting. Set the property to `False` to open and close without transition animations.
-
-`AutoCloseDelay` starts after opening completes. Changing it while open restarts the timer. Zero
-or a negative value disables automatic close:
-
-```csharp
-_flyout.AutoCloseDelay = TimeSpan.FromSeconds(4);
-```
-
-### Interaction and backdrop
-
-`PressedScale` controls the press scale effect; its default of `1.0` disables the effect.
-`IsSwipeToDismissEnabled` enables dismissal by swiping opposite the active popup direction.
-`SwipeDismissThreshold` is measured in DIPs.
-
-```xml
-<desktop:DesktopFlyout
-    PressedScale="0.92"
-    IsSwipeToDismissEnabled="True"
-    SwipeDismissThreshold="80" />
-```
-
-The Windows App SDK package applies Desktop Acrylic or Mica to islands. On Windows 11 and later,
-UWP uses per-island Composition Acrylic or Mica effects, including accent tint when taskbar color
-prevalence is enabled. The UWP package includes the Win2D dependency used to build the effects:
-
-```xml
-<desktop:DesktopFlyout BackdropKind="DesktopAcrylic" />
-```
-
-Use `BackdropKind="Mica"` for Mica. On UWP, Mica samples the blurred desktop wallpaper rather
-than other windows behind the flyout. Both UWP materials remain active when the flyout loses
-activation, including `NoActivateOnOpen` and `NeverActivate`. They use a solid fallback on older
-Windows versions, when transparency is disabled, in high contrast or energy saver mode, or when
-the required Composition effects or backdrop source are unavailable.
-Use `BackdropKind="None"` to leave the island without a library-owned backdrop. Locally set island
-`Background` values are preserved.
-Uno does not apply these Windows materials. See the
-[API reference](api-reference.md#desktopflyout) for defaults and property behavior.
+Windows hosts also respect the system animation setting. `AutoCloseDelay` starts after opening;
+zero or negative values disable it. Changing it while open restarts the timer. Swipe thresholds
+use DIPs. Construct, operate, and dispose the flyout on its owning UI thread.
 
 ## Position requests
 
@@ -322,8 +344,9 @@ _flyout.Show(DesktopFlyoutPosition.InWorkArea(
 | `NoActivateOnOpen` | Restores the previous foreground window after opening. The flyout may still be activated by later user interaction. |
 | `NeverActivate` | Prevents activation and focus. Use it for passive UI. |
 
-```xml
-<desktop:DesktopFlyout ActivationMode="NeverActivate" HideOnLostFocus="False" />
+```csharp
+_flyout.ActivationMode = DesktopFlyoutActivationMode.NeverActivate;
+_flyout.HideOnLostFocus = false;
 ```
 
 `NavigateFocus` moves focus into the hosted XAML island unless `NeverActivate` is selected, which
@@ -449,9 +472,9 @@ Windows paths must identify a file loadable by Win32 `LoadImage`. A missing file
 
 ## Lifetime and threading
 
-Create and operate flyout controls on their owning UI thread, including `Show`, `Hide`, and
-`Dispose`. Create each flyout once and reuse it. Dispose flyouts when the application no longer
-needs them to release their host windows and islands:
+Create and operate flyouts on their owning UI thread, including `Show`, `Hide`, and `Dispose`.
+Reuse each flyout while needed. Dispose flyouts and menus to release their hosts, generated
+containers, content attachments, event subscriptions, and native resources:
 
 ```csharp
 _flyout.Dispose();

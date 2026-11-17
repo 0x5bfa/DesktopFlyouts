@@ -5,30 +5,62 @@ belong in **Unreleased** until the next release is tagged.
 
 ## Unreleased
 
+### Fixed
+
+- Generate WinRT collection interfaces for direct flyout islands and the sample data source.
+  This prevents startup ArgumentException (0x80070057) when assigning ItemsSource with dynamic
+  code support disabled, as in the samples' AOT configuration.
+
 ### Breaking changes
 
+- Make `DesktopFlyout` a nonvisual `DependencyObject, IDisposable` for v3. Keep Show, Hide,
+  navigation, state, activation, dismissal, and disposal on that type. The visual presenter is
+  now internal and created by the flyout. Remove external presenter construction and styles.
+  Existing derived flyout class names and XAML roots can stay, but move Resources to application
+  resources or content elements; use explicit binding sources or compiled bindings on the flyout.
+- Make `DesktopFlyoutIsland` a nonvisual content/allocation definition. Move inherited Width,
+  Height, padding, and content appearance settings to its contained UI, or use IslandWidth and
+  IslandHeight for allocation. Remove TemplateSettings, Background, border/corner/shadow styling,
+  frame templates, outer margin, BackdropKind, PressedScale, MenuFlyout, and IsBackdropEnabled
+  configuration from flyouts. The library owns all outer chrome and uses system-adaptive Acrylic
+  or a platform fallback. Content templates may still customize the interior.
+- Replace FlyoutWidth/FlyoutHeight with the flyout's own Width/Height DPs (double, NaN = Auto),
+  including Min/Max dimensions. Replace an overall star size with an Auto dimension and the
+  corresponding HorizontalAlignment/VerticalAlignment set to Stretch. Child island stars no
+  longer implicitly stretch Auto parents. Requested values and bindings survive viewport clipping.
+- Widen Islands to IList<object>; IslandsSource now connects to an enumerable without copying.
+  Move arbitrary data display into IslandTemplate or IslandTemplateSelector, or use a definition's
+  ContentTemplate. Direct Islands edits throw while IslandsSource is set; clear the source to
+  restore direct items. Background, frame, and container-style overrides have no public API.
+- Bound the actual frame to the available work area while preserving requested dimensions and
+  bindings. Scroll overflowing islands along IslandsOrientation, and give scrollable island
+  content a finite measurement budget.
+- Fix the visible screen-edge gap at 12 DIPs and calculate shadow padding independently. Remove
+  flyout Margin/PlacementMargin overrides. Move padding intended for content inside its UI tree.
+  Construction is host-free; the first show with a resolvable position creates the native host.
+
 - Remove `DesktopFlyout.Show(System.Drawing.Point)`. Use
-  `Show(DesktopFlyoutPosition.ForAnchor(bounds, side))` for an explicit screen anchor, or
-  `Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon))` for a tray icon.
+  `flyout.Show(DesktopFlyoutPosition.ForAnchor(bounds, side))` for an explicit screen anchor,
+  or `flyout.Show(DesktopFlyoutPosition.ForTrayIcon(trayIcon))` for a tray icon.
 - Remove parameterless `DesktopFlyout.Show()`. Every flyout show request must specify a
   `DesktopFlyoutPosition`. To retain bottom-right placement on the primary monitor, use
-  `Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight))`.
+  `flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight))`.
 - Remove `DesktopFlyoutPosition.ForTaskbarAnchor(Rectangle)`. Use `ForTrayIcon` to follow a live
   tray icon, or `ForAnchor` for fixed coordinates with an explicit side.
 - Remove the obsolete `DesktopFlyoutPosition.InWorkArea(DesktopFlyoutPlacementMode, ...)` overload
   and `DesktopFlyoutPlacementMode`. Use `InWorkArea(DesktopFlyoutWorkAreaPosition, ...)` and replace
   each old enum member with the same named member of `DesktopFlyoutWorkAreaPosition`; their numeric
   values differ, so do not migrate by casting.
-- Remove `DesktopFlyout.IsBackdropEnabled`. Set `BackdropKind` to `None` to stop applying a
-  library-owned backdrop, or select `DesktopAcrylic` or `Mica` to apply one.
 
 ### Added
 
-- Add per-island Composition Acrylic and wallpaper-based Mica on Windows 11+ for UWP flyout
-  islands. Mica uses the blurred desktop wallpaper with luminosity and tint, without Acrylic noise.
-- Add the WinUI sample's settings screen and all eight flyout examples to the UWP sample. Marshal
+- Add UWP Composition Acrylic and wallpaper-based Mica primitives on Windows 11+. Desktop
+  flyouts use Acrylic internally; standalone Mica uses the blurred desktop wallpaper with
+  luminosity and tint, without Acrylic noise.
+- Add the WinUI sample's settings screen and the flyout examples to the UWP sample. Marshal
   settings and tray operations to the XAML thread, serialize example replacement, and release
-  flyout/menu hosts before closing the settings window. Expose UWP Acrylic and Mica settings.
+  flyout/menu hosts before closing the settings window. Add a data-template example to all three
+  samples and keep chrome configuration internal.
 
 - Consolidate the UWP sample executable, MSIX manifest, and assets in
   `samples/DesktopFlyouts.SampleApp.Uwp`; remove the separate tray host, packaging project,
@@ -43,13 +75,19 @@ belong in **Unreleased** until the next release is tagged.
 
 ### Fixed
 
-- Stop applying WinUI 2 Mica to `Window.Current` for UWP XAML-island flyouts. Keep both materials
-  on each island so switching to Acrylic does not leave a rectangular root background.
-  Replace shared in-app Acrylic resource aliases with per-island Composition effects and enable
+- Measure the whole visual flyout using standard XAML dimension constraints and reuse that
+  layout for placement, the native viewport, and transition distances. Update open layouts for
+  root sizing, alignment, collection changes, and island allocation changes, retaining
+  updates made during opening. Auto islands receive finite work-area constraints so bounded
+  scroll content can establish a viewport. Update all three sample flavors to the nonvisual
+  owner and fixed chrome.
+- Stop applying WinUI 2 Mica to `Window.Current` for UWP XAML-island flyouts. Keep flyout
+  material inside library-owned island containers. Replace shared in-app Acrylic resource
+  aliases with per-island Composition effects and enable
   host-backdrop sampling on the Win32 host, avoiding standard AcrylicBrush's activation fallback.
   Add the Win2D UWP dependency, respect transparency/high contrast/energy saver settings, release
-  effect resources on disconnection, and preserve custom backgrounds. Default the UWP sample to
-  Acrylic. Older Windows versions and unavailable backdrop sources use a solid fallback.
+  effect resources on disconnection. Use Acrylic for consistent desktop flyout chrome.
+  Older Windows versions and unavailable backdrop sources use a solid fallback.
 - Stop transition and gesture storyboards before disposing a flyout host so their completion
   callbacks cannot run against a torn-down XAML island.
 - Keep flyout opening and backdrop cleanup on the owning UI thread. Reuse system backdrops across

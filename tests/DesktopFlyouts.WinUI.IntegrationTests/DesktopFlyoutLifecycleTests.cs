@@ -21,13 +21,10 @@ namespace DesktopFlyouts.WinUI.IntegrationTests;
 public sealed class DesktopFlyoutLifecycleTests
 {
 	[UITestMethod]
-	[DataRow(DesktopFlyoutBackdropKind.DesktopAcrylic)]
-	[DataRow(DesktopFlyoutBackdropKind.Mica)]
-	public async Task Repeated_open_close_reuses_connected_backdrops_on_the_UI_thread(DesktopFlyoutBackdropKind kind)
+	public async Task Repeated_open_close_reuses_connected_backdrops_on_the_UI_thread()
 	{
 		using var errors = new WrongThreadErrors();
-		using var flyout = CreateFlyout(kind);
-		var island = flyout.Islands[0];
+		using var flyout = CreateFlyout();
 		var ownerThread = Environment.CurrentManagedThreadId;
 		flyout.TransitionStateChanged += (_, _) =>
 		{
@@ -37,7 +34,8 @@ public sealed class DesktopFlyoutLifecycleTests
 
 		flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 		await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
-		var backdrop = island.TemplateSettings.SystemBackdrop;
+		var island = (Control)GetPresenter(flyout).ContainerFromIndex(0);
+		var backdrop = FindBackdropElement(island)?.SystemBackdrop;
 		Assert.IsNotNull(backdrop);
 		Assert.IsTrue(island.IsLoaded, "Exercise a live XAML island, not just backdrop construction.");
 		var element = FindBackdropElement(island);
@@ -50,7 +48,7 @@ public sealed class DesktopFlyoutLifecycleTests
 			await WaitForState(flyout, DesktopFlyoutTransitionState.Closed);
 			flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 			await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
-			Assert.AreSame(backdrop, island.TemplateSettings.SystemBackdrop, $"Backdrop changed on open {cycle + 2}.");
+			Assert.AreSame(backdrop, FindBackdropElement(island)?.SystemBackdrop, $"Backdrop changed on open {cycle + 2}.");
 			Assert.AreSame(backdrop, element.SystemBackdrop);
 
 			// Exercise wrapper finalization while the backdrop is still connected.
@@ -59,39 +57,24 @@ public sealed class DesktopFlyoutLifecycleTests
 		}
 
 		flyout.Dispose();
-		Assert.IsNull(island.TemplateSettings.SystemBackdrop);
+		Assert.IsNull(FindBackdropElement(island)?.SystemBackdrop);
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
 		errors.AssertNone();
 	}
 
 	[UITestMethod]
-	public async Task Backdrop_settings_changes_replace_or_disconnect_the_visible_backdrop()
+	public async Task Library_chrome_is_not_exposed_as_consumer_styles()
 	{
-		using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
+		using var flyout = CreateFlyout();
 		flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 		await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
-		var island = flyout.Islands[0];
-		var element = FindBackdropElement(island);
-		Assert.IsNotNull(element);
-		var acrylic = island.TemplateSettings.SystemBackdrop;
-		Assert.IsNotNull(acrylic);
-
-		flyout.BackdropKind = DesktopFlyoutBackdropKind.Mica;
-		var mica = island.TemplateSettings.SystemBackdrop;
-		Assert.IsNotNull(mica);
-		Assert.AreNotSame(acrylic, mica);
-		Assert.AreSame(mica, element.SystemBackdrop);
-
-		flyout.BackdropKind = DesktopFlyoutBackdropKind.None;
-		Assert.IsNull(island.TemplateSettings.SystemBackdrop);
-		Assert.IsNull(element.SystemBackdrop);
-
-		flyout.BackdropKind = DesktopFlyoutBackdropKind.Mica;
-		var reenabled = island.TemplateSettings.SystemBackdrop;
-		Assert.IsNotNull(reenabled);
-		Assert.AreNotSame(mica, reenabled);
-		Assert.AreSame(reenabled, element.SystemBackdrop);
+		Assert.IsFalse(typeof(FrameworkElement).IsAssignableFrom(typeof(DesktopFlyout)));
+		foreach (var name in new[] { "Style", "Template", "Background", "BorderBrush", "Margin", "FlyoutPresenterStyle", "IslandContainerStyle", "BackdropKind" })
+			Assert.IsNull(typeof(DesktopFlyout).GetProperty(name));
+		var presenter = GetPresenter(flyout);
+		Assert.IsFalse(presenter.GetType().IsPublic);
+		Assert.IsFalse(presenter.ContainerFromIndex(0).GetType().IsPublic);
 	}
 
 	[UITestMethod]
@@ -99,7 +82,7 @@ public sealed class DesktopFlyoutLifecycleTests
 	[DataRow(true)]
 	public async Task Hide_during_opening_completes_closed_and_can_open_again(bool animationsEnabled)
 	{
-		using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
+		using var flyout = CreateFlyout();
 		flyout.IsTransitionAnimationEnabled = animationsEnabled;
 		for (var cycle = 0; cycle < 10; cycle++)
 		{
@@ -119,7 +102,7 @@ public sealed class DesktopFlyoutLifecycleTests
 	public async Task Dispose_cancels_an_open_that_is_already_queued()
 	{
 		using var errors = new WrongThreadErrors();
-		using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
+		using var flyout = CreateFlyout();
 		flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 		Assert.AreEqual(DesktopFlyoutTransitionState.Opening, flyout.TransitionState);
 		flyout.Dispose();
@@ -128,37 +111,34 @@ public sealed class DesktopFlyoutLifecycleTests
 		await Task.Delay(250);
 		Assert.AreEqual(DesktopFlyoutTransitionState.Closed, flyout.TransitionState);
 		Assert.IsFalse(flyout.IsOpen);
-		Assert.IsNull(flyout.Islands[0].TemplateSettings.SystemBackdrop);
+		Assert.AreEqual(0, GetPresenter(flyout).Items.Count);
 		errors.AssertNone();
 	}
 
-	private static DesktopFlyout CreateFlyout(DesktopFlyoutBackdropKind kind)
+	private static DesktopFlyout CreateFlyout()
 	{
 		var flyout = new DesktopFlyout
 		{
-			BackdropKind = kind,
+			Width = 160, Height = 80,
 			IsTransitionAnimationEnabled = false,
 			HideOnLostFocus = false,
 			ActivationMode = DesktopFlyoutActivationMode.NeverActivate,
 		};
-		flyout.Islands.Add(new DesktopFlyoutIsland
-		{
-			Width = 160,
-			Height = 80,
-			Content = new TextBlock { Text = "Lifecycle regression test" },
-		});
-		Assert.IsTrue(flyout.ApplyTemplate());
+		flyout.Islands.Add(new DesktopFlyoutIsland { Content = new TextBlock { Text = "Lifecycle regression test" } });
 		return flyout;
 	}
+
+	private static ItemsControl GetPresenter(DesktopFlyout flyout)
+		=> (ItemsControl)typeof(DesktopFlyout).GetProperty("Presenter", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(flyout)!;
 
 	[UITestMethod]
 	[DataRow(false)]
 	[DataRow(true)]
 	public async Task Live_tray_bounds_move_the_open_flyout_without_reopening_and_stop_sampling_when_closed(bool animationsEnabled)
 	{
-		using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
+		using var flyout = CreateFlyout();
 		flyout.IsTransitionAnimationEnabled = animationsEnabled;
-		flyout.FlyoutWidth = new GridLength(160);
+		flyout.Width = 160;
 		var area = Microsoft.UI.Windowing.DisplayArea.Primary.WorkArea;
 		Rectangle? bounds = new Rectangle(area.X + area.Width / 3, area.Y + area.Height / 3, 24, 24);
 		var reads = 0;
@@ -167,10 +147,10 @@ public sealed class DesktopFlyoutLifecycleTests
 		flyout.TransitionStateChanged += (_, _) => { if (flyout.TransitionState is DesktopFlyoutTransitionState.Opening) { openings++; } };
 		flyout.Show(request);
 		await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
-		var container = (FrameworkElement)VisualTreeHelper.GetParent(flyout);
+		var container = (FrameworkElement)VisualTreeHelper.GetParent(GetPresenter(flyout));
 		var previousX = Canvas.GetLeft(container);
 		var previousY = Canvas.GetTop(container);
-		var backdrop = flyout.Islands[0].TemplateSettings.SystemBackdrop;
+		var backdrop = FindBackdropElement(GetPresenter(flyout))?.SystemBackdrop;
 
 		bounds = new Rectangle(area.X + area.Width * 2 / 3, area.Y + area.Height * 2 / 3, 24, 24);
 		var timeout = Stopwatch.StartNew();
@@ -183,7 +163,7 @@ public sealed class DesktopFlyoutLifecycleTests
 		var updatedX = Canvas.GetLeft(container);
 		var updatedY = Canvas.GetTop(container);
 		Assert.AreEqual(1, openings, "Repositioning must not restart the opening transition.");
-		Assert.AreSame(backdrop, flyout.Islands[0].TemplateSettings.SystemBackdrop);
+		Assert.AreSame(backdrop, FindBackdropElement(GetPresenter(flyout))?.SystemBackdrop);
 		bounds = null;
 		await Task.Delay(400);
 		Assert.AreEqual(updatedX, Canvas.GetLeft(container), 0.01, "Temporarily missing bounds must keep the last anchor.");
@@ -199,7 +179,7 @@ public sealed class DesktopFlyoutLifecycleTests
 	[UITestMethod]
 	public async Task Unavailable_tray_bounds_do_not_open_or_start_monitoring()
 	{
-		using var flyout = CreateFlyout(DesktopFlyoutBackdropKind.DesktopAcrylic);
+		using var flyout = CreateFlyout();
 		var reads = 0;
 		flyout.Show(CreateTrayRequest(() => { reads++; return null; }));
 		await Task.Delay(400);

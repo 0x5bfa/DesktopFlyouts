@@ -13,7 +13,7 @@ internal partial class TrayIconManager : IDisposable
 	internal static TrayIconManager Default => _default.Value;
 
 	internal SystemTrayIcon? SystemTrayIcon { get; set; }
-	internal DesktopFlyout? DesktopFlyout { get; set; }
+	internal DesktopFlyout? Flyout { get; set; }
 	internal DesktopMenuFlyout? DesktopMenuFlyout { get; set; }
 	internal DesktopFlyoutSampleKind SelectedFlyoutExample { get; private set; }
 
@@ -23,7 +23,7 @@ internal partial class TrayIconManager : IDisposable
 
 	internal void Initialize(SystemTrayIcon trayIcon)
 	{
-		DesktopFlyout = CreateFlyout(SelectedFlyoutExample);
+		Flyout = CreateFlyout(SelectedFlyoutExample);
 		DesktopMenuFlyout = new MainDesktopMenuFlyout();
 
 		SystemTrayIcon = trayIcon;
@@ -34,22 +34,22 @@ internal partial class TrayIconManager : IDisposable
 
 	internal void SwitchFlyout(DesktopFlyoutSampleKind example)
 	{
-		if (_disposed || (DesktopFlyout is not null && SelectedFlyoutExample == example))
+		if (_disposed || (Flyout is not null && SelectedFlyoutExample == example))
 		{
 			return;
 		}
 
-		var oldFlyout = DesktopFlyout;
+		var oldFlyout = Flyout;
 		var newFlyout = CreateFlyout(example);
 
-		DesktopFlyout = newFlyout;
+		Flyout = newFlyout;
 		SelectedFlyoutExample = example;
 		oldFlyout?.Dispose();
 	}
 
 	private static DesktopFlyout CreateFlyout(DesktopFlyoutSampleKind example)
 	{
-		return example switch
+		DesktopFlyout content = example switch
 		{
 			DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
 			DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
@@ -58,52 +58,64 @@ internal partial class TrayIconManager : IDisposable
 			DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
 			DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
 			DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
+			DesktopFlyoutSampleKind.DataTemplate => new DataTemplateFlyout(),
 			_ => new CustomizableFlyout(),
 		};
+
+		content.HideOnLostFocus = example is not (DesktopFlyoutSampleKind.Button or DesktopFlyoutSampleKind.NotificationCenterStyle or DesktopFlyoutSampleKind.Severity);
+		content.ActivationMode = example switch
+		{
+			DesktopFlyoutSampleKind.Button => DesktopFlyoutActivationMode.NoActivateOnOpen,
+			DesktopFlyoutSampleKind.IndicatorStyle => DesktopFlyoutActivationMode.NeverActivate,
+			_ => DesktopFlyoutActivationMode.Activate,
+		};
+		content.IsSwipeToDismissEnabled = example is DesktopFlyoutSampleKind.Button;
+		content.AutoCloseDelay = example is DesktopFlyoutSampleKind.IndicatorStyle ? TimeSpan.FromSeconds(1.5) : TimeSpan.Zero;
+		return content;
 	}
 
 	internal void ToggleFlyout(DesktopFlyoutPosition? position = null)
 	{
-		if (DesktopFlyout is null)
+		if (Flyout is null)
 		{
 			return;
 		}
 
-		if (DesktopFlyout.TransitionState is
+		if (Flyout.TransitionState is
 			DesktopFlyoutTransitionState.Open or
 			DesktopFlyoutTransitionState.Opening or
 			DesktopFlyoutTransitionState.Closing)
 		{
-			DesktopFlyout.Hide();
+			Flyout.Hide();
 		}
 		else
 		{
-			DesktopFlyout.Show(position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
+			Flyout.Show(position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 		}
 	}
 
 	private void SystemTrayIcon_LeftClicked(object? sender, MouseEventReceivedEventArgs e)
 	{
-		if (DesktopFlyout is null)
+		if (Flyout is null)
 		{
 			return;
 		}
 
-		if (DesktopFlyout.TransitionState is
+		if (Flyout.TransitionState is
 			DesktopFlyoutTransitionState.Open or
 			DesktopFlyoutTransitionState.Opening or
 			DesktopFlyoutTransitionState.Closing)
 		{
-			DesktopFlyout.Hide();
+			Flyout.Hide();
 		}
 		else if (SystemTrayIcon?.TryGetBounds(out _) == true)
 		{
-			DesktopFlyout.Show(DesktopFlyoutPosition.ForTrayIcon(SystemTrayIcon));
+			Flyout.Show(DesktopFlyoutPosition.ForTrayIcon(SystemTrayIcon));
 		}
 		else
 		{
 			var anchor = new System.Drawing.Rectangle((int)e.Point.X, (int)e.Point.Y, 0, 0);
-			DesktopFlyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
+			Flyout.Show(DesktopFlyoutPosition.ForAnchor(anchor, DesktopFlyoutAnchorSide.Above));
 		}
 	}
 
@@ -134,11 +146,11 @@ internal partial class TrayIconManager : IDisposable
 		SystemTrayIcon?.LeftClicked -= SystemTrayIcon_LeftClicked;
 		SystemTrayIcon?.RightClicked -= SystemTrayIcon_RightClicked;
 		SystemTrayIcon?.Dispose();
-		DesktopFlyout?.Dispose();
+		Flyout?.Dispose();
 		DesktopMenuFlyout?.Dispose();
 
 		SystemTrayIcon = null;
-		DesktopFlyout = null;
+		Flyout = null;
 		DesktopMenuFlyout = null;
 
 		GC.SuppressFinalize(this);

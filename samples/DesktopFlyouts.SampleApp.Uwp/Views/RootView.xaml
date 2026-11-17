@@ -123,13 +123,6 @@
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModel.AutoCloseDelaySecondsValue, Mode=TwoWay}" />
                 </wctcontrols:SettingsCard>
-                <wctcontrols:SettingsCard Header="System backdrop">
-                    <ComboBox
-                        Width="150"
-                        IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                        ItemsSource="{x:Bind ViewModel.SystemBackdrops.Values}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedSystemBackdropIndex, Mode=TwoWay}" />
-                </wctcontrols:SettingsCard>
             </StackPanel>
 
         </StackPanel>

@@ -6,12 +6,8 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:local="using:DesktopFlyouts"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	ActivationMode="NoActivateOnOpen"
-	FlyoutWidth="360"
-	HideOnLostFocus="False"
-	IsSwipeToDismissEnabled="True"
+	Width="360"
 	IslandsOrientation="Vertical"
-	PressedScale="0.9"
 	mc:Ignorable="d">
 
 	<local:DesktopFlyout.Islands>

@@ -6,25 +6,12 @@
 // Each property below is the implementation part matching the partial declaration in the shared file.
 
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 
 namespace DesktopFlyouts;
 
 public partial class DesktopFlyout
 {
-	partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e);
-	partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e);
-	partial void OnBackdropKindPropertyChanged(DependencyPropertyChangedEventArgs e);
 	partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e);
-	partial void OnHideOnLostFocusPropertyChanged(DependencyPropertyChangedEventArgs e);
-
-	public partial object? IslandsSource
-	{
-		get => (object?)GetValue(IslandsSourceProperty);
-		set => SetValue(IslandsSourceProperty, value);
-	}
-	public static readonly DependencyProperty IslandsSourceProperty =
-		DependencyProperty.Register(nameof(IslandsSource), typeof(object), typeof(DesktopFlyout), new PropertyMetadata(null, (d, e) => ((DesktopFlyout)d).OnIslandsSourcePropertyChanged(e)));
 
 	public partial bool IsOpen
 	{
@@ -34,22 +21,6 @@ public partial class DesktopFlyout
 	public static readonly DependencyProperty IsOpenProperty =
 		DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(false));
 
-	public partial Orientation IslandsOrientation
-	{
-		get => (Orientation)GetValue(IslandsOrientationProperty);
-		set => SetValue(IslandsOrientationProperty, value);
-	}
-	public static readonly DependencyProperty IslandsOrientationProperty =
-		DependencyProperty.Register(nameof(IslandsOrientation), typeof(Orientation), typeof(DesktopFlyout), new PropertyMetadata(Orientation.Vertical, (d, e) => ((DesktopFlyout)d).OnIslandsOrientationPropertyChanged(e)));
-
-	public partial MenuFlyout? MenuFlyout
-	{
-		get => (MenuFlyout?)GetValue(MenuFlyoutProperty);
-		set => SetValue(MenuFlyoutProperty, value);
-	}
-	public static readonly DependencyProperty MenuFlyoutProperty =
-		DependencyProperty.Register(nameof(MenuFlyout), typeof(MenuFlyout), typeof(DesktopFlyout), new PropertyMetadata(null));
-
 	public partial bool IsTransitionAnimationEnabled
 	{
 		get => (bool)GetValue(IsTransitionAnimationEnabledProperty);
@@ -57,14 +28,6 @@ public partial class DesktopFlyout
 	}
 	public static readonly DependencyProperty IsTransitionAnimationEnabledProperty =
 		DependencyProperty.Register(nameof(IsTransitionAnimationEnabled), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(true));
-
-	public partial double PressedScale
-	{
-		get => (double)GetValue(PressedScaleProperty);
-		set => SetValue(PressedScaleProperty, value);
-	}
-	public static readonly DependencyProperty PressedScaleProperty =
-		DependencyProperty.Register(nameof(PressedScale), typeof(double), typeof(DesktopFlyout), new PropertyMetadata(1.0D));
 
 	public partial bool IsSwipeToDismissEnabled
 	{
@@ -88,7 +51,7 @@ public partial class DesktopFlyout
 		set => SetValue(HideOnLostFocusProperty, value);
 	}
 	public static readonly DependencyProperty HideOnLostFocusProperty =
-		DependencyProperty.Register(nameof(HideOnLostFocus), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(true, (d, e) => ((DesktopFlyout)d).OnHideOnLostFocusPropertyChanged(e)));
+		DependencyProperty.Register(nameof(HideOnLostFocus), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(true));
 
 	public partial DesktopFlyoutActivationMode ActivationMode
 	{
@@ -98,11 +61,111 @@ public partial class DesktopFlyout
 	public static readonly DependencyProperty ActivationModeProperty =
 		DependencyProperty.Register(nameof(ActivationMode), typeof(DesktopFlyoutActivationMode), typeof(DesktopFlyout), new PropertyMetadata(DesktopFlyoutActivationMode.Activate, (d, e) => ((DesktopFlyout)d).OnActivationModePropertyChanged(e)));
 
-	public partial DesktopFlyoutBackdropKind BackdropKind
+	partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial object? IslandsSource
 	{
-		get => (DesktopFlyoutBackdropKind)GetValue(BackdropKindProperty);
-		set => SetValue(BackdropKindProperty, value);
+		get => (object?)GetValue(IslandsSourceProperty);
+		set => SetValue(IslandsSourceProperty, value);
 	}
-	public static readonly DependencyProperty BackdropKindProperty =
-		DependencyProperty.Register(nameof(BackdropKind), typeof(DesktopFlyoutBackdropKind), typeof(DesktopFlyout), new PropertyMetadata(DesktopFlyoutBackdropKind.DesktopAcrylic, (d, e) => ((DesktopFlyout)d).OnBackdropKindPropertyChanged(e)));
+	public static readonly DependencyProperty IslandsSourceProperty =
+		DependencyProperty.Register(nameof(IslandsSource), typeof(object), typeof(DesktopFlyout), new PropertyMetadata(null, (d,e) => ((DesktopFlyout)d).OnIslandsSourcePropertyChanged(e)));
+
+	partial void OnIslandTemplatePropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial DataTemplate? IslandTemplate
+	{
+		get => (DataTemplate?)GetValue(IslandTemplateProperty);
+		set => SetValue(IslandTemplateProperty, value);
+	}
+	public static readonly DependencyProperty IslandTemplateProperty =
+		DependencyProperty.Register(nameof(IslandTemplate), typeof(DataTemplate), typeof(DesktopFlyout), new PropertyMetadata(null, (d,e) => ((DesktopFlyout)d).OnIslandTemplatePropertyChanged(e)));
+
+	partial void OnIslandTemplateSelectorPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial DataTemplateSelector? IslandTemplateSelector
+	{
+		get => (DataTemplateSelector?)GetValue(IslandTemplateSelectorProperty);
+		set => SetValue(IslandTemplateSelectorProperty, value);
+	}
+	public static readonly DependencyProperty IslandTemplateSelectorProperty =
+		DependencyProperty.Register(nameof(IslandTemplateSelector), typeof(DataTemplateSelector), typeof(DesktopFlyout), new PropertyMetadata(null, (d,e) => ((DesktopFlyout)d).OnIslandTemplateSelectorPropertyChanged(e)));
+
+	partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial Orientation IslandsOrientation
+	{
+		get => (Orientation)GetValue(IslandsOrientationProperty);
+		set => SetValue(IslandsOrientationProperty, value);
+	}
+	public static readonly DependencyProperty IslandsOrientationProperty =
+		DependencyProperty.Register(nameof(IslandsOrientation), typeof(Orientation), typeof(DesktopFlyout), new PropertyMetadata(Orientation.Vertical, (d,e) => ((DesktopFlyout)d).OnIslandsOrientationPropertyChanged(e)));
+
+	partial void OnWidthPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial double Width
+	{
+		get => (double)GetValue(WidthProperty);
+		set => SetValue(WidthProperty, value);
+	}
+	public static readonly DependencyProperty WidthProperty =
+		DependencyProperty.Register(nameof(Width), typeof(double), typeof(DesktopFlyout), new PropertyMetadata(double.NaN, (d,e) => ((DesktopFlyout)d).OnWidthPropertyChanged(e)));
+
+	partial void OnHeightPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial double Height
+	{
+		get => (double)GetValue(HeightProperty);
+		set => SetValue(HeightProperty, value);
+	}
+	public static readonly DependencyProperty HeightProperty =
+		DependencyProperty.Register(nameof(Height), typeof(double), typeof(DesktopFlyout), new PropertyMetadata(double.NaN, (d,e) => ((DesktopFlyout)d).OnHeightPropertyChanged(e)));
+
+	partial void OnMinWidthPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial double MinWidth
+	{
+		get => (double)GetValue(MinWidthProperty);
+		set => SetValue(MinWidthProperty, value);
+	}
+	public static readonly DependencyProperty MinWidthProperty =
+		DependencyProperty.Register(nameof(MinWidth), typeof(double), typeof(DesktopFlyout), new PropertyMetadata(0D, (d,e) => ((DesktopFlyout)d).OnMinWidthPropertyChanged(e)));
+
+	partial void OnMinHeightPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial double MinHeight
+	{
+		get => (double)GetValue(MinHeightProperty);
+		set => SetValue(MinHeightProperty, value);
+	}
+	public static readonly DependencyProperty MinHeightProperty =
+		DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(DesktopFlyout), new PropertyMetadata(0D, (d,e) => ((DesktopFlyout)d).OnMinHeightPropertyChanged(e)));
+
+	partial void OnMaxWidthPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial double MaxWidth
+	{
+		get => (double)GetValue(MaxWidthProperty);
+		set => SetValue(MaxWidthProperty, value);
+	}
+	public static readonly DependencyProperty MaxWidthProperty =
+		DependencyProperty.Register(nameof(MaxWidth), typeof(double), typeof(DesktopFlyout), new PropertyMetadata(double.PositiveInfinity, (d,e) => ((DesktopFlyout)d).OnMaxWidthPropertyChanged(e)));
+
+	partial void OnMaxHeightPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial double MaxHeight
+	{
+		get => (double)GetValue(MaxHeightProperty);
+		set => SetValue(MaxHeightProperty, value);
+	}
+	public static readonly DependencyProperty MaxHeightProperty =
+		DependencyProperty.Register(nameof(MaxHeight), typeof(double), typeof(DesktopFlyout), new PropertyMetadata(double.PositiveInfinity, (d,e) => ((DesktopFlyout)d).OnMaxHeightPropertyChanged(e)));
+
+	partial void OnHorizontalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial HorizontalAlignment HorizontalAlignment
+	{
+		get => (HorizontalAlignment)GetValue(HorizontalAlignmentProperty);
+		set => SetValue(HorizontalAlignmentProperty, value);
+	}
+	public static readonly DependencyProperty HorizontalAlignmentProperty =
+		DependencyProperty.Register(nameof(HorizontalAlignment), typeof(HorizontalAlignment), typeof(DesktopFlyout), new PropertyMetadata(HorizontalAlignment.Left, (d,e) => ((DesktopFlyout)d).OnHorizontalAlignmentPropertyChanged(e)));
+
+	partial void OnVerticalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e);
+	public partial VerticalAlignment VerticalAlignment
+	{
+		get => (VerticalAlignment)GetValue(VerticalAlignmentProperty);
+		set => SetValue(VerticalAlignmentProperty, value);
+	}
+	public static readonly DependencyProperty VerticalAlignmentProperty =
+		DependencyProperty.Register(nameof(VerticalAlignment), typeof(VerticalAlignment), typeof(DesktopFlyout), new PropertyMetadata(VerticalAlignment.Top, (d,e) => ((DesktopFlyout)d).OnVerticalAlignmentPropertyChanged(e)));
 }

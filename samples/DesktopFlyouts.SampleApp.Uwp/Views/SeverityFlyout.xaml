@@ -7,19 +7,14 @@
 	xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
-	FlyoutWidth="360"
-	HideOnLostFocus="False"
+	Width="360"
 	IslandsOrientation="Vertical"
 	mc:Ignorable="d">
 
-	<local:DesktopFlyout.Resources>
-		<local:SampleResources />
-	</local:DesktopFlyout.Resources>
-
 	<local:DesktopFlyout.Islands>
 		<!--  Attention  -->
-		<local:DesktopFlyoutIsland Background="{ThemeResource SystemFillColorAttentionBackgroundBrush}" IslandHeight="150">
-			<Grid
+		<local:DesktopFlyoutIsland IslandHeight="150">
+			<Grid Background="{ThemeResource SystemFillColorAttentionBackgroundBrush}"
 				Padding="16"
 				ColumnSpacing="8"
 				RowSpacing="8">
@@ -48,8 +43,8 @@
 		</local:DesktopFlyoutIsland>
 
 		<!--  Success  -->
-		<local:DesktopFlyoutIsland Background="{ThemeResource SystemFillColorSuccessBackgroundBrush}" IslandHeight="150">
-			<Grid
+		<local:DesktopFlyoutIsland IslandHeight="150">
+			<Grid Background="{ThemeResource SystemFillColorSuccessBackgroundBrush}"
 				Padding="16"
 				ColumnSpacing="8"
 				RowSpacing="8">
@@ -78,8 +73,8 @@
 		</local:DesktopFlyoutIsland>
 
 		<!--  Warning  -->
-		<local:DesktopFlyoutIsland Background="{ThemeResource SystemFillColorCautionBackgroundBrush}" IslandHeight="150">
-			<Grid
+		<local:DesktopFlyoutIsland IslandHeight="150">
+			<Grid Background="{ThemeResource SystemFillColorCautionBackgroundBrush}"
 				Padding="16"
 				ColumnSpacing="8"
 				RowSpacing="8">
@@ -108,8 +103,8 @@
 		</local:DesktopFlyoutIsland>
 
 		<!--  Critical  -->
-		<local:DesktopFlyoutIsland Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}" IslandHeight="150">
-			<Grid
+		<local:DesktopFlyoutIsland IslandHeight="150">
+			<Grid Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}"
 				Padding="16"
 				ColumnSpacing="8"
 				RowSpacing="8">

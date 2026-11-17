@@ -22,6 +22,12 @@ namespace DesktopFlyouts;
 /// </summary>
 public partial class DesktopFlyoutIslandsPanel : Panel
 {
+	/// <summary>Initializes the layout infrastructure without application implicit styles.</summary>
+	public DesktopFlyoutIslandsPanel()
+	{
+		Style = new Style(typeof(DesktopFlyoutIslandsPanel));
+	}
+
 	/// <summary>
 	/// Identifies the <see cref="Orientation"/> dependency property.
 	/// </summary>
@@ -74,8 +80,11 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		var spacing = GetResolvedSpacing();
 		var spacingTotal = GetSpacingTotal(items.Count, spacing);
 		var availableLength = GetLength(availableSize, isVertical);
+		if (GetOwnerFlyout() is DesktopFlyout owner)
+			availableLength = Math.Min(availableLength, owner.Presenter.GetMainAxisBudget(isVertical));
 		var availableCross = GetCrossLength(availableSize, isVertical);
 		var hasFiniteLength = !double.IsInfinity(availableLength);
+		var allocateStars = hasFiniteLength && GetOwnerFlyout()?.IsContentSized(isVertical) != true;
 		var fixedLength = 0D;
 		var autoLength = 0D;
 		var starLength = 0D;
@@ -92,7 +101,7 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 
 			if (item.Length.IsAuto)
 			{
-				item.Element.Measure(CreateSize(availableCross, double.PositiveInfinity, isVertical));
+				item.Element.Measure(CreateSize(availableCross, availableLength, isVertical));
 				autoLength += GetLength(item.Element.DesiredSize, isVertical);
 			}
 			else
@@ -116,12 +125,12 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 				continue;
 			}
 
-			var allocatedLength = hasFiniteLength
+			var allocatedLength = allocateStars
 				? GetWeightedLength(remainingLength, item.Length, starWeight)
-				: double.PositiveInfinity;
+				: remainingLength;
 
 			item.Element.Measure(CreateSize(availableCross, allocatedLength, isVertical));
-			var measuredLength = hasFiniteLength
+			var measuredLength = allocateStars
 				? allocatedLength
 				: GetLength(item.Element.DesiredSize, isVertical);
 
@@ -237,9 +246,9 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 
 		while (current is not null)
 		{
-			if (current is DesktopFlyout flyout)
+			if (current is DesktopFlyoutPresenter presenter)
 			{
-				return flyout;
+				return presenter.Owner;
 			}
 
 			current = VisualTreeHelper.GetParent(current);
@@ -248,12 +257,12 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		return null;
 	}
 
-	private static DesktopFlyoutIsland? GetIsland(UIElement element)
+	private static DesktopFlyoutIslandPresenter? GetIsland(UIElement element)
 	{
 		return element switch
 		{
-			DesktopFlyoutIsland island => island,
-			ContentPresenter { Content: DesktopFlyoutIsland island } => island,
+			DesktopFlyoutIslandPresenter island => island,
+			ContentPresenter { Content: DesktopFlyoutIslandPresenter island } => island,
 			_ => null,
 		};
 	}
@@ -267,6 +276,7 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 
 	private double GetResolvedSpacing()
 	{
+		if (GetOwnerFlyout() is not null) return DesktopFlyoutChromeMetrics.IslandSpacing;
 		return double.IsNaN(Spacing) || double.IsInfinity(Spacing)
 			? 0D
 			: Math.Max(0D, Spacing);

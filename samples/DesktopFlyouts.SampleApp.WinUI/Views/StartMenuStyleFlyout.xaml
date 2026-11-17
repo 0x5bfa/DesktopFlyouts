@@ -6,7 +6,7 @@
 	xmlns:local="using:DesktopFlyouts"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
-	FlyoutHeight="725"
+	Height="725"
 	IslandsOrientation="Horizontal"
 	mc:Ignorable="d">
 

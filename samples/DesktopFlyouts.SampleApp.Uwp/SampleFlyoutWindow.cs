@@ -5,12 +5,12 @@ using System;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Windows.UI.Core;
-using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml;
 
 namespace DesktopFlyouts;
 
 // Creates flyout controls and dispatches their operations on the application's XAML thread.
-internal sealed class SampleFlyoutWindow<T> where T : Control, IDisposable
+internal sealed class SampleFlyoutWindow<T> where T : DependencyObject, IDisposable
 {
 	private readonly T _content;
 	private readonly CoreDispatcher _dispatcher;

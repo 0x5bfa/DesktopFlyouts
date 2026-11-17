@@ -8,15 +8,10 @@ using System.Drawing;
 using System.Threading.Tasks;
 using Windows.Graphics;
 using FoundationPoint = Windows.Foundation.Point;
-using FoundationSize = Windows.Foundation.Size;
 
 #if (UWP || WASDK) && !HAS_UNO
 using Windows.Foundation.Metadata;
 using Windows.UI.ViewManagement;
-#endif
-
-#if WASDK && !HAS_UNO
-using Microsoft.UI.Composition.SystemBackdrops;
 #endif
 
 #if UWP
@@ -41,28 +36,23 @@ using Microsoft.UI.Xaml.Media.Animation;
 namespace DesktopFlyouts;
 
 /// <summary>
-/// Displays a desktop flyout in an independent XAML island window.
+/// Displays islands in an independent desktop window with library-owned chrome.
 /// </summary>
 /// <remarks>
-/// Use <see cref="DesktopFlyout"/> when you need a lightweight desktop surface that can be opened
-/// from a tray icon or from application code. Add one or more <see cref="DesktopFlyoutIsland"/>
-/// instances to define the visible sections, then call <see cref="Show(DesktopFlyoutPosition)"/>
-/// to display it. Dispose the instance when it is no longer used
-/// so the underlying host window and XAML island can be released.
+/// Construct and operate the flyout on its UI thread. The native host is created on the
+/// first successful show request. Dispose the flyout to release its host and connected content.
 /// </remarks>
 [ContentProperty(Name = nameof(Islands))]
-public partial class DesktopFlyout : Control, IDisposable
+public partial class DesktopFlyout : DependencyObject, IDisposable
 {
 	private const string PART_RootGrid = "PART_RootGrid";
-	private const string PART_IslandsItemsControl = "PART_IslandsItemsControl";
 	private const double SwipeDismissDragStartThreshold = 4.0D;
 	private const double SwipeDismissAxisDominanceRatio = 1.2D;
 
-	private readonly XamlIslandHostWindow? _host;
+	private XamlIslandHostWindow? _host;
 #if !HAS_UNO
 	// Keep the native viewport monitor-sized; only content and the input region change.
 	private readonly Canvas _hostCanvas;
-	private readonly Grid _hostContainer;
 	private Rectangle _hostBounds;
 	private TaskbarFlyoutVisibilityLease? _taskbarFlyoutVisibilityLease;
 	private TaskbarOverflowFlyoutMonitor? _taskbarOverflowFlyoutMonitor;
@@ -106,30 +96,23 @@ public partial class DesktopFlyout : Control, IDisposable
 	private bool _isOpenFlyoutLayoutUpdateQueued;
 	private bool _disposed;
 
+	private readonly DesktopFlyoutLayoutPanel _hostContainer;
 	private Grid? RootGrid;
-	private ItemsControl? IslandsItemsControl;
+	private bool _layoutUpdatePending;
+	private bool _isOverflowAnchor;
 
-	/// <summary>
-	/// Initializes a new instance of <see cref="DesktopFlyout"/>.
-	/// </summary>
-	/// <remarks>
-	/// The constructor creates the hidden desktop host window used to display the flyout.
-	/// </remarks>
+	/// <summary>Initializes a flyout without creating a native window.</summary>
 	public DesktopFlyout()
 	{
-		DefaultStyleKey = typeof(DesktopFlyout);
-
-		_host = new XamlIslandHostWindow();
+		_islands = new DesktopFlyoutIslandCollection(this);
+		Presenter = new DesktopFlyoutPresenter(this);
+		_hostContainer = new DesktopFlyoutLayoutPanel(Presenter) { Style = new Style(typeof(Panel)), Margin = new Thickness(0) };
 #if !HAS_UNO
-		_hostCanvas = new Canvas();
-		_hostContainer = new Grid();
-		_hostContainer.Children.Add(this);
+		_hostCanvas = new Canvas { Style = new Style(typeof(Canvas)), Margin = new Thickness(0) };
 		_hostCanvas.Children.Add(_hostContainer);
-		_host.SetContent(_hostCanvas);
-#else
-		_host.SetContent(this);
 #endif
-		_ = _host.UpdateWindowVisibility(false);
+		Presenter.TemplateChanged += Presenter_TemplateChanged;
+		Presenter.LayoutInvalidated += Presenter_LayoutInvalidated;
 #if (UWP || WASDK) && !HAS_UNO
 		_uiSettings = new UISettings();
 		_systemAnimationsEnabled = _uiSettings.AnimationsEnabled;
@@ -139,25 +122,56 @@ public partial class DesktopFlyout : Control, IDisposable
 			_isAnimationsEnabledChangedSubscribed = true;
 		}
 #endif
-#if HAS_UNO
-		if (HideOnLostFocus)
-		{
-			_host.WindowInactivated += HostWindow_Inactivated;
-		}
-#else
-		_host.WindowInactivated += HostWindow_Inactivated;
+	}
+
+	internal DesktopFlyoutPresenter Presenter { get; }
+	internal bool IsContentSized(bool isVertical) => isVertical
+		? double.IsNaN(Height) && VerticalAlignment is not VerticalAlignment.Stretch
+		: double.IsNaN(Width) && HorizontalAlignment is not HorizontalAlignment.Stretch;
+
+	internal void OnIslandLayoutChanged() => Presenter_LayoutInvalidated(this, EventArgs.Empty);
+
+#if UWP
+	internal bool IsHostBackdropBrushEnabled => _host?.IsHostBackdropBrushEnabled == true;
 #endif
+
+	private void EnsureHost()
+	{
+		if (_host is not null)
+		{
+			return;
+		}
+
+		_hostContainer.AttachContent();
+		try
+		{
+			_host = new XamlIslandHostWindow();
+#if !HAS_UNO
+			_host.SetContent(_hostCanvas);
+#else
+			_host.SetContent(_hostContainer);
+#endif
+		}
+		catch
+		{
+			_host?.Dispose();
+			_host = null;
+			_hostContainer.DetachContent();
+			throw;
+		}
+		_ = _host.UpdateWindowVisibility(false);
+		_host.WindowInactivated += HostWindow_Inactivated;
 		_host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
 #if !HAS_UNO
 		_host.DisplayAreaChanged += HostWindow_DisplayAreaChanged;
 #endif
+		Presenter.ApplyTemplate();
+		Presenter_TemplateChanged(Presenter, EventArgs.Empty);
+		Presenter.UpdateFlyoutTheme(forceBackdropUpdate: true);
 	}
 
-	/// <inheritdoc/>
-	protected override void OnApplyTemplate()
+	private void DetachRootHandlers()
 	{
-		base.OnApplyTemplate();
-
 		RootGrid?.GettingFocus -= RootGrid_GettingFocus;
 		RootGrid?.PointerPressed -= RootGrid_PointerPressed;
 		RootGrid?.PointerMoved -= RootGrid_PointerMoved;
@@ -165,19 +179,30 @@ public partial class DesktopFlyout : Control, IDisposable
 		RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
 		RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
 		RootGrid?.PointerExited -= RootGrid_PointerExited;
-		if (IslandsItemsControl is not null)
+	}
+
+	private void Presenter_TemplateChanged(object? sender, EventArgs e)
+	{
+		if (_disposed || ReferenceEquals(RootGrid, Presenter.RootGrid))
 		{
-			IslandsItemsControl.ItemsSource = null;
+			return;
 		}
 
-		RootGrid = GetTemplateChild(PART_RootGrid) as Grid
-			?? throw new MissingFieldException($"Could not find {PART_RootGrid} in the given {nameof(DesktopFlyout)}'s style.");
-		IslandsItemsControl = GetTemplateChild(PART_IslandsItemsControl) as ItemsControl
-			?? throw new MissingFieldException($"Could not find {PART_IslandsItemsControl} in the given {nameof(DesktopFlyout)}'s style.");
-		IslandsItemsControl.ItemsSource = Islands;
+		var transition = TransitionState;
+		var wasAnimating = _transitionStoryboard is not null;
+		StopTransitionStoryboard();
+		StopSwipeDismissRestoreStoryboard();
+		RestoreFocusSuppression();
+		ResetPressedScale();
+		ResetSwipeDismissTracking();
+		DetachRootHandlers();
+		RootGrid = Presenter.RootGrid;
+		if (RootGrid is null)
+		{
+			return;
+		}
 
 		EnsureRootTransform();
-
 		RootGrid.GettingFocus += RootGrid_GettingFocus;
 		RootGrid.PointerPressed += RootGrid_PointerPressed;
 		RootGrid.PointerMoved += RootGrid_PointerMoved;
@@ -185,14 +210,34 @@ public partial class DesktopFlyout : Control, IDisposable
 		RootGrid.PointerCanceled += RootGrid_PointerCanceled;
 		RootGrid.PointerCaptureLost += RootGrid_PointerCaptureLost;
 		RootGrid.PointerExited += RootGrid_PointerExited;
-
 		if (!_isFocusManagerGettingFocusSubscribed)
 		{
 			FocusManager.GettingFocus += FocusManager_GettingFocus;
 			_isFocusManagerGettingFocusSubscribed = true;
 		}
 
-		UpdateIslands();
+		if (transition is DesktopFlyoutTransitionState.Closing)
+		{
+			CompleteClose();
+		}
+		else if (transition is DesktopFlyoutTransitionState.Open)
+		{
+			SetOpenTransform();
+		}
+		else if (transition is DesktopFlyoutTransitionState.Opening && wasAnimating)
+		{
+			CompleteOpen();
+		}
+		UpdateOpenFlyoutLayout();
+	}
+
+	private void Presenter_LayoutInvalidated(object? sender, EventArgs e)
+	{
+		if (!_isUpdatingOpenFlyoutLayout)
+		{
+			_layoutUpdatePending = true;
+			UpdateOpenFlyoutLayout();
+		}
 	}
 
 	/// <summary>
@@ -207,7 +252,7 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 		ArgumentNullException.ThrowIfNull(position);
 
-		if (_disposed || _host?.DesktopWindowXamlSource is null || RootGrid is null)
+		if (_disposed)
 		{
 			return;
 		}
@@ -234,6 +279,7 @@ public partial class DesktopFlyout : Control, IDisposable
 			return;
 		}
 
+		EnsureHost();
 		_requestedPosition = position;
 		position = anchorPosition;
 		_lastTrayIconBounds = position.IsTaskbarAnchor ? position.Anchor : null;
@@ -260,21 +306,21 @@ public partial class DesktopFlyout : Control, IDisposable
 		var shouldActivateOnOpen = ShouldActivateOnOpen();
 		if (!shouldActivateOnOpen)
 		{
-			_host.PreserveActivationState();
+			_host!.PreserveActivationState();
 		}
 
-		_host.SetActivationMode(ActivationMode);
+		_host!.SetActivationMode(ActivationMode);
 #if !HAS_UNO
 		UpdateHostBounds(shouldActivateOnOpen);
 		PrepareHostContainerLayout();
 #else
-		_host.Maximize(_activeWorkArea, shouldActivateOnOpen);
+		_host!.Maximize(_activeWorkArea, shouldActivateOnOpen);
 #endif
 
 #if UWP
-		_ = RootGrid.Dispatcher.TryRunAsync(CoreDispatcherPriority.Normal, async () =>
+		_ = Dispatcher.TryRunAsync(CoreDispatcherPriority.Normal, async () =>
 #elif WASDK
-		RootGrid.DispatcherQueue.TryEnqueue(async () =>
+		DispatcherQueue.TryEnqueue(async () =>
 #endif
 		{
 			if (_disposed)
@@ -287,31 +333,16 @@ public partial class DesktopFlyout : Control, IDisposable
 			UpdateHostBounds(false);
 			PrepareHostContainerLayout();
 #endif
-			ResetResolvedFlyoutSize();
-			UpdateLayout();
-			await Task.Delay(1);
-			if (_disposed)
-			{
-				return;
-			}
-
-			ApplyResolvedFlyoutSize();
-
-			UpdateLayout();
-			await Task.Delay(1);
-			if (_disposed)
-			{
-				return;
-			}
-
-			UpdateFlyoutTheme();
+			Presenter.UpdateFlyoutTheme();
+			MeasureFlyoutLayout();
 			UpdateFocusSuppression();
 			_activePopupDirection = UpdateFlyoutRegion(shouldActivateOnOpen);
+			_layoutUpdatePending = false;
 
 			// Ensure to hide first
 			SetClosedTransform(_activePopupDirection);
 
-			UpdateLayout();
+			_hostContainer.UpdateLayout();
 			await Task.Delay(1);
 			if (_disposed)
 			{
@@ -355,37 +386,6 @@ public partial class DesktopFlyout : Control, IDisposable
 	{
 		Hide(false);
 	}
-
-#if WASDK && !HAS_UNO
-	internal SystemBackdrop? CreateIslandSystemBackdrop(ElementTheme islandTheme, SystemBackdrop? currentBackdrop)
-	{
-		if (BackdropKind is DesktopFlyoutBackdropKind.None)
-		{
-			return null;
-		}
-
-		var useLightTheme = islandTheme switch
-		{
-			ElementTheme.Light => true,
-			ElementTheme.Dark => false,
-			_ => GeneralHelpers.IsTaskbarLight(),
-		};
-
-		var useMica = BackdropKind is DesktopFlyoutBackdropKind.Mica;
-		if (currentBackdrop is DesktopFlyoutSystemBackdrop backdrop
-			&& backdrop.UseLightTheme == useLightTheme
-			&& (useMica ? backdrop is DesktopFlyoutMicaBackdrop : backdrop is DesktopFlyoutAcrylicBackdrop))
-		{
-			return backdrop;
-		}
-
-		return BackdropKind switch
-		{
-			DesktopFlyoutBackdropKind.Mica => new DesktopFlyoutMicaBackdrop(useLightTheme),
-			_ => new DesktopFlyoutAcrylicBackdrop(useLightTheme),
-		};
-	}
-#endif
 
 	private void Hide(bool closeFromCurrentTransform)
 	{
@@ -471,59 +471,9 @@ public partial class DesktopFlyout : Control, IDisposable
 	}
 #endif
 
-	private void UpdateFlyoutTheme(bool forceBackdropUpdate = false)
-	{
-		var requestedTheme = GeneralHelpers.IsTaskbarLight() ? ElementTheme.Light : ElementTheme.Dark;
-		RequestedTheme = requestedTheme;
-
-		foreach (var island in Islands)
-		{
-			island.RequestedTheme = requestedTheme;
-		}
-
-		UpdateIslandBackdrops(forceBackdropUpdate);
-	}
-
-	private void UpdateIslandBackdrops(bool forceUpdate = false)
-	{
-#if WASDK && !HAS_UNO
-		foreach (var island in Islands)
-		{
-			island.UpdateOwnerBackdrop(forceUpdate);
-		}
-#elif UWP
-		foreach (var island in Islands)
-		{
-			island.UpdateOwnerBackdrop(forceUpdate);
-		}
-#endif
-	}
-
-#if UWP
-	internal bool IsHostBackdropBrushEnabled => _host?.IsHostBackdropBrushEnabled == true;
-#endif
-
-	private void UpdateIslands()
-	{
-		if (IslandsItemsControl is null)
-		{
-			return;
-		}
-
-		for (var index = 0; index < Islands.Count; index++)
-		{
-			if (Islands[index] is DesktopFlyoutIsland island)
-			{
-				island.SetOwner(this);
-			}
-		}
-
-		IslandsItemsControl.InvalidateMeasure();
-	}
-
 	private DesktopFlyoutPopupDirection UpdateFlyoutRegion(bool activateHost = false)
 	{
-		if (_host?.DesktopWindowXamlSource is null || IslandsItemsControl is null)
+		if (_host?.DesktopWindowXamlSource is null || RootGrid is null)
 		{
 			return _activePopupDirection;
 		}
@@ -532,22 +482,32 @@ public partial class DesktopFlyout : Control, IDisposable
 		UpdateHostBounds(activateHost);
 #endif
 		var scale = _host.XamlIslandRasterizationScale;
-		var flyoutWidth = GetCurrentFlyoutWidth();
-		var flyoutHeight = GetCurrentFlyoutHeight();
-		var scaledFlyoutSize = new FoundationSize(flyoutWidth * scale, flyoutHeight * scale);
-		var scaledMargin = GetScaledMargin(Margin, scale);
-		var frameWidth = scaledFlyoutSize.Width + scaledMargin.Left + scaledMargin.Right;
-		var frameHeight = scaledFlyoutSize.Height + scaledMargin.Top + scaledMargin.Bottom;
-		var workArea = _activeWorkArea;
-		var hostWidth = workArea.Width;
-		var hostHeight = workArea.Height;
-		var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(frameWidth, hostWidth)));
-		var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(frameHeight, hostHeight)));
+		var frame = _hostContainer.DesiredSize;
+		var workArea = GetVisualWorkArea(scale);
+		var shadow = Math.Ceiling(DesktopFlyoutChromeMetrics.ShadowInset * scale);
+		var regionWidth = Math.Max(1, (int)Math.Ceiling(Math.Min(Math.Max(0, frame.Width * scale - 2 * shadow), workArea.Width)));
+		var regionHeight = Math.Max(1, (int)Math.Ceiling(Math.Min(Math.Max(0, frame.Height * scale - 2 * shadow), workArea.Height)));
+		var request = _position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight);
+		if (request.Anchor is Rectangle anchor && !_isOverflowAnchor)
+		{
+			var gap = (int)Math.Ceiling(DesktopFlyoutChromeMetrics.EdgeGap * scale);
+			anchor.Offset(request.AnchorSide switch { DesktopFlyoutAnchorSide.Left => -gap, DesktopFlyoutAnchorSide.Right => gap, _ => 0 },
+				request.AnchorSide switch { DesktopFlyoutAnchorSide.Above => -gap, DesktopFlyoutAnchorSide.Below => gap, _ => 0 });
+			request = DesktopFlyoutPosition.ForAnchor(anchor, request.AnchorSide, request.AnchorAlignment, request.TransitionDirection);
+		}
 		var resolvedPosition = DesktopFlyoutPositionResolver.Resolve(
-			_position ?? DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight),
+			request,
 			workArea,
 			new Size(regionWidth, regionHeight));
-		var bounds = resolvedPosition.Bounds;
+		var visualBounds = resolvedPosition.Bounds;
+#if !HAS_UNO
+		var monitor = _hostBounds;
+#else
+		var monitor = _monitorReferenceBounds;
+#endif
+		var bounds = DesktopFlyoutChromeMetrics.IncludeShadow(visualBounds, monitor, scale);
+		_hostContainer.SetShadowInsets(new((visualBounds.Left - bounds.Left) / scale, (visualBounds.Top - bounds.Top) / scale,
+			(bounds.Right - visualBounds.Right) / scale, (bounds.Bottom - visualBounds.Bottom) / scale));
 
 #if !HAS_UNO
 		// Apply position and size in one XAML layout without resizing the native viewport.
@@ -567,26 +527,11 @@ public partial class DesktopFlyout : Control, IDisposable
 #else
 		var region = new RectInt32() { X = bounds.X, Y = bounds.Y, Width = bounds.Width, Height = bounds.Height };
 		_host.MoveAndResize(region, activateHost);
+		_hostContainer.Arrange(new(0, 0, bounds.Width / scale, bounds.Height / scale));
+		_hostContainer.UpdateLayout();
 #endif
 
 		return resolvedPosition.TransitionDirection;
-	}
-
-	internal void OnIslandSizeChanged()
-	{
-		UpdateIslands();
-		UpdateOpenFlyoutLayout();
-	}
-
-	internal void OnIslandVisibilityChanged()
-	{
-		UpdateIslands();
-		UpdateOpenFlyoutLayout();
-	}
-
-	internal void OnIslandLayoutChanged()
-	{
-		UpdateOpenFlyoutLayout();
 	}
 
 	private void UpdateOpenFlyoutLayout()
@@ -641,9 +586,9 @@ public partial class DesktopFlyout : Control, IDisposable
 			UpdateHostBounds(false);
 			PrepareHostContainerLayout();
 #endif
-			ApplyResolvedFlyoutSize();
-			MeasureRootGridForAvailableFlyoutSize();
-			UpdateLayout();
+			MeasureFlyoutLayout();
+			_layoutUpdatePending = false;
+			UpdateFocusSuppression();
 			_activePopupDirection = UpdateFlyoutRegion();
 			SetOpenTransform();
 		}
@@ -652,90 +597,36 @@ public partial class DesktopFlyout : Control, IDisposable
 			_isUpdatingOpenFlyoutLayout = false;
 		}
 
-		if (_placementUpdatePending)
+		if (_placementUpdatePending || _layoutUpdatePending)
 		{
 			UpdateOpenFlyoutLayout();
 		}
 	}
 
-	private void ResetResolvedFlyoutSize()
+	private void MeasureFlyoutLayout()
 	{
-		if (RootGrid is null)
-		{
-			return;
-		}
-
-		RootGrid.Width = double.NaN;
-		RootGrid.Height = double.NaN;
+		var scale = _host?.XamlIslandRasterizationScale ?? 1.0D;
+		var area = GetVisualWorkArea(scale);
+		var shadow = Math.Ceiling(DesktopFlyoutChromeMetrics.ShadowInset * scale) / scale;
+		_hostContainer.SetAvailableSize(new(area.Width / scale + 2 * shadow, area.Height / scale + 2 * shadow), new Thickness(shadow));
+		Presenter.ApplyTemplate();
+		_hostContainer.Measure(new(area.Width / scale + 2 * shadow, area.Height / scale + 2 * shadow));
 	}
 
-	private void ApplyResolvedFlyoutSize()
+	private Rectangle GetVisualWorkArea(double scale)
 	{
-		if (RootGrid is null || _host is null)
+		var area = DesktopFlyoutChromeMetrics.InsetWorkArea(_activeWorkArea, scale);
+		if (_isOverflowAnchor && _position is not null)
 		{
-			return;
-		}
-
-		var (availableWidth, availableHeight) = GetAvailableFlyoutSizeInDips();
-		RootGrid.Width = ResolveFlyoutLength(FlyoutWidth, availableWidth, HasStarIslandWidth());
-		RootGrid.Height = ResolveFlyoutLength(FlyoutHeight, availableHeight, HasStarIslandHeight());
-	}
-
-	private void MeasureRootGridForAvailableFlyoutSize()
-	{
-		if (RootGrid is null)
-		{
-			return;
-		}
-
-		var (availableWidth, availableHeight) = GetAvailableFlyoutSizeInDips();
-		RootGrid.Measure(new(availableWidth, availableHeight));
-	}
-
-	private (double Width, double Height) GetAvailableFlyoutSizeInDips()
-	{
-		if (_host is null)
-		{
-			return (0, 0);
-		}
-
-		var scale = _host.XamlIslandRasterizationScale;
-		var workArea = _activeWorkArea;
-		var availableWidth = (workArea.Width / scale) - Margin.Left - Margin.Right;
-		var availableHeight = (workArea.Height / scale) - Margin.Top - Margin.Bottom;
-
-		return (Math.Max(0, availableWidth), Math.Max(0, availableHeight));
-	}
-
-	private bool HasStarIslandWidth()
-	{
-		foreach (var item in Islands)
-		{
-			if (item is DesktopFlyoutIsland island && IsIslandVisible(island) && island.IslandWidth.IsStar)
+			area = _position.AnchorSide switch
 			{
-				return true;
-			}
+				DesktopFlyoutAnchorSide.Above => Rectangle.FromLTRB(area.Left, area.Top, area.Right, _activeWorkArea.Bottom),
+				DesktopFlyoutAnchorSide.Below => Rectangle.FromLTRB(area.Left, _activeWorkArea.Top, area.Right, area.Bottom),
+				DesktopFlyoutAnchorSide.Left => Rectangle.FromLTRB(area.Left, area.Top, _activeWorkArea.Right, area.Bottom),
+				_ => Rectangle.FromLTRB(_activeWorkArea.Left, area.Top, area.Right, area.Bottom),
+			};
 		}
-
-		return false;
-	}
-
-	private bool HasStarIslandHeight()
-	{
-		foreach (var item in Islands)
-		{
-			if (item is DesktopFlyoutIsland island && IsIslandVisible(island) && island.IslandHeight.IsStar)
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private static bool IsIslandVisible(DesktopFlyoutIsland island)
-	{
-		return island.Visibility is Visibility.Visible;
+		return area;
 	}
 
 	private void OpenAnimationStoryboard_Completed(object? sender, object e)
@@ -854,11 +745,11 @@ public partial class DesktopFlyout : Control, IDisposable
 			return;
 		}
 
-		IsTabStop = true;
+		Presenter.IsTabStop = true;
 		_host.NavigateFocus(XamlSourceFocusNavigationReason.Programmatic);
 
 		// Keep the first real child unfocused until the user presses Tab.
-		Focus(FocusState.Programmatic);
+		Presenter.Focus(FocusState.Programmatic);
 	}
 
 	private void RestartAutoCloseTimer()
@@ -974,7 +865,7 @@ public partial class DesktopFlyout : Control, IDisposable
 			return false;
 		}
 
-		if (ReferenceEquals(element, this) || ReferenceEquals(element, rootGrid))
+		if (ReferenceEquals(element, Presenter) || ReferenceEquals(element, rootGrid))
 		{
 			return true;
 		}
@@ -982,7 +873,7 @@ public partial class DesktopFlyout : Control, IDisposable
 		var current = element;
 		while (current is not null)
 		{
-			if (ReferenceEquals(current, this) || ReferenceEquals(current, rootGrid))
+			if (ReferenceEquals(current, Presenter) || ReferenceEquals(current, rootGrid))
 			{
 				return true;
 			}
@@ -1403,12 +1294,12 @@ public partial class DesktopFlyout : Control, IDisposable
 
 	private double GetResolvedPressedScale()
 	{
-		if (double.IsNaN(PressedScale) || double.IsInfinity(PressedScale))
+		if (double.IsNaN(Presenter.PressedScale) || double.IsInfinity(Presenter.PressedScale))
 		{
 			return 1.0D;
 		}
 
-		return Clamp(PressedScale, 0.1D, 2.0D);
+		return Clamp(Presenter.PressedScale, 0.1D, 2.0D);
 	}
 
 	private void UpdateFocusSuppression()
@@ -1548,82 +1439,24 @@ public partial class DesktopFlyout : Control, IDisposable
 		return transform;
 	}
 
-	private int GetClosedXOffset(DesktopFlyoutPopupDirection popupDirection)
+	private double GetClosedXOffset(DesktopFlyoutPopupDirection popupDirection)
 	{
 		return popupDirection switch
 		{
-			DesktopFlyoutPopupDirection.LeftToRight => -(int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Left),
-			DesktopFlyoutPopupDirection.RightToLeft => (int)Math.Ceiling(GetCurrentFlyoutWidth() + Margin.Right),
+			DesktopFlyoutPopupDirection.LeftToRight => -Math.Ceiling(_hostContainer.ContentBounds.Right),
+			DesktopFlyoutPopupDirection.RightToLeft => Math.Ceiling(_hostContainer.ActualWidth - _hostContainer.ContentBounds.Left),
 			_ => 0,
 		};
 	}
 
-	private int GetClosedYOffset(DesktopFlyoutPopupDirection popupDirection)
+	private double GetClosedYOffset(DesktopFlyoutPopupDirection popupDirection)
 	{
 		return popupDirection switch
 		{
-			DesktopFlyoutPopupDirection.TopToBottom => -(int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Top),
-			DesktopFlyoutPopupDirection.BottomToTop => (int)Math.Ceiling(GetCurrentFlyoutHeight() + Margin.Bottom),
+			DesktopFlyoutPopupDirection.TopToBottom => -Math.Ceiling(_hostContainer.ContentBounds.Bottom),
+			DesktopFlyoutPopupDirection.BottomToTop => Math.Ceiling(_hostContainer.ActualHeight - _hostContainer.ContentBounds.Top),
 			_ => 0,
 		};
-	}
-
-	private double GetCurrentFlyoutWidth()
-	{
-		return RootGrid is null
-			? DesiredSize.Width
-			: ResolveCurrentFlyoutLength(RootGrid.Width, RootGrid.DesiredSize.Width, RootGrid.ActualWidth, DesiredSize.Width);
-	}
-
-	private double GetCurrentFlyoutHeight()
-	{
-		return RootGrid is null
-			? DesiredSize.Height
-			: ResolveCurrentFlyoutLength(RootGrid.Height, RootGrid.DesiredSize.Height, RootGrid.ActualHeight, DesiredSize.Height);
-	}
-
-	private static double ResolveCurrentFlyoutLength(double explicitLength, double desiredLength, double actualLength, double fallbackLength)
-	{
-		if (!double.IsNaN(explicitLength) && !double.IsInfinity(explicitLength))
-		{
-			return explicitLength;
-		}
-
-		if (desiredLength > 0)
-		{
-			return desiredLength;
-		}
-
-		if (actualLength > 0)
-		{
-			return actualLength;
-		}
-
-		return fallbackLength;
-	}
-
-	private static double ResolveFlyoutLength(GridLength length, double availableLength, bool stretchWhenAuto)
-	{
-		if (length.IsAuto)
-		{
-			return stretchWhenAuto ? availableLength : double.NaN;
-		}
-
-		if (length.IsStar)
-		{
-			return availableLength;
-		}
-
-		return Clamp(length.Value, 0, availableLength);
-	}
-
-	private static Thickness GetScaledMargin(Thickness margin, double scale)
-	{
-		return new(
-			margin.Left * scale,
-			margin.Top * scale,
-			margin.Right * scale,
-			margin.Bottom * scale);
 	}
 
 	private static bool IsVerticalDirection(DesktopFlyoutPopupDirection popupDirection)
@@ -1705,12 +1538,8 @@ public partial class DesktopFlyout : Control, IDisposable
 
 	private void PrepareHostContainerLayout()
 	{
-		var scale = _host?.XamlIslandRasterizationScale ?? 1.0D;
-		// Measure against the available area, not the previous visible container size.
 		_hostContainer.Width = double.NaN;
 		_hostContainer.Height = double.NaN;
-		_hostContainer.MaxWidth = _activeWorkArea.Width / scale;
-		_hostContainer.MaxHeight = _activeWorkArea.Height / scale;
 	}
 
 	private void UpdateTaskbarFlyoutVisibilityLease(DesktopFlyoutPosition position)
@@ -1889,16 +1718,8 @@ public partial class DesktopFlyout : Control, IDisposable
 #if !HAS_UNO
 		if (trayBounds is Rectangle overflowIcon && overflowBounds is Rectangle overflowArea)
 		{
-			var margin = GetScaledMargin(Margin, _host.XamlIslandRasterizationScale);
-			var adjacentMargin = position.AnchorSide switch
-			{
-				DesktopFlyoutAnchorSide.Above => margin.Bottom,
-				DesktopFlyoutAnchorSide.Below => margin.Top,
-				DesktopFlyoutAnchorSide.Left => margin.Right,
-				_ => margin.Left,
-			};
 			var anchor = DesktopFlyoutPositionResolver.GetOverflowAnchor(overflowIcon, overflowArea,
-				position.AnchorSide, (int)Math.Floor(Math.Max(0, adjacentMargin)));
+				position.AnchorSide);
 			position = DesktopFlyoutPosition.ForAnchor(anchor, position.AnchorSide, position.AnchorAlignment, position.TransitionDirection);
 			workArea = DesktopFlyoutPositionResolver.GetWorkAreaOutsideAnchor(workArea, anchor, position.AnchorSide);
 		}
@@ -1909,6 +1730,7 @@ public partial class DesktopFlyout : Control, IDisposable
 			|| _lastLayoutScale != scale;
 		if (apply)
 		{
+			_isOverflowAnchor = overflowBounds is not null;
 			_position = position;
 			_activeWorkArea = workArea;
 			_monitorReferenceBounds = monitorBounds;
@@ -1944,7 +1766,7 @@ public partial class DesktopFlyout : Control, IDisposable
 #if (UWP || WASDK) && !HAS_UNO
 		_systemAnimationsEnabled = _uiSettings.AnimationsEnabled;
 #endif
-		UpdateFlyoutTheme(forceBackdropUpdate: true);
+		Presenter.UpdateFlyoutTheme(forceBackdropUpdate: true);
 	}
 
 #if (UWP || WASDK) && !HAS_UNO
@@ -1980,6 +1802,7 @@ public partial class DesktopFlyout : Control, IDisposable
 		StopSwipeDismissRestoreStoryboard();
 		ResetSwipeDismissTracking();
 		ResetPressedScale();
+		SetOpenTransform();
 		_isPopupAnimationPlaying = false;
 		_hideAfterOpen = false;
 		StopEnvironmentMonitoring();
@@ -2002,23 +1825,12 @@ public partial class DesktopFlyout : Control, IDisposable
 			_uiSettings.AnimationsEnabledChanged -= UISettings_AnimationsEnabledChanged;
 		}
 #endif
-		RootGrid?.GettingFocus -= RootGrid_GettingFocus;
-		RootGrid?.PointerPressed -= RootGrid_PointerPressed;
-		RootGrid?.PointerMoved -= RootGrid_PointerMoved;
-		RootGrid?.PointerReleased -= RootGrid_PointerReleased;
-		RootGrid?.PointerCanceled -= RootGrid_PointerCanceled;
-		RootGrid?.PointerCaptureLost -= RootGrid_PointerCaptureLost;
-		RootGrid?.PointerExited -= RootGrid_PointerExited;
-#if WASDK && !HAS_UNO
-		foreach (var island in Islands)
-		{
-			island.ClearOwnerBackdrop();
-		}
-#endif
-		if (IslandsItemsControl is not null)
-		{
-			IslandsItemsControl.ItemsSource = null;
-		}
+		DetachRootHandlers();
+		Presenter.TemplateChanged -= Presenter_TemplateChanged;
+		Presenter.LayoutInvalidated -= Presenter_LayoutInvalidated;
+		Presenter.ReleasePresentationResources();
+		_hostContainer.DetachContent();
+		Presenter.ClearItems();
 
 		if (_isFocusManagerGettingFocusSubscribed)
 		{
@@ -2026,6 +1838,8 @@ public partial class DesktopFlyout : Control, IDisposable
 			_isFocusManagerGettingFocusSubscribed = false;
 		}
 		_host?.Dispose();
+		_host = null;
+		RootGrid = null;
 		IsOpen = false;
 		_showAfterClose = false;
 		_showAfterClosePosition = null;

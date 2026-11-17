@@ -29,46 +29,58 @@ XAML framework: `Microsoft.UI.Xaml` for WinUI and Uno, or `Windows.UI.Xaml` for 
 - **DP** marks a dependency property. Each has a public static identifier named
   `<PropertyName>Property`, usable with XAML binding and dependency-property APIs. A property
   marked read-only has no public CLR setter.
-- Inherited XAML members and their Uno-generated equivalents are not exhaustively listed. For
-  example, islands inherit `Content`, `Visibility`, `Margin`, and `CornerRadius`; menu flyouts
-  inherit `Items` and `ItemsSource`. SDK-generated bootstrap types such as Uno's
+- Inherited XAML members and their Uno-generated equivalents are not exhaustively listed.
+  Menu flyouts inherit `Items` and `ItemsSource`. Desktop flyouts and island definitions are
+  nonvisual and have only their explicitly declared configuration. SDK-generated bootstrap types such as Uno's
   `GlobalStaticResources` and `WindowExtensions` are outside this library API reference.
-- Construct, show, hide, and dispose flyout controls on their owning UI thread. Tray events may
-  require dispatching to that thread before operating a flyout.
+- Construct, show, hide, and dispose flyouts on their owning UI thread. Tray events may require dispatching.
 
 ## DesktopFlyout
 
 ```csharp
-public partial class DesktopFlyout : Control, IDisposable
+public partial class DesktopFlyout : DependencyObject, IDisposable
 ```
 
-Hosts one or more islands in an independent desktop window. The XAML content property is `Islands`.
-
-### Constructor
-
-`DesktopFlyout()` creates the hidden desktop host and initializes the control. Retain and reuse
-the instance until `Dispose()` is called.
+A nonvisual controller with `Islands` as its XAML content property. `DesktopFlyout()` initializes
+the definition and private visual presenter without creating a native window. The first show
+with a resolvable position creates the host. Operate and dispose it on its UI thread.
 
 ### Properties
 
+All settable properties below are DPs. The collection reference itself is read-only.
+
+| Property | Type | Default | Behavior |
+| --- | --- | --- | --- |
+| `Islands` | `IList<object>` | Empty | Direct definitions, UI elements, or data items. Mutation throws while IslandsSource is set. |
+| `IslandsSource` | `object?` | `null` | Enumerable item source, connected directly. Collection notifications update generated containers. Null restores direct Islands. Invalid non-enumerables throw ArgumentException. |
+| `IslandTemplate` | `DataTemplate?` | `null` | Content template for generated island containers. |
+| `IslandTemplateSelector` | `DataTemplateSelector?` | `null` | Selects item content templates using the standard XAML template-selection rules. |
+| `IslandsOrientation` | `Orientation` | `Vertical` | Main direction of island allocation. |
+| `Width`, `Height` | `double` | `NaN` | Requested dimensions in DIPs. NaN means Auto. Negative or infinite values throw ArgumentOutOfRangeException. |
+| `MinWidth`, `MinHeight` | `double` | `0` | Nonnegative finite minimum dimensions. |
+| `MaxWidth`, `MaxHeight` | `double` | `PositiveInfinity` | Nonnegative maximum dimensions; positive infinity removes the limit. |
+| `HorizontalAlignment`, `VerticalAlignment` | Corresponding XAML enum | `Left`, `Top` | Sizing alignment. Stretch fills an automatic dimension subject to its min/max constraints. Explicit dimensions take precedence. |
+
+Requested values and bindings are preserved when the viewport is constrained. Minimum constraints
+take precedence over maximum constraints, with the available work area as the hard presentation
+limit. Excess island content scrolls along the layout axis. Rendering and input geometry share the measured layout. Automatic parent
+dimensions do not become stretched merely because a child island uses stars.
+
 | Property | Type | Default | Access / DP | Behavior |
 | --- | --- | --- | --- | --- |
-| `Islands` | `IList<DesktopFlyoutIsland>` | Empty collection | Read-only collection reference | Add, remove, or reorder the displayed sections. Also accepts child islands in XAML. |
-| `IslandsSource` | `object?` | `null` | Get/set, DP | Accepts `IEnumerable<DesktopFlyoutIsland>`. Assigning a valid source clears and repopulates `Islands`; incompatible values, including `null`, are ignored. This assignment copies the sequence. |
-| `FlyoutWidth` | `GridLength` | `Auto` | Get/set, DP | Requested width. Star sizing fills available work-area width after margins. |
-| `FlyoutHeight` | `GridLength` | `Auto` | Get/set, DP | Requested height. Star sizing fills available work-area height after margins. |
-| `IslandsOrientation` | `Orientation` | `Vertical` | Get/set, DP | Stacks islands vertically or horizontally. |
 | `IsOpen` | `bool` | `false` | Read-only, DP | Becomes `true` after opening completes and `false` after closing completes. Use `TransitionState` to distinguish transitions. |
 | `TransitionState` | `DesktopFlyoutTransitionState` | `Closed` | Read-only | Current lifecycle phase. |
 | `HideOnLostFocus` | `bool` | `true` | Get/set, DP | Closes the flyout when its host is deactivated. |
 | `ActivationMode` | `DesktopFlyoutActivationMode` | `Activate` | Get/set, DP | Controls foreground activation and keyboard focus. |
 | `AutoCloseDelay` | `TimeSpan` | `TimeSpan.Zero` | Get/set, DP | Automatic close delay after opening. Zero or negative disables it. Changing the value while open restarts the timer. |
 | `IsTransitionAnimationEnabled` | `bool` | `true` | Get/set, DP | Enables opening and closing animations. Windows hosts also respect the system animation setting. |
-| `PressedScale` | `double` | `1.0` | Get/set, DP | Effective press scale is clamped to `0.1` through `2.0`. `1.0`, NaN, or infinity disables the effect. |
 | `IsSwipeToDismissEnabled` | `bool` | `false` | Get/set, DP | Enables dismissal by swiping opposite the active popup direction. |
 | `SwipeDismissThreshold` | `double` | `80.0` | Get/set, DP | Required distance in DIPs, constrained by the available dismiss distance. NaN or infinity uses a distance-based default. |
-| `BackdropKind` | `DesktopFlyoutBackdropKind` | `DesktopAcrylic` | Get/set, DP | Chooses Desktop Acrylic, Mica, or no library-owned backdrop. UWP uses per-island Composition effects, with Mica sampling the blurred desktop wallpaper. |
-| `MenuFlyout` | `MenuFlyout?` | `null` | Get/set, DP | Optional reference for application code. The control does not show this menu automatically. |
+
+Background, border, corner radius, shadow, outer margin, presenter/container styles, and templates
+are not public configuration points. Library chrome uses a private dictionary, system theme and
+accessibility behavior, a 12-DIP visible screen-edge gap, and separately reserved shadow space.
+There are no inherited FrameworkElement dimensions, DataContext, Resources, or Style on this type.
 
 ### Methods
 
@@ -111,20 +123,25 @@ observe opening, closing, and native focus-loss dismissal on the owning UI threa
 ## DesktopFlyoutIsland
 
 ```csharp
-public partial class DesktopFlyoutIsland : ContentControl
+public partial class DesktopFlyoutIsland : DependencyObject
 ```
 
-A content section owned by a `DesktopFlyout`. `DesktopFlyoutIsland()` initializes the default
-island style. Populate the inherited `Content` property in code or XAML.
+A nonvisual section definition with `Content` as its XAML content property. The library creates
+and owns the actual visual container. A definition can be attached to only one live container
+at a time; it can be reused once its previous flyout has detached it.
 
-| Property | Type | Default | Access / DP | Behavior |
-| --- | --- | --- | --- | --- |
-| `IslandWidth` | `GridLength` | `Auto` | Get/set, DP | Requested size along a horizontal island layout. Supports pixel, auto, and star sizing. |
-| `IslandHeight` | `GridLength` | `Auto` | Get/set, DP | Requested size along a vertical island layout. Supports pixel, auto, and star sizing. |
-| `TemplateSettings` | `DesktopFlyoutIslandTemplateSettings` | Per-island instance | Read-only | Calculated values for control templates. |
+| Property | Type | Default | Behavior |
+| --- | --- | --- | --- |
+| `Content` | `object?` | `null` | UI element or data displayed inside the fixed frame. DP. |
+| `ContentTemplate` | `DataTemplate?` | `null` | Definition-specific content template, taking precedence over the flyout template. DP. |
+| `IslandWidth` | `GridLength` | `Auto` | Horizontal main-axis allocation: pixels, Auto, or weighted stars. DP. |
+| `IslandHeight` | `GridLength` | `Auto` | Vertical main-axis allocation: pixels, Auto, or weighted stars. DP. |
+| `Visibility` | `Visibility` | `Visible` | Collapsed sections consume no space. DP. |
 
-Runtime changes to island size, content layout, or inherited `Visibility` update the owning
-flyout's layout. A collapsed island does not occupy layout space.
+Definition changes update a connected container and its layout. Arbitrary data items in Islands
+or IslandsSource also receive generated containers; use a definition when explicit allocation or
+visibility is needed. Templates customize content only. This type has no Background, BorderBrush,
+CornerRadius, Margin, Style, Template, or TemplateSettings properties.
 
 ## DesktopFlyoutPosition
 
@@ -132,8 +149,8 @@ flyout's layout. A collapsed island does not occupy layout space.
 public sealed partial class DesktopFlyoutPosition
 ```
 
-A position request passed to `DesktopFlyout.Show`. Create it through a factory; it has no public
-constructor or public mutable properties. Factory calls describe placement; resolution happens
+A position request passed to `DesktopFlyout.Show`. Create it through a factory; it has no
+public constructor or public mutable properties. Factory calls describe placement; resolution happens
 when the flyout is shown. Open flyouts follow work-area changes without restarting their animations
 or activating their host windows.
 
@@ -377,25 +394,9 @@ request is shown.
 
 ### DesktopFlyoutBackdropKind
 
-`DesktopAcrylic = 0` selects the Desktop Acrylic system backdrop on WinUI. On Windows 11 and later,
-UWP enables `DWMWA_USE_HOSTBACKDROPBRUSH` on the Win32 host and uses a per-island Composition
-host-backdrop effect with luminosity, tint, and noise. The UWP package depends on `Win2D.uwp`
-for the effect graph. Accent tint follows taskbar color prevalence. The effect stays active
-when the host loses activation, including `NoActivateOnOpen` and `NeverActivate`.
-UWP uses a solid fallback on older Windows versions, when transparency is disabled, in high
-contrast or energy saver mode, or when Composition effects are unavailable. Effect policy and
-device changes are monitored while each brush is connected; resources are released on disconnection.
-
-`Mica = 1` selects base Mica on WinUI. On Windows 11 and later, UWP uses
-`Compositor.TryCreateBlurredWallpaperBackdropBrush()` with a Win2D luminosity and tint effect
-on each island. It samples the desktop wallpaper, not other windows, and adds no Acrylic noise.
-It shares Acrylic's theme/accent handling, activation-independent lifetime, and effect policy
-fallbacks. If the wallpaper API is absent or returns no brush, Mica uses a solid fallback.
-Both UWP kinds use the system window color in high contrast
-and preserve locally set island `Background` values.
-
-`None = 2` leaves the island without a library-owned backdrop and preserves locally set island
-`Background` values. Uno does not apply these Windows materials.
+`DesktopAcrylic = 0`, `Mica = 1`, `None = 2`. This enum remains available to the standalone
+UWP Composition primitives. Desktop flyouts select their Acrylic or solid fallback internally;
+neither the flyout nor an island definition exposes a backdrop-selection property.
 
 ### DesktopFlyoutTransitionState
 
@@ -416,20 +417,7 @@ It has a public parameterless constructor.
 | Property | Type | Default | Access / DP | Behavior |
 | --- | --- | --- | --- | --- |
 | `Orientation` | `Orientation` | `Vertical` | Get/set, DP | Fallback orientation outside a `DesktopFlyout`; an owning flyout supplies its island orientation. |
-| `Spacing` | `double` | `0.0` | Get/set, DP | Spacing in DIPs between visible islands. |
-
-### DesktopFlyoutIslandTemplateSettings
-
-`public partial class DesktopFlyoutIslandTemplateSettings : DependencyObject` supplies calculated
-template values through `DesktopFlyoutIsland.TemplateSettings`. It has a public parameterless
-constructor; applications normally use the instance provided by the island.
-
-The following properties are **WinUI only**. They are publicly readable DPs with internal setters:
-
-| Property | Type | Behavior |
-| --- | --- | --- |
-| `BackdropCornerRadius` | `CornerRadius` | Owner corner radius adjusted for the inner backdrop surface. |
-| `SystemBackdrop` | `SystemBackdrop?` | Library-owned backdrop for this island, or `null` when disconnected. Do not dispose or replace it from application code. |
+| `Spacing` | `double` | `0.0` | Get/set, DP | Standalone panel spacing. Hosted flyouts always use the library-owned 12-DIP spacing. |
 
 ### XamlIslandApplication
 

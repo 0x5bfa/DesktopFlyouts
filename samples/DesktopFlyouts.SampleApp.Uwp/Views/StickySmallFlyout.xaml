@@ -6,12 +6,8 @@
 	xmlns:local="using:DesktopFlyouts"
 	xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	FlyoutWidth="360"
+	Width="360"
 	mc:Ignorable="d">
-
-	<local:DesktopFlyout.Resources>
-		<local:SampleResources />
-	</local:DesktopFlyout.Resources>
 
 	<local:DesktopFlyout.Islands>
 		<local:DesktopFlyoutIsland IslandHeight="260">

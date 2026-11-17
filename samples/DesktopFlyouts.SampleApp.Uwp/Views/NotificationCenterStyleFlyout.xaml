@@ -7,15 +7,10 @@
 	xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:wctcontrols="using:CommunityToolkit.WinUI.Controls"
-	FlyoutHeight="*"
-	FlyoutWidth="336"
-	HideOnLostFocus="False"
+	VerticalAlignment="Stretch"
+	Width="336"
 	IslandsOrientation="Vertical"
 	mc:Ignorable="d">
-
-	<local:DesktopFlyout.Resources>
-		<local:SampleResources />
-	</local:DesktopFlyout.Resources>
 
 	<local:DesktopFlyout.Islands>
 		<local:DesktopFlyoutIsland IslandHeight="*">

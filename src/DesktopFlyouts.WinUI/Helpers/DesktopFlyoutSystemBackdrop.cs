@@ -4,6 +4,7 @@
 using Microsoft.UI.Composition;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
@@ -25,10 +26,10 @@ internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
 
 	protected abstract ISystemBackdropControllerWithTargets? TryCreateController(SystemBackdropConfiguration configuration);
 
-	internal void ClearFrom(DesktopFlyoutIslandTemplateSettings templateSettings)
+	internal void ClearFrom(SystemBackdropElement element)
 	{
 		var targets = new List<ICompositionSupportsSystemBackdrop>(_targets.Keys);
-		templateSettings.SystemBackdrop = null;
+		element.SystemBackdrop = null;
 
 		// SystemBackdropElement has now detached its links. Close them on the UI thread
 		// before the last managed reference can be released by the finalizer thread.

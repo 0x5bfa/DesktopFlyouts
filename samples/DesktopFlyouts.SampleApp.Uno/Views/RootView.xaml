@@ -281,28 +281,7 @@
 					</Grid>
 				</Border>
 
-				<Border
-					Padding="16,12"
-					Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-					CornerRadius="8">
-					<Grid ColumnSpacing="16">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="120" />
-							<ColumnDefinition Width="*" />
-						</Grid.ColumnDefinitions>
-						<TextBlock
-							VerticalAlignment="Center"
-							Style="{StaticResource BodyTextBlockStyle}"
-							Text="System backdrop" />
-						<ComboBox
-							Grid.Column="1"
-							Width="150"
-							HorizontalAlignment="Left"
-							IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-							ItemsSource="{x:Bind ViewModel.SystemBackdrops.Values}"
-							SelectedIndex="{x:Bind ViewModel.SelectedSystemBackdropIndex, Mode=TwoWay}" />
-					</Grid>
-				</Border>
+
 			</StackPanel>
 
 		</StackPanel>

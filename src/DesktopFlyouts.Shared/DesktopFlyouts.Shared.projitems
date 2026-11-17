@@ -40,9 +40,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\TransitionHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Properties.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutPresenter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandPresenter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutChromeResources.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutChromeMetrics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutLayoutPanel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutSizeResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandsPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandTemplateSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interop\WindowHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.cs" />

@@ -193,18 +193,29 @@ internal sealed class TrayIconManager
 		}
 	}
 
-    private static DesktopFlyout CreateFlyout(DesktopFlyoutSampleKind example)
-    {
-        return example switch
-        {
-            DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
-            DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
-            DesktopFlyoutSampleKind.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
-            DesktopFlyoutSampleKind.StartMenuStyle => new StartMenuStyleFlyout(),
-            DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
-            DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
-            DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
-            _ => new CustomizableFlyout(),
-        };
-    }
+	private static DesktopFlyout CreateFlyout(DesktopFlyoutSampleKind example)
+	{
+		DesktopFlyout content = example switch
+		{
+			DesktopFlyoutSampleKind.Button => new ButtonFlyout(),
+			DesktopFlyoutSampleKind.IndicatorStyle => new IndicatorStyleFlyout(),
+			DesktopFlyoutSampleKind.NotificationCenterStyle => new NotificationCenterStyleFlyout(),
+			DesktopFlyoutSampleKind.StartMenuStyle => new StartMenuStyleFlyout(),
+			DesktopFlyoutSampleKind.StickySmallStyle => new StickySmallFlyout(),
+			DesktopFlyoutSampleKind.WidgetStyle => new WidgetStyleFlyout(),
+			DesktopFlyoutSampleKind.Severity => new SeverityFlyout(),
+			DesktopFlyoutSampleKind.DataTemplate => new DataTemplateFlyout(),
+			_ => new CustomizableFlyout(),
+		};
+
+		content.HideOnLostFocus = example is not (DesktopFlyoutSampleKind.Button or DesktopFlyoutSampleKind.NotificationCenterStyle or DesktopFlyoutSampleKind.Severity);
+		content.ActivationMode = example switch
+		{
+			DesktopFlyoutSampleKind.Button => DesktopFlyoutActivationMode.NoActivateOnOpen,
+			DesktopFlyoutSampleKind.IndicatorStyle => DesktopFlyoutActivationMode.NeverActivate,
+			_ => DesktopFlyoutActivationMode.Activate,
+		};
+		content.IsSwipeToDismissEnabled = example is DesktopFlyoutSampleKind.Button;
+		content.AutoCloseDelay = example is DesktopFlyoutSampleKind.IndicatorStyle ? TimeSpan.FromSeconds(1.5) : TimeSpan.Zero;
+		return content;	}
 }
