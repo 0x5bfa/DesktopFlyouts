@@ -19,6 +19,11 @@ belong in **Unreleased** until the next release is tagged.
 - Use the XAML island window's DPI when mapping flyout regions between physical pixels and DIPs,
   including fractional display scales.
 
+### Changed
+
+- Use Composition animations for flyout transitions, swipe restoration, and press scaling across
+  WinUI, UWP, and Uno while retaining the existing durations and easing curves.
+
 ### Breaking changes
 
 - Rename `HideOnLostFocus` to `IsLightDismissEnabled`, including its dependency property name.

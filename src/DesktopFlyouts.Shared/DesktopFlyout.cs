@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Numerics;
 using System.Threading.Tasks;
 using Windows.Graphics;
 using FoundationPoint = Windows.Foundation.Point;
@@ -22,7 +23,6 @@ using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Markup;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Animation;
 #elif WASDK
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -30,7 +30,6 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Animation;
 #endif
 
 namespace DesktopFlyouts;
@@ -80,9 +79,9 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	private DesktopFlyoutPopupDirection _activePopupDirection = DesktopFlyoutPopupDirection.BottomToTop;
 	private DispatcherTimer? _autoCloseTimer;
 	private DispatcherTimer? _restoreActivationTimer;
-	private Storyboard? _transitionStoryboard;
-	private Storyboard? _pressScaleStoryboard;
-	private Storyboard? _swipeDismissRestoreStoryboard;
+	private CompositionAnimationOperation? _transitionAnimation;
+	private CompositionAnimationOperation? _pressScaleAnimation;
+	private CompositionAnimationOperation? _swipeDismissRestoreAnimation;
 	private FoundationPoint _swipeDismissStartPoint;
 	private double _pressScaleTargetScale = 1.0D;
 	private uint _swipeDismissPointerId;
@@ -173,6 +172,7 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	private void DetachRootHandlers()
 	{
 		RootGrid?.GettingFocus -= RootGrid_GettingFocus;
+		RootGrid?.SizeChanged -= RootGrid_SizeChanged;
 		RootGrid?.PointerPressed -= RootGrid_PointerPressed;
 		RootGrid?.PointerMoved -= RootGrid_PointerMoved;
 		RootGrid?.PointerReleased -= RootGrid_PointerReleased;
@@ -189,9 +189,9 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 		}
 
 		var transition = TransitionState;
-		var wasAnimating = _transitionStoryboard is not null;
-		StopTransitionStoryboard();
-		StopSwipeDismissRestoreStoryboard();
+		var wasAnimating = IsTransitionAnimationRunning;
+		StopTransitionAnimation();
+		StopSwipeDismissRestoreAnimation();
 		RestoreFocusSuppression();
 		ResetPressedScale();
 		ResetSwipeDismissTracking();
@@ -202,7 +202,8 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 			return;
 		}
 
-		EnsureRootTransform();
+		RootGrid.SizeChanged += RootGrid_SizeChanged;
+		UpdateRootScaleCenterPoint();
 		RootGrid.GettingFocus += RootGrid_GettingFocus;
 		RootGrid.PointerPressed += RootGrid_PointerPressed;
 		RootGrid.PointerMoved += RootGrid_PointerMoved;
@@ -367,10 +368,10 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 
 			if (AreTransitionAnimationsEnabled)
 			{
-				var storyboard = GetOpenStoryboard(_activePopupDirection);
-				_transitionStoryboard = storyboard;
-				storyboard.Completed += OpenAnimationStoryboard_Completed;
-				storyboard.Begin();
+				var animation = CreateFlyoutTranslationAnimation(_activePopupDirection, opening: true);
+				_transitionAnimation = animation;
+				animation.Completed += OpenCompositionAnimation_Completed;
+				animation.Start();
 			}
 			else
 			{
@@ -396,7 +397,7 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	{
 		StopAutoCloseTimer();
 		StopRestoreActivationTimer();
-		StopSwipeDismissRestoreStoryboard();
+		StopSwipeDismissRestoreAnimation();
 		ResetSwipeDismissTracking();
 
 		if (_disposed || RootGrid is null)
@@ -436,10 +437,10 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 
 		if (AreTransitionAnimationsEnabled)
 		{
-			var storyboard = GetCloseStoryboard(_activePopupDirection, closeFromCurrentTransform);
-			_transitionStoryboard = storyboard;
-			storyboard.Completed += CloseAnimationStoryboard_Completed;
-			storyboard.Begin();
+			var animation = CreateFlyoutTranslationAnimation(_activePopupDirection, opening: false, fromCurrentTransform: closeFromCurrentTransform);
+			_transitionAnimation = animation;
+			animation.Completed += CloseCompositionAnimation_Completed;
+			animation.Start();
 		}
 		else
 		{
@@ -634,59 +635,55 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 		return area;
 	}
 
-	private void OpenAnimationStoryboard_Completed(object? sender, object e)
+	private void OpenCompositionAnimation_Completed(object? sender, EventArgs e)
 	{
-		if (sender is not Storyboard storyboard || !ReferenceEquals(_transitionStoryboard, storyboard))
+		if (sender is not CompositionAnimationOperation animation || !ReferenceEquals(_transitionAnimation, animation))
 		{
 			return;
 		}
 
-		storyboard.Completed -= OpenAnimationStoryboard_Completed;
-		_transitionStoryboard = null;
-		storyboard.Stop();
-		if (_disposed)
+		animation.Completed -= OpenCompositionAnimation_Completed;
+		_transitionAnimation = null;
+		animation.Dispose();
+		if (!_disposed)
 		{
-			return;
+			CompleteOpen();
 		}
-
-		CompleteOpen();
 	}
 
-	private void CloseAnimationStoryboard_Completed(object? sender, object e)
+	private void CloseCompositionAnimation_Completed(object? sender, EventArgs e)
 	{
-		if (sender is not Storyboard storyboard || !ReferenceEquals(_transitionStoryboard, storyboard))
+		if (sender is not CompositionAnimationOperation animation || !ReferenceEquals(_transitionAnimation, animation))
 		{
 			return;
 		}
 
-		storyboard.Completed -= CloseAnimationStoryboard_Completed;
-		_transitionStoryboard = null;
-		storyboard.Stop();
-		if (_disposed)
+		animation.Completed -= CloseCompositionAnimation_Completed;
+		_transitionAnimation = null;
+		animation.Dispose();
+		if (!_disposed)
 		{
-			return;
+			CompleteClose();
 		}
-
-		CompleteClose();
 	}
 
-	private void StopTransitionStoryboard()
+	private void StopTransitionAnimation()
 	{
-		if (_transitionStoryboard is null)
+		if (_transitionAnimation is null)
 		{
 			return;
 		}
 
-		var storyboard = _transitionStoryboard;
-		_transitionStoryboard = null;
-		storyboard.Completed -= OpenAnimationStoryboard_Completed;
-		storyboard.Completed -= CloseAnimationStoryboard_Completed;
-		storyboard.Stop();
+		var animation = _transitionAnimation;
+		_transitionAnimation = null;
+		animation.Completed -= OpenCompositionAnimation_Completed;
+		animation.Completed -= CloseCompositionAnimation_Completed;
+		animation.Dispose();
 	}
 
 	private void CompleteOpen()
 	{
-		StopSwipeDismissRestoreStoryboard();
+		StopSwipeDismissRestoreAnimation();
 		ResetSwipeDismissTracking();
 		SetOpenTransform();
 		_isPopupAnimationPlaying = false;
@@ -724,7 +721,7 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 		_lastTrayIconBounds = null;
 		_placementUpdatePending = false;
 		StopAutoCloseTimer();
-		StopSwipeDismissRestoreStoryboard();
+		StopSwipeDismissRestoreAnimation();
 		ResetSwipeDismissTracking();
 		RestoreFocusSuppression();
 		ResetPressedScale();
@@ -905,7 +902,7 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 			return;
 		}
 
-		StopSwipeDismissRestoreStoryboard();
+		StopSwipeDismissRestoreAnimation();
 		RootGrid.CapturePointer(e.Pointer);
 
 		if (isSwipeDismissEnabled)
@@ -1007,14 +1004,13 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 			RestorePressedScale();
 		}
 
-		var transform = GetRootTransform();
-		if (transform is null)
+		if (RootGrid is null)
 		{
 			return false;
 		}
 
-		transform.TranslateX = translateX;
-		transform.TranslateY = translateY;
+		StopSwipeDismissRestoreAnimation();
+		SetRootTranslation(translateX, translateY);
 		return true;
 	}
 
@@ -1113,22 +1109,16 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 
 	private double GetSwipeDismissDistance()
 	{
-		var transform = GetRootTransform();
-		if (transform is null)
-		{
-			return 0;
-		}
-
 		var closedX = GetClosedXOffset(_activePopupDirection);
 		if (closedX != 0)
 		{
-			return Math.Max(0, Math.Sign(closedX) * transform.TranslateX);
+			return Math.Max(0, Math.Sign(closedX) * GetRootTranslationX());
 		}
 
 		var closedY = GetClosedYOffset(_activePopupDirection);
 		return closedY == 0
 			? 0
-			: Math.Max(0, Math.Sign(closedY) * transform.TranslateY);
+			: Math.Max(0, Math.Sign(closedY) * GetRootTranslationY());
 	}
 
 	private double GetSwipeDismissMaxDistance()
@@ -1154,7 +1144,7 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 
 	private void AnimateSwipeDismissRestore()
 	{
-		StopSwipeDismissRestoreStoryboard();
+		StopSwipeDismissRestoreAnimation();
 
 		if (!AreTransitionAnimationsEnabled)
 		{
@@ -1163,40 +1153,39 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 			return;
 		}
 
-		_swipeDismissRestoreStoryboard = GetOpenStoryboard(_activePopupDirection, true);
-		_swipeDismissRestoreStoryboard.Completed += SwipeDismissRestoreStoryboard_Completed;
-		_swipeDismissRestoreStoryboard.Begin();
+		_swipeDismissRestoreAnimation = CreateFlyoutTranslationAnimation(_activePopupDirection, opening: true, fromCurrentTransform: true);
+		_swipeDismissRestoreAnimation.Completed += SwipeDismissRestoreAnimation_Completed;
+		_swipeDismissRestoreAnimation.Start();
 	}
 
-	private void StopSwipeDismissRestoreStoryboard()
+	private void StopSwipeDismissRestoreAnimation()
 	{
-		if (_swipeDismissRestoreStoryboard is null)
+		if (_swipeDismissRestoreAnimation is null)
 		{
 			return;
 		}
 
-		_swipeDismissRestoreStoryboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
-		_swipeDismissRestoreStoryboard.Stop();
-		_swipeDismissRestoreStoryboard = null;
+		var animation = _swipeDismissRestoreAnimation;
+		_swipeDismissRestoreAnimation = null;
+		animation.Completed -= SwipeDismissRestoreAnimation_Completed;
+		animation.Dispose();
 	}
 
-	private void SwipeDismissRestoreStoryboard_Completed(object? sender, object e)
+	private void SwipeDismissRestoreAnimation_Completed(object? sender, EventArgs e)
 	{
-		if (sender is not Storyboard storyboard || !ReferenceEquals(_swipeDismissRestoreStoryboard, storyboard))
+		if (sender is not CompositionAnimationOperation animation || !ReferenceEquals(_swipeDismissRestoreAnimation, animation))
 		{
 			return;
 		}
 
-		storyboard.Completed -= SwipeDismissRestoreStoryboard_Completed;
-		_swipeDismissRestoreStoryboard = null;
-		storyboard.Stop();
-		if (_disposed)
+		animation.Completed -= SwipeDismissRestoreAnimation_Completed;
+		_swipeDismissRestoreAnimation = null;
+		animation.Dispose();
+		if (!_disposed)
 		{
-			return;
+			SetOpenTransform();
+			RestartAutoCloseTimer();
 		}
-
-		SetOpenTransform();
-		RestartAutoCloseTimer();
 	}
 
 	private void RestorePressedScale()
@@ -1213,83 +1202,69 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	private void ResetPressedScale()
 	{
 		_isPressAnimationActive = false;
-		StopPressedScaleStoryboard();
-		_pressScaleStoryboard = null;
+		StopPressedScaleAnimation();
 		_pressScaleTargetScale = 1.0D;
-
-		var transform = GetRootTransform();
-		if (transform is null)
-		{
-			return;
-		}
-
-		transform.ScaleX = 1.0D;
-		transform.ScaleY = 1.0D;
+		SetRootScale(1.0D, 1.0D);
 	}
 
 	private void AnimatePressedScale(double scale, TimeSpan duration)
 	{
-		var transform = GetRootTransform();
-		if (transform is null)
+		if (RootGrid is null)
 		{
 			return;
 		}
 
 		if (!AreSystemAnimationsEnabled)
 		{
-			StopPressedScaleStoryboard();
-			transform.ScaleX = scale;
-			transform.ScaleY = scale;
+			StopPressedScaleAnimation();
+			SetRootScale(scale, scale);
 			_pressScaleTargetScale = scale;
 			return;
 		}
 
-		var currentScaleX = transform.ScaleX;
-		var currentScaleY = transform.ScaleY;
+		var currentScaleX = _pressScaleAnimation is null ? GetRootScaleX() : _pressScaleTargetScale;
+		var currentScaleY = _pressScaleAnimation is null ? GetRootScaleY() : _pressScaleTargetScale;
 
-		StopPressedScaleStoryboard();
-		transform.ScaleX = currentScaleX;
-		transform.ScaleY = currentScaleY;
+		StopPressedScaleAnimation();
 		_pressScaleTargetScale = scale;
-		_pressScaleStoryboard = TransitionHelpers.GetPressedScaleTransitionStoryboard(
-			transform,
-			currentScaleX,
-			currentScaleY,
-			scale,
+		SetRootScale(currentScaleX, currentScaleY);
+		var animation = CompositionTransitionHelpers.CreateScaleAnimation(
+			RootGrid,
+			new Vector3((float)currentScaleX, (float)currentScaleY, 1),
+			new Vector3((float)scale, (float)scale, 1),
 			duration);
-		_pressScaleStoryboard.Completed += PressScaleStoryboard_Completed;
-		_pressScaleStoryboard.Begin();
+		_pressScaleAnimation = animation;
+		animation.Completed += PressScaleAnimation_Completed;
+		animation.Start();
 	}
 
-	private void StopPressedScaleStoryboard()
+	private void StopPressedScaleAnimation()
 	{
-		if (_pressScaleStoryboard is null)
+		if (_pressScaleAnimation is null)
 		{
 			return;
 		}
 
-		_pressScaleStoryboard.Completed -= PressScaleStoryboard_Completed;
-		_pressScaleStoryboard.Stop();
-		_pressScaleStoryboard = null;
+		var animation = _pressScaleAnimation;
+		_pressScaleAnimation = null;
+		animation.Completed -= PressScaleAnimation_Completed;
+		animation.Dispose();
 	}
 
-	private void PressScaleStoryboard_Completed(object? sender, object e)
+	private void PressScaleAnimation_Completed(object? sender, EventArgs e)
 	{
-		if (!ReferenceEquals(sender, _pressScaleStoryboard))
+		if (sender is not CompositionAnimationOperation animation || !ReferenceEquals(_pressScaleAnimation, animation))
 		{
 			return;
 		}
 
-		StopPressedScaleStoryboard();
-
-		var transform = GetRootTransform();
-		if (transform is null)
+		animation.Completed -= PressScaleAnimation_Completed;
+		_pressScaleAnimation = null;
+		animation.Dispose();
+		if (!_disposed)
 		{
-			return;
+			SetRootScale(_pressScaleTargetScale, _pressScaleTargetScale);
 		}
-
-		transform.ScaleX = _pressScaleTargetScale;
-		transform.ScaleY = _pressScaleTargetScale;
 	}
 
 	private bool IsPressedScaleEnabled()
@@ -1367,81 +1342,101 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 		_suppressedTabStopStates.Clear();
 	}
 
-	private Storyboard GetOpenStoryboard(DesktopFlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
+	private CompositionAnimationOperation CreateFlyoutTranslationAnimation(
+		DesktopFlyoutPopupDirection popupDirection,
+		bool opening,
+		bool fromCurrentTransform = false)
 	{
-		var transform = GetRootTransform() ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
-
-		return IsVerticalDirection(popupDirection)
-			? TransitionHelpers.GetWindows11BottomToTopTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateY : GetClosedYOffset(popupDirection), 0)
-			: TransitionHelpers.GetWindows11RightToLeftTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateX : GetClosedXOffset(popupDirection), 0);
-	}
-
-	private Storyboard GetCloseStoryboard(DesktopFlyoutPopupDirection popupDirection, bool fromCurrentTransform = false)
-	{
-		var transform = GetRootTransform() ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
-
-		return IsVerticalDirection(popupDirection)
-			? TransitionHelpers.GetWindows11TopToBottomTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateY : 0, GetClosedYOffset(popupDirection))
-			: TransitionHelpers.GetWindows11LeftToRightTransitionStoryboard(transform, fromCurrentTransform ? transform.TranslateX : 0, GetClosedXOffset(popupDirection));
+		var rootGrid = RootGrid ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
+		var isVertical = IsVerticalDirection(popupDirection);
+#if HAS_UNO
+		// Uno's Visual exposes Offset, while WinUI and UWP expose Translation on UIElement.
+		var targetProperty = isVertical ? "Offset.Y" : "Offset.X";
+#else
+		var targetProperty = isVertical ? "Translation.Y" : "Translation.X";
+#endif
+		var closedOffset = isVertical ? GetClosedYOffset(popupDirection) : GetClosedXOffset(popupDirection);
+		var currentOffset = isVertical ? GetRootTranslationY() : GetRootTranslationX();
+		var from = opening
+			? fromCurrentTransform ? currentOffset : closedOffset
+			: fromCurrentTransform ? currentOffset : 0;
+		var to = opening ? 0 : closedOffset;
+		return CompositionTransitionHelpers.CreateFlyoutTranslationAnimation(
+			rootGrid,
+			targetProperty,
+			(float)from,
+			(float)to,
+			opening,
+			isVertical);
 	}
 
 	private void SetOpenTransform()
 	{
-		var transform = GetRootTransform();
-		if (transform is null)
-		{
-			return;
-		}
-
-		transform.TranslateX = 0;
-		transform.TranslateY = 0;
+		SetRootTranslation(0, 0);
 	}
 
 	private void SetClosedTransform(DesktopFlyoutPopupDirection popupDirection)
 	{
-		var transform = GetRootTransform();
-		if (transform is null)
-		{
-			return;
-		}
-
-		transform.TranslateX = GetClosedXOffset(popupDirection);
-		transform.TranslateY = GetClosedYOffset(popupDirection);
+		SetRootTranslation(GetClosedXOffset(popupDirection), GetClosedYOffset(popupDirection));
 	}
 
-	private CompositeTransform? GetRootTransform()
+	private double GetRootTranslationX()
 	{
-		if (RootGrid is null)
-		{
-			return null;
-		}
-
-		return EnsureRootTransform();
+#if HAS_UNO
+		return RootGrid is null ? 0 : ElementCompositionPreview.GetElementVisual(RootGrid).Offset.X;
+#else
+		return RootGrid?.Translation.X ?? 0;
+#endif
 	}
 
-	private CompositeTransform EnsureRootTransform()
+	private double GetRootTranslationY()
 	{
-		var rootGrid = RootGrid ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
+#if HAS_UNO
+		return RootGrid is null ? 0 : ElementCompositionPreview.GetElementVisual(RootGrid).Offset.Y;
+#else
+		return RootGrid?.Translation.Y ?? 0;
+#endif
+	}
 
-		if (rootGrid.RenderTransform is CompositeTransform compositeTransform)
+	private void SetRootTranslation(double x, double y)
+	{
+		if (RootGrid is not null)
 		{
-			return compositeTransform;
+#if HAS_UNO
+			ElementCompositionPreview.GetElementVisual(RootGrid).Offset = new Vector3((float)x, (float)y, 0);
+#else
+			RootGrid.Translation = new Vector3((float)x, (float)y, 0);
+#endif
 		}
+	}
 
-		var transform = new CompositeTransform()
-		{
-			ScaleX = 1.0D,
-			ScaleY = 1.0D,
-		};
+	private double GetRootScaleX()
+	{
+		return RootGrid is null ? 1 : ElementCompositionPreview.GetElementVisual(RootGrid).Scale.X;
+	}
 
-		if (rootGrid.RenderTransform is TranslateTransform translateTransform)
+	private double GetRootScaleY()
+	{
+		return RootGrid is null ? 1 : ElementCompositionPreview.GetElementVisual(RootGrid).Scale.Y;
+	}
+
+	private void SetRootScale(double scaleX, double scaleY)
+	{
+		if (RootGrid is not null)
 		{
-			transform.TranslateX = translateTransform.X;
-			transform.TranslateY = translateTransform.Y;
+			ElementCompositionPreview.GetElementVisual(RootGrid).Scale = new Vector3((float)scaleX, (float)scaleY, 1);
 		}
+	}
 
-		rootGrid.RenderTransform = transform;
-		return transform;
+	private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+		=> UpdateRootScaleCenterPoint();
+
+	private void UpdateRootScaleCenterPoint()
+	{
+		if (RootGrid is not null)
+		{
+			ElementCompositionPreview.GetElementVisual(RootGrid).CenterPoint = new Vector3((float)(RootGrid.ActualWidth / 2), (float)(RootGrid.ActualHeight / 2), 0);
+		}
 	}
 
 	private double GetClosedXOffset(DesktopFlyoutPopupDirection popupDirection)
@@ -1490,6 +1485,8 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 #endif
 		}
 	}
+
+	private bool IsTransitionAnimationRunning => _transitionAnimation is not null;
 
 	private bool AreTransitionAnimationsEnabled => IsTransitionAnimationEnabled && AreSystemAnimationsEnabled;
 
@@ -1803,8 +1800,8 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 
 		_disposed = true;
 		CancelOpenFlyoutLayoutUpdate();
-		StopTransitionStoryboard();
-		StopSwipeDismissRestoreStoryboard();
+		StopTransitionAnimation();
+		StopSwipeDismissRestoreAnimation();
 		ResetSwipeDismissTracking();
 		ResetPressedScale();
 		SetOpenTransform();

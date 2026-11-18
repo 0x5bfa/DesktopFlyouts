@@ -37,7 +37,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)SystemTrayIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WindowHelpers.Geometry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interop\WindowHelpers.Environment.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\TransitionHelpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\CompositionTransitionHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Properties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutPresenter.cs" />
