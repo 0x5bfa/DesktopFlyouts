@@ -4,6 +4,27 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:DesktopFlyouts">
 
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
+                <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1,1,1,1" />
+            </Style>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
+                <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1,1,1,1" />
+            </Style>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="HighContrast">
+            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
+                <Setter Property="BorderBrush" Value="{ThemeResource SystemColorWindowTextColorBrush}" />
+                <Setter Property="BorderThickness" Value="2,2,2,2" />
+            </Style>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
     <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
         <Grid
             x:Name="PART_RootGrid"
@@ -30,7 +51,7 @@
     <ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
         <Grid
             x:Name="PART_RootGrid"
-            BorderThickness="1"
+            Style="{ThemeResource DesktopFlyoutIslandChromeStyle}"
             CornerRadius="8">
             <ContentPresenter
                 x:Name="PART_MainContentPresenter"

@@ -7,6 +7,8 @@ belong in **Unreleased** until the next release is tagged.
 
 ### Fixed
 
+- Style island borders with `SurfaceStrokeColorDefaultBrush` and 1-DIP thickness in Light and Dark,
+  and `SystemColorWindowTextColorBrush` with 2-DIP thickness in high contrast.
 - Generate WinRT collection interfaces for direct flyout islands and the sample data source.
   This prevents startup ArgumentException (0x80070057) when assigning ItemsSource with dynamic
   code support disabled, as in the samples' AOT configuration.

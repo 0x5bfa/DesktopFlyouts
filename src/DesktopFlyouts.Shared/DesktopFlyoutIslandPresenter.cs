@@ -109,7 +109,6 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 	{
 		base.OnApplyTemplate();
 		_root = (Grid)GetTemplateChild("PART_RootGrid");
-		_root.Style = new Style(typeof(Grid));
 		_root.SizeChanged += (_, _) => UpdateContentClip();
 		_contentPresenter = (ContentPresenter)GetTemplateChild("PART_MainContentPresenter");
 		_contentPresenter.Style = new Style(typeof(ContentPresenter));
@@ -130,9 +129,7 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		if (_root is null || !_hasItem) return;
 		var light = GeneralHelpers.IsTaskbarLight();
 		RequestedTheme = light ? ElementTheme.Light : ElementTheme.Dark;
-		_root.BorderThickness = new Thickness(1);
 		_root.CornerRadius = new CornerRadius(8);
-		_root.BorderBrush = new SolidColorBrush(light ? Color.FromArgb(15, 0, 0, 0) : Color.FromArgb(38, 255, 255, 255));
 #if !HAS_UNO
 		var highContrast = new AccessibilitySettings().HighContrast;
 		if (highContrast)
@@ -140,7 +137,6 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 			_root.Shadow = null;
 			var settings = new UISettings();
 			_root.Background = new SolidColorBrush(settings.GetColorValue(UIColorType.Background));
-			_root.BorderBrush = new SolidColorBrush(settings.GetColorValue(UIColorType.Foreground));
 			ClearOwnerBackdrop();
 			return;
 		}
