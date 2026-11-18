@@ -19,53 +19,44 @@ namespace DesktopFlyouts;
 internal static class CompositionTransitionHelpers
 {
 	internal static CompositionAnimationOperation CreateFlyoutTranslationAnimation(
-		UIElement target,
-		string targetProperty,
-		float from,
-		float to,
-		bool opening,
-		bool isVertical)
+		UIElement target, string targetProperty, float from, float to, bool opening, bool isVertical)
 	{
 		var duration = opening
 			? isVertical ? TimeSpan.FromMilliseconds(267) : TimeSpan.FromMilliseconds(167)
 			: isVertical ? TimeSpan.FromMilliseconds(200) : TimeSpan.FromMilliseconds(167);
 		var controlPoint1 = opening ? new Vector2(0.1F, 0.9F) : new Vector2(0.2F, 0.0F);
 		var controlPoint2 = opening ? new Vector2(0.4F, 1.0F) : new Vector2(0.9F, 0.0F);
+
 		return CreateTranslationAnimation(target, targetProperty, from, to, duration, controlPoint1, controlPoint2);
 	}
 
 	internal static CompositionAnimationOperation CreateTranslationAnimation(
-		UIElement target,
-		string targetProperty,
-		float from,
-		float to,
-		TimeSpan duration,
-		Vector2 controlPoint1,
-		Vector2 controlPoint2)
+		UIElement target, string targetProperty, float from, float to, TimeSpan duration, Vector2 controlPoint1, Vector2 controlPoint2)
 	{
 		var compositor = ElementCompositionPreview.GetElementVisual(target).Compositor;
 		var animation = compositor.CreateScalarKeyFrameAnimation();
 		var easing = compositor.CreateCubicBezierEasingFunction(controlPoint1, controlPoint2);
+
 		animation.InsertKeyFrame(0.0F, from);
 		animation.InsertKeyFrame(1.0F, to, easing);
 		animation.Duration = duration;
 		animation.Target = targetProperty;
+
 		return new(target, animation, duration);
 	}
 
 	internal static CompositionAnimationOperation CreateScaleAnimation(
-		UIElement target,
-		Vector3 from,
-		Vector3 to,
-		TimeSpan duration)
+		UIElement target, Vector3 from, Vector3 to, TimeSpan duration)
 	{
 		var compositor = ElementCompositionPreview.GetElementVisual(target).Compositor;
 		var animation = compositor.CreateVector3KeyFrameAnimation();
 		var easing = compositor.CreateCubicBezierEasingFunction(new(0.16F, 0.0F), new(0.3F, 1.0F));
+
 		animation.InsertKeyFrame(0.0F, from);
 		animation.InsertKeyFrame(1.0F, to, easing);
 		animation.Duration = duration;
 		animation.Target = "Scale";
+
 		return new(target, animation, duration);
 	}
 }
