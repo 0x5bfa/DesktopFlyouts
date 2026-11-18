@@ -8,7 +8,7 @@ namespace DesktopFlyouts;
 
 // Only plain values cross XAML threads; XAML layout and dependency properties stay on the owner.
 internal sealed record FlyoutSettings(
-	bool HideOnLostFocus = true,
+	bool IsLightDismissEnabled = true,
 	bool IsSwipeToDismissEnabled = false,
 	double SwipeDismissThreshold = 80,
 	DesktopFlyoutActivationMode ActivationMode = DesktopFlyoutActivationMode.Activate,
@@ -18,7 +18,7 @@ internal sealed record FlyoutSettings(
 {
 	internal void Apply(DesktopFlyout flyout)
 	{
-		flyout.HideOnLostFocus = HideOnLostFocus;
+		flyout.IsLightDismissEnabled = IsLightDismissEnabled;
 		flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
 		flyout.SwipeDismissThreshold = SwipeDismissThreshold;
 		flyout.ActivationMode = ActivationMode;

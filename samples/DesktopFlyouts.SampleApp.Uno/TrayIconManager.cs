@@ -61,7 +61,7 @@ internal partial class TrayIconManager : IDisposable
 			_ => new CustomizableFlyout(),
 		};
 
-		content.HideOnLostFocus = example is not (DesktopFlyoutSampleKind.Button or DesktopFlyoutSampleKind.NotificationCenterStyle or DesktopFlyoutSampleKind.Severity);
+		content.IsLightDismissEnabled = example is not (DesktopFlyoutSampleKind.Button or DesktopFlyoutSampleKind.NotificationCenterStyle or DesktopFlyoutSampleKind.Severity);
 		content.ActivationMode = example switch
 		{
 			DesktopFlyoutSampleKind.Button => DesktopFlyoutActivationMode.NoActivateOnOpen,

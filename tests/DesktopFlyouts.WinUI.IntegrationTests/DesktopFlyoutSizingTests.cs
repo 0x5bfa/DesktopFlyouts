@@ -245,7 +245,7 @@ public sealed class DesktopFlyoutSizingTests
 
 	private static DesktopFlyout CreateFlyout()
 	{
-		var flyout = new DesktopFlyout { IsTransitionAnimationEnabled = false, HideOnLostFocus = false, ActivationMode = DesktopFlyoutActivationMode.NeverActivate };
+		var flyout = new DesktopFlyout { IsTransitionAnimationEnabled = false, IsLightDismissEnabled = false, ActivationMode = DesktopFlyoutActivationMode.NeverActivate };
 		flyout.Islands.Add(new DesktopFlyoutIsland { Content = new Border { Width = 80, Height = 60 } });
 		return flyout;
 	}

@@ -14,7 +14,7 @@ internal partial class RootViewModel : ObservableObject
 	private bool _isModifiable = true;
 	private string? _iconPath;
 	private string? _tooltipText;
-	private bool _hideOnLostFocus;
+	private bool _isLightDismissEnabled;
 	private bool _isSwipeToDismissEnabled;
 	private double _swipeDismissThresholdValue = 80D;
 	private int _selectedActivationModeIndex;
@@ -54,14 +54,14 @@ internal partial class RootViewModel : ObservableObject
 		}
 	}
 
-	internal bool HideOnLostFocus
+	internal bool IsLightDismissEnabled
 	{
-		get => _hideOnLostFocus;
+		get => _isLightDismissEnabled;
 		set
 		{
-			if (SetProperty(ref _hideOnLostFocus, value))
+			if (SetProperty(ref _isLightDismissEnabled, value))
 			{
-				OnHideOnLostFocusChanged(value);
+				OnIsLightDismissEnabledChanged(value);
 			}
 		}
 	}
@@ -171,7 +171,7 @@ internal partial class RootViewModel : ObservableObject
 		IconPath = TrayIconManager.Default.SystemTrayIcon?.IconPath;
 		TooltipText = TrayIconManager.Default.SystemTrayIcon?.Tooltip;
 
-		HideOnLostFocus = true;
+		IsLightDismissEnabled = true;
 
 		ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
 		ActivationModes.Add(DesktopFlyoutActivationMode.NoActivateOnOpen, "No activate on open");
@@ -217,11 +217,11 @@ internal partial class RootViewModel : ObservableObject
 		TrayIconManager.Default.SystemTrayIcon?.Tooltip = value ?? string.Empty;
 	}
 
-	private void OnHideOnLostFocusChanged(bool value)
+	private void OnIsLightDismissEnabledChanged(bool value)
 	{
 		if (IsDefaultFlyoutSelected())
 		{
-			TrayIconManager.Default.Flyout?.HideOnLostFocus = value;
+			TrayIconManager.Default.Flyout?.IsLightDismissEnabled = value;
 		}
 	}
 
@@ -303,7 +303,7 @@ internal partial class RootViewModel : ObservableObject
 		flyout.Width = ToLength(FlyoutWidthValue);
 		flyout.AutoCloseDelay = ToAutoCloseDelay(AutoCloseDelaySecondsValue);
 		flyout.ActivationMode = ActivationModes.ElementAt(SelectedActivationModeIndex).Key;
-		flyout.HideOnLostFocus = HideOnLostFocus;
+		flyout.IsLightDismissEnabled = IsLightDismissEnabled;
 		flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
 		flyout.SwipeDismissThreshold = SwipeDismissThresholdValue;
 	}

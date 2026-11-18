@@ -45,13 +45,13 @@ public partial class DesktopFlyout
 	public static readonly DependencyProperty SwipeDismissThresholdProperty =
 		DependencyProperty.Register(nameof(SwipeDismissThreshold), typeof(double), typeof(DesktopFlyout), new PropertyMetadata(80.0D));
 
-	public partial bool HideOnLostFocus
+	public partial bool IsLightDismissEnabled
 	{
-		get => (bool)GetValue(HideOnLostFocusProperty);
-		set => SetValue(HideOnLostFocusProperty, value);
+		get => (bool)GetValue(IsLightDismissEnabledProperty);
+		set => SetValue(IsLightDismissEnabledProperty, value);
 	}
-	public static readonly DependencyProperty HideOnLostFocusProperty =
-		DependencyProperty.Register(nameof(HideOnLostFocus), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(true));
+	public static readonly DependencyProperty IsLightDismissEnabledProperty =
+		DependencyProperty.Register(nameof(IsLightDismissEnabled), typeof(bool), typeof(DesktopFlyout), new PropertyMetadata(true));
 
 	public partial DesktopFlyoutActivationMode ActivationMode
 	{

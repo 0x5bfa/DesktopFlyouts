@@ -24,7 +24,7 @@ internal partial class RootViewModel : ObservableObject
 	internal partial string? TooltipText { get; set; }
 
 	[ObservableProperty]
-	internal partial bool HideOnLostFocus { get; set; }
+	internal partial bool IsLightDismissEnabled { get; set; }
 
 	[ObservableProperty]
 	internal partial bool IsSwipeToDismissEnabled { get; set; }
@@ -61,7 +61,7 @@ internal partial class RootViewModel : ObservableObject
 		IconPath = TrayIconManager.Default.SystemTrayIcon?.IconPath;
 		TooltipText = TrayIconManager.Default.SystemTrayIcon?.Tooltip;
 
-		HideOnLostFocus = true;
+		IsLightDismissEnabled = true;
 
 		ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
 		ActivationModes.Add(DesktopFlyoutActivationMode.NoActivateOnOpen, "No activate on open");
@@ -104,10 +104,10 @@ internal partial class RootViewModel : ObservableObject
 		TrayIconManager.Default.SystemTrayIcon?.Tooltip = value ?? string.Empty;
 	}
 
-	partial void OnHideOnLostFocusChanged(bool value)
+	partial void OnIsLightDismissEnabledChanged(bool value)
 	{
 		if (IsDefaultFlyoutSelected())
-			TrayIconManager.Default.Flyout?.HideOnLostFocus = value;
+			TrayIconManager.Default.Flyout?.IsLightDismissEnabled = value;
 	}
 
 	partial void OnIsSwipeToDismissEnabledChanged(bool value)
@@ -176,7 +176,7 @@ internal partial class RootViewModel : ObservableObject
 		flyout.Width = ToLength(FlyoutWidthValue);
 		flyout.AutoCloseDelay = ToAutoCloseDelay(AutoCloseDelaySecondsValue);
 		flyout.ActivationMode = ActivationModes.ElementAt(SelectedActivationModeIndex).Key;
-		flyout.HideOnLostFocus = HideOnLostFocus;
+		flyout.IsLightDismissEnabled = IsLightDismissEnabled;
 		flyout.IsSwipeToDismissEnabled = IsSwipeToDismissEnabled;
 		flyout.SwipeDismissThreshold = SwipeDismissThresholdValue;
 	}

@@ -77,7 +77,7 @@ Create the flyout once on the UI thread and reuse it:
 private readonly MainDesktopFlyout _flyout = new()
 {
     ActivationMode = DesktopFlyoutActivationMode.NoActivateOnOpen,
-    HideOnLostFocus = false,
+    IsLightDismissEnabled = false,
 };
 
 private void ToggleFlyout()
@@ -245,7 +245,8 @@ solid fallbacks. Uno uses the library's theme-appropriate solid fallback.
 
 ### Closing and transitions
 
-`HideOnLostFocus` defaults to true. `ActivationMode`, `AutoCloseDelay`,
+`IsLightDismissEnabled` defaults to true and closes the flyout when its host window is deactivated.
+`ActivationMode`, `AutoCloseDelay`,
 `IsTransitionAnimationEnabled`, `IsSwipeToDismissEnabled`, and `SwipeDismissThreshold` configure
 behavior on `DesktopFlyout` itself.
 
@@ -347,12 +348,12 @@ _flyout.Show(DesktopFlyoutPosition.InWorkArea(
 
 ```csharp
 _flyout.ActivationMode = DesktopFlyoutActivationMode.NeverActivate;
-_flyout.HideOnLostFocus = false;
+_flyout.IsLightDismissEnabled = false;
 ```
 
 `NavigateFocus` moves focus into the hosted XAML island unless `NeverActivate` is selected, which
-suppresses focusable states in the content. `HideOnLostFocus="True"` closes the flyout when its host
-is deactivated; set it to `False` for a persistent panel.
+suppresses focusable states in the content. `IsLightDismissEnabled="True"` closes the flyout when
+its host window is deactivated; set it to `False` for a persistent panel.
 
 ### UWP message dispatch
 

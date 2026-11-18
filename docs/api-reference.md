@@ -71,7 +71,7 @@ stretched merely because a child island uses stars.
 | --- | --- | --- | --- | --- |
 | `IsOpen` | `bool` | `false` | Read-only, DP | Becomes `true` after opening completes and `false` after closing completes. Use `TransitionState` to distinguish transitions. |
 | `TransitionState` | `DesktopFlyoutTransitionState` | `Closed` | Read-only | Current lifecycle phase. |
-| `HideOnLostFocus` | `bool` | `true` | Get/set, DP | Closes the flyout when its host is deactivated. |
+| `IsLightDismissEnabled` | `bool` | `true` | Get/set, DP | Enables light dismissal when the host window is deactivated. |
 | `ActivationMode` | `DesktopFlyoutActivationMode` | `Activate` | Get/set, DP | Controls foreground activation and keyboard focus. |
 | `AutoCloseDelay` | `TimeSpan` | `TimeSpan.Zero` | Get/set, DP | Automatic close delay after opening. Zero or negative disables it. Changing the value while open restarts the timer. |
 | `IsTransitionAnimationEnabled` | `bool` | `true` | Get/set, DP | Enables opening and closing animations. Windows hosts also respect the system animation setting. |

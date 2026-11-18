@@ -202,12 +202,12 @@
                         <TextBlock
                             VerticalAlignment="Center"
                             Style="{StaticResource BodyTextBlockStyle}"
-                            Text="Hide on lost focus" />
+                            Text="Light dismiss" />
                         <ToggleSwitch
                             Grid.Column="1"
                             HorizontalAlignment="Left"
                             IsEnabled="{x:Bind ViewModel.IsModifiable, Mode=OneWay}"
-                            IsOn="{x:Bind ViewModel.HideOnLostFocus, Mode=TwoWay}" />
+                            IsOn="{x:Bind ViewModel.IsLightDismissEnabled, Mode=TwoWay}" />
                     </Grid>
                 </Border>
 

@@ -121,7 +121,7 @@ public sealed class DesktopFlyoutLifecycleTests
 		{
 			Width = 160, Height = 80,
 			IsTransitionAnimationEnabled = false,
-			HideOnLostFocus = false,
+			IsLightDismissEnabled = false,
 			ActivationMode = DesktopFlyoutActivationMode.NeverActivate,
 		};
 		flyout.Islands.Add(new DesktopFlyoutIsland { Content = new TextBlock { Text = "Lifecycle regression test" } });

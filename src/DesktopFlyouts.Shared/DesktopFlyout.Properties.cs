@@ -64,11 +64,11 @@ public partial class DesktopFlyout
 	public partial double SwipeDismissThreshold { get; set; }
 
 	/// <summary>
-	/// Gets or sets whether the flyout closes when it loses focus.
+	/// Gets or sets whether the flyout closes when its host window is deactivated (light dismissal).
 	/// </summary>
 	/// <value><see langword="true"/> to close when the host window is deactivated; otherwise, <see langword="false"/>. The default is <see langword="true"/>.</value>
 	[GeneratedDependencyProperty(DefaultValue = true)]
-	public partial bool HideOnLostFocus { get; set; }
+	public partial bool IsLightDismissEnabled { get; set; }
 
 	/// <summary>
 	/// Gets or sets how the flyout participates in activation and focus.

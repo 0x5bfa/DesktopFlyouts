@@ -21,6 +21,8 @@ belong in **Unreleased** until the next release is tagged.
 
 ### Breaking changes
 
+- Rename `HideOnLostFocus` to `IsLightDismissEnabled`, including its dependency property name.
+  Update C# references and XAML bindings; the default remains `true`.
 - Disable scrolling of the root island collection. Content outside the visible viewport is clipped;
   use a `ScrollViewer` inside an island for scrollable content.
 - Make `DesktopFlyout` a nonvisual `DependencyObject, IDisposable` for v3. Keep Show, Hide,

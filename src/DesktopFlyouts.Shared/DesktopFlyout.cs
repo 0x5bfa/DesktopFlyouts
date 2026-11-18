@@ -1755,7 +1755,7 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 
 	private void HostWindow_Inactivated(object? sender, EventArgs e)
 	{
-		if (HideOnLostFocus)
+		if (IsLightDismissEnabled)
 		{
 			Hide();
 		}

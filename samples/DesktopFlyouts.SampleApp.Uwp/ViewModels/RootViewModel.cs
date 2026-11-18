@@ -24,7 +24,7 @@ internal partial class RootViewModel : ObservableObject
 	internal partial string? TooltipText { get; set; }
 
 	[ObservableProperty]
-	internal partial bool HideOnLostFocus { get; set; }
+	internal partial bool IsLightDismissEnabled { get; set; }
 
 	[ObservableProperty]
 	internal partial bool IsSwipeToDismissEnabled { get; set; }
@@ -69,7 +69,7 @@ internal partial class RootViewModel : ObservableObject
 		IconPath = TrayIconManager.Default.SystemTrayIcon?.IconPath;
 		TooltipText = TrayIconManager.Default.SystemTrayIcon?.Tooltip;
 
-		HideOnLostFocus = true;
+		IsLightDismissEnabled = true;
 
 		ActivationModes.Add(DesktopFlyoutActivationMode.Activate, "Activate");
 		ActivationModes.Add(DesktopFlyoutActivationMode.NoActivateOnOpen, "No activate on open");
@@ -133,7 +133,7 @@ internal partial class RootViewModel : ObservableObject
 					IsModifiable = example is DesktopFlyoutSampleKind.Customizable;
 					TrayIconManager.Default.SwitchFlyout(example, GetSettings());
 					break;
-				case nameof(HideOnLostFocus):
+				case nameof(IsLightDismissEnabled):
 				case nameof(IsSwipeToDismissEnabled):
 				case nameof(SwipeDismissThresholdValue):
 				case nameof(SelectedActivationModeIndex):
@@ -157,7 +157,7 @@ internal partial class RootViewModel : ObservableObject
     private FlyoutSettings GetSettings()
     {
         return new(
-        HideOnLostFocus, IsSwipeToDismissEnabled,
+        IsLightDismissEnabled, IsSwipeToDismissEnabled,
         double.IsFinite(SwipeDismissThresholdValue) && SwipeDismissThresholdValue > 0 ? SwipeDismissThresholdValue : 80,
         SelectedActivationModeIndex >= 0 && SelectedActivationModeIndex < ActivationModes.Count
             ? ActivationModes.ElementAt(SelectedActivationModeIndex).Key : DesktopFlyoutActivationMode.Activate,
