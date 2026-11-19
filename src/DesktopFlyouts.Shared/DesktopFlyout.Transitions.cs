@@ -52,6 +52,8 @@ public partial class DesktopFlyout
 
 	private bool AreTransitionAnimationsEnabled => IsTransitionAnimationEnabled && AreSystemAnimationsEnabled;
 
+	private bool IsVerticalDirection => _activePopupDirection is DesktopFlyoutPopupDirection.BottomToTop or DesktopFlyoutPopupDirection.TopToBottom;
+
 	private bool _isPopupAnimationPlaying;
 	private bool _hideAfterOpen;
 	private bool _showAfterClose;
@@ -185,7 +187,7 @@ public partial class DesktopFlyout
 
 			if (AreTransitionAnimationsEnabled)
 			{
-				var animation = CreateFlyoutTranslationAnimation(_activePopupDirection, opening: true);
+				var animation = CreateFlyoutTranslationAnimation(opening: true);
 				_transitionAnimation = animation;
 				animation.Completed += OpenCompositionAnimation_Completed;
 				animation.Start();
@@ -254,7 +256,7 @@ public partial class DesktopFlyout
 
 		if (AreTransitionAnimationsEnabled)
 		{
-			var animation = CreateFlyoutTranslationAnimation(_activePopupDirection, opening: false, fromCurrentTransform: closeFromCurrentTransform);
+			var animation = CreateFlyoutTranslationAnimation(opening: false, fromCurrentTransform: closeFromCurrentTransform);
 			_transitionAnimation = animation;
 			animation.Completed += CloseCompositionAnimation_Completed;
 			animation.Start();
@@ -338,11 +340,11 @@ public partial class DesktopFlyout
 		}
 	}
 
-	private CompositionAnimationOperation CreateFlyoutTranslationAnimation(
-		DesktopFlyoutPopupDirection popupDirection, bool opening, bool fromCurrentTransform = false)
+	private CompositionAnimationOperation CreateFlyoutTranslationAnimation(bool opening, bool fromCurrentTransform = false)
 	{
 		var rootGrid = RootGrid ?? throw new InvalidOperationException($"{PART_RootGrid} is not initialized.");
-		var isVertical = IsVerticalDirection(popupDirection);
+		var popupDirection = _activePopupDirection;
+		var isVertical = IsVerticalDirection;
 #if HAS_UNO
 		// Uno's Visual exposes Offset, while WinUI and UWP expose Translation on UIElement.
 		var targetProperty = isVertical ? "Offset.Y" : "Offset.X";
@@ -453,16 +455,6 @@ public partial class DesktopFlyout
 	private bool ShouldActivateOnOpen()
 	{
 		return ActivationMode is DesktopFlyoutActivationMode.Activate;
-	}
-
-	private static bool IsVerticalDirection(DesktopFlyoutPopupDirection popupDirection)
-	{
-		return popupDirection is DesktopFlyoutPopupDirection.BottomToTop or DesktopFlyoutPopupDirection.TopToBottom;
-	}
-
-	private static double Clamp(double value, double min, double max)
-	{
-		return Math.Min(Math.Max(value, min), Math.Max(min, max));
 	}
 
 	private void SetTransitionState(DesktopFlyoutTransitionState transitionState)

@@ -41,6 +41,15 @@
         <local:DesktopFlyoutIslandsPanel />
     </ItemsPanelTemplate>
 
+    <Style x:Key="DesktopFlyoutPresenterStyle" TargetType="ItemsControl">
+        <Setter Property="Template" Value="{StaticResource DesktopFlyoutPresenterTemplate}" />
+        <Setter Property="ItemsPanel" Value="{StaticResource DesktopFlyoutItemsPanel}" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
     <ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
         <Grid
             x:Name="PART_RootGrid"

@@ -359,7 +359,7 @@ public partial class DesktopFlyout
 			return Math.Min(80.0D, Math.Max(1.0D, GetSwipeDismissMaxDistance()));
 		}
 
-		return Clamp(SwipeDismissThreshold, 1.0D, Math.Max(1.0D, GetSwipeDismissMaxDistance()));
+		return Math.Clamp(SwipeDismissThreshold, 1.0D, Math.Max(1.0D, GetSwipeDismissMaxDistance()));
 	}
 
 	private void AnimateSwipeDismissRestore()
@@ -373,7 +373,7 @@ public partial class DesktopFlyout
 			return;
 		}
 
-		_swipeDismissRestoreAnimation = CreateFlyoutTranslationAnimation(_activePopupDirection, opening: true, fromCurrentTransform: true);
+		_swipeDismissRestoreAnimation = CreateFlyoutTranslationAnimation(opening: true, fromCurrentTransform: true);
 		_swipeDismissRestoreAnimation.Completed += SwipeDismissRestoreAnimation_Completed;
 		_swipeDismissRestoreAnimation.Start();
 	}
@@ -466,7 +466,7 @@ public partial class DesktopFlyout
 			return 1.0D;
 		}
 
-		return Clamp(Presenter.PressedScale, 0.1D, 2.0D);
+		return Math.Clamp(Presenter.PressedScale, 0.1D, 2.0D);
 	}
 
 	private void UpdateFocusSuppression()

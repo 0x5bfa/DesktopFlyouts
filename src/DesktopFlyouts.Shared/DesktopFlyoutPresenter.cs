@@ -33,23 +33,19 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 	internal DesktopFlyoutPresenter(DesktopFlyout owner)
 	{
 		Owner = owner;
-		Style = new Style(typeof(ItemsControl));
-		Template = DesktopFlyoutChromeResources.Get<ControlTemplate>("DesktopFlyoutPresenterTemplate");
-		ItemsPanel = DesktopFlyoutChromeResources.Get<ItemsPanelTemplate>("DesktopFlyoutItemsPanel");
-		IsTabStop = false;
-		Margin = new Thickness(0);
-		Padding = new Thickness(0);
-		BorderThickness = new Thickness(0);
+		Style = DesktopFlyoutChromeResources.Get<Style>("DesktopFlyoutPresenterStyle");
 		ApplyConfiguration();
-		LayoutUpdated += (_, _) =>
+		LayoutUpdated += OnLayoutUpdated;
+	}
+
+	private void OnLayoutUpdated(object? sender, object e)
+	{
+		var size = new SizeSnapshot(DesiredSize.Width, DesiredSize.Height, ActualWidth, ActualHeight);
+		if (size != _lastSize)
 		{
-			var size = new SizeSnapshot(DesiredSize.Width, DesiredSize.Height, ActualWidth, ActualHeight);
-			if (size != _lastSize)
-			{
-				_lastSize = size;
-				LayoutInvalidated?.Invoke(this, EventArgs.Empty);
-			}
-		};
+			_lastSize = size;
+			LayoutInvalidated?.Invoke(this, EventArgs.Empty);
+		}
 	}
 
 	protected override void OnApplyTemplate()
