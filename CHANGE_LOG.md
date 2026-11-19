@@ -9,9 +9,9 @@ belong in **Unreleased** until the next release is tagged.
 
 - Style island borders with `SurfaceStrokeColorDefaultBrush` and 1-DIP thickness in Light and Dark,
   and `SystemColorWindowTextColorBrush` with 2-DIP thickness in high contrast.
-- Use a `Grid` as the island root for its border, corner radius, and shadow, with the content
-  presenter as a direct child. Throw if protected styles or values change unexpectedly. Keep
-  backdrop selection internal.
+- Use a `Grid` as the island root, apply custom brush and thickness resources directly, and keep
+  the content presenter as a direct child. Throw if protected styles or values change
+  unexpectedly. Keep backdrop selection internal.
 - Generate WinRT collection interfaces for direct flyout islands and the sample data source.
   This prevents startup ArgumentException (0x80070057) when assigning ItemsSource with dynamic
   code support disabled, as in the samples' AOT configuration.

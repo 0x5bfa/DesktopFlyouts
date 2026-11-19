@@ -37,7 +37,8 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 	private ContentPresenter? _contentPresenter;
 	private bool _hasItem;
 	private bool _isUpdatingProtectedChrome;
-	private readonly HashSet<Style> _expectedRootStyles = [];
+	private readonly HashSet<Brush> _expectedRootBorderBrushes = [];
+	private readonly HashSet<Thickness> _expectedRootBorderThicknesses = [];
 	private Style? _expectedContentPresenterStyle;
 #if WASDK && !HAS_UNO
 	private Style? _expectedBackdropStyle;
@@ -125,9 +126,13 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		_contentPresenter = GetTemplateChild("PART_MainContentPresenter") as ContentPresenter
 			?? throw new InvalidOperationException("The library island template has no main content presenter.");
 		_contentPresenter.SizeChanged += (_, _) => UpdateContentClip();
-		_expectedRootStyles.Clear();
-		foreach (var style in DesktopFlyoutChromeResources.GetIslandChromeStyles())
-			_expectedRootStyles.Add(style);
+		_expectedRootBorderBrushes.Clear();
+		_expectedRootBorderThicknesses.Clear();
+		foreach (var theme in new[] { "Light", "Dark", "HighContrast" })
+		{
+			_expectedRootBorderBrushes.Add(DesktopFlyoutChromeResources.GetTheme<Brush>(theme, "DesktopFlyoutIslandBorderBrush"));
+			_expectedRootBorderThicknesses.Add(DesktopFlyoutChromeResources.GetTheme<Thickness>(theme, "DesktopFlyoutIslandBorderThickness"));
+		}
 		_expectedContentPresenterStyle = DesktopFlyoutChromeResources.Get<Style>("DesktopFlyoutIslandContentPresenterStyle");
 #if !HAS_UNO
 		_rootShadow = _root.Shadow as ThemeShadow;
@@ -217,9 +222,14 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 			return;
 		}
 
-		if (ReferenceEquals(sender, _root) &&
-			(property == Grid.BorderBrushProperty || property == Grid.BorderThicknessProperty) &&
-			sender.ReadLocalValue(property) == DependencyProperty.UnsetValue)
+		if (ReferenceEquals(sender, _root) && property == Grid.BorderBrushProperty &&
+			sender.GetValue(property) is Brush borderBrush && _expectedRootBorderBrushes.Contains(borderBrush))
+		{
+			_protectedChromeValues[(sender, property)] = sender.GetValue(property);
+			return;
+		}
+		if (ReferenceEquals(sender, _root) && property == Grid.BorderThicknessProperty &&
+			sender.GetValue(property) is Thickness borderThickness && _expectedRootBorderThicknesses.Contains(borderThickness))
 		{
 			_protectedChromeValues[(sender, property)] = sender.GetValue(property);
 			return;
@@ -245,7 +255,7 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 
 	private void ValidateExpectedStyles()
 	{
-		if (_root is not null && !_expectedRootStyles.Contains(_root.Style))
+		if (_root is not null && _root.Style is not null)
 			throw new InvalidOperationException("The island root grid has an unexpected style.");
 		if (_contentPresenter is not null && !ReferenceEquals(_contentPresenter.Style, _expectedContentPresenterStyle))
 			throw new InvalidOperationException("The island content presenter has an unexpected style.");
@@ -258,6 +268,10 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 	private void CaptureCurrentRootBorderValues()
 	{
 		if (_root is null) return;
+		if (!_expectedRootBorderBrushes.Contains(_root.BorderBrush))
+			throw new InvalidOperationException("The island root grid has an unexpected border brush.");
+		if (!_expectedRootBorderThicknesses.Contains(_root.BorderThickness))
+			throw new InvalidOperationException("The island root grid has an unexpected border thickness.");
 		_protectedChromeValues[(_root, Grid.BorderBrushProperty)] = _root.GetValue(Grid.BorderBrushProperty);
 		_protectedChromeValues[(_root, Grid.BorderThicknessProperty)] = _root.GetValue(Grid.BorderThicknessProperty);
 	}

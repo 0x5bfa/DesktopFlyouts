@@ -54,5 +54,7 @@ public partial class DesktopFlyoutIsland : DependencyObject
 	}
 
 	private static void OnIslandSizePropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
-		=> ((DesktopFlyoutIsland)sender).Changed?.Invoke(sender, EventArgs.Empty);
+	{
+		((DesktopFlyoutIsland)sender).Changed?.Invoke(sender, EventArgs.Empty);
+	}
 }

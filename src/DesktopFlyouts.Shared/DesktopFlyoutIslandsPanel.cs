@@ -287,7 +287,10 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 			: Math.Max(0D, Spacing);
 	}
 
-	private double GetResolvedOuterInset() => GetOwnerFlyout() is not null ? DesktopFlyoutChromeMetrics.IslandOuterInset : 0D;
+	private double GetResolvedOuterInset()
+	{
+		return GetOwnerFlyout() is not null ? DesktopFlyoutChromeMetrics.IslandOuterInset : 0D;
+	}
 
 	private static double GetSpacingTotal(int count, double spacing)
 	{

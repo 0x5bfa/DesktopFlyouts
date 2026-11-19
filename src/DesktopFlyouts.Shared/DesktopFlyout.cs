@@ -105,9 +105,9 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	{
 		_islands = new DesktopFlyoutIslandCollection(this);
 		Presenter = new DesktopFlyoutPresenter(this);
-		_hostContainer = new DesktopFlyoutLayoutPanel(Presenter) { Style = new Style(typeof(Panel)), Margin = new Thickness(0) };
+		_hostContainer = new DesktopFlyoutLayoutPanel(Presenter);
 #if !HAS_UNO
-		_hostCanvas = new Canvas { Style = new Style(typeof(Canvas)), Margin = new Thickness(0) };
+		_hostCanvas = new Canvas();
 		_hostCanvas.Children.Add(_hostContainer);
 #endif
 		Presenter.TemplateChanged += Presenter_TemplateChanged;
@@ -124,11 +124,17 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	}
 
 	internal DesktopFlyoutPresenter Presenter { get; }
-	internal bool IsContentSized(bool isVertical) => isVertical
+	internal bool IsContentSized(bool isVertical)
+	{
+		return isVertical
 		? double.IsNaN(Height) && VerticalAlignment is not VerticalAlignment.Stretch
 		: double.IsNaN(Width) && HorizontalAlignment is not HorizontalAlignment.Stretch;
+	}
 
-	internal void OnIslandLayoutChanged() => Presenter_LayoutInvalidated(this, EventArgs.Empty);
+	internal void OnIslandLayoutChanged()
+	{
+		Presenter_LayoutInvalidated(this, EventArgs.Empty);
+	}
 
 #if UWP
 	internal bool IsHostBackdropBrushEnabled => _host?.IsHostBackdropBrushEnabled == true;
@@ -1429,7 +1435,9 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	}
 
 	private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs e)
-		=> UpdateRootScaleCenterPoint();
+	{
+		UpdateRootScaleCenterPoint();
+	}
 
 	private void UpdateRootScaleCenterPoint()
 	{

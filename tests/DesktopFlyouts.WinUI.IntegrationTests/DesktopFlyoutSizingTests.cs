@@ -251,15 +251,23 @@ public sealed class DesktopFlyoutSizingTests
 	}
 
 	private static ItemsControl Presenter(DesktopFlyout flyout)
-		=> (ItemsControl)typeof(DesktopFlyout).GetProperty("Presenter", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(flyout)!;
+	{
+		return (ItemsControl)typeof(DesktopFlyout).GetProperty("Presenter", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(flyout)!;
+	}
 
-	private static DataTemplate Template(string tag) => (DataTemplate)XamlReader.Load($"<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><TextBlock Text='{{Binding}}' Tag='{tag}' Margin='16'/></DataTemplate>");
+	private static DataTemplate Template(string tag)
+	{
+		return (DataTemplate)XamlReader.Load($"<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><TextBlock Text='{{Binding}}' Tag='{tag}' Margin='16'/></DataTemplate>");
+	}
 
 	private sealed class LengthSelector : DataTemplateSelector
 	{
 		public DataTemplate Short { get; set; } = null!;
 		public DataTemplate Long { get; set; } = null!;
-		protected override DataTemplate SelectTemplateCore(object item, DependencyObject container) => ((string)item).Length > 5 ? Long : Short;
+		protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
+		{
+			return ((string)item).Length > 5 ? Long : Short;
+		}
 	}
 
 	private static T? Find<T>(DependencyObject? element) where T : DependencyObject

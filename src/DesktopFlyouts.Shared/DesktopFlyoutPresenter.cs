@@ -100,9 +100,12 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 		ApplyConfiguration();
 	}
 
-	internal double GetMainAxisBudget(bool isVertical) => isVertical
+	internal double GetMainAxisBudget(bool isVertical)
+	{
+		return isVertical
 		? (double.IsNaN(Height) ? MaxHeight : Height)
 		: (double.IsNaN(Width) ? MaxWidth : Width);
+	}
 
 	private static void IsolateScrollInfrastructure(DependencyObject element)
 	{
@@ -116,8 +119,15 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 			IsolateScrollInfrastructure(VisualTreeHelper.GetChild(element, index));
 	}
 
-	protected override bool IsItemItsOwnContainerOverride(object item) => false;
-	protected override DependencyObject GetContainerForItemOverride() => new DesktopFlyoutIslandPresenter(Owner);
+	protected override bool IsItemItsOwnContainerOverride(object item)
+	{
+		return false;
+	}
+
+	protected override DependencyObject GetContainerForItemOverride()
+	{
+		return new DesktopFlyoutIslandPresenter(Owner);
+	}
 
 	protected override void PrepareContainerForItemOverride(DependencyObject element, object item)
 	{

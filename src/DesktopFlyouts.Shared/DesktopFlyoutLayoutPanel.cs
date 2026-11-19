@@ -33,7 +33,10 @@ internal sealed partial class DesktopFlyoutLayoutPanel(DesktopFlyoutPresenter fl
 		Children.Add(flyout);
 	}
 
-	internal void DetachContent() => Children.Clear();
+	internal void DetachContent()
+	{
+		Children.Clear();
+	}
 
 	internal void SetShadowInsets(Thickness insets)
 	{

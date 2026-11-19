@@ -129,7 +129,9 @@ public sealed class DesktopFlyoutLifecycleTests
 	}
 
 	private static ItemsControl GetPresenter(DesktopFlyout flyout)
-		=> (ItemsControl)typeof(DesktopFlyout).GetProperty("Presenter", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(flyout)!;
+	{
+		return (ItemsControl)typeof(DesktopFlyout).GetProperty("Presenter", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(flyout)!;
+	}
 
 	[UITestMethod]
 	[DataRow(false)]

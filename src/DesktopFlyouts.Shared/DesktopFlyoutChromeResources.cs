@@ -27,14 +27,13 @@ internal static class DesktopFlyoutChromeResources
 #endif
 	};
 
-	internal static T Get<T>(string key) => (T)Resources[key];
+	internal static T Get<T>(string key)
+	{
+		return (T)Resources[key];
+	}
 
-	internal static T GetTheme<T>(string themeKey, string key) => (T)((ResourceDictionary)Resources.ThemeDictionaries[themeKey])[key];
-
-	internal static Style[] GetIslandChromeStyles() =>
-	[
-		GetTheme<Style>("Light", "DesktopFlyoutIslandChromeStyle"),
-		GetTheme<Style>("Dark", "DesktopFlyoutIslandChromeStyle"),
-		GetTheme<Style>("HighContrast", "DesktopFlyoutIslandChromeStyle"),
-	];
+	internal static T GetTheme<T>(string themeKey, string key)
+	{
+		return (T)((ResourceDictionary)Resources.ThemeDictionaries[themeKey])[key];
+	}
 }

@@ -6,22 +6,16 @@
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
-                <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
-                <Setter Property="BorderThickness" Value="1,1,1,1" />
-            </Style>
+            <SolidColorBrush x:Key="DesktopFlyoutIslandBorderBrush" Color="{ThemeResource SurfaceStrokeColorDefault}" />
+            <Thickness x:Key="DesktopFlyoutIslandBorderThickness">1,1,1,1</Thickness>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
-                <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
-                <Setter Property="BorderThickness" Value="1,1,1,1" />
-            </Style>
+            <SolidColorBrush x:Key="DesktopFlyoutIslandBorderBrush" Color="{ThemeResource SurfaceStrokeColorDefault}" />
+            <Thickness x:Key="DesktopFlyoutIslandBorderThickness">1,1,1,1</Thickness>
         </ResourceDictionary>
         <ResourceDictionary x:Key="HighContrast">
-            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
-                <Setter Property="BorderBrush" Value="{ThemeResource SystemColorWindowTextColorBrush}" />
-                <Setter Property="BorderThickness" Value="2,2,2,2" />
-            </Style>
+            <SolidColorBrush x:Key="DesktopFlyoutIslandBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <Thickness x:Key="DesktopFlyoutIslandBorderThickness">2,2,2,2</Thickness>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
@@ -50,8 +44,10 @@
     <ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
         <Grid
             x:Name="PART_RootGrid"
-            CornerRadius="8"
-            Style="{ThemeResource DesktopFlyoutIslandChromeStyle}"
+            BorderBrush="{ThemeResource DesktopFlyoutIslandBorderBrush}"
+            BorderThickness="{ThemeResource DesktopFlyoutIslandBorderThickness}"
+            CornerRadius="{StaticResource OverlayCornerRadius}"
+            Style="{x:Null}"
             Translation="0,0,36">
             <Grid.Shadow>
                 <ThemeShadow />

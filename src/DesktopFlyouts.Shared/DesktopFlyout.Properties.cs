@@ -89,7 +89,9 @@ public partial class DesktopFlyout
 	}
 
 	private static void OnAutoCloseDelayPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
-		=> ((DesktopFlyout)sender).RestartAutoCloseTimer();
+	{
+		((DesktopFlyout)sender).RestartAutoCloseTimer();
+	}
 
 	partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
@@ -121,67 +123,100 @@ public partial class DesktopFlyout
 	[GeneratedDependencyProperty]
 	public partial DataTemplate? IslandTemplate { get; set; }
 
-	partial void OnIslandTemplatePropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+	partial void OnIslandTemplatePropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnConfigurationChanged();
+	}
 
 	/// <summary>Gets or sets the selector for item content templates.</summary>
 	[GeneratedDependencyProperty]
 	public partial DataTemplateSelector? IslandTemplateSelector { get; set; }
 
-	partial void OnIslandTemplateSelectorPropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+	partial void OnIslandTemplateSelectorPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnConfigurationChanged();
+	}
 
 	/// <summary>Gets or sets the direction of island layout.</summary>
 	[GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
 	public partial Orientation IslandsOrientation { get; set; }
 
-	partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+	partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnConfigurationChanged();
+	}
 
 	/// <summary>Gets or sets the requested width in DIPs; NaN means Auto.</summary>
 	[GeneratedDependencyProperty(DefaultValue = double.NaN)]
 	public partial double Width { get; set; }
 
-	partial void OnWidthPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(WidthProperty, e, true, false);
+	partial void OnWidthPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnDimensionChanged(WidthProperty, e, true, false);
+	}
 
 	/// <summary>Gets or sets the requested height in DIPs; NaN means Auto.</summary>
 	[GeneratedDependencyProperty(DefaultValue = double.NaN)]
 	public partial double Height { get; set; }
 
-	partial void OnHeightPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(HeightProperty, e, true, false);
+	partial void OnHeightPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnDimensionChanged(HeightProperty, e, true, false);
+	}
 
 	/// <summary>Gets or sets the minimum requested width in DIPs.</summary>
 	[GeneratedDependencyProperty(DefaultValue = 0D)]
 	public partial double MinWidth { get; set; }
 
-	partial void OnMinWidthPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(MinWidthProperty, e, false, false);
+	partial void OnMinWidthPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnDimensionChanged(MinWidthProperty, e, false, false);
+	}
 
 	/// <summary>Gets or sets the minimum requested height in DIPs.</summary>
 	[GeneratedDependencyProperty(DefaultValue = 0D)]
 	public partial double MinHeight { get; set; }
 
-	partial void OnMinHeightPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(MinHeightProperty, e, false, false);
+	partial void OnMinHeightPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnDimensionChanged(MinHeightProperty, e, false, false);
+	}
 
 	/// <summary>Gets or sets the maximum requested width in DIPs.</summary>
 	[GeneratedDependencyProperty(DefaultValue = double.PositiveInfinity)]
 	public partial double MaxWidth { get; set; }
 
-	partial void OnMaxWidthPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(MaxWidthProperty, e, false, true);
+	partial void OnMaxWidthPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnDimensionChanged(MaxWidthProperty, e, false, true);
+	}
 
 	/// <summary>Gets or sets the maximum requested height in DIPs.</summary>
 	[GeneratedDependencyProperty(DefaultValue = double.PositiveInfinity)]
 	public partial double MaxHeight { get; set; }
 
-	partial void OnMaxHeightPropertyChanged(DependencyPropertyChangedEventArgs e) => OnDimensionChanged(MaxHeightProperty, e, false, true);
+	partial void OnMaxHeightPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnDimensionChanged(MaxHeightProperty, e, false, true);
+	}
 
 	/// <summary>Gets or sets sizing alignment; Stretch fills an automatic width.</summary>
 	[GeneratedDependencyProperty(DefaultValue = HorizontalAlignment.Left)]
 	public partial HorizontalAlignment HorizontalAlignment { get; set; }
 
-	partial void OnHorizontalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+	partial void OnHorizontalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnConfigurationChanged();
+	}
 
 	/// <summary>Gets or sets sizing alignment; Stretch fills an automatic height.</summary>
 	[GeneratedDependencyProperty(DefaultValue = VerticalAlignment.Top)]
 	public partial VerticalAlignment VerticalAlignment { get; set; }
 
-	partial void OnVerticalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e) => OnConfigurationChanged();
+	partial void OnVerticalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		OnConfigurationChanged();
+	}
 
 	private void OnDimensionChanged(DependencyProperty property, DependencyPropertyChangedEventArgs e, bool allowAuto, bool allowInfinity)
 	{

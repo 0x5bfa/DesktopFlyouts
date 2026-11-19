@@ -6,22 +6,16 @@
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
-                <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
-                <Setter Property="BorderThickness" Value="1,1,1,1" />
-            </Style>
+            <SolidColorBrush x:Key="DesktopFlyoutIslandBorderBrush" Color="{ThemeResource SurfaceStrokeColorDefault}" />
+            <Thickness x:Key="DesktopFlyoutIslandBorderThickness">1,1,1,1</Thickness>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
-                <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
-                <Setter Property="BorderThickness" Value="1,1,1,1" />
-            </Style>
+            <SolidColorBrush x:Key="DesktopFlyoutIslandBorderBrush" Color="{ThemeResource SurfaceStrokeColorDefault}" />
+            <Thickness x:Key="DesktopFlyoutIslandBorderThickness">1,1,1,1</Thickness>
         </ResourceDictionary>
         <ResourceDictionary x:Key="HighContrast">
-            <Style x:Key="DesktopFlyoutIslandChromeStyle" TargetType="Grid">
-                <Setter Property="BorderBrush" Value="{ThemeResource SystemColorWindowTextColorBrush}" />
-                <Setter Property="BorderThickness" Value="2,2,2,2" />
-            </Style>
+            <SolidColorBrush x:Key="DesktopFlyoutIslandBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <Thickness x:Key="DesktopFlyoutIslandBorderThickness">2,2,2,2</Thickness>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
@@ -52,7 +46,9 @@
     <ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
         <Grid
             x:Name="PART_RootGrid"
-            Style="{ThemeResource DesktopFlyoutIslandChromeStyle}"
+            Style="{x:Null}"
+            BorderBrush="{ThemeResource DesktopFlyoutIslandBorderBrush}"
+            BorderThickness="{ThemeResource DesktopFlyoutIslandBorderThickness}"
             CornerRadius="8">
             <ContentPresenter
                 x:Name="PART_MainContentPresenter"

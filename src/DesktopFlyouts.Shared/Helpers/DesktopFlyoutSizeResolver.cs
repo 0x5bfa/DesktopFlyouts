@@ -15,5 +15,8 @@ internal static class DesktopFlyoutSizeResolver
 		return Math.Min(available, length);
 	}
 
-	internal static double NormalizeMargin(double value) => double.IsFinite(value) ? Math.Max(0, value) : 0;
+	internal static double NormalizeMargin(double value)
+	{
+		return double.IsFinite(value) ? Math.Max(0, value) : 0;
+	}
 }
