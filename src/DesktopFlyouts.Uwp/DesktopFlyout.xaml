@@ -25,10 +25,10 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
+    <Style x:Key="DesktopFlyoutIslandContentPresenterStyle" TargetType="ContentPresenter" />
+
     <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
-        <Grid
-            x:Name="PART_RootGrid"
-            TabFocusNavigation="Cycle">
+        <Grid x:Name="PART_RootGrid" TabFocusNavigation="Cycle">
             <ScrollViewer
                 x:Name="PART_ScrollViewer"
                 HorizontalContentAlignment="Stretch"
@@ -50,8 +50,12 @@
     <ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
         <Grid
             x:Name="PART_RootGrid"
+            CornerRadius="8"
             Style="{ThemeResource DesktopFlyoutIslandChromeStyle}"
-            CornerRadius="8">
+            Translation="0,0,36">
+            <Grid.Shadow>
+                <ThemeShadow />
+            </Grid.Shadow>
             <ContentPresenter
                 x:Name="PART_MainContentPresenter"
                 Margin="0"
@@ -59,10 +63,13 @@
                 VerticalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
+                BorderBrush="Transparent"
+                BorderThickness="0"
                 Content="{TemplateBinding Content}"
                 ContentTemplate="{TemplateBinding ContentTemplate}"
                 ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
-                CornerRadius="7" />
+                CornerRadius="7"
+                Style="{StaticResource DesktopFlyoutIslandContentPresenterStyle}" />
         </Grid>
     </ControlTemplate>
 

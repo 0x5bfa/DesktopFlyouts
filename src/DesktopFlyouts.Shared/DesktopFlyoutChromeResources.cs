@@ -16,18 +16,25 @@ internal static class DesktopFlyoutChromeResources
 	[ThreadStatic]
 	private static ResourceDictionary? s_resources;
 
-	internal static T Get<T>(string key)
+	private static ResourceDictionary Resources => s_resources ??= new ResourceDictionary
 	{
-		s_resources ??= new ResourceDictionary
-		{
 #if UWP
-			Source = new Uri("ms-appx:///DesktopFlyouts.Uwp/DesktopFlyout.xaml"),
+		Source = new Uri("ms-appx:///DesktopFlyouts.Uwp/DesktopFlyout.xaml"),
 #elif HAS_UNO
-			Source = new Uri("ms-appx:///Themes/DesktopFlyout.xaml"),
+		Source = new Uri("ms-appx:///Themes/DesktopFlyout.xaml"),
 #else
-			Source = new Uri("ms-appx:///DesktopFlyouts.WinUI/DesktopFlyout.xaml"),
+		Source = new Uri("ms-appx:///DesktopFlyouts.WinUI/DesktopFlyout.xaml"),
 #endif
-		};
-		return (T)s_resources[key];
-	}
+	};
+
+	internal static T Get<T>(string key) => (T)Resources[key];
+
+	internal static T GetTheme<T>(string themeKey, string key) => (T)((ResourceDictionary)Resources.ThemeDictionaries[themeKey])[key];
+
+	internal static Style[] GetIslandChromeStyles() =>
+	[
+		GetTheme<Style>("Light", "DesktopFlyoutIslandChromeStyle"),
+		GetTheme<Style>("Dark", "DesktopFlyoutIslandChromeStyle"),
+		GetTheme<Style>("HighContrast", "DesktopFlyoutIslandChromeStyle"),
+	];
 }

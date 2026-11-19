@@ -25,6 +25,8 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
+    <Style x:Key="DesktopFlyoutIslandContentPresenterStyle" TargetType="ContentPresenter" />
+
     <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
         <Grid
             x:Name="PART_RootGrid"
@@ -54,6 +56,7 @@
             CornerRadius="8">
             <ContentPresenter
                 x:Name="PART_MainContentPresenter"
+                Style="{StaticResource DesktopFlyoutIslandContentPresenterStyle}"
                 Margin="0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
@@ -62,6 +65,8 @@
                 Content="{TemplateBinding Content}"
                 ContentTemplate="{TemplateBinding ContentTemplate}"
                 ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                BorderBrush="Transparent"
+                BorderThickness="0"
                 CornerRadius="7" />
         </Grid>
     </ControlTemplate>
