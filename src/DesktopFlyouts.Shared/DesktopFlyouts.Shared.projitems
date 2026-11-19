@@ -40,6 +40,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\CompositionTransitionHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Events.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Layout.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Transitions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Interaction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Properties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutPresenter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandPresenter.cs" />
