@@ -23,17 +23,7 @@
 
     <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="local:DesktopFlyoutPresenter">
         <Grid x:Name="PART_RootGrid" TabFocusNavigation="Cycle">
-            <ScrollViewer
-                x:Name="PART_ScrollViewer"
-                HorizontalContentAlignment="Stretch"
-                VerticalContentAlignment="Stretch"
-                HorizontalScrollBarVisibility="Disabled"
-                HorizontalScrollMode="Disabled"
-                VerticalScrollBarVisibility="Disabled"
-                VerticalScrollMode="Disabled"
-                ZoomMode="Disabled">
-                <ItemsPresenter x:Name="PART_ItemsPresenter" />
-            </ScrollViewer>
+            <ItemsPresenter x:Name="PART_ItemsPresenter" />
         </Grid>
     </ControlTemplate>
 

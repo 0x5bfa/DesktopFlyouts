@@ -35,86 +35,18 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 		DefaultStyleKey = typeof(DesktopFlyoutPresenter);
 		Owner = owner;
 
-		//Style = DesktopFlyoutChromeResources.Get<Style>("DesktopFlyoutPresenterStyle");
 		ApplyConfiguration();
 		LayoutUpdated += OnLayoutUpdated;
-	}
-
-	private void OnLayoutUpdated(object? sender, object e)
-	{
-		var size = new SizeSnapshot(DesiredSize.Width, DesiredSize.Height, ActualWidth, ActualHeight);
-		if (size != _lastSize)
-		{
-			_lastSize = size;
-			LayoutInvalidated?.Invoke(this, EventArgs.Empty);
-		}
 	}
 
 	protected override void OnApplyTemplate()
 	{
 		base.OnApplyTemplate();
+
 		RootGrid = GetTemplateChild("PART_RootGrid") as Grid
 			?? throw new InvalidOperationException("The library flyout template has no root grid.");
 
-		if (GetTemplateChild("PART_ScrollViewer") is ScrollViewer scroll)
-		{
-			scroll.Style = new Style(typeof(ScrollViewer));
-			// Extend the viewport into the host's shadow allowance so island shadows
-			// remain visible beyond the panel's outer inset.
-			var shadowInset = DesktopFlyoutChromeMetrics.ShadowMargin;
-			scroll.Margin = new Thickness(-shadowInset);
-			scroll.Padding = new Thickness(0);
-			scroll.Background = null;
-			scroll.BorderThickness = new Thickness(0);
-			IsolateScrollInfrastructure(scroll);
-		}
-		if (GetTemplateChild("PART_ItemsPresenter") is ItemsPresenter itemsPresenter)
-			itemsPresenter.Style = new Style(typeof(ItemsPresenter));
 		TemplateChanged?.Invoke(this, EventArgs.Empty);
-	}
-
-	internal void ApplyConfiguration()
-	{
-		MinWidth = Math.Min(Owner.MinWidth, _viewportLimit.Width);
-		MinHeight = Math.Min(Owner.MinHeight, _viewportLimit.Height);
-		MaxWidth = Math.Min(Math.Max(Owner.MinWidth, Owner.MaxWidth), _viewportLimit.Width);
-		MaxHeight = Math.Min(Math.Max(Owner.MinHeight, Owner.MaxHeight), _viewportLimit.Height);
-		Width = double.IsNaN(Owner.Width) ? double.NaN : Math.Clamp(Owner.Width, MinWidth, MaxWidth);
-		Height = double.IsNaN(Owner.Height) ? double.NaN : Math.Clamp(Owner.Height, MinHeight, MaxHeight);
-		HorizontalAlignment = Owner.HorizontalAlignment;
-		VerticalAlignment = Owner.VerticalAlignment;
-		ItemTemplate = Owner.IslandTemplate;
-		ItemTemplateSelector = Owner.IslandTemplateSelector;
-		var source = Owner.IslandsSource ?? Owner.Islands;
-		if (!ReferenceEquals(ItemsSource, source)) ItemsSource = source;
-		foreach (var container in _containers) container.RefreshContent();
-		InvalidateLayout();
-	}
-
-	internal void SetViewportLimit(Size size)
-	{
-		if (_viewportLimit == size) return;
-		_viewportLimit = size;
-		ApplyConfiguration();
-	}
-
-	internal double GetMainAxisBudget(bool isVertical)
-	{
-		return isVertical
-		? (double.IsNaN(Height) ? MaxHeight : Height)
-		: (double.IsNaN(Width) ? MaxWidth : Width);
-	}
-
-	private static void IsolateScrollInfrastructure(DependencyObject element)
-	{
-		// Keep application implicit styles out of the framework's scrolling visuals,
-		// while leaving the actual item content free to inherit application resources.
-		if (element is ItemsPresenter) return;
-		if (element is FrameworkElement frameworkElement && frameworkElement.ReadLocalValue(StyleProperty) == DependencyProperty.UnsetValue)
-			frameworkElement.Style = new Style(frameworkElement.GetType());
-		if (element is Control control) control.ApplyTemplate();
-		for (var index = 0; index < VisualTreeHelper.GetChildrenCount(element); index++)
-			IsolateScrollInfrastructure(VisualTreeHelper.GetChild(element, index));
 	}
 
 	protected override bool IsItemItsOwnContainerOverride(object item)
@@ -147,6 +79,48 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 	{
 		base.OnItemsChanged(e);
 		InvalidateLayout();
+	}
+
+	private void OnLayoutUpdated(object? sender, object e)
+	{
+		var size = new SizeSnapshot(DesiredSize.Width, DesiredSize.Height, ActualWidth, ActualHeight);
+		if (size != _lastSize)
+		{
+			_lastSize = size;
+			LayoutInvalidated?.Invoke(this, EventArgs.Empty);
+		}
+	}
+
+	internal void ApplyConfiguration()
+	{
+		MinWidth = Math.Min(Owner.MinWidth, _viewportLimit.Width);
+		MinHeight = Math.Min(Owner.MinHeight, _viewportLimit.Height);
+		MaxWidth = Math.Min(Math.Max(Owner.MinWidth, Owner.MaxWidth), _viewportLimit.Width);
+		MaxHeight = Math.Min(Math.Max(Owner.MinHeight, Owner.MaxHeight), _viewportLimit.Height);
+		Width = double.IsNaN(Owner.Width) ? double.NaN : Math.Clamp(Owner.Width, MinWidth, MaxWidth);
+		Height = double.IsNaN(Owner.Height) ? double.NaN : Math.Clamp(Owner.Height, MinHeight, MaxHeight);
+		HorizontalAlignment = Owner.HorizontalAlignment;
+		VerticalAlignment = Owner.VerticalAlignment;
+		ItemTemplate = Owner.IslandTemplate;
+		ItemTemplateSelector = Owner.IslandTemplateSelector;
+		var source = Owner.IslandsSource ?? Owner.Islands;
+		if (!ReferenceEquals(ItemsSource, source)) ItemsSource = source;
+		foreach (var container in _containers) container.RefreshContent();
+		InvalidateLayout();
+	}
+
+	internal void SetViewportLimit(Size size)
+	{
+		if (_viewportLimit == size) return;
+		_viewportLimit = size;
+		ApplyConfiguration();
+	}
+
+	internal double GetMainAxisBudget(bool isVertical)
+	{
+		return isVertical
+		? (double.IsNaN(Height) ? MaxHeight : Height)
+		: (double.IsNaN(Width) ? MaxWidth : Width);
 	}
 
 	internal void InvalidateLayout()
