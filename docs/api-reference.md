@@ -204,6 +204,21 @@ are unavailable. The flyout follows icon movement and desktop layout changes.
 Uno's StatusNotifierItem implementation does not provide icon bounds, so this factory cannot
 produce a usable initial anchor there. Use `ForAnchor` with the tray event's screen point instead.
 
+### FromTrayIconBounds
+
+```csharp
+public static DesktopFlyoutPosition FromTrayIconBounds(Func<Rectangle?> getBounds);
+```
+
+Use this factory for a tray icon registered by your app or another library. The flyout calls
+`getBounds` on its owning UI thread to retrieve the current icon rectangle in physical screen
+pixels. Return `null` when bounds are unavailable. Throws `ArgumentNullException` if `getBounds`
+is `null`.
+
+The request uses the same live placement rules as `ForTrayIcon`. The first lookup must return
+a rectangle with positive width and height for `Show` to open the flyout. Later lookup failures
+retain the last valid anchor while the flyout is open.
+
 ### InWorkArea
 
 ```csharp

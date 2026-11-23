@@ -144,7 +144,7 @@ public sealed class DesktopFlyoutLifecycleTests
 		var area = Microsoft.UI.Windowing.DisplayArea.Primary.WorkArea;
 		Rectangle? bounds = new Rectangle(area.X + area.Width / 3, area.Y + area.Height / 3, 24, 24);
 		var reads = 0;
-		var request = CreateTrayRequest(() => { reads++; return bounds; });
+		var request = DesktopFlyoutPosition.FromTrayIconBounds(() => { reads++; return bounds; });
 		var openings = 0;
 		flyout.TransitionStateChanged += (_, _) => { if (flyout.TransitionState is DesktopFlyoutTransitionState.Opening) { openings++; } };
 		flyout.Show(request);
@@ -183,19 +183,10 @@ public sealed class DesktopFlyoutLifecycleTests
 	{
 		using var flyout = CreateFlyout();
 		var reads = 0;
-		flyout.Show(CreateTrayRequest(() => { reads++; return null; }));
+		flyout.Show(DesktopFlyoutPosition.FromTrayIconBounds(() => { reads++; return null; }));
 		await Task.Delay(400);
 		Assert.AreEqual(DesktopFlyoutTransitionState.Closed, flyout.TransitionState);
 		Assert.AreEqual(1, reads);
-	}
-
-	private static DesktopFlyoutPosition CreateTrayRequest(Func<Rectangle?> readBounds)
-	{
-		// Replace only the shell bounds source. The actual library, XAML host, dispatcher,
-		// sampler, transitions, and backdrop lifecycle all run normally.
-		var factory = typeof(DesktopFlyoutPosition).GetMethod("FromTrayIconBounds", BindingFlags.NonPublic | BindingFlags.Static);
-		Assert.IsNotNull(factory);
-		return (DesktopFlyoutPosition)factory.Invoke(null, new object[] { readBounds })!;
 	}
 
 	private static async Task WaitForState(DesktopFlyout flyout, DesktopFlyoutTransitionState expected)

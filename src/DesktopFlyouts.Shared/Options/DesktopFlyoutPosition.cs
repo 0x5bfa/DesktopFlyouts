@@ -127,7 +127,18 @@ public sealed class DesktopFlyoutPosition
 			transitionDirection: DesktopFlyoutPopupDirection.Auto);
 	}
 
-	internal static DesktopFlyoutPosition FromTrayIconBounds(Func<Rectangle?> getBounds)
+	/// <summary>
+	/// Creates a position request that follows a tray icon registered by the caller or another library.
+	/// </summary>
+	/// <param name="getBounds">
+	/// A callback that returns the current icon bounds in physical screen pixels, or <see langword="null"/>
+	/// when the bounds are unavailable. The flyout calls it on its owning UI thread.
+	/// </param>
+	/// <remarks>
+	/// Showing the flyout requires bounds with positive width and height. While open, the flyout
+	/// retains the last valid bounds if the callback temporarily cannot locate the icon.
+	/// </remarks>
+	public static DesktopFlyoutPosition FromTrayIconBounds(Func<Rectangle?> getBounds)
 	{
 		ArgumentNullException.ThrowIfNull(getBounds);
 		return new DesktopFlyoutPosition(null, true, DesktopFlyoutAnchorSide.Above,

@@ -317,6 +317,13 @@ The icon must have shell-reported bounds when first shown, or the show request i
 temporary lookup failure while open retains the last known anchor. The caller continues to own
 the tray icon.
 
+For an icon registered by your app or another library, supply a callback that returns its
+current bounds in physical screen pixels. Return `null` when the bounds are unavailable.
+
+```csharp
+_flyout.Show(DesktopFlyoutPosition.FromTrayIconBounds(GetTrayIconBounds));
+```
+
 Placement uses a detected taskbar edge and opens toward the work area. If edge detection fails,
 it estimates a side from the nearest monitor edge; if monitor bounds are also unavailable, it uses
 `Above`. Supported geometry includes Windows shell taskbars and X11 panels publishing EWMH struts;

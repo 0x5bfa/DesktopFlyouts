@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v3.1.0)
+
+Add `DesktopFlyoutPosition.FromTrayIconBounds` for tray icons registered by your app or another
+library. Supply a callback that returns the icon's current bounds in physical screen pixels.
+Open flyouts follow the icon as it moves and retain the last valid bounds during temporary lookup
+failures.
+
+[Full changelog](https://github.com/0x5bfa/DesktopFlyouts/compare/v3.0.0...v3.1.0)
+
 ## [3.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v3.0.0)
 
 DesktopFlyouts 3.0 introduces a simpler flyout model with consistent appearance, data-bound

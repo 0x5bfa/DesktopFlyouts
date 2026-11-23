@@ -22,7 +22,7 @@
 		<PackageId>DesktopFlyouts.Uwp</PackageId>
 		<Title>DesktopFlyouts.Uwp</Title>
 		<Authors>0x5BFA</Authors>
-		<Version>3.0.0</Version>
+		<Version>3.1.0</Version>
 		<Description>WinUI library for showing desktop flyouts from tray icons or programmatically.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
