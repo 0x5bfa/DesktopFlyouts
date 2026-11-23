@@ -12,7 +12,6 @@ internal static class DesktopFlyoutChromeMetrics
 	internal const double ScreenEdgeGap = 12;
 	internal const double ShadowMargin = 12;
 	internal const double IslandSpacing = 12;
-	internal const double IslandOuterInset = 12;
 
 	internal static Rectangle InsetWorkArea(Rectangle area, double scale)
 	{

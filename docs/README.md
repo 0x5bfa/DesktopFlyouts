@@ -233,8 +233,8 @@ reopening it. Changes during opening are applied after the transition.
 ### Consistent outer appearance
 
 The library owns the background material, 1-DIP border, 8-DIP corner radius, shadow, 12-DIP island
-spacing and outer inset, a 12-DIP shadow margin, and a 12-DIP visible screen-edge gap. Presenter
-styles, container styles, custom frame templates, backdrop selection,
+spacing, a 12-DIP shadow margin outside the presenter, and a 12-DIP visible screen-edge gap. The
+islands panel adds no outer inset. Presenter styles, container styles, custom frame templates, backdrop selection,
 and outer margin overrides are not part of the public flyout API.
 
 Applications control the content inside each frame, including its padding and colors. Content is

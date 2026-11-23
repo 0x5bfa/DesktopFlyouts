@@ -82,12 +82,12 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		var availableLength = GetLength(availableSize, isVertical);
 		if (GetOwnerFlyout() is DesktopFlyout owner)
 			availableLength = Math.Min(availableLength, owner.Presenter.GetMainAxisBudget(isVertical));
-		var inset = items.Count > 0 ? GetResolvedOuterInset() : 0D;
-		var availableCross = Math.Max(0D, GetCrossLength(availableSize, isVertical) - 2D * inset);
+		// The host layout reserves shadow space outside the presenter.
+		var availableCross = Math.Max(0D, GetCrossLength(availableSize, isVertical));
 		var hasFiniteLength = !double.IsInfinity(availableLength);
 		var allocateStars = hasFiniteLength && GetOwnerFlyout()?.IsContentSized(isVertical) != true;
 		var itemAvailableLength = hasFiniteLength
-			? Math.Max(0D, availableLength - 2D * inset - spacingTotal)
+			? Math.Max(0D, availableLength - spacingTotal)
 			: double.PositiveInfinity;
 		var fixedLength = 0D;
 		var autoLength = 0D;
@@ -142,8 +142,8 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 			desiredCross = Math.Max(desiredCross, GetCrossLength(item.Element.DesiredSize, isVertical));
 		}
 
-		var desiredLength = 2D * inset + fixedLength + autoLength + starLength + spacingTotal;
-		return CreateSize(desiredCross + 2D * inset, desiredLength, isVertical);
+		var desiredLength = fixedLength + autoLength + starLength + spacingTotal;
+		return CreateSize(desiredCross, desiredLength, isVertical);
 	}
 
 	private Size ArrangeStack(Size finalSize, bool isVertical)
@@ -152,8 +152,7 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		var spacing = GetResolvedSpacing();
 		var spacingTotal = GetSpacingTotal(items.Count, spacing);
 		var finalLength = GetLength(finalSize, isVertical);
-		var inset = items.Count > 0 ? GetResolvedOuterInset() : 0D;
-		var finalCross = Math.Max(0D, GetCrossLength(finalSize, isVertical) - 2D * inset);
+		var finalCross = Math.Max(0D, GetCrossLength(finalSize, isVertical));
 		var fixedLength = 0D;
 		var autoLength = 0D;
 		var starWeight = 0D;
@@ -174,8 +173,8 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 			}
 		}
 
-		var remainingLength = Math.Max(0D, finalLength - 2D * inset - fixedLength - autoLength - spacingTotal);
-		var offset = inset;
+		var remainingLength = Math.Max(0D, finalLength - fixedLength - autoLength - spacingTotal);
+		var offset = 0D;
 
 		foreach (var item in items)
 		{
@@ -185,7 +184,7 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 					? GetLength(item.Element.DesiredSize, isVertical)
 					: Math.Max(0D, item.Length.Value);
 
-			item.Element.Arrange(CreateRect(offset, inset, finalCross, length, isVertical));
+			item.Element.Arrange(CreateRect(offset, 0D, finalCross, length, isVertical));
 			offset += length + spacing;
 		}
 
@@ -285,11 +284,6 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		return double.IsNaN(Spacing) || double.IsInfinity(Spacing)
 			? 0D
 			: Math.Max(0D, Spacing);
-	}
-
-	private double GetResolvedOuterInset()
-	{
-		return GetOwnerFlyout() is not null ? DesktopFlyoutChromeMetrics.IslandOuterInset : 0D;
 	}
 
 	private static double GetSpacingTotal(int count, double spacing)

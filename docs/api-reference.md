@@ -80,8 +80,8 @@ stretched merely because a child island uses stars.
 
 Background, border, corner radius, shadow, outer margin, presenter/container styles, and templates
 are not public configuration points. Library chrome uses a private dictionary, system theme and
-accessibility behavior, 12-DIP island spacing and outer insets, a 12-DIP visible screen-edge gap,
-and a separately reserved 12-DIP shadow margin.
+accessibility behavior, 12-DIP island spacing, a 12-DIP visible screen-edge gap, and a separately
+reserved 12-DIP shadow margin outside the presenter. The islands panel adds no outer inset.
 There are no inherited FrameworkElement dimensions, DataContext, Resources, or Style on this type.
 
 ### Methods

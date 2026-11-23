@@ -15,10 +15,11 @@ belong in **Unreleased** until the next release is tagged.
 - Generate WinRT collection interfaces for direct flyout islands and the sample data source.
   This prevents startup ArgumentException (0x80070057) when assigning ItemsSource with dynamic
   code support disabled, as in the samples' AOT configuration.
-- Reserve 12-DIP gaps between islands and 12-DIP outer insets in the islands panel so the
-  shadows have room without adding extra gaps. Expand the scroll clip into the host's shadow
-  allowance, keep the presenter at zero padding and margin, and reconnect WinUI backdrop
-  targets after the flyout host becomes visible.
+- Reserve 12-DIP gaps between islands and keep the 12-DIP shadow allowance in the host layout.
+  Remove the islands panel's outer inset so removing the root ScrollViewer and its negative
+  margin does not move islands inward or reduce their available size. Keep the presenter at
+  zero padding and margin, and reconnect WinUI backdrop targets after the flyout host becomes
+  visible.
 - Use the XAML island window's DPI when mapping flyout regions between physical pixels and DIPs,
   including fractional display scales.
 

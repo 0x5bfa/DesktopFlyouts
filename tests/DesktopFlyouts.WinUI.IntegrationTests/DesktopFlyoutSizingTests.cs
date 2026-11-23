@@ -62,11 +62,21 @@ public sealed class DesktopFlyoutSizingTests
 		var frame = (FrameworkElement)VisualTreeHelper.GetParent(presenter);
 		Assert.AreEqual(240, presenter.ActualWidth, 1);
 		Assert.AreEqual(120, presenter.ActualHeight, 1);
-		Assert.AreEqual(256, frame.ActualWidth, 2);
+		Assert.AreEqual(264, frame.ActualWidth, 2);
+		Assert.AreEqual(144, frame.ActualHeight, 2);
+		var island = (FrameworkElement)presenter.ContainerFromIndex(0);
+		var islandOrigin = island.TransformToVisual(presenter).TransformPoint(new(0, 0));
+		Assert.AreEqual(0, islandOrigin.X, 1);
+		Assert.AreEqual(0, islandOrigin.Y, 1);
+		Assert.AreEqual(presenter.ActualWidth, island.ActualWidth, 1);
+		var presenterOrigin = presenter.TransformToVisual(frame).TransformPoint(new(0, 0));
+		Assert.AreEqual(12, presenterOrigin.X, 1);
+		Assert.AreEqual(12, presenterOrigin.Y, 1);
 		Assert.AreSame(binding, flyout.ReadLocalValue(DesktopFlyout.WidthProperty));
 		source.Width = 360;
-		await WaitUntil(() => Math.Abs(frame.ActualWidth - 376) <= 2);
+		await WaitUntil(() => Math.Abs(frame.ActualWidth - 384) <= 2);
 		Assert.AreEqual(360, presenter.ActualWidth, 1);
+		Assert.AreEqual(360, island.ActualWidth, 1);
 		Assert.AreSame(binding, flyout.ReadLocalValue(DesktopFlyout.WidthProperty));
 		flyout.ClearValue(DesktopFlyout.WidthProperty);
 		await WaitUntil(() => Math.Abs(presenter.ActualWidth - 82) <= 1);
@@ -183,11 +193,23 @@ public sealed class DesktopFlyoutSizingTests
 		var one = (FrameworkElement)Presenter(flyout).ContainerFromIndex(0);
 		var two = (FrameworkElement)Presenter(flyout).ContainerFromIndex(1);
 		Assert.AreEqual(one.ActualHeight * 2, two.ActualHeight, 1);
+		Assert.AreEqual(240, one.ActualWidth, 1);
+		Assert.AreEqual(240, two.ActualWidth, 1);
+		Assert.AreEqual(360, one.ActualHeight + 12 + two.ActualHeight, 1);
+		var verticalOrigin = two.TransformToVisual(one).TransformPoint(new(0, 0));
+		Assert.AreEqual(0, verticalOrigin.X, 1);
+		Assert.AreEqual(one.ActualHeight + 12, verticalOrigin.Y, 1);
 		second.Visibility = Visibility.Collapsed;
 		await WaitUntil(() => Math.Abs(one.ActualHeight - 360) <= 1);
 		second.Visibility = Visibility.Visible;
 		flyout.IslandsOrientation = Orientation.Horizontal;
 		await WaitUntil(() => one.ActualWidth < 120 && Math.Abs(one.ActualWidth * 2 - two.ActualWidth) <= 1);
+		Assert.AreEqual(240, one.ActualWidth + 12 + two.ActualWidth, 1);
+		Assert.AreEqual(360, one.ActualHeight, 1);
+		Assert.AreEqual(360, two.ActualHeight, 1);
+		var horizontalOrigin = two.TransformToVisual(one).TransformPoint(new(0, 0));
+		Assert.AreEqual(one.ActualWidth + 12, horizontalOrigin.X, 1);
+		Assert.AreEqual(0, horizontalOrigin.Y, 1);
 		Assert.AreEqual(DesktopFlyoutTransitionState.Open, flyout.TransitionState);
 	}
 
@@ -205,7 +227,7 @@ public sealed class DesktopFlyoutSizingTests
 	}
 
 	[UITestMethod]
-	public async Task Large_requested_dimensions_keep_the_frame_bounded_and_many_items_scroll()
+	public async Task Large_requested_dimensions_keep_the_frame_bounded_and_clip_overflowing_items()
 	{
 		using var flyout = CreateFlyout();
 		flyout.Width = 1_000_000;
@@ -216,12 +238,18 @@ public sealed class DesktopFlyoutSizingTests
 		flyout.IslandsSource = source;
 		await Open(flyout);
 		var presenter = Presenter(flyout);
-		var scroll = Find<ScrollViewer>(presenter)!;
 		Assert.IsTrue(presenter.ActualWidth < 1_000_000);
 		Assert.AreEqual(1_000_000, flyout.Width);
-		Assert.IsTrue(scroll.ScrollableHeight > 0);
-		scroll.ChangeView(null, scroll.ScrollableHeight, null, true);
-		await WaitUntil(() => scroll.VerticalOffset > 0);
+		Assert.IsTrue(presenter.ActualHeight <= 181);
+		Assert.IsNull(Find<ScrollViewer>(presenter));
+		var last = (FrameworkElement)presenter.ContainerFromIndex(source.Count - 1);
+		var lastOrigin = last.TransformToVisual(presenter).TransformPoint(new(0, 0));
+		Assert.IsTrue(lastOrigin.Y + last.ActualHeight > presenter.ActualHeight);
+		var frame = (FrameworkElement)VisualTreeHelper.GetParent(presenter);
+		Assert.IsInstanceOfType<RectangleGeometry>(frame.Clip);
+		var clip = ((RectangleGeometry)frame.Clip).Rect;
+		Assert.AreEqual(frame.ActualWidth, clip.Width, 1);
+		Assert.AreEqual(frame.ActualHeight, clip.Height, 1);
 	}
 
 	[UITestMethod]
