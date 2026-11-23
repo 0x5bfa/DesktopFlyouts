@@ -2,34 +2,18 @@
 // Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Numerics;
-using System.Threading.Tasks;
-using Windows.Graphics;
-using FoundationPoint = Windows.Foundation.Point;
 
 #if (UWP || WASDK) && !HAS_UNO
-using Windows.Foundation.Metadata;
 using Windows.UI.ViewManagement;
 #endif
 
 #if UWP
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Markup;
-using Windows.UI.Xaml.Media;
 #elif WASDK
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Markup;
-using Microsoft.UI.Xaml.Media;
 #endif
 
 namespace DesktopFlyouts;

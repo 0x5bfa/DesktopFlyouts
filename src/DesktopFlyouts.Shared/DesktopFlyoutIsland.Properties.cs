@@ -1,14 +1,10 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-using System;
-
 #if UWP
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 #elif WASDK
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 #endif
 
 namespace DesktopFlyouts;

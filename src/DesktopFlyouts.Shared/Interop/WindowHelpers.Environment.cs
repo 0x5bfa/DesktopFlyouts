@@ -3,7 +3,6 @@
 
 #if !HAS_UNO
 
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using Windows.Win32;

@@ -5,8 +5,6 @@
 // _NET_WORKAREA gives the usable screen area excluding all panels.
 // _NET_WM_STRUT_PARTIAL on child windows identifies individual panel positions.
 
-using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using static DesktopFlyouts.X11PInvoke;

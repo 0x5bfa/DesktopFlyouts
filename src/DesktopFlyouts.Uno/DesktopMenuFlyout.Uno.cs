@@ -2,15 +2,10 @@
 // Licensed under the MIT license.
 
 #if !WINDOWS
-using System;
 using System.Drawing;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.WinUI;
 using FoundationSize = Windows.Foundation.Size;
 using Windows.Graphics;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Markup;
 
 namespace DesktopFlyouts;

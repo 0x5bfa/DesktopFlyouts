@@ -5,15 +5,10 @@
 // Uses Microsoft.UI.Xaml.Window for XAML rendering and raw X11 P/Invoke
 // for window property manipulation (borderless, override_redirect, positioning).
 
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Hosting;
 using Uno.UI.NativeElementHosting;
 using static DesktopFlyouts.X11PInvoke;
 

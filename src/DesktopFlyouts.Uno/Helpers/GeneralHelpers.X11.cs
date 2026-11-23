@@ -4,8 +4,6 @@
 // Real implementation: detects system theme via D-Bus org.freedesktop.portal.Settings.
 // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Settings.html
 
-using System;
-using System.Threading.Tasks;
 using Tmds.DBus.Protocol;
 using DesktopFlyouts.DBus;
 

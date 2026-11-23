@@ -5,8 +5,6 @@
 // The GeneratedDependencyProperty source generator does not run under Uno.Sdk.
 // Each property below is the implementation part matching the partial declaration in the shared file.
 
-using Microsoft.UI.Xaml;
-
 namespace DesktopFlyouts;
 
 public partial class DesktopFlyout

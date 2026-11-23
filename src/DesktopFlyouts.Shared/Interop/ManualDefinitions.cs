@@ -7,9 +7,7 @@
 
 global using static global::Windows.Win32.ManualDefinitions;
 
-using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 
 namespace Windows.Win32;
