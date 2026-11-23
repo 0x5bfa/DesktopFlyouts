@@ -9,13 +9,13 @@ namespace DesktopFlyouts.UnitTests;
 public sealed class DesktopFlyoutSizeResolverTests
 {
 	[TestMethod]
-	[DataRow(800, 240, false, 0, double.PositiveInfinity, 0, 240)]
-	[DataRow(800, 1200, false, 0, double.PositiveInfinity, 0, 800)]
-	[DataRow(800, 240, true, 0, double.PositiveInfinity, 0, 800)]
-	[DataRow(800, 240, true, 0, 400, 20, 420)]
-	[DataRow(800, 240, true, 500, 400, 20, 520)]
-	[DataRow(100, 200, true, 200, 400, 0, 100)]
-	[DataRow(0, 240, true, 0, double.PositiveInfinity, 0, 0)]
+	[DataRow(800d, 240d, false, 0d, double.PositiveInfinity, 0d, 240d)]
+	[DataRow(800d, 1200d, false, 0d, double.PositiveInfinity, 0d, 800d)]
+	[DataRow(800d, 240d, true, 0d, double.PositiveInfinity, 0d, 800d)]
+	[DataRow(800d, 240d, true, 0d, 400d, 20d, 420d)]
+	[DataRow(800d, 240d, true, 500d, 400d, 20d, 520d)]
+	[DataRow(100d, 200d, true, 200d, 400d, 0d, 100d)]
+	[DataRow(0d, 240d, true, 0d, double.PositiveInfinity, 0d, 0d)]
 	public void ViewportHonorsContentStretchConstraintsAndWorkArea(double available, double desired, bool stretch, double minimum, double maximum, double margin, double expected)
 	{
 		Assert.AreEqual(expected, DesktopFlyoutSizeResolver.ResolveLength(available, desired, stretch, minimum, maximum, margin), 0.001);

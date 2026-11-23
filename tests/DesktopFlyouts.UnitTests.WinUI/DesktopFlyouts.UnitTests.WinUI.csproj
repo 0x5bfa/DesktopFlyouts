@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk">
 
 	<PropertyGroup>
 
@@ -13,10 +13,8 @@
 		<UseWinUI>true</UseWinUI>
 		<WinUISDKReferences>false</WinUISDKReferences>
 		<EnableMsixTooling>true</EnableMsixTooling>
-
-		<!--  Test config  -->
-		<IsTestProject>true</IsTestProject>
-		<GenerateProgramFile>false</GenerateProgramFile>
+		<!-- MTP owns package activation and its controller handshake. -->
+		<EnableWinAppRunSupport>false</EnableWinAppRunSupport>
 
 	</PropertyGroup>
 
@@ -30,10 +28,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="Microsoft.TestPlatform.TestHost" />
-		<PackageReference Include="MSTest.TestAdapter" />
-		<PackageReference Include="MSTest.TestFramework" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" />
 		<PackageReference Include="Microsoft.WindowsAppSDK.Runtime" />

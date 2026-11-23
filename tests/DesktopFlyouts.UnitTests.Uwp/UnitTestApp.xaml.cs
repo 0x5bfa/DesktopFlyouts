@@ -1,7 +1,8 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-using Microsoft.VisualStudio.TestPlatform.TestExecutor;
+using System;
+using Microsoft.Testing.Extensions;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -15,11 +16,17 @@ public sealed partial class App : Application
 		InitializeComponent();
 	}
 
-	protected override void OnLaunched(LaunchActivatedEventArgs args)
+	protected override async void OnLaunched(LaunchActivatedEventArgs args)
 	{
 		Window.Current.Content ??= new Frame();
-		UnitTestClient.CreateDefaultUI();
 		Window.Current.Activate();
-		UnitTestClient.Run(args.Arguments);
+		try
+		{
+			Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(PackagedAppExtensions.GetTestApplicationArguments(args.Arguments));
+		}
+		finally
+		{
+			Exit();
+		}
 	}
 }

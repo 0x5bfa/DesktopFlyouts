@@ -6,7 +6,8 @@
 
 - Organize tests into shared test sources and template-based WinUI and UWP test applications.
   Both applications reference their platform library directly, replacing product-source links;
-  run Windows tests through Visual Studio Test Explorer or VSTest with the generated build recipe.
+  run them with Microsoft.Testing.Platform (MTP) through `MSTest.Sdk`. WinUI supports `dotnet test`;
+  modern .NET 10 UWP uses the `InvokeTestingPlatform` MSBuild target for its AppContainer host.
 
 ### Fixed
 

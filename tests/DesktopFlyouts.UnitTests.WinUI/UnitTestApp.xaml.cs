@@ -3,7 +3,6 @@
 
 using System;
 using Microsoft.UI.Xaml;
-using Microsoft.VisualStudio.TestPlatform.TestExecutor;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
 namespace DesktopFlyouts.UnitTests.WinUI;
@@ -17,13 +16,20 @@ public partial class UnitTestApp : Application
 		InitializeComponent();
 	}
 
-	protected override void OnLaunched(LaunchActivatedEventArgs args)
+	protected override async void OnLaunched(LaunchActivatedEventArgs args)
 	{
-		UnitTestClient.CreateDefaultUI();
 		_window = new UnitTestAppWindow();
 		_window.Activate();
 		_window.DispatcherQueue.EnsureSystemDispatcherQueue();
 		UITestMethodAttribute.DispatcherQueue = _window.DispatcherQueue;
-		UnitTestClient.Run(Environment.CommandLine);
+		try
+		{
+			Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(Environment.GetCommandLineArgs()[1..]);
+		}
+		finally
+		{
+			_window.Close();
+			Exit();
+		}
 	}
 }
