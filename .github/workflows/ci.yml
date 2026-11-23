@@ -25,10 +25,12 @@ env:
   WINUI_PROJ_PATH:       '${{ github.workspace }}\samples\DesktopFlyouts.SampleApp.WinUI\DesktopFlyouts.SampleApp.WinUI.csproj'
   UWP_PROJ_PATH:         '${{ github.workspace }}\samples\DesktopFlyouts.SampleApp.Uwp\DesktopFlyouts.SampleApp.Uwp.csproj'
   UNO_PROJ_PATH:         '${{ github.workspace }}\samples\DesktopFlyouts.SampleApp.Uno\DesktopFlyouts.SampleApp.Uno.csproj'
+  WINUI_TEST_PROJ_PATH:  '${{ github.workspace }}\tests\DesktopFlyouts.UnitTests.WinUI\DesktopFlyouts.UnitTests.WinUI.csproj'
+  UWP_TEST_PROJ_PATH:    '${{ github.workspace }}\tests\DesktopFlyouts.UnitTests.Uwp\DesktopFlyouts.UnitTests.Uwp.csproj'
 
 jobs:
 
-  build-winui:
+  winui:
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -54,9 +56,14 @@ jobs:
           10.0.x
 
     - name: Build the sample app
-      run: msbuild /restore $env:WINUI_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:AppxBundle=Never
+      run: msbuild /restore $env:WINUI_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
 
-  build-uwp:
+    - name: Build the tests
+      run: msbuild /restore $env:WINUI_TEST_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
+    - name: Run the tests
+      run: dotnet test --project $env:WINUI_TEST_PROJ_PATH -c $env:CONFIGURATION -p:Platform=$env:PLATFORM --no-build
+
+  uwp:
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -82,9 +89,14 @@ jobs:
           10.0.x
 
     - name: Build the sample app
-      run: msbuild /restore $env:UWP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:AppxBundle=Never
+      run: msbuild /restore $env:UWP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
 
-  build-uno:
+    - name: Build the tests
+      run: msbuild /restore $env:UWP_TEST_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
+    - name: Run the tests
+      run: msbuild $env:UWP_TEST_PROJ_PATH /t:InvokeTestingPlatform /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
+
+  uno:
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -109,44 +121,3 @@ jobs:
       run: |
         dotnet restore $env:UNO_PROJ_PATH
         dotnet build $env:UNO_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM --no-restore
-
-  test:
-    runs-on: windows-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        flavor: [WinUI, Uwp]
-    env:
-      TEST_PROJ_PATH: tests/DesktopFlyouts.UnitTests.${{ matrix.flavor }}/DesktopFlyouts.UnitTests.${{ matrix.flavor }}.csproj
-
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v6
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: |
-          9.0.x
-          10.0.x
-
-    # - name: Enable developer mode for test deployment
-    #   shell: pwsh
-    #   run: |
-    #     $developerModeKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
-    #     New-Item -Path $developerModeKey -Force | Out-Null
-    #     New-ItemProperty -Path $developerModeKey -Name AllowDevelopmentWithoutDevLicense -PropertyType DWord -Value 1 -Force | Out-Null
-
-    - name: Build tests
-      run: msbuild /restore $env:TEST_PROJ_PATH /p:Configuration=Release /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false
-
-    - name: Run WinUI tests with dotnet test
-      if: matrix.flavor == 'WinUI'
-      run: dotnet test --project $env:TEST_PROJ_PATH -c Release -p:Platform=x64 --no-build --report-trx --results-directory tests/TestResults/WinUI
-
-    # Modern UWP runs in AppContainer, which the native dotnet test pipe cannot connect to.
-    - name: Run UWP tests with MTP
-      if: matrix.flavor == 'Uwp'
-      run: msbuild $env:TEST_PROJ_PATH /t:InvokeTestingPlatform /p:Configuration=Release /p:Platform=x64 "/p:TestingPlatformCommandLineArguments=--report-trx --results-directory %22$env:WORKING_DIR/tests/TestResults/Uwp%22"

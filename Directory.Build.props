@@ -16,5 +16,7 @@
 		<PublishAot>true</PublishAot>
 		<AotCompatible>true</AotCompatible>
 
+		<AppxBundle>Never</AppxBundle>
+
 	</PropertyGroup>
 </Project>
