@@ -1,26 +1,5 @@
 # Changelog
 
-## Unreleased
-
-### Changed
-
-- Package WinUI and UWP implementations for Windows x86, x64, and ARM64 together, with
-  architecture-neutral compile references. Ship Uno's managed library as AnyCPU.
-- Build packages through `.nuget/DesktopFlyoutsPack.proj` and verify their architectures and sample consumers
-  before publishing; ordinary library builds no longer produce partial packages.
-- Organize tests into shared test sources and template-based WinUI and UWP test applications.
-  Both applications reference their platform library directly, replacing product-source links;
-  run them with Microsoft.Testing.Platform (MTP) through `MSTest.Sdk`. WinUI supports `dotnet test`;
-  modern .NET 10 UWP uses the `InvokeTestingPlatform` MSBuild target for its AppContainer host.
-
-### Fixed
-
-- Use the 32-bit `SetWindowLongW` API when subclassing XAML island windows on x86.
-- Reuse WinUI island backdrop instances across open/close cycles while reconnecting native
-  targets and releasing them on the owning UI thread.
-- Make WinUI test data sources and template selectors compatible with AOT marshalling, and wait
-  for realized content and completed layout before asserting live collection and orientation changes.
-
 ## [3.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v3.0.0)
 
 DesktopFlyouts 3.0 introduces a simpler flyout model with consistent appearance, data-bound
@@ -28,6 +7,9 @@ islands, and more reliable desktop integration across WinUI 3, UWP / WinUI 2, an
 
 ### Highlights
 
+- Use one WinUI or UWP NuGet package across Windows x86, x64, and ARM64. The Uno package
+  contains an AnyCPU managed assembly for Linux / X11 hosts with supported native dependencies.
+  Windows x86 applications use JIT rather than Native AOT.
 - Display data-bound island collections with item templates and selectors, and update content,
   dimensions, orientation, and visibility while a flyout is open.
 - Keep tray flyouts aligned as icons, monitors, DPI, work areas, and taskbars change. Improve
@@ -35,7 +17,8 @@ islands, and more reliable desktop integration across WinUI 3, UWP / WinUI 2, an
 - Use system-adaptive Acrylic with solid fallbacks that respect accessibility and transparency
   settings. Add standalone UWP Composition Acrylic and Mica effects for Windows 11+.
 - Improve transitions, swipe gestures, runtime theme updates, and stability during rapid
-  open/close cycles and disposal. Fix fractional-DPI sizing and extra outer island gaps.
+  open/close cycles and disposal. Reuse WinUI island backdrops across open/close cycles, and
+  fix fractional-DPI sizing and extra outer island gaps.
 - Support AOT island collections and expand the samples with settings, flyout, and data-template
   examples. Simplify the UWP sample into a single application.
 
@@ -68,7 +51,11 @@ islands, and more reliable desktop integration across WinUI 3, UWP / WinUI 2, an
 | `DesktopFlyoutPosition.ForTaskbarAnchor(Rectangle)` | `ForTrayIcon(trayIcon)` for a live tray anchor, or `ForAnchor(bounds, side)` for fixed bounds |
 | `DesktopFlyoutPosition.InWorkArea(DesktopFlyoutPlacementMode, ...)` | Use the matching `DesktopFlyoutWorkAreaPosition` member; numeric values differ, so do not cast |
 
-See the [usage guide](docs/README.md) and [API reference](docs/api-reference.md) for the current API.
+See the [usage guide](https://github.com/0x5bfa/DesktopFlyouts/blob/v3.0.0/docs/README.md) and
+[API reference](https://github.com/0x5bfa/DesktopFlyouts/blob/v3.0.0/docs/api-reference.md) for examples
+and API details.
+
+[Full changelog](https://github.com/0x5bfa/DesktopFlyouts/compare/v2.2.0...v3.0.0)
 
 ## [2.2.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v2.2.0)
 
