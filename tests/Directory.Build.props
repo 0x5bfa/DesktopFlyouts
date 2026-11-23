@@ -1,9 +1,0 @@
-<Project>
-    <Import Project="../Directory.Build.props" />
-
-    <PropertyGroup>
-        <!-- The template's VSTest app hosts discover tests through reflection. -->
-        <PublishAot>false</PublishAot>
-        <AotCompatible>false</AotCompatible>
-    </PropertyGroup>
-</Project>
