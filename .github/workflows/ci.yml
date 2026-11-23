@@ -55,7 +55,15 @@ jobs:
       run: msbuild /restore tests/DesktopFlyouts.UnitTests.${{ matrix.flavor }}/DesktopFlyouts.UnitTests.${{ matrix.flavor }}.csproj /p:Configuration=Release /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false
     - name: Run ${{ matrix.flavor }} tests
       shell: pwsh
-      run: ./tests/Run-Tests.ps1 -Flavor ${{ matrix.flavor }} -Configuration Release -Platform x64
+      run: |
+        $testProject = 'DesktopFlyouts.UnitTests.${{ matrix.flavor }}'
+        $recipes = @(Get-ChildItem "tests/$testProject/bin/x64/Release" -Filter "$testProject.build.appxrecipe" -File -Recurse)
+        if ($recipes.Count -ne 1) { throw 'Expected exactly one test application build recipe.' }
+        $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+        $vstest = & $vswhere -latest -products * -find 'Common7\IDE\Extensions\TestPlatform\vstest.console.exe'
+        if ($LASTEXITCODE -ne 0 -or -not $vstest) { throw 'Visual Studio VSTest tools were not found.' }
+        & $vstest $recipes[0].FullName /Platform:x64 /Framework:FrameworkUap10 /InIsolation /Logger:trx '/ResultsDirectory:tests/TestResults/${{ matrix.flavor }}' -- RunConfiguration.TreatNoTestsAsError=true
+        exit $LASTEXITCODE
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4

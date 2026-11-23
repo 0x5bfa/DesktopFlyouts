@@ -61,6 +61,11 @@ All settable properties below are DPs. The collection reference itself is read-o
 | `MaxWidth`, `MaxHeight` | `double` | `PositiveInfinity` | Nonnegative maximum dimensions; positive infinity removes the limit. |
 | `HorizontalAlignment`, `VerticalAlignment` | Corresponding XAML enum | `Left`, `Top` | Sizing alignment. Stretch fills an automatic dimension subject to its min/max constraints. Explicit dimensions take precedence. |
 
+On Windows with dynamic code support disabled, managed `IslandsSource` collections must expose
+generated WinRT collection interfaces. Mark a partial collection class with
+`[WinRT.GeneratedWinRTExposedType]`. Custom `DataTemplateSelector` subclasses and their containing
+types must also be partial for WinRT source generation.
+
 Requested values and bindings are preserved when the viewport is constrained. Minimum constraints
 take precedence over maximum constraints, with the available work area as the hard presentation
 limit. The root island collection does not scroll, so content beyond the visible viewport is clipped.

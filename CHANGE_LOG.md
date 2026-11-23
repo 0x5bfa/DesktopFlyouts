@@ -6,7 +6,14 @@
 
 - Organize tests into shared test sources and template-based WinUI and UWP test applications.
   Both applications reference their platform library directly, replacing product-source links;
-  run Windows tests through Visual Studio Test Explorer or `tests/Run-Tests.ps1`.
+  run Windows tests through Visual Studio Test Explorer or VSTest with the generated build recipe.
+
+### Fixed
+
+- Reuse WinUI island backdrop instances across open/close cycles while reconnecting native
+  targets and releasing them on the owning UI thread.
+- Make WinUI test data sources and template selectors compatible with AOT marshalling, and wait
+  for realized content and completed layout before asserting live collection and orientation changes.
 
 ## [3.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v3.0.0)
 

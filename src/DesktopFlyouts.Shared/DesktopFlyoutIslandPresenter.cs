@@ -52,6 +52,7 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 #endif
 #if WASDK && !HAS_UNO
 	private SystemBackdropElement? _backdrop;
+	private DesktopFlyoutAcrylicBackdrop? _ownedBackdrop;
 #endif
 
 	internal GridLength IslandWidth => _definition?.IslandWidth ?? GridLength.Auto;
@@ -113,6 +114,9 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		_hasItem = false;
 		Content = null;
 		ClearOwnerBackdrop();
+#if WASDK && !HAS_UNO
+		_ownedBackdrop = null;
+#endif
 		ReleaseClip();
 	}
 
@@ -189,12 +193,16 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		_root.Background = null;
 		if (_backdrop is not null)
 		{
-			if (force) ClearOwnerBackdrop();
-			if (_backdrop.SystemBackdrop is not DesktopFlyoutAcrylicBackdrop current || current.UseLightTheme != light)
+			if (_ownedBackdrop is null || _ownedBackdrop.UseLightTheme != light)
 			{
 				ClearOwnerBackdrop();
-				_backdrop.SystemBackdrop = new DesktopFlyoutAcrylicBackdrop(light);
+				_ownedBackdrop = new DesktopFlyoutAcrylicBackdrop(light);
 			}
+			else if (force)
+				ClearOwnerBackdrop();
+			// Reconnect native targets on the UI thread without replacing the backdrop instance.
+			if (!ReferenceEquals(_backdrop.SystemBackdrop, _ownedBackdrop))
+				_backdrop.SystemBackdrop = _ownedBackdrop;
 		}
 #elif UWP
 		if (force || _root.Background is not DesktopFlyoutBackdropBrush brush || brush.UseLightTheme != light || brush.UseAccent != GeneralHelpers.IsTaskbarColorPrevalenceEnabled())

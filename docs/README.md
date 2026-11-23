@@ -205,6 +205,11 @@ Direct `Islands` mutation is prohibited while `IslandsSource` is non-null. Setti
 restores the original direct collection. Use explicit binding sources or `x:Bind` for properties
 on the nonvisual flyout; it does not inherit a `DataContext` or expose `Resources`.
 
+On Windows with dynamic code support disabled, managed collection sources need generated WinRT
+collection interfaces. Use a partial collection class marked `[WinRT.GeneratedWinRTExposedType]`,
+as in the samples. Custom `DataTemplateSelector` subclasses and their containing types must also
+be partial for WinRT source generation.
+
 ### Overall dimensions
 
 Set the flyout's `Width`, `Height`, `MinWidth`, `MaxWidth`, `MinHeight`, and `MaxHeight` DPs directly:

@@ -18,7 +18,7 @@ namespace DesktopFlyouts.UnitTests.WinUI;
 
 [TestClass]
 [DoNotParallelize]
-public sealed class DesktopFlyoutSizingTests
+public sealed partial class DesktopFlyoutSizingTests
 {
 	[UITestMethod]
 	public void Public_definitions_are_nonvisual_and_creation_is_host_free()
@@ -117,7 +117,7 @@ public sealed class DesktopFlyoutSizingTests
 	public async Task Source_changes_templates_and_return_to_direct_items_work_while_open()
 	{
 		using var flyout = CreateFlyout();
-		var source = new ObservableCollection<string> { "First", "Second" };
+		var source = new StringCollection { "First", "Second" };
 		flyout.IslandTemplate = Template("normal");
 		flyout.IslandsSource = source;
 		Assert.ThrowsExactly<InvalidOperationException>(() => flyout.Islands.Add("blocked"));
@@ -125,7 +125,7 @@ public sealed class DesktopFlyoutSizingTests
 		await Open(flyout);
 		await WaitUntil(() => Find<TextBlock>(Presenter(flyout).ContainerFromIndex(0))?.Text == "First");
 		source.Add("Third");
-		await WaitUntil(() => Presenter(flyout).ContainerFromIndex(2) is not null);
+		await WaitUntil(() => Find<TextBlock>(Presenter(flyout).ContainerFromIndex(2))?.Text == "Third");
 		Assert.AreEqual("Third", Find<TextBlock>(Presenter(flyout).ContainerFromIndex(2))?.Text);
 		source.Move(2, 0);
 		await WaitUntil(() => Find<TextBlock>(Presenter(flyout).ContainerFromIndex(0))?.Text == "Third");
@@ -203,7 +203,9 @@ public sealed class DesktopFlyoutSizingTests
 		await WaitUntil(() => Math.Abs(one.ActualHeight - 360) <= 1);
 		second.Visibility = Visibility.Visible;
 		flyout.IslandsOrientation = Orientation.Horizontal;
-		await WaitUntil(() => one.ActualWidth < 120 && Math.Abs(one.ActualWidth * 2 - two.ActualWidth) <= 1);
+		await WaitUntil(() => one.ActualWidth > 0 && two.ActualWidth > 0
+			&& Math.Abs(one.ActualWidth * 2 - two.ActualWidth) <= 1
+			&& Math.Abs(one.ActualWidth + 12 + two.ActualWidth - 240) <= 1);
 		Assert.AreEqual(240, one.ActualWidth + 12 + two.ActualWidth, 1);
 		Assert.AreEqual(360, one.ActualHeight, 1);
 		Assert.AreEqual(360, two.ActualHeight, 1);
@@ -233,7 +235,7 @@ public sealed class DesktopFlyoutSizingTests
 		flyout.Width = 1_000_000;
 		flyout.MaxHeight = 180;
 		flyout.IslandTemplate = Template("overflow");
-		var source = new ObservableCollection<string>();
+		var source = new StringCollection();
 		for (var index = 0; index < 50; index++) source.Add($"Item {index}");
 		flyout.IslandsSource = source;
 		await Open(flyout);
@@ -288,7 +290,12 @@ public sealed class DesktopFlyoutSizingTests
 		return (DataTemplate)XamlReader.Load($"<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><TextBlock Text='{{Binding}}' Tag='{tag}' Margin='16'/></DataTemplate>");
 	}
 
-	private sealed class LengthSelector : DataTemplateSelector
+	[WinRT.GeneratedWinRTExposedType]
+	private sealed partial class StringCollection : ObservableCollection<string>
+	{
+	}
+
+	private sealed partial class LengthSelector : DataTemplateSelector
 	{
 		public DataTemplate Short { get; set; } = null!;
 		public DataTemplate Long { get; set; } = null!;

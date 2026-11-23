@@ -18,6 +18,6 @@ Windows App SDK / WinUI 3, UWP / WinUI 2, and Uno Platform on Linux / X11.
 - Do not launch sample apps or other UI applications, including the WinUI and UWP test apps, unless the user explicitly requests it. Validate with builds and non-UI checks by default.
 - If an explicitly requested launch involves the packaged WinUI sample, register its generated `AppxManifest.xml` and launch through `shell:AppsFolder`, rather than running its executable directly. Stop running samples before rebuilding only if their output files are locked.
 - `NETSDK1057` preview SDK messages can appear on this machine. Treat them as environment notices unless accompanied by a build failure.
-- Build both Windows test apps with Visual Studio's MSBuild using the commands in `tests/README.md`. These template-based test apps use VSTest and a packaged application host; run `tests/Run-Tests.ps1` only when the user explicitly requests UI execution on Windows with an interactive desktop.
+- Build both Windows test apps with Visual Studio's MSBuild and `/p:AppxBundle=Never`. These template-based test apps use VSTest and a packaged application host; use Visual Studio Test Explorer or VSTest with the generated `.build.appxrecipe` only when the user explicitly requests UI execution on Windows with an interactive desktop.
 - Before finishing, run `git diff --check` and verify that changed text files use CRLF.
 - Summarize the changes, validation results, and any remaining risks or limitations.
