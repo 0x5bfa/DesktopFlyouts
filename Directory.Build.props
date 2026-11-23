@@ -14,6 +14,8 @@
 		<CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
 
 		<PublishAot>true</PublishAot>
+		<!-- Native AOT has no x86 toolchain. Keep x86 applications on the JIT runtime. -->
+		<PublishAot Condition="'$(Platform)' == 'x86' Or '$(PlatformTarget)' == 'x86' Or '$(RuntimeIdentifier)' == 'win-x86'">false</PublishAot>
 		<AotCompatible>true</AotCompatible>
 
 		<AppxBundle>Never</AppxBundle>

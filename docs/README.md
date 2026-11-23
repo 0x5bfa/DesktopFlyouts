@@ -24,6 +24,12 @@ Install the package that matches your XAML stack:
 | `DesktopFlyouts.Uwp` | UWP / WinUI 2 desktop XAML island hosting |
 | `DesktopFlyouts.Uno` | Uno Platform on Linux / X11 |
 
+The WinUI and UWP packages contain implementations for Windows x86, x64, and ARM64. Set the
+application's platform and runtime identifier consistently (`win-x86`, `win-x64`, or `win-arm64`);
+NuGet selects the matching implementation. Native AOT is available on supported .NET targets
+for x64 and ARM64; x86 applications use JIT. The Uno package contains architecture-neutral
+managed code; Linux architecture support also depends on Uno and its native dependencies.
+
 Choose one of these commands:
 
 ```console

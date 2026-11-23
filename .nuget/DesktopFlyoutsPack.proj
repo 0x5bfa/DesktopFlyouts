@@ -1,0 +1,89 @@
+<!-- Copyright (c) 0x5BFA. Licensed under the MIT license. -->
+<Project DefaultTargets="Pack">
+    <PropertyGroup>
+        <_PackRepositoryRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</_PackRepositoryRoot>
+        <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+        <Flavor Condition="'$(Flavor)' == ''">All</Flavor>
+        <PackageOutputPath Condition="'$(PackageOutputPath)' == ''">artifacts/packages</PackageOutputPath>
+        <_PackOutputPath>$([MSBuild]::NormalizeDirectory('$(_PackRepositoryRoot)', '$(PackageOutputPath)'))</_PackOutputPath>
+        <_UnoOutputPath>$(_PackOutputPath.Replace('\', '/'))</_UnoOutputPath>
+        <_PackBuildRoot>$([MSBuild]::NormalizeDirectory('$(_PackOutputPath)', 'build', '$(Configuration)'))</_PackBuildRoot>
+        <_PackAssemblyName>$([System.IO.Path]::GetFileNameWithoutExtension('$(DesktopFlyoutsPackLibrary)'))</_PackAssemblyName>
+        <_UnoVersionArgument Condition="'$(PackageVersion)' != ''">-p:PackageVersion=&quot;$(PackageVersion)&quot;</_UnoVersionArgument>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <_WindowsLibrary Include="$(_PackRepositoryRoot)src/DesktopFlyouts.WinUI/DesktopFlyouts.WinUI.csproj" Condition="'$(Flavor)' == 'All' Or '$(Flavor)' == 'WinUI'" />
+        <_WindowsLibrary Include="$(_PackRepositoryRoot)src/DesktopFlyouts.Uwp/DesktopFlyouts.Uwp.csproj" Condition="'$(Flavor)' == 'All' Or '$(Flavor)' == 'Uwp'" />
+    </ItemGroup>
+
+    <Target Name="ValidatePackSettings">
+        <Error Condition="'$(Flavor)' != 'All' And '$(Flavor)' != 'WinUI' And '$(Flavor)' != 'Uwp' And '$(Flavor)' != 'Uno'"
+               Text="Flavor must be All, WinUI, Uwp, or Uno." />
+        <Error Condition="'@(_WindowsLibrary)' != '' And ('$(OS)' != 'Windows_NT' Or '$(MSBuildRuntimeType)' != 'Full')"
+               Text="Use Visual Studio MSBuild on Windows to pack WinUI and UWP. Use Flavor=Uno for a dotnet-only build." />
+    </Target>
+
+    <Target Name="Pack" DependsOnTargets="ValidatePackSettings;PackWindowsLibraries;PackUnoLibrary" />
+
+    <Target Name="PackWindowsLibraries">
+        <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="PackWindowsLibrary" BuildInParallel="false"
+                 Properties="Configuration=$(Configuration);DesktopFlyoutsPackLibrary=%(_WindowsLibrary.Identity)"
+                 Condition="'@(_WindowsLibrary)' != ''" />
+    </Target>
+
+    <Target Name="PackWindowsLibrary">
+        <ItemGroup>
+            <_PackArchitecture Include="x86;x64;arm64;reference-build" />
+        </ItemGroup>
+        <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="BuildWindowsArchitecture" BuildInParallel="false"
+                 Properties="Configuration=$(Configuration);DesktopFlyoutsPackArchitecture=%(_PackArchitecture.Identity)" />
+        <MSBuild Projects="$(DesktopFlyoutsPackLibrary)" Targets="Pack" BuildInParallel="false"
+                 Properties="Configuration=$(Configuration);Platform=x64;NoBuild=true;DesktopFlyoutsPackageRoot=$(_PackBuildRoot);PackageOutputPath=$(_PackOutputPath)" />
+    </Target>
+
+    <Target Name="ReadWindowsFrameworks">
+        <MSBuild Projects="$(DesktopFlyoutsPackLibrary)" Targets="GetTargetFrameworks" BuildInParallel="false"
+                 Properties="Configuration=$(Configuration)">
+            <Output TaskParameter="TargetOutputs" ItemName="_PackFrameworkInfo" />
+        </MSBuild>
+        <ItemGroup>
+            <_PackFramework Include="%(_PackFrameworkInfo.TargetFrameworks)" />
+        </ItemGroup>
+        <Error Condition="'@(_PackFramework)' == ''" Text="No target frameworks found in $(DesktopFlyoutsPackLibrary)." />
+    </Target>
+
+    <Target Name="BuildWindowsArchitecture" DependsOnTargets="ReadWindowsFrameworks">
+        <PropertyGroup>
+            <_PackPlatform>$(DesktopFlyoutsPackArchitecture)</_PackPlatform>
+            <_PackPlatformTarget>$(DesktopFlyoutsPackArchitecture)</_PackPlatformTarget>
+            <_PackReference>false</_PackReference>
+        </PropertyGroup>
+        <!-- The reference exposes the same API with an AnyCPU PE header; its implementation is not shipped. -->
+        <PropertyGroup Condition="'$(DesktopFlyoutsPackArchitecture)' == 'reference-build'">
+            <_PackPlatform>x64</_PackPlatform>
+            <_PackPlatformTarget>AnyCPU</_PackPlatformTarget>
+            <_PackCsWin32Platform>x64</_PackCsWin32Platform>
+            <_PackReference>true</_PackReference>
+        </PropertyGroup>
+        <Message Importance="high" Text="Building $(_PackAssemblyName): $(DesktopFlyoutsPackArchitecture)" />
+        <MSBuild Projects="$(DesktopFlyoutsPackLibrary)" Targets="Restore" BuildInParallel="false"
+                 Properties="Configuration=$(Configuration);Platform=$(_PackPlatform);PlatformTarget=$(_PackPlatformTarget);ExcludeRestorePackageImports=true" />
+        <MSBuild Projects="$(DesktopFlyoutsPackLibrary)" Targets="Build" BuildInParallel="false"
+                 Properties="Configuration=$(Configuration);Platform=$(_PackPlatform);PlatformTarget=$(_PackPlatformTarget);TargetFramework=%(_PackFramework.Identity);CsWin32PlatformTarget=$(_PackCsWin32Platform);ProduceReferenceAssemblyInOutDir=$(_PackReference);OutputPath=$(_PackBuildRoot)$(_PackAssemblyName)/$(DesktopFlyoutsPackArchitecture)/%(_PackFramework.Identity)/" />
+        <Copy Condition="'$(_PackReference)' == 'true'"
+              SourceFiles="@(_PackFramework->'$(_PackBuildRoot)$(_PackAssemblyName)/reference-build/%(Identity)/ref/$(_PackAssemblyName).dll')"
+              DestinationFiles="@(_PackFramework->'$(_PackBuildRoot)$(_PackAssemblyName)/reference/%(Identity)/$(_PackAssemblyName).dll')" />
+        <Copy Condition="'$(_PackReference)' == 'true'"
+              SourceFiles="@(_PackFramework->'$(_PackBuildRoot)$(_PackAssemblyName)/reference-build/%(Identity)/$(_PackAssemblyName).xml')"
+              DestinationFiles="@(_PackFramework->'$(_PackBuildRoot)$(_PackAssemblyName)/reference/%(Identity)/$(_PackAssemblyName).xml')" />
+    </Target>
+
+    <Target Name="PackUnoLibrary" Condition="'$(Flavor)' == 'All' Or '$(Flavor)' == 'Uno'">
+        <PropertyGroup>
+            <_UnoProject>$(_PackRepositoryRoot)src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj</_UnoProject>
+        </PropertyGroup>
+        <Exec Command="dotnet build &quot;$(_UnoProject)&quot; -c &quot;$(Configuration)&quot; -p:Platform=AnyCPU -p:PlatformTarget=AnyCPU $(_UnoVersionArgument)" />
+        <Exec Command="dotnet pack &quot;$(_UnoProject)&quot; --no-build -c &quot;$(Configuration)&quot; -p:Platform=AnyCPU -p:PackageOutputPath=&quot;$(_UnoOutputPath)&quot; $(_UnoVersionArgument)" />
+    </Target>
+</Project>

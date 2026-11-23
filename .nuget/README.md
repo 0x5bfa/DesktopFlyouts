@@ -1,5 +1,10 @@
 DesktopFlyouts is a WinUI library for showing desktop flyouts from tray icons or programmatically.
 
+The WinUI and UWP packages include Windows x86, x64, and ARM64 implementations. Match the
+application's platform and runtime identifier; NuGet selects the appropriate implementation.
+The Uno package contains architecture-neutral managed code for Linux / X11 hosts with supported
+Uno/native dependencies.
+
 ## Usage
 
 ### DesktopFlyout

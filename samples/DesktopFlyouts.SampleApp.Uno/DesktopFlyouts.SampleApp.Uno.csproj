@@ -17,7 +17,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="../../src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj" />
+		<ProjectReference Include="../../src/DesktopFlyouts.Uno/DesktopFlyouts.Uno.csproj" Condition="'$(DesktopFlyoutsPackageVersion)' == ''" />
+		<PackageReference Include="DesktopFlyouts.Uno" VersionOverride="$(DesktopFlyoutsPackageVersion)" Condition="'$(DesktopFlyoutsPackageVersion)' != ''" />
 	</ItemGroup>
 
 	<Import Project="../DesktopFlyouts.SampleApp.Shared/DesktopFlyouts.SampleApp.Shared.projitems" Label="Shared" />

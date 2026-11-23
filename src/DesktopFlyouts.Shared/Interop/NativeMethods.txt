@@ -77,8 +77,6 @@ SetActiveWindow
 CreateRectRgn
 SetWindowRgn
 DeleteObject
-GetWindowLongPtr
-SetWindowLongPtr
 GetCursorPos
 Shell_NotifyIconGetRect
 SHAppBarMessage

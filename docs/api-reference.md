@@ -19,6 +19,9 @@ Types are in `DesktopFlyouts` unless another namespace is specified. **WinUI** m
 `DesktopFlyouts.WinUI`, **UWP** means `DesktopFlyouts.Uwp`, and **Uno** means `DesktopFlyouts.Uno`
 on Linux / X11. Members are available in all three unless marked otherwise.
 
+WinUI and UWP packages support Windows x86, x64, and ARM64 through RID-specific implementations.
+The Uno assembly is AnyCPU; its supported Linux architectures depend on the Uno/native runtime.
+
 XAML types such as `Control`, `GridLength`, `MenuFlyout`, and `CornerRadius` come from the target's
 XAML framework: `Microsoft.UI.Xaml` for WinUI and Uno, or `Windows.UI.Xaml` for UWP.
 `XamlSourceFocusNavigationReason` comes from that framework's `Hosting` namespace.

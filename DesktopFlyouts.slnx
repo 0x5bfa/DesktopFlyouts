@@ -17,7 +17,9 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/.nuget/">
+    <File Path=".nuget/DesktopFlyoutsPack.proj" />
     <File Path=".nuget/README.md" />
+    <File Path=".nuget/Test-Packages.ps1" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/DesktopFlyouts.SampleApp.Shared/DesktopFlyouts.SampleApp.Shared.shproj" Id="d6b7e138-e5a5-4ec4-968e-1baf6aadd3c1" />

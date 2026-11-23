@@ -42,14 +42,15 @@ jobs:
       with:
         user: '0x5bfa'
 
-    - name: Pack the project (WinUI)
-      run: dotnet build $env:WINUI_PROJ_PATH -c Release -a x64 -o $env:OUTPUT_DIR
+    - name: Build and pack all architectures
+      shell: pwsh
+      run: msbuild .nuget/DesktopFlyoutsPack.proj /t:Pack /p:Configuration=Release /p:PackageOutputPath=$env:OUTPUT_DIR
 
-    - name: Pack the project (UWP)
-      run: dotnet build $env:UWP_PROJ_PATH -c Release -a x64 -o $env:OUTPUT_DIR
-
-    - name: Pack the project (Uno)
-      run: dotnet build $env:UNO_PROJ_PATH -c Release -a x64 -o $env:OUTPUT_DIR
+    - name: Verify packages and build their consumers
+      shell: pwsh
+      run: |
+        $version = ([xml](Get-Content $env:WINUI_PROJ_PATH -Raw)).Project.PropertyGroup.Version | Where-Object { $_ }
+        ./.nuget/Test-Packages.ps1 -PackageDirectory $env:OUTPUT_DIR -PackageVersion $version
 
     - name: Upload nupkg artifacts
       uses: actions/upload-artifact@v4

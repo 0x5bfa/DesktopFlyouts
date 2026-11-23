@@ -5,7 +5,66 @@
 		<!--  General properties  -->
 		<Configurations>Debug;Release</Configurations>
 		<Platforms>x86;x64;arm64</Platforms>
-		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<RuntimeIdentifiers Condition="'$(UseUwp)' == 'true' Or ('$(UseWinUI)' == 'true' And '$(UnoSingleProject)' != 'true')">win-x86;win-x64;win-arm64</RuntimeIdentifiers>
 
 	</PropertyGroup>
+	<PropertyGroup>
+		<_DesktopFlyoutsWindowsPackage Condition="'$(MSBuildProjectName)' == 'DesktopFlyouts.WinUI' Or '$(MSBuildProjectName)' == 'DesktopFlyouts.Uwp'">true</_DesktopFlyoutsWindowsPackage>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(_DesktopFlyoutsWindowsPackage)' == 'true'">
+		<!-- NU5131 compares legacy nuspec reference lists, which SDK-style RID packages do not need. -->
+		<NoWarn>$(NoWarn);NU5131</NoWarn>
+		<BuildOutputTargetFolder>ref</BuildOutputTargetFolder>
+		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CollectWindowsReferenceFiles</TargetsForTfmSpecificBuildOutput>
+		<TargetsForTfmSpecificDebugSymbolsInPackage>$(TargetsForTfmSpecificDebugSymbolsInPackage);ExcludeWindowsReferenceSymbols</TargetsForTfmSpecificDebugSymbolsInPackage>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CollectWindowsPackageFiles</TargetsForTfmSpecificContentInPackage>
+	</PropertyGroup>
+
+	<Target Name="CollectWindowsReferenceFiles" Condition="'$(_DesktopFlyoutsWindowsPackage)' == 'true'">
+		<Error Condition="'$(DesktopFlyoutsPackageRoot)' == ''"
+			   Text="Use .nuget/DesktopFlyoutsPack.proj to build and pack all Windows architectures together." />
+		<PropertyGroup>
+			<_PackageAssemblyRoot>$(DesktopFlyoutsPackageRoot)/$(AssemblyName)</_PackageAssemblyRoot>
+			<_PackageTargetFramework>$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFramework)', '(windows[0-9]+\.[0-9]+\.[0-9]+)\.0$', '$1'))</_PackageTargetFramework>
+		</PropertyGroup>
+		<ItemGroup>
+			<_PackageReference Include="$(_PackageAssemblyRoot)/reference/$(TargetFramework)/$(AssemblyName).dll" />
+		</ItemGroup>
+		<Error Condition="!Exists('%(_PackageReference.Identity)')" Text="Missing package reference: %(_PackageReference.Identity)" />
+		<ItemGroup>
+			<BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
+			<DocumentationProjectOutputGroupOutput Remove="@(DocumentationProjectOutputGroupOutput)" />
+			<_PathToPriFile Remove="@(_PathToPriFile)" />
+			<_WindowsReferenceOutput Include="@(_PackageReference);$(_PackageAssemblyRoot)/reference/$(TargetFramework)/$(AssemblyName).xml" />
+			<!-- WinUI resolves the library PRI beside its compile reference. -->
+			<_WindowsReferenceOutput Include="$(_PackageAssemblyRoot)/x64/$(TargetFramework)/$(AssemblyName).pri" Condition="'$(UseWinUI)' == 'true'" />
+			<BuildOutputInPackage Include="@(_WindowsReferenceOutput)">
+				<FinalOutputPath>%(_WindowsReferenceOutput.FullPath)</FinalOutputPath>
+				<TargetPath>%(_WindowsReferenceOutput.Filename)%(_WindowsReferenceOutput.Extension)</TargetPath>
+				<TargetFramework>$(TargetFramework)</TargetFramework>
+			</BuildOutputInPackage>
+		</ItemGroup>
+	</Target>
+
+	<Target Name="ExcludeWindowsReferenceSymbols" Condition="'$(_DesktopFlyoutsWindowsPackage)' == 'true'">
+		<ItemGroup>
+			<DebugSymbolsProjectOutputGroupOutput Remove="@(DebugSymbolsProjectOutputGroupOutput)" />
+		</ItemGroup>
+	</Target>
+
+	<Target Name="CollectWindowsPackageFiles" DependsOnTargets="CollectWindowsReferenceFiles" Condition="'$(_DesktopFlyoutsWindowsPackage)' == 'true'">
+		<ItemGroup>
+			<_PackageArchitecture Include="x86;x64;arm64" />
+			<_PackageImplementation Include="@(_PackageArchitecture->'$(_PackageAssemblyRoot)/%(Identity)/$(TargetFramework)/$(AssemblyName).dll')" />
+		</ItemGroup>
+		<Error Condition="!Exists('%(_PackageImplementation.Identity)')" Text="Missing package implementation: %(_PackageImplementation.Identity)" />
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(_PackageAssemblyRoot)/x86/$(TargetFramework)/$(AssemblyName).dll;$(_PackageAssemblyRoot)/x86/$(TargetFramework)/$(AssemblyName).pdb"
+									PackagePath="runtimes/win-x86/lib/$(_PackageTargetFramework)" />
+			<TfmSpecificPackageFile Include="$(_PackageAssemblyRoot)/x64/$(TargetFramework)/$(AssemblyName).dll;$(_PackageAssemblyRoot)/x64/$(TargetFramework)/$(AssemblyName).pdb"
+									PackagePath="runtimes/win-x64/lib/$(_PackageTargetFramework)" />
+			<TfmSpecificPackageFile Include="$(_PackageAssemblyRoot)/arm64/$(TargetFramework)/$(AssemblyName).dll;$(_PackageAssemblyRoot)/arm64/$(TargetFramework)/$(AssemblyName).pdb"
+									PackagePath="runtimes/win-arm64/lib/$(_PackageTargetFramework)" />
+		</ItemGroup>
+	</Target>
 </Project>

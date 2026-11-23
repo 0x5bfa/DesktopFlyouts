@@ -28,7 +28,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.csproj" />
+		<ProjectReference Include="..\..\src\DesktopFlyouts.WinUI\DesktopFlyouts.WinUI.csproj" Condition="'$(DesktopFlyoutsPackageVersion)' == ''" />
+		<PackageReference Include="DesktopFlyouts.WinUI" VersionOverride="$(DesktopFlyoutsPackageVersion)" Condition="'$(DesktopFlyoutsPackageVersion)' != ''" />
 	</ItemGroup>
 
 	<Import Project="..\DesktopFlyouts.SampleApp.Shared\DesktopFlyouts.SampleApp.Shared.projitems" Label="Shared" />

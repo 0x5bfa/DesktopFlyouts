@@ -494,7 +494,7 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 			return;
 		}
 
-		var previousWndProc = (nint)PInvoke.SetWindowLongPtr(
+		var previousWndProc = SetWindowLongPointer(
 			hWnd,
 			WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC,
 			Marshal.GetFunctionPointerForDelegate(_xamlWndProc));
@@ -512,7 +512,7 @@ internal unsafe partial class XamlIslandHostWindow : IDisposable
 				continue;
 			}
 
-			PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC, item.Value);
+			SetWindowLongPointer(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC, item.Value);
 		}
 
 		_subclassedXamlWndProcs.Clear();

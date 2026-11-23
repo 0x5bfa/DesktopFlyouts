@@ -4,6 +4,10 @@
 
 ### Changed
 
+- Package WinUI and UWP implementations for Windows x86, x64, and ARM64 together, with
+  architecture-neutral compile references. Ship Uno's managed library as AnyCPU.
+- Build packages through `.nuget/DesktopFlyoutsPack.proj` and verify their architectures and sample consumers
+  before publishing; ordinary library builds no longer produce partial packages.
 - Organize tests into shared test sources and template-based WinUI and UWP test applications.
   Both applications reference their platform library directly, replacing product-source links;
   run them with Microsoft.Testing.Platform (MTP) through `MSTest.Sdk`. WinUI supports `dotnet test`;
@@ -11,6 +15,7 @@
 
 ### Fixed
 
+- Use the 32-bit `SetWindowLongW` API when subclassing XAML island windows on x86.
 - Reuse WinUI island backdrop instances across open/close cycles while reconnecting native
   targets and releasing them on the owning UI thread.
 - Make WinUI test data sources and template selectors compatible with AOT marshalling, and wait

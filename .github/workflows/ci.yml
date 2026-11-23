@@ -36,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [Debug, Release]
-        platform: [x64, ARM64]
+        platform: [x86, x64, ARM64]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       PLATFORM: ${{ matrix.platform }}
@@ -61,6 +61,7 @@ jobs:
     - name: Build the tests
       run: msbuild /restore $env:WINUI_TEST_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
     - name: Run the tests
+      if: matrix.platform != 'ARM64'
       run: dotnet test --project $env:WINUI_TEST_PROJ_PATH -c $env:CONFIGURATION -p:Platform=$env:PLATFORM --no-build
 
   uwp:
@@ -69,7 +70,7 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [Debug, Release]
-        platform: [x64, ARM64]
+        platform: [x86, x64, ARM64]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       PLATFORM: ${{ matrix.platform }}
@@ -94,6 +95,7 @@ jobs:
     - name: Build the tests
       run: msbuild /restore $env:UWP_TEST_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
     - name: Run the tests
+      if: matrix.platform != 'ARM64'
       run: msbuild $env:UWP_TEST_PROJ_PATH /t:InvokeTestingPlatform /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
 
   uno:

@@ -8,12 +8,25 @@
 global using static global::Windows.Win32.ManualDefinitions;
 
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Windows.Win32;
 
-internal static class ManualDefinitions
+internal static partial class ManualDefinitions
 {
+	// SetWindowLongPtrW is a header alias for SetWindowLongW on 32-bit Windows.
+	public static nint SetWindowLongPointer(HWND window, WINDOW_LONG_PTR_INDEX index, nint value)
+	{
+		return nint.Size == 8
+			? SetWindowLongPtr64(window, index, value)
+			: PInvoke.SetWindowLong(window, index, unchecked((int)value));
+	}
+
+	[LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
+	private static partial nint SetWindowLongPtr64(HWND window, WINDOW_LONG_PTR_INDEX index, nint value);
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool SUCCEEDED(HRESULT hr)
 	{
