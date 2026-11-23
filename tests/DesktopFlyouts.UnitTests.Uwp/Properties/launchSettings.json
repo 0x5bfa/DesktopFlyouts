@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "DesktopFlyouts.UnitTests.Uwp": {
+      "commandName": "MsixPackage"
+    }
+  }
+}

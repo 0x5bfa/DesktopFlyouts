@@ -1,10 +1,3 @@
 <Project>
     <Import Project="../Directory.Build.targets" />
-
-    <PropertyGroup Condition="'$(UseWinUI)' != 'true'">
-        <!-- Keep the tests portable and independent from the library's Windows RIDs. -->
-        <RuntimeIdentifiers></RuntimeIdentifiers>
-        <RuntimeIdentifier></RuntimeIdentifier>
-        <Platforms>AnyCPU</Platforms>
-    </PropertyGroup>
 </Project>

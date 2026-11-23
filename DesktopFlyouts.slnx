@@ -61,16 +61,18 @@
   </Folder>
 
   <Folder Name="/tests/">
-    <Project Path="tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj" />
-    <Project Path="tests/DesktopFlyouts.Uwp.CompositionTests/DesktopFlyouts.Uwp.CompositionTests.csproj">
+    <Project Path="tests/DesktopFlyouts.UnitTests.Shared/DesktopFlyouts.UnitTests.Shared.shproj" Id="ccd06971-c6ed-466e-950e-d871e83ef903" />
+    <Project Path="tests/DesktopFlyouts.UnitTests.Uwp/DesktopFlyouts.UnitTests.Uwp.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
+      <Deploy />
     </Project>
-    <Project Path="tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj">
+    <Project Path="tests/DesktopFlyouts.UnitTests.WinUI/DesktopFlyouts.UnitTests.WinUI.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
+      <Deploy />
     </Project>
   </Folder>
 </Solution>

@@ -27,34 +27,42 @@ env:
   UNO_PROJ_PATH:         '${{ github.workspace }}\samples\DesktopFlyouts.SampleApp.Uno\DesktopFlyouts.SampleApp.Uno.csproj'
 
 jobs:
-  test-unit:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v6
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: 10.0.x
-    - name: Build unit tests
-      run: dotnet build tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj --configuration Release
-    - name: Run unit tests
-      run: dotnet test tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj --configuration Release --no-build --no-restore
-
-  test-windows-integration:
+  test-windows:
     runs-on: windows-2025-vs2026
-    timeout-minutes: 5
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [WinUI, Uwp]
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v6
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v3
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 10.0.x
-    - name: Build WinUI integration tests
-      run: dotnet build tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --configuration Release -p:Platform=x64
-    - name: Run WinUI integration tests
-      run: dotnet run --project tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --configuration Release --no-build --no-restore -p:Platform=x64
+        dotnet-version: |
+          9.0.x
+          10.0.x
+    - name: Enable developer mode for test deployment
+      shell: pwsh
+      run: |
+        $developerModeKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+        New-Item -Path $developerModeKey -Force | Out-Null
+        New-ItemProperty -Path $developerModeKey -Name AllowDevelopmentWithoutDevLicense -PropertyType DWord -Value 1 -Force | Out-Null
+    - name: Build ${{ matrix.flavor }} tests
+      run: msbuild /restore tests/DesktopFlyouts.UnitTests.${{ matrix.flavor }}/DesktopFlyouts.UnitTests.${{ matrix.flavor }}.csproj /p:Configuration=Release /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false
+    - name: Run ${{ matrix.flavor }} tests
+      shell: pwsh
+      run: ./tests/Run-Tests.ps1 -Flavor ${{ matrix.flavor }} -Configuration Release -Platform x64
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: UnitTests-${{ matrix.flavor }}
+        path: tests/TestResults/${{ matrix.flavor }}/*.trx
+        if-no-files-found: ignore
 
   build-winui:
     runs-on: windows-2025-vs2026

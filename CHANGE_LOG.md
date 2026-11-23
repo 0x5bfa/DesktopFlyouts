@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Organize tests into shared test sources and template-based WinUI and UWP test applications.
+  Both applications reference their platform library directly, replacing product-source links;
+  run Windows tests through Visual Studio Test Explorer or `tests/Run-Tests.ps1`.
+
 ## [3.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v3.0.0)
 
 DesktopFlyouts 3.0 introduces a simpler flyout model with consistent appearance, data-bound

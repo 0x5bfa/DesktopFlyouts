@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DesktopFlyouts.UnitTests.WinUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DesktopFlyouts.UnitTests.WinUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

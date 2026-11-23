@@ -1,65 +1,89 @@
 # Testing
 
-The repository has three MSTest projects. Unit tests source-link the platform-neutral helpers.
-UWP Composition tests validate Acrylic and Mica effect graphs without opening a window. WinUI integration
-tests reference the actual WinUI library and source-link the internal User32 overflow helpers.
+The tests use two Windows application hosts built from the WinUI and UWP unit-testing templates:
 
-## Unit tests
+- `DesktopFlyouts.UnitTests.WinUI` references `src/DesktopFlyouts.WinUI`.
+- `DesktopFlyouts.UnitTests.Uwp` references `src/DesktopFlyouts.Uwp`.
+- `DesktopFlyouts.UnitTests.Shared` is a shared project containing the common geometry and
+  placement tests. Both application projects import its test sources.
 
-The platform-neutral project targets `net10.0`. It source-links the host-layout and flyout-positioning helpers and checks:
+Tests exercise the actual library assemblies. `InternalsVisibleTo` grants each platform's test
+assembly access to its library's internal helpers; no production files under `src` are compiled
+into the test applications. The UWP project additionally links the sample's collection declaration
+so its WinRT interface regression test continues to cover the real sample type.
 
-- Screen-to-monitor coordinate mapping across negative monitor origins and multiple DPI scales, monitor-sized host bounds, and rejection of invalid scales or out-of-monitor regions.
-- Viewport sizing for content and stretching, minimum/maximum constraints, element margins, work-area clipping, and invalid placement margins.
-- Independent visible edge gap and shadow bounds at fractional DPI scales, negative monitor origins, and tiny work areas.
-- Taskbar-edge placement, overflow contact edges and tray-icon row or column alignment, popup margin and transition direction, explicit anchors, and work-area clamping.
-- Live tray-bound providers, side changes across monitors, visible auto-hide overlap on all four edges, partially revealed bars, and combining reserved and overlay appbar areas without double subtraction.
+Both hosts target `net10.0-windows10.0.26100.0`. They include application XAML, package manifests,
+assets, launch settings, and x86/x64/ARM64 publish profiles. WinUI also has a test window and a
+Win32 application manifest. MSTest's `UnitTestClient` hosts VSTest execution, and `[UITestMethod]`
+runs tests on the appropriate XAML UI thread.
 
-Build and run from the repository root:
+## Build
 
-```powershell
-dotnet build tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj --configuration Debug
-dotnet test tests/DesktopFlyouts.UnitTests/DesktopFlyouts.UnitTests.csproj --configuration Debug --no-build --no-restore
-```
-
-## UWP Composition and collection interop tests
-
-On Windows, these tests source-link the production Acrylic and Mica effect factories and create
-them on a dedicated Composition dispatcher. They verify that the native Compositor accepts the
-dark, light, and accent effect graphs and connects the Acrylic backdrop/noise or Mica wallpaper
-inputs. The Mica tests supply a color brush as wallpaper input. They do not create XAML content,
-open windows, or verify desktop pixels, wallpaper capture, host activation policy, or system fallback settings.
-The test project includes app-local Win2D and CRT forwarders so it needs no MSIX registration.
-It also checks that the library's direct island collection and the sample data source expose
-generated WinRT collection interfaces. These ABI checks create no XAML application or window.
-Dynamic code support is disabled for this test host to exercise the same marshalling path as
-the AOT-configured samples.
+Use Visual Studio's MSBuild on Windows with the Windows SDK, UWP tooling, and .NET 9/10 installed.
+Run each build separately and inspect its result before continuing. From a Visual Studio
+Developer PowerShell, build x64 Debug tests with:
 
 ```powershell
-dotnet test tests/DesktopFlyouts.Uwp.CompositionTests/DesktopFlyouts.Uwp.CompositionTests.csproj --configuration Debug -p:Platform=x64 /p:AppxBundle=Never
+msbuild /restore tests/DesktopFlyouts.UnitTests.WinUI/DesktopFlyouts.UnitTests.WinUI.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false
 ```
-
-The UWP library also requires an explicit build platform, for example `-p:Platform=x64`.
-
-## WinUI integration tests
-
-`DesktopFlyouts.WinUI.IntegrationTests` is a Windows-only WinUI test application targeting `net10.0-windows10.0.26100.0`. It uses MSTest's Microsoft.Testing.Platform runner inside a real WinUI application with a dispatcher and message loop. It includes:
-
-- Live XAML-island lifecycle tests for the library-owned Desktop Acrylic: repeated open/close preserves the connected backdrop instance; transitions run on the owning UI thread; a close requested during opening completes and permits reopening; and disposal cancels an already-queued open.
-- Forced garbage collections while backdrops are connected and after disposal, with managed `RPC_E_WRONG_THREAD` exceptions recorded as failures. A native fail-fast also fails the test process.
-- User32 overflow tests: overflow-window discovery, bounds after resize, hide/destroy notifications, unrelated-event filtering, exactly-once deferred completion, callback cancellation on disposal, native callback lifetime across collection, and cleanup when dispatch is rejected.
-- Layout-monitor tests using test-owned windows and real WinEvents: move/hide/destroy notifications, deferred coalescing, unrelated-window filtering, replacement HWNDs, queued-callback cancellation, hook lifetime across GC, and rejected-dispatch cleanup.
-- Live placement tests inject only a shell-bounds provider into the actual library: the WinUI host moves when bounds change, retains the last anchor during temporary lookup failure, preserves the backdrop and open transition, and stops sampling when closed. No Explorer registration or global work-area settings are changed by these tests.
-- Nonvisual flyout/island definitions and private chrome tests cover lazy host creation, public dimension validation and live bindings, fixed frame/shadow geometry without extra island insets, minimum/maximum and stretch sizing, oversized requests, live item sources, source/direct-item exclusivity, templates and selectors, resource override isolation, weighted island allocation, visibility/orientation, scrolling within islands, clipping of overflowing island collections, and changes during opening. Content definitions can be reused after disposal releases their containers.
-
-The test app is intentionally **unpackaged** and carries its Windows App SDK runtime alongside it, so it needs neither MSIX registration nor a separately installed Windows App Runtime. This differs from the packaged sample's launch requirements. Build and run on Windows with an interactive desktop, the Windows SDK, and .NET 10 installed (x64 example):
 
 ```powershell
-dotnet build tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --configuration Debug -p:Platform=x64
-dotnet run --project tests/DesktopFlyouts.WinUI.IntegrationTests/DesktopFlyouts.WinUI.IntegrationTests.csproj --configuration Debug --no-build --no-restore -p:Platform=x64
+msbuild /restore tests/DesktopFlyouts.UnitTests.Uwp/DesktopFlyouts.UnitTests.Uwp.csproj /p:Configuration=Debug /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false
 ```
 
-Use `dotnet run` for the self-hosted MTP application; the existing VSTest-based `dotnet test` command still applies to the portable unit tests. To filter the integration suite, append `-- --filter "FullyQualifiedName~DesktopFlyoutLifecycleTests"` to the run command.
+Use `Release` for CI builds, or change `Platform` to `x86` or `ARM64` for another architecture.
+Test hosts disable Native AOT publishing so VSTest can discover and execute tests through
+reflection. The UWP host retains the dynamic-code-disabled runtime feature switch for its
+WinRT collection marshalling regression tests.
 
-The lifecycle tests exercise the public flyout methods used by the sample's tray icon and Toggle open button. They do not automate Explorer's tray, reproduce every scheduling interleaving, capture every native first-chance notification, or verify pixels and animation smoothness. The User32 tests retain their controlled queued dispatcher and do not deterministically cover the initial discovery-to-hook race or Explorer restarts.
+## Run
 
-CI runs unit tests on Ubuntu and the combined WinUI/User32 integration suite on Windows. Both projects disable AOT publishing; the portable project uses VSTest without Windows runtime identifiers, while the WinUI app uses an architecture-specific runtime identifier and MTP.
+Running either suite starts a test application and requires an interactive Windows desktop.
+Enable Windows developer mode for deployment of the unsigned development layout. In Visual
+Studio, build and run the tests through Test Explorer. For command-line execution after building:
+
+```powershell
+./tests/Run-Tests.ps1 -Flavor WinUI -Configuration Debug -Platform x64
+```
+
+```powershell
+./tests/Run-Tests.ps1 -Flavor Uwp -Configuration Debug -Platform x64
+```
+
+To select a subset, add `-Filter 'FullyQualifiedName~DesktopFlyoutLifecycleTests'`, for example,
+to the WinUI command. Test Explorer also supports selecting individual tests.
+
+The script locates Visual Studio's VSTest runner and passes it the matching `.build.appxrecipe`,
+which supplies the package deployment and activation information. It returns the runner's exit
+code, fails if no tests are discovered, and writes TRX results under `tests/TestResults/<flavor>`.
+Use the recipe rather than invoking a test DLL with `dotnet test` or launching its executable
+outside the package context. Build-only verification does not execute any test methods.
+
+## Coverage
+
+The shared suite runs in both platform assemblies and covers:
+
+- Monitor coordinates, negative origins, fractional DPI, host bounds, and invalid regions.
+- Content/stretch sizing, min/max constraints, work-area clipping, and placement margins.
+- Independent screen-edge gaps and shadow bounds, including tiny work areas.
+- Explicit and tray anchors, taskbar edges, overflow alignment, and work-area clamping.
+- Live tray-bound providers and visible auto-hide taskbar overlap on all four edges.
+
+The WinUI suite additionally covers live flyout lifecycle, backdrop reuse and cleanup, queued
+opening and dismissal, UI-thread ownership and garbage collection, bindings and sizing, live
+item sources/templates, protected chrome, weighted island allocation, visibility/orientation,
+scrollable island content, and clipping of overflowing collections. Its native tests create
+controlled test windows to verify WinEvent filtering, coalescing, deferred callbacks, disposal,
+replacement HWNDs, and rejected dispatch. These tests call the monitors in the library assembly;
+test-only native calls reuse that assembly's native types.
+
+The UWP suite additionally validates native Acrylic and Mica effect graphs on a dedicated
+Composition dispatcher, including their source inputs, and queries the generated WinRT
+collection interfaces on the library's island collection and the sample's data source. The Mica
+tests substitute a color brush for wallpaper pixels.
+
+These tests do not automate Explorer's tray, verify rendered pixels or animation smoothness,
+reproduce every scheduling interleaving, or exercise Linux/X11 runtime behavior. UWP material
+tests do not verify desktop wallpaper capture or all system fallback settings.
+
+CI builds and runs both x64 Release application suites on Windows and uploads their TRX results.

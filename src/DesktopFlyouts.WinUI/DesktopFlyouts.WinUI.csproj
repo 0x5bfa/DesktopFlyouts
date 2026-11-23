@@ -49,4 +49,8 @@
 
 	<Import Project="..\DesktopFlyouts.Shared\DesktopFlyouts.Shared.projitems" Label="Shared" />
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="DesktopFlyouts.UnitTests.WinUI" />
+	</ItemGroup>
+
 </Project>

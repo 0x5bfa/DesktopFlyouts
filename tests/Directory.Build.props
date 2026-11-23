@@ -2,10 +2,8 @@
     <Import Project="../Directory.Build.props" />
 
     <PropertyGroup>
-        <!-- Test assemblies are run by VSTest and must stay framework-dependent. -->
+        <!-- The template's VSTest app hosts discover tests through reflection. -->
         <PublishAot>false</PublishAot>
         <AotCompatible>false</AotCompatible>
-        <RuntimeIdentifiers></RuntimeIdentifiers>
-        <RuntimeIdentifier></RuntimeIdentifier>
     </PropertyGroup>
 </Project>
