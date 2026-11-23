@@ -120,6 +120,10 @@ belong in **Unreleased** until the next release is tagged.
 - Apply activation mode before showing the host and activate visible islands when requested.
 - Respond to system theme changes at runtime.
 
+## [3.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v3.0.0)
+
+- 
+
 ## [2.2.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v2.2.0)
 
 - Rename the Windows App SDK library project from `DesktopFlyouts.Wasdk` to

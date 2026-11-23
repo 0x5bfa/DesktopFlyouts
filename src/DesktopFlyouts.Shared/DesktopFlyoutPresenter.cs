@@ -32,8 +32,10 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 
 	internal DesktopFlyoutPresenter(DesktopFlyout owner)
 	{
+		DefaultStyleKey = typeof(DesktopFlyoutPresenter);
 		Owner = owner;
-		Style = DesktopFlyoutChromeResources.Get<Style>("DesktopFlyoutPresenterStyle");
+
+		//Style = DesktopFlyoutChromeResources.Get<Style>("DesktopFlyoutPresenterStyle");
 		ApplyConfiguration();
 		LayoutUpdated += OnLayoutUpdated;
 	}
@@ -53,7 +55,7 @@ internal sealed partial class DesktopFlyoutPresenter : ItemsControl
 		base.OnApplyTemplate();
 		RootGrid = GetTemplateChild("PART_RootGrid") as Grid
 			?? throw new InvalidOperationException("The library flyout template has no root grid.");
-		RootGrid.Style = new Style(typeof(Grid));
+
 		if (GetTemplateChild("PART_ScrollViewer") is ScrollViewer scroll)
 		{
 			scroll.Style = new Style(typeof(ScrollViewer));

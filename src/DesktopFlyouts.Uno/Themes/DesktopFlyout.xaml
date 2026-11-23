@@ -21,10 +21,8 @@
 
     <Style x:Key="DesktopFlyoutIslandContentPresenterStyle" TargetType="ContentPresenter" />
 
-    <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
-        <Grid
-            x:Name="PART_RootGrid"
-            TabFocusNavigation="Cycle">
+    <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="local:DesktopFlyoutPresenter">
+        <Grid x:Name="PART_RootGrid" TabFocusNavigation="Cycle">
             <ScrollViewer
                 x:Name="PART_ScrollViewer"
                 HorizontalContentAlignment="Stretch"
@@ -43,7 +41,7 @@
         <local:DesktopFlyoutIslandsPanel />
     </ItemsPanelTemplate>
 
-    <Style x:Key="DesktopFlyoutPresenterStyle" TargetType="ItemsControl">
+    <Style x:Key="DesktopFlyoutPresenterStyle" TargetType="local:DesktopFlyoutPresenter">
         <Setter Property="Template" Value="{StaticResource DesktopFlyoutPresenterTemplate}" />
         <Setter Property="ItemsPanel" Value="{StaticResource DesktopFlyoutItemsPanel}" />
         <Setter Property="IsTabStop" Value="False" />
@@ -55,24 +53,24 @@
     <ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
         <Grid
             x:Name="PART_RootGrid"
-            Style="{x:Null}"
             BorderBrush="{ThemeResource DesktopFlyoutIslandBorderBrush}"
             BorderThickness="{ThemeResource DesktopFlyoutIslandBorderThickness}"
-            CornerRadius="8">
+            CornerRadius="8"
+            Style="{x:Null}">
             <ContentPresenter
                 x:Name="PART_MainContentPresenter"
-                Style="{StaticResource DesktopFlyoutIslandContentPresenterStyle}"
                 Margin="0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
+                BorderBrush="Transparent"
+                BorderThickness="0"
                 Content="{TemplateBinding Content}"
                 ContentTemplate="{TemplateBinding ContentTemplate}"
                 ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
-                BorderBrush="Transparent"
-                BorderThickness="0"
-                CornerRadius="7" />
+                CornerRadius="7"
+                Style="{StaticResource DesktopFlyoutIslandContentPresenterStyle}" />
         </Grid>
     </ControlTemplate>
 
@@ -98,7 +96,7 @@
         </Setter>
     </Style>
 
-
+    <Style BasedOn="{StaticResource DesktopFlyoutPresenterStyle}" TargetType="local:DesktopFlyoutPresenter" />
     <Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
 
 </ResourceDictionary>

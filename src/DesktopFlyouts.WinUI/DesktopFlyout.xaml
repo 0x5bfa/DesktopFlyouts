@@ -22,7 +22,7 @@
     <Style x:Key="DesktopFlyoutIslandContentPresenterStyle" TargetType="ContentPresenter" />
     <Style x:Key="DesktopFlyoutIslandSystemBackdropElementStyle" TargetType="SystemBackdropElement" />
 
-    <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="ItemsControl">
+    <ControlTemplate x:Key="DesktopFlyoutPresenterTemplate" TargetType="local:DesktopFlyoutPresenter">
         <Grid x:Name="PART_RootGrid" TabFocusNavigation="Cycle">
             <ScrollViewer
                 x:Name="PART_ScrollViewer"
@@ -42,7 +42,7 @@
         <local:DesktopFlyoutIslandsPanel />
     </ItemsPanelTemplate>
 
-    <Style x:Key="DesktopFlyoutPresenterStyle" TargetType="ItemsControl">
+    <Style x:Key="DesktopFlyoutPresenterStyle" TargetType="local:DesktopFlyoutPresenter">
         <Setter Property="Template" Value="{StaticResource DesktopFlyoutPresenterTemplate}" />
         <Setter Property="ItemsPanel" Value="{StaticResource DesktopFlyoutItemsPanel}" />
         <Setter Property="IsTabStop" Value="False" />
@@ -54,10 +54,10 @@
     <ControlTemplate x:Key="DesktopFlyoutIslandTemplate" TargetType="ContentControl">
         <Grid
             x:Name="PART_RootGrid"
-            CornerRadius="8"
-            Style="{x:Null}"
             BorderBrush="{ThemeResource DesktopFlyoutIslandBorderBrush}"
             BorderThickness="{ThemeResource DesktopFlyoutIslandBorderThickness}"
+            CornerRadius="8"
+            Style="{x:Null}"
             Translation="0,0,36">
             <Grid.Shadow>
                 <ThemeShadow />
@@ -105,7 +105,7 @@
         </Setter>
     </Style>
 
-
+    <Style BasedOn="{StaticResource DesktopFlyoutPresenterStyle}" TargetType="local:DesktopFlyoutPresenter" />
     <Style BasedOn="{StaticResource DefaultWindows11DesktopMenuFlyoutStyle}" TargetType="local:DesktopMenuFlyout" />
 
 </ResourceDictionary>
