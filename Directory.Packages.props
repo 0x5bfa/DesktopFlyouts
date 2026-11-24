@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-		<DesktopFlyoutsPackageVersion>3.2.0-local</DesktopFlyoutsPackageVersion>
+		<DesktopFlyoutsPackageVersion>4.0.0-local</DesktopFlyoutsPackageVersion>
 		<DesktopFlyoutsPackageOutputPath Condition="'$(DesktopFlyoutsPackageOutputPath)' == ''">artifacts/packages</DesktopFlyoutsPackageOutputPath>
 	</PropertyGroup>
 
