@@ -20,6 +20,40 @@
 		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CollectWindowsPackageFiles</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
+	<Target Name="PackDesktopFlyoutsPackageBeforeSampleBuild"
+			BeforeTargets="PrepareForBuild"
+			Condition="'$(DesignTimeBuild)' != 'true' And '$(SkipDesktopFlyoutsAutoPack)' != 'true' And '$(DesktopFlyoutsPackageVersion)' != '' And
+				('$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.WinUI' Or
+				 '$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.Uwp' Or
+				 '$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.Uno')">
+		<PropertyGroup>
+			<_DesktopFlyoutsPackFlavor Condition="'$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.WinUI'">WinUI</_DesktopFlyoutsPackFlavor>
+			<_DesktopFlyoutsPackFlavor Condition="'$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.Uwp'">Uwp</_DesktopFlyoutsPackFlavor>
+			<_DesktopFlyoutsPackFlavor Condition="'$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.Uno'">Uno</_DesktopFlyoutsPackFlavor>
+			<_DesktopFlyoutsPackageCacheId Condition="'$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.WinUI'">desktopflyouts.winui</_DesktopFlyoutsPackageCacheId>
+			<_DesktopFlyoutsPackageCacheId Condition="'$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.Uwp'">desktopflyouts.uwp</_DesktopFlyoutsPackageCacheId>
+			<_DesktopFlyoutsPackageCacheId Condition="'$(MSBuildProjectName)' == 'DesktopFlyouts.SampleApp.Uno'">desktopflyouts.uno</_DesktopFlyoutsPackageCacheId>
+			<_DesktopFlyoutsPackageCacheDirectory>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_DesktopFlyoutsPackageCacheId)', '$(DesktopFlyoutsPackageVersion)'))</_DesktopFlyoutsPackageCacheDirectory>
+		</PropertyGroup>
+		<Error Condition="'$(_DesktopFlyoutsPackFlavor)' != 'Uno' And '$(MSBuildRuntimeType)' != 'Full'"
+			   Text="Use Visual Studio MSBuild to build the Windows sample with its local package." />
+		<Error Condition="'$(NuGetPackageRoot)' == ''"
+			   Text="NuGetPackageRoot is required to refresh the local package before building the sample." />
+		<Message Importance="high" Text="Packing DesktopFlyouts.$(_DesktopFlyoutsPackFlavor) $(DesktopFlyoutsPackageVersion) (Release) before sample build." />
+		<MSBuild Projects="$(MSBuildThisFileDirectory).nuget/DesktopFlyoutsPack.proj"
+				 Targets="Pack"
+				 BuildInParallel="false"
+				 RemoveProperties="Platform;PlatformTarget;RuntimeIdentifier;TargetFramework"
+				 Properties="Configuration=Release;Flavor=$(_DesktopFlyoutsPackFlavor);PackageVersion=$(DesktopFlyoutsPackageVersion);PackageOutputPath=$(DesktopFlyoutsPackageOutputPath)" />
+		<RemoveDir Directories="$(_DesktopFlyoutsPackageCacheDirectory)"
+				  Condition="Exists('$(_DesktopFlyoutsPackageCacheDirectory)')" />
+		<Message Importance="normal" Text="Restoring DesktopFlyouts.$(_DesktopFlyoutsPackFlavor) from the freshly packed local feed." />
+		<MSBuild Projects="$(MSBuildProjectFullPath)"
+				 Targets="Restore"
+				 BuildInParallel="false"
+				 Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);DesktopFlyoutsPackageVersion=$(DesktopFlyoutsPackageVersion);DesktopFlyoutsPackageOutputPath=$(DesktopFlyoutsPackageOutputPath);RestoreConfigFile=$(RestoreConfigFile);RestorePackagesPath=$(RestorePackagesPath)" />
+	</Target>
+
 	<Target Name="CollectWindowsReferenceFiles" Condition="'$(_DesktopFlyoutsWindowsPackage)' == 'true'">
 		<Error Condition="'$(DesktopFlyoutsPackageRoot)' == ''"
 			   Text="Use .nuget/DesktopFlyoutsPack.proj to build and pack all Windows architectures together." />

@@ -37,16 +37,27 @@ function Assert-AssemblyArchitecture($Entry, [string] $Architecture) {
 
 # Retain the repository's feed mappings, with this build's packages selected from the local feed.
 [xml] $nugetConfig = Get-Content -LiteralPath (Join-Path $repositoryRoot 'nuget.config') -Raw
-$source = $nugetConfig.CreateElement('add')
-$source.SetAttribute('key', 'Local packages')
-$source.SetAttribute('value', $PackageDirectory)
-$nugetConfig.configuration.packageSources.AppendChild($source) | Out-Null
-$mapping = $nugetConfig.CreateElement('packageSource')
-$mapping.SetAttribute('key', 'Local packages')
-$pattern = $nugetConfig.CreateElement('package')
-$pattern.SetAttribute('pattern', 'DesktopFlyouts.*')
-$mapping.AppendChild($pattern) | Out-Null
-$nugetConfig.configuration.packageSourceMapping.AppendChild($mapping) | Out-Null
+$source = $nugetConfig.SelectSingleNode('/configuration/packageSources/add[@key="Local packages"]')
+if ($source) {
+    $source.SetAttribute('value', $PackageDirectory)
+}
+else {
+    $source = $nugetConfig.CreateElement('add')
+    $source.SetAttribute('key', 'Local packages')
+    $source.SetAttribute('value', $PackageDirectory)
+    $nugetConfig.configuration.packageSources.AppendChild($source) | Out-Null
+}
+$mapping = $nugetConfig.SelectSingleNode('/configuration/packageSourceMapping/packageSource[@key="Local packages"]')
+if (-not $mapping) {
+    $mapping = $nugetConfig.CreateElement('packageSource')
+    $mapping.SetAttribute('key', 'Local packages')
+    $nugetConfig.configuration.packageSourceMapping.AppendChild($mapping) | Out-Null
+}
+if (-not $mapping.SelectSingleNode('package[@pattern="DesktopFlyouts.*"]')) {
+    $pattern = $nugetConfig.CreateElement('package')
+    $pattern.SetAttribute('pattern', 'DesktopFlyouts.*')
+    $mapping.AppendChild($pattern) | Out-Null
+}
 $configPath = Join-Path $PackageDirectory 'consumer.nuget.config'
 $nugetConfig.Save($configPath)
 
@@ -84,7 +95,7 @@ foreach ($libraryFlavor in $Flavor) {
     Write-Host "Verified package assemblies: $assemblyName"
 
     $sample = Join-Path $repositoryRoot "samples/DesktopFlyouts.SampleApp.$libraryFlavor/DesktopFlyouts.SampleApp.$libraryFlavor.csproj"
-    $consumerArguments = @("/p:DesktopFlyoutsPackageVersion=$PackageVersion", "/p:RestoreConfigFile=$configPath", '/p:AppxPackageSigningEnabled=false')
+    $consumerArguments = @("/p:DesktopFlyoutsPackageVersion=$PackageVersion", "/p:DesktopFlyoutsPackageOutputPath=$PackageDirectory", "/p:RestoreConfigFile=$configPath", '/p:AppxPackageSigningEnabled=false', '/p:SkipDesktopFlyoutsAutoPack=true')
     if ($libraryFlavor -eq 'Uno') {
         & dotnet build $sample -c Release -a x64 @consumerArguments
         if ($LASTEXITCODE -ne 0) { throw 'Uno package consumer build failed.' }

@@ -38,7 +38,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\DesktopFlyouts.Uwp\DesktopFlyouts.Uwp.csproj" Condition="'$(DesktopFlyoutsPackageVersion)' == ''" />
-		<PackageReference Include="DesktopFlyouts.Uwp" VersionOverride="$(DesktopFlyoutsPackageVersion)" Condition="'$(DesktopFlyoutsPackageVersion)' != ''" />
+		<PackageReference Include="DesktopFlyouts.Uwp" Condition="'$(DesktopFlyoutsPackageVersion)' != ''" />
 	</ItemGroup>
 
 	<Import Project="..\DesktopFlyouts.SampleApp.Shared\DesktopFlyouts.SampleApp.Shared.projitems" Label="Shared" />
