@@ -96,7 +96,7 @@ _desktopMenuFlyout.Show(e.Point);
 1. Prerequisites
     - Windows 10 (Build 10.0.17763.0) onwards or Windows 11
     - Visual Studio with the Windows application build tools for your target
-    - .NET 10 SDK
+    - .NET 10 SDK or later
 2. Clone the repo
 3. Open the solution
 4. Build the solution

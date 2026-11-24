@@ -74,12 +74,12 @@ foreach ($libraryFlavor in $Flavor) {
     try {
         if ($libraryFlavor -eq 'Uno') {
             $assemblies = @($zip.Entries | Where-Object { $_.FullName -match "^lib/[^/]+/$assemblyName.dll$" })
-            if ($assemblies.Count -ne 2) { throw 'Expected both .NET target frameworks in the Uno package.' }
+            if ($assemblies.Count -ne 1) { throw 'Expected the .NET 10 target framework in the Uno package.' }
             foreach ($assembly in $assemblies) { Assert-AssemblyArchitecture $assembly 'AnyCPU' }
         }
         else {
             $references = @($zip.Entries | Where-Object { $_.FullName -match "^ref/[^/]+/$assemblyName.dll$" })
-            if ($references.Count -ne 2) { throw "Expected both .NET target frameworks in $assemblyName." }
+            if ($references.Count -ne 1) { throw "Expected the .NET 10 target framework in $assemblyName." }
             foreach ($reference in $references) {
                 Assert-AssemblyArchitecture $reference 'AnyCPU'
                 $framework = $reference.FullName.Split('/')[1]

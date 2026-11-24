@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Breaking change:** Drop the .NET 9 target and require .NET 10 or later. Applications targeting
+  .NET 9 must upgrade to .NET 10. The Uno package remains built against Uno Platform 6.6; Uno
+  applications targeting .NET 11 require a future package build against Uno Platform 7.0.
 - Define presenter styles in XAML, place default styles after their base styles, and add the
   missing Uno island presenter style.
 - Use dependency property generation for WinUI, UWP, and Uno.

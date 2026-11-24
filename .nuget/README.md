@@ -1,5 +1,9 @@
 DesktopFlyouts is a WinUI library for showing desktop flyouts from tray icons or programmatically.
 
+The packages target .NET 10. Newer .NET applications can use these assets when their platform
+dependencies support that target. The Uno package is built against Uno Platform 6.6. Uno
+applications targeting .NET 11 require the package to be rebuilt against Uno Platform 7.0.
+
 The WinUI and UWP packages include Windows x86, x64, and ARM64 implementations. Match the
 application's platform and runtime identifier; NuGet selects the appropriate implementation.
 The Uno package contains architecture-neutral managed code for Linux / X11 hosts with supported

@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 
-		<TargetFrameworks>net9.0-windows$(TargetWindowsVersion);net10.0-windows$(TargetWindowsVersion)</TargetFrameworks>
+		<TargetFramework>net10.0-windows$(TargetWindowsVersion)</TargetFramework>
 		<NoWarn>$(NoWarn);CS8305;NU5104;CS1591</NoWarn>
 		<DefineConstants>$(DefineConstants);WASDK</DefineConstants>
 
