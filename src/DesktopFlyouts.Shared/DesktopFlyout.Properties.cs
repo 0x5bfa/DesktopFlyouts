@@ -4,7 +4,6 @@
 using CommunityToolkit.WinUI;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 
 #if UWP
 using Windows.UI.Xaml;
@@ -24,18 +23,6 @@ public partial class DesktopFlyout
 	/// <value><see langword="true"/> after the open transition completes; otherwise, <see langword="false"/>.</value>
 	[GeneratedDependencyProperty]
 	public partial bool IsOpen { get; private set; }
-
-	/// <summary>
-	/// Gets the current lifecycle phase of the flyout.
-	/// </summary>
-	/// <value>The current opening, open, closing, or closed state.</value>
-	/// <remarks>
-	/// Unlike <see cref="IsOpen"/>, this property also distinguishes transitions in progress.
-	/// </remarks>
-	public DesktopFlyoutTransitionState TransitionState { get; private set; } = DesktopFlyoutTransitionState.Closed;
-
-	/// <summary>Occurs when the flyout lifecycle state changes.</summary>
-	public event EventHandler? TransitionStateChanged;
 
 	/// <summary>
 	/// Gets or sets whether open and close transitions are enabled.
@@ -77,21 +64,57 @@ public partial class DesktopFlyout
 	[GeneratedDependencyProperty(DefaultValue = DesktopFlyoutActivationMode.Activate)]
 	public partial DesktopFlyoutActivationMode ActivationMode { get; set; }
 
-	/// <summary>Identifies the <see cref="AutoCloseDelay"/> dependency property.</summary>
-	public static readonly DependencyProperty AutoCloseDelayProperty =
-		DependencyProperty.Register(nameof(AutoCloseDelay), typeof(TimeSpan), typeof(DesktopFlyout), new PropertyMetadata(TimeSpan.Zero, OnAutoCloseDelayPropertyChanged));
-
 	/// <summary>Gets or sets the delay after opening before automatic close; zero disables it.</summary>
-	public TimeSpan AutoCloseDelay
-	{
-		get => (TimeSpan)GetValue(AutoCloseDelayProperty);
-		set => SetValue(AutoCloseDelayProperty, value);
-	}
+	[GeneratedDependencyProperty(DefaultValueCallback = nameof(GetDefaultAutoCloseDelay))]
+	public partial TimeSpan AutoCloseDelay { get; set; }
 
-	private static void OnAutoCloseDelayPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
-	{
-		((DesktopFlyout)sender).RestartAutoCloseTimer();
-	}
+	/// <summary>Gets or sets the external item source; null restores the direct Islands collection.</summary>
+	[GeneratedDependencyProperty]
+	public partial object? IslandsSource { get; set; }
+
+	/// <summary>Gets or sets the template for item content inside the fixed island chrome.</summary>
+	[GeneratedDependencyProperty]
+	public partial DataTemplate? IslandTemplate { get; set; }
+
+	/// <summary>Gets or sets the selector for item content templates.</summary>
+	[GeneratedDependencyProperty]
+	public partial DataTemplateSelector? IslandTemplateSelector { get; set; }
+
+	/// <summary>Gets or sets the direction of island layout.</summary>
+	[GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
+	public partial Orientation IslandsOrientation { get; set; }
+
+	/// <summary>Gets or sets the requested width in DIPs; NaN means Auto.</summary>
+	[GeneratedDependencyProperty(DefaultValue = double.NaN)]
+	public partial double Width { get; set; }
+
+	/// <summary>Gets or sets the requested height in DIPs; NaN means Auto.</summary>
+	[GeneratedDependencyProperty(DefaultValue = double.NaN)]
+	public partial double Height { get; set; }
+
+	/// <summary>Gets or sets the minimum requested width in DIPs.</summary>
+	[GeneratedDependencyProperty(DefaultValue = 0D)]
+	public partial double MinWidth { get; set; }
+
+	/// <summary>Gets or sets the minimum requested height in DIPs.</summary>
+	[GeneratedDependencyProperty(DefaultValue = 0D)]
+	public partial double MinHeight { get; set; }
+
+	/// <summary>Gets or sets the maximum requested width in DIPs.</summary>
+	[GeneratedDependencyProperty(DefaultValue = double.PositiveInfinity)]
+	public partial double MaxWidth { get; set; }
+
+	/// <summary>Gets or sets the maximum requested height in DIPs.</summary>
+	[GeneratedDependencyProperty(DefaultValue = double.PositiveInfinity)]
+	public partial double MaxHeight { get; set; }
+
+	/// <summary>Gets or sets sizing alignment; Stretch fills an automatic width.</summary>
+	[GeneratedDependencyProperty(DefaultValue = HorizontalAlignment.Left)]
+	public partial HorizontalAlignment HorizontalAlignment { get; set; }
+
+	/// <summary>Gets or sets sizing alignment; Stretch fills an automatic height.</summary>
+	[GeneratedDependencyProperty(DefaultValue = VerticalAlignment.Top)]
+	public partial VerticalAlignment VerticalAlignment { get; set; }
 
 	partial void OnActivationModePropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
@@ -99,15 +122,10 @@ public partial class DesktopFlyout
 		UpdateFocusSuppression();
 	}
 
-	private readonly DesktopFlyoutIslandCollection _islands;
-
-	/// <summary>Gets the directly supplied island definitions, UI elements, or data items.</summary>
-	/// <remarks>Mutation is prohibited while IslandsSource is non-null.</remarks>
-	public IList<object> Islands => _islands;
-
-	/// <summary>Gets or sets the external item source; null restores the direct Islands collection.</summary>
-	[GeneratedDependencyProperty]
-	public partial object? IslandsSource { get; set; }
+	partial void OnAutoCloseDelayPropertyChanged(DependencyPropertyChangedEventArgs e)
+	{
+		RestartAutoCloseTimer();
+	}
 
 	partial void OnIslandsSourcePropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
@@ -119,103 +137,64 @@ public partial class DesktopFlyout
 		OnConfigurationChanged();
 	}
 
-	/// <summary>Gets or sets the template for item content inside the fixed island chrome.</summary>
-	[GeneratedDependencyProperty]
-	public partial DataTemplate? IslandTemplate { get; set; }
-
 	partial void OnIslandTemplatePropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnConfigurationChanged();
 	}
-
-	/// <summary>Gets or sets the selector for item content templates.</summary>
-	[GeneratedDependencyProperty]
-	public partial DataTemplateSelector? IslandTemplateSelector { get; set; }
 
 	partial void OnIslandTemplateSelectorPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnConfigurationChanged();
 	}
 
-	/// <summary>Gets or sets the direction of island layout.</summary>
-	[GeneratedDependencyProperty(DefaultValue = Orientation.Vertical)]
-	public partial Orientation IslandsOrientation { get; set; }
-
 	partial void OnIslandsOrientationPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnConfigurationChanged();
 	}
-
-	/// <summary>Gets or sets the requested width in DIPs; NaN means Auto.</summary>
-	[GeneratedDependencyProperty(DefaultValue = double.NaN)]
-	public partial double Width { get; set; }
 
 	partial void OnWidthPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnDimensionChanged(WidthProperty, e, true, false);
 	}
 
-	/// <summary>Gets or sets the requested height in DIPs; NaN means Auto.</summary>
-	[GeneratedDependencyProperty(DefaultValue = double.NaN)]
-	public partial double Height { get; set; }
-
 	partial void OnHeightPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnDimensionChanged(HeightProperty, e, true, false);
 	}
-
-	/// <summary>Gets or sets the minimum requested width in DIPs.</summary>
-	[GeneratedDependencyProperty(DefaultValue = 0D)]
-	public partial double MinWidth { get; set; }
 
 	partial void OnMinWidthPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnDimensionChanged(MinWidthProperty, e, false, false);
 	}
 
-	/// <summary>Gets or sets the minimum requested height in DIPs.</summary>
-	[GeneratedDependencyProperty(DefaultValue = 0D)]
-	public partial double MinHeight { get; set; }
-
 	partial void OnMinHeightPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnDimensionChanged(MinHeightProperty, e, false, false);
 	}
-
-	/// <summary>Gets or sets the maximum requested width in DIPs.</summary>
-	[GeneratedDependencyProperty(DefaultValue = double.PositiveInfinity)]
-	public partial double MaxWidth { get; set; }
 
 	partial void OnMaxWidthPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnDimensionChanged(MaxWidthProperty, e, false, true);
 	}
 
-	/// <summary>Gets or sets the maximum requested height in DIPs.</summary>
-	[GeneratedDependencyProperty(DefaultValue = double.PositiveInfinity)]
-	public partial double MaxHeight { get; set; }
-
 	partial void OnMaxHeightPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnDimensionChanged(MaxHeightProperty, e, false, true);
 	}
-
-	/// <summary>Gets or sets sizing alignment; Stretch fills an automatic width.</summary>
-	[GeneratedDependencyProperty(DefaultValue = HorizontalAlignment.Left)]
-	public partial HorizontalAlignment HorizontalAlignment { get; set; }
 
 	partial void OnHorizontalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnConfigurationChanged();
 	}
 
-	/// <summary>Gets or sets sizing alignment; Stretch fills an automatic height.</summary>
-	[GeneratedDependencyProperty(DefaultValue = VerticalAlignment.Top)]
-	public partial VerticalAlignment VerticalAlignment { get; set; }
-
 	partial void OnVerticalAlignmentPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnConfigurationChanged();
+	}
+
+	private static TimeSpan GetDefaultAutoCloseDelay()
+	{
+		return TimeSpan.Zero;
 	}
 
 	private void OnDimensionChanged(DependencyProperty property, DependencyPropertyChangedEventArgs e, bool allowAuto, bool allowInfinity)

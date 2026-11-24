@@ -21,24 +21,6 @@ public partial class DesktopFlyoutIsland : DependencyObject
 	private DesktopFlyoutIslandPresenter? _container;
 	internal event EventHandler? Changed;
 
-	/// <summary>Identifies the <see cref="Content"/> dependency property.</summary>
-	public static readonly DependencyProperty ContentProperty = DependencyProperty.Register(
-		nameof(Content), typeof(object), typeof(DesktopFlyoutIsland), new PropertyMetadata(null, OnIslandSizePropertyChanged));
-	/// <summary>Gets or sets the UI element or data displayed inside the fixed chrome.</summary>
-	public object? Content { get => GetValue(ContentProperty); set => SetValue(ContentProperty, value); }
-
-	/// <summary>Identifies the <see cref="ContentTemplate"/> dependency property.</summary>
-	public static readonly DependencyProperty ContentTemplateProperty = DependencyProperty.Register(
-		nameof(ContentTemplate), typeof(DataTemplate), typeof(DesktopFlyoutIsland), new PropertyMetadata(null, OnIslandSizePropertyChanged));
-	/// <summary>Gets or sets a template for this definition's content.</summary>
-	public DataTemplate? ContentTemplate { get => (DataTemplate?)GetValue(ContentTemplateProperty); set => SetValue(ContentTemplateProperty, value); }
-
-	/// <summary>Identifies the <see cref="Visibility"/> dependency property.</summary>
-	public static readonly DependencyProperty VisibilityProperty = DependencyProperty.Register(
-		nameof(Visibility), typeof(Visibility), typeof(DesktopFlyoutIsland), new PropertyMetadata(Visibility.Visible, OnIslandSizePropertyChanged));
-	/// <summary>Gets or sets whether this section occupies layout space.</summary>
-	public Visibility Visibility { get => (Visibility)GetValue(VisibilityProperty); set => SetValue(VisibilityProperty, value); }
-
 	internal void Attach(DesktopFlyoutIslandPresenter container)
 	{
 		if (_container is not null && !ReferenceEquals(_container, container))
@@ -49,10 +31,5 @@ public partial class DesktopFlyoutIsland : DependencyObject
 	internal void Detach(DesktopFlyoutIslandPresenter container)
 	{
 		if (ReferenceEquals(_container, container)) _container = null;
-	}
-
-	private static void OnIslandSizePropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
-	{
-		((DesktopFlyoutIsland)sender).Changed?.Invoke(sender, EventArgs.Empty);
 	}
 }

@@ -23,39 +23,8 @@ namespace DesktopFlyouts;
 public partial class DesktopFlyoutIslandsPanel : Panel
 {
 	/// <summary>Initializes the layout infrastructure without application implicit styles.</summary>
-	public DesktopFlyoutIslandsPanel()
+	public DesktopFlyoutIslandsPanel() : base()
 	{
-		Style = new Style(typeof(DesktopFlyoutIslandsPanel));
-	}
-
-	/// <summary>
-	/// Identifies the <see cref="Orientation"/> dependency property.
-	/// </summary>
-	public static readonly DependencyProperty OrientationProperty =
-		DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(DesktopFlyoutIslandsPanel), new PropertyMetadata(Orientation.Vertical, OnLayoutPropertyChanged));
-
-	/// <summary>
-	/// Gets or sets the fallback orientation used when the panel is not hosted by a <see cref="DesktopFlyout"/>.
-	/// </summary>
-	public Orientation Orientation
-	{
-		get => (Orientation)GetValue(OrientationProperty);
-		set => SetValue(OrientationProperty, value);
-	}
-
-	/// <summary>
-	/// Identifies the <see cref="Spacing"/> dependency property.
-	/// </summary>
-	public static readonly DependencyProperty SpacingProperty =
-		DependencyProperty.Register(nameof(Spacing), typeof(double), typeof(DesktopFlyoutIslandsPanel), new PropertyMetadata(0D, OnLayoutPropertyChanged));
-
-	/// <summary>
-	/// Gets or sets the spacing between visible islands.
-	/// </summary>
-	public double Spacing
-	{
-		get => (double)GetValue(SpacingProperty);
-		set => SetValue(SpacingProperty, value);
 	}
 
 	/// <inheritdoc/>
@@ -313,16 +282,6 @@ public partial class DesktopFlyoutIslandsPanel : Panel
 		return isVertical
 			? new(crossOffset, offset, cross, length)
 			: new(offset, crossOffset, length, cross);
-	}
-
-	private static void OnLayoutPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
-	{
-		if (dependencyObject is not DesktopFlyoutIslandsPanel panel)
-		{
-			return;
-		}
-
-		panel.InvalidateMeasure();
 	}
 
 	private readonly struct LayoutItem

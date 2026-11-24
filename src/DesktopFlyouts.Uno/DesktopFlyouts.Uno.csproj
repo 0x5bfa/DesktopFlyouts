@@ -1,4 +1,4 @@
-﻿<Project Sdk="Uno.Sdk">
+<Project Sdk="Uno.Sdk">
 
 	<PropertyGroup>
 
@@ -19,6 +19,8 @@
 
 		<UseWinUI>true</UseWinUI>
 		<WinUISDKReferences>false</WinUISDKReferences>
+		<DependencyPropertyGeneratorUseWindowsUIXaml>false</DependencyPropertyGeneratorUseWindowsUIXaml>
+		<EnableGeneratedDependencyPropertyAttributeEmbeddedMode>true</EnableGeneratedDependencyPropertyAttributeEmbeddedMode>
 
 		<Deterministic>true</Deterministic>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
@@ -51,7 +53,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- <PackageReference Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" PrivateAssets="all" /> -->
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" PrivateAssets="all" ExcludeAssets="compile;runtime" />
 		<PackageReference Include="Tmds.DBus.Protocol" />
 		<PackageReference Include="Tmds.DBus.Generator" />
 		<PackageReference Include="Svg.Skia" />

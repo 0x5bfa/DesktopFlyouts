@@ -51,8 +51,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutLayoutPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutSizeResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandsPanel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandsPanel.Properties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIsland.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesktopMenuFlyout.Properties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interop\WindowHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XamlIslandHostWindow.cs" />
   </ItemGroup>

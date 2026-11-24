@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using System;
+using System.Collections.Generic;
 
 #if UWP
 using Windows.Foundation.Metadata;
@@ -46,9 +47,26 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 	private bool _disposed;
 
 	private readonly DesktopFlyoutLayoutPanel _hostContainer;
+	private readonly DesktopFlyoutIslandCollection _islands;
 	private Grid? RootGrid;
 
 	internal DesktopFlyoutPresenter Presenter { get; }
+
+	/// <summary>
+	/// Gets the current lifecycle phase of the flyout.
+	/// </summary>
+	/// <value>The current opening, open, closing, or closed state.</value>
+	/// <remarks>
+	/// Unlike <see cref="IsOpen"/>, this property also distinguishes transitions in progress.
+	/// </remarks>
+	public DesktopFlyoutTransitionState TransitionState { get; private set; } = DesktopFlyoutTransitionState.Closed;
+
+	/// <summary>Occurs when the flyout lifecycle state changes.</summary>
+	public event EventHandler? TransitionStateChanged;
+
+	/// <summary>Gets the directly supplied island definitions, UI elements, or data items.</summary>
+	/// <remarks>Mutation is prohibited while IslandsSource is non-null.</remarks>
+	public IList<object> Islands => _islands;
 
 #if UWP
 	internal bool IsHostBackdropBrushEnabled => _host?.IsHostBackdropBrushEnabled == true;

@@ -3,7 +3,6 @@
 
 #if !WINDOWS
 using System.Drawing;
-using CommunityToolkit.WinUI;
 using FoundationSize = Windows.Foundation.Size;
 using Windows.Graphics;
 using Microsoft.UI.Xaml.Markup;
@@ -31,13 +30,6 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	private bool _isShowPending;
 
 	private Panel? MenuFlyoutTargetControl;
-
-	/// <summary>
-	/// Gets whether the menu flyout is currently open.
-	/// </summary>
-	/// <value><see langword="true"/> while the hosted menu is open; otherwise, <see langword="false"/>.</value>
-	[GeneratedDependencyProperty]
-	public partial bool IsOpen { get; private set; }
 
 	/// <summary>
 	/// Initializes a new instance of <see cref="DesktopMenuFlyout"/>.

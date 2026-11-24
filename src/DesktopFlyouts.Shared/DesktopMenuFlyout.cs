@@ -4,7 +4,6 @@
 #if WINDOWS
 using System;
 using System.Drawing;
-using CommunityToolkit.WinUI;
 using Windows.Graphics;
 
 
@@ -38,13 +37,6 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	private bool _disposed;
 
 	private Border? MenuFlyoutTargetControl;
-
-	/// <summary>
-	/// Gets whether the menu flyout is currently open.
-	/// </summary>
-	/// <value><see langword="true"/> while the hosted menu is open; otherwise, <see langword="false"/>.</value>
-	[GeneratedDependencyProperty]
-	public partial bool IsOpen { get; private set; }
 
 	/// <summary>
 	/// Initializes a new instance of <see cref="DesktopMenuFlyout"/>.

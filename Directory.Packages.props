@@ -5,8 +5,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageVersion Include="CommunityToolkit.Labs.Uwp.DependencyPropertyGenerator" Version="0.1.251101-build.2372" />
-		<PackageVersion Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" Version="0.1.260515-build.2617" />
+		<PackageVersion Include="CommunityToolkit.Labs.Uwp.DependencyPropertyGenerator" Version="0.1.261027-build.2704" />
+		<PackageVersion Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" Version="0.1.261027-build.2704" />
 		<PackageVersion Include="CommunityToolkit.Uwp.Controls.Primitives" Version="8.2.250402" />
 		<PackageVersion Include="CommunityToolkit.Uwp.Controls.SettingsControls" Version="8.2.250402" />
 		<PackageVersion Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.3.260402-preview2" />
