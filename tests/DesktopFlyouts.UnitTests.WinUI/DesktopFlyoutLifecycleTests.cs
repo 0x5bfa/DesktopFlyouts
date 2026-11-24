@@ -35,9 +35,9 @@ public sealed class DesktopFlyoutLifecycleTests
 		flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
 		await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
 		var island = (Control)GetPresenter(flyout).ContainerFromIndex(0);
+		await WaitForLoaded(island);
 		var backdrop = FindBackdropElement(island)?.SystemBackdrop;
 		Assert.IsNotNull(backdrop);
-		Assert.IsTrue(island.IsLoaded, "Exercise a live XAML island, not just backdrop construction.");
 		var element = FindBackdropElement(island);
 		Assert.IsNotNull(element);
 		Assert.AreSame(backdrop, element.SystemBackdrop);
@@ -195,6 +195,16 @@ public sealed class DesktopFlyoutLifecycleTests
 		while (flyout.TransitionState != expected)
 		{
 			Assert.IsLessThan(TimeSpan.FromSeconds(5), timeout.Elapsed, $"Timed out waiting for {expected}; actual state: {flyout.TransitionState}.");
+			await Task.Delay(10);
+		}
+	}
+
+	private static async Task WaitForLoaded(FrameworkElement element)
+	{
+		var timeout = Stopwatch.StartNew();
+		while (!element.IsLoaded)
+		{
+			Assert.IsLessThan(TimeSpan.FromSeconds(5), timeout.Elapsed, "Timed out waiting for the flyout island to load.");
 			await Task.Delay(10);
 		}
 	}
