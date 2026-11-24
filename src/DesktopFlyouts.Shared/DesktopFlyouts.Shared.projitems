@@ -46,7 +46,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyout.Properties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutPresenter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandPresenter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutChromeResources.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutIslandCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutChromeMetrics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesktopFlyoutLayoutPanel.cs" />

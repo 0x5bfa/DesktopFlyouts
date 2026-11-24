@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Apply the library presenter style explicitly so unpackaged WinUI apps can open desktop flyouts
+  when the host does not resolve the default style from the library's theme dictionary.
+- Resolve default styles after their base styles in all platform dictionaries and add the missing
+  Uno island presenter style.
+
 ## [3.1.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v3.1.0)
 
 Add `DesktopFlyoutPosition.FromTrayIconBounds` for tray icons registered by your app or another

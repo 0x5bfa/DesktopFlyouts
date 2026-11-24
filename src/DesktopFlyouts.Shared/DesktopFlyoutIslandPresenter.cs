@@ -2,9 +2,10 @@
 // Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
 using System.Numerics;
+#if HAS_UNO
 using Windows.UI;
+#endif
 
 #if UWP
 using Windows.UI.Xaml;
@@ -36,15 +37,6 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 	private Grid? _root;
 	private ContentPresenter? _contentPresenter;
 	private bool _hasItem;
-	private bool _isUpdatingProtectedChrome;
-	private readonly HashSet<Brush> _expectedRootBorderBrushes = [];
-	private readonly HashSet<Thickness> _expectedRootBorderThicknesses = [];
-	private Style? _expectedContentPresenterStyle;
-#if WASDK && !HAS_UNO
-	private Style? _expectedBackdropStyle;
-#endif
-	private readonly Dictionary<(DependencyObject Element, DependencyProperty Property), object?> _protectedChromeValues = [];
-	private readonly List<(DependencyObject Element, DependencyProperty Property, long Token)> _chromePropertyCallbacks = [];
 #if !HAS_UNO
 	private CompositionRoundedRectangleGeometry? _clipGeometry;
 	private CompositionGeometricClip? _contentClip;
@@ -61,13 +53,8 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 	internal DesktopFlyoutIslandPresenter(DesktopFlyout owner)
 	{
 		_owner = owner;
-		Style = new Style(typeof(ContentControl));
-		Template = DesktopFlyoutChromeResources.Get<ControlTemplate>("DesktopFlyoutIslandTemplate");
-		HorizontalAlignment = HorizontalAlignment.Stretch;
-		VerticalAlignment = VerticalAlignment.Stretch;
-		IsTabStop = false;
-		Margin = new Thickness(0);
-		Padding = new Thickness(0);
+		DefaultStyleKey = typeof(DesktopFlyoutIslandPresenter);
+
 		Loaded += (_, _) => { UpdateChrome(force: true); UpdateContentClip(); };
 		Unloaded += (_, _) => { ClearOwnerBackdrop(); ReleaseClip(); };
 		SizeChanged += (_, _) => _owner.OnIslandLayoutChanged();
@@ -123,60 +110,37 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 	protected override void OnApplyTemplate()
 	{
 		base.OnApplyTemplate();
-		UnregisterChromePropertyCallbacks();
+
 		_root = GetTemplateChild("PART_RootGrid") as Grid
 			?? throw new InvalidOperationException("The library island template has no root grid.");
-		_root.SizeChanged += (_, _) => UpdateContentClip();
 		_contentPresenter = GetTemplateChild("PART_MainContentPresenter") as ContentPresenter
 			?? throw new InvalidOperationException("The library island template has no main content presenter.");
+
+		_root.SizeChanged += (_, _) => UpdateContentClip();
 		_contentPresenter.SizeChanged += (_, _) => UpdateContentClip();
-		_expectedRootBorderBrushes.Clear();
-		_expectedRootBorderThicknesses.Clear();
-		foreach (var theme in new[] { "Light", "Dark", "HighContrast" })
-		{
-			_expectedRootBorderBrushes.Add(DesktopFlyoutChromeResources.GetTheme<Brush>(theme, "DesktopFlyoutIslandBorderBrush"));
-			_expectedRootBorderThicknesses.Add(DesktopFlyoutChromeResources.GetTheme<Thickness>(theme, "DesktopFlyoutIslandBorderThickness"));
-		}
-		_expectedContentPresenterStyle = DesktopFlyoutChromeResources.Get<Style>("DesktopFlyoutIslandContentPresenterStyle");
+
 #if !HAS_UNO
 		_rootShadow = _root.Shadow as ThemeShadow;
 #endif
+
 #if WASDK && !HAS_UNO
 		_backdrop = GetTemplateChild("PART_Backdrop") as SystemBackdropElement
 			?? throw new InvalidOperationException("The library island template has no system backdrop element.");
-		_expectedBackdropStyle = DesktopFlyoutChromeResources.Get<Style>("DesktopFlyoutIslandSystemBackdropElementStyle");
 #endif
-		ValidateExpectedStyles();
-		RegisterChromePropertyCallback(_root, FrameworkElement.StyleProperty);
-		RegisterChromePropertyCallback(_root, Grid.BorderBrushProperty);
-		RegisterChromePropertyCallback(_root, Grid.BorderThicknessProperty);
-		RegisterChromePropertyCallback(_root, Grid.CornerRadiusProperty);
-		RegisterChromePropertyCallback(_contentPresenter, FrameworkElement.StyleProperty);
-		RegisterChromePropertyCallback(_contentPresenter, ContentPresenter.BorderBrushProperty);
-		RegisterChromePropertyCallback(_contentPresenter, ContentPresenter.BorderThicknessProperty);
-		RegisterChromePropertyCallback(_contentPresenter, ContentPresenter.CornerRadiusProperty);
-#if WASDK && !HAS_UNO
-		RegisterChromePropertyCallback(_backdrop, FrameworkElement.StyleProperty);
-		RegisterChromePropertyCallback(_backdrop, SystemBackdropElement.SystemBackdropProperty);
-#endif
+
 		UpdateChrome();
 	}
 
 	internal void UpdateChrome(bool force = false)
 	{
-		if (_root is null || !_hasItem) return;
+		if (_root is null || !_hasItem)
+		{
+			return;
+		}
+
 		var light = GeneralHelpers.IsTaskbarLight();
-		ValidateExpectedStyles();
-		_isUpdatingProtectedChrome = true;
-		try
-		{
-			RequestedTheme = light ? ElementTheme.Light : ElementTheme.Dark;
-			CaptureCurrentRootBorderValues();
-		}
-		finally
-		{
-			_isUpdatingProtectedChrome = false;
-		}
+		RequestedTheme = light ? ElementTheme.Light : ElementTheme.Dark;
+
 #if !HAS_UNO
 		var highContrast = new AccessibilitySettings().HighContrast;
 		if (highContrast)
@@ -189,6 +153,7 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		}
 		_root.Shadow ??= _rootShadow;
 #endif
+
 #if WASDK && !HAS_UNO
 		_root.Background = null;
 		if (_backdrop is not null)
@@ -199,10 +164,15 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 				_ownedBackdrop = new DesktopFlyoutAcrylicBackdrop(light);
 			}
 			else if (force)
+			{
 				ClearOwnerBackdrop();
+			}
+
 			// Reconnect native targets on the UI thread without replacing the backdrop instance.
 			if (!ReferenceEquals(_backdrop.SystemBackdrop, _ownedBackdrop))
+			{
 				_backdrop.SystemBackdrop = _ownedBackdrop;
+			}
 		}
 #elif UWP
 		if (force || _root.Background is not DesktopFlyoutBackdropBrush brush || brush.UseLightTheme != light || brush.UseAccent != GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
@@ -210,86 +180,6 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 #else
 		_root.Background = new SolidColorBrush(light ? Color.FromArgb(255, 243, 243, 243) : Color.FromArgb(255, 32, 32, 32));
 #endif
-	}
-
-	private void RegisterChromePropertyCallback(DependencyObject element, DependencyProperty property)
-	{
-		_protectedChromeValues[(element, property)] = element.GetValue(property);
-		var token = element.RegisterPropertyChangedCallback(property, OnChromePropertyChanged);
-		_chromePropertyCallbacks.Add((element, property, token));
-	}
-
-	private void OnChromePropertyChanged(DependencyObject sender, DependencyProperty property)
-	{
-		if (_isUpdatingProtectedChrome) return;
-		ValidateExpectedStyles();
-
-		if (property == FrameworkElement.StyleProperty)
-		{
-			_protectedChromeValues[(sender, property)] = sender.GetValue(property);
-			return;
-		}
-
-		if (ReferenceEquals(sender, _root) && property == Grid.BorderBrushProperty &&
-			sender.GetValue(property) is Brush borderBrush && _expectedRootBorderBrushes.Contains(borderBrush))
-		{
-			_protectedChromeValues[(sender, property)] = sender.GetValue(property);
-			return;
-		}
-		if (ReferenceEquals(sender, _root) && property == Grid.BorderThicknessProperty &&
-			sender.GetValue(property) is Thickness borderThickness && _expectedRootBorderThicknesses.Contains(borderThickness))
-		{
-			_protectedChromeValues[(sender, property)] = sender.GetValue(property);
-			return;
-		}
-
-#if WASDK && !HAS_UNO
-		if (ReferenceEquals(sender, _backdrop) && property == SystemBackdropElement.SystemBackdropProperty &&
-			(sender.GetValue(property) is null or DesktopFlyoutAcrylicBackdrop))
-		{
-			_protectedChromeValues[(sender, property)] = sender.GetValue(property);
-			return;
-		}
-#endif
-
-		if (_protectedChromeValues.TryGetValue((sender, property), out var expectedValue) &&
-			Equals(sender.GetValue(property), expectedValue))
-		{
-			return;
-		}
-
-		throw new InvalidOperationException($"The island's protected dependency property {property} was changed unexpectedly.");
-	}
-
-	private void ValidateExpectedStyles()
-	{
-		if (_root is not null && _root.Style is not null)
-			throw new InvalidOperationException("The island root grid has an unexpected style.");
-		if (_contentPresenter is not null && !ReferenceEquals(_contentPresenter.Style, _expectedContentPresenterStyle))
-			throw new InvalidOperationException("The island content presenter has an unexpected style.");
-#if WASDK && !HAS_UNO
-		if (_backdrop is not null && !ReferenceEquals(_backdrop.Style, _expectedBackdropStyle))
-			throw new InvalidOperationException("The island backdrop element has an unexpected style.");
-#endif
-	}
-
-	private void CaptureCurrentRootBorderValues()
-	{
-		if (_root is null) return;
-		if (!_expectedRootBorderBrushes.Contains(_root.BorderBrush))
-			throw new InvalidOperationException("The island root grid has an unexpected border brush.");
-		if (!_expectedRootBorderThicknesses.Contains(_root.BorderThickness))
-			throw new InvalidOperationException("The island root grid has an unexpected border thickness.");
-		_protectedChromeValues[(_root, Grid.BorderBrushProperty)] = _root.GetValue(Grid.BorderBrushProperty);
-		_protectedChromeValues[(_root, Grid.BorderThicknessProperty)] = _root.GetValue(Grid.BorderThicknessProperty);
-	}
-
-	private void UnregisterChromePropertyCallbacks()
-	{
-		foreach (var (element, property, token) in _chromePropertyCallbacks)
-			element.UnregisterPropertyChangedCallback(property, token);
-		_chromePropertyCallbacks.Clear();
-		_protectedChromeValues.Clear();
 	}
 
 	internal void ClearOwnerBackdrop()
