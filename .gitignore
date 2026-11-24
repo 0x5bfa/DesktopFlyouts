@@ -73,6 +73,11 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+!artifacts/
+artifacts/*
+!artifacts/packages/
+artifacts/packages/*
+!artifacts/packages/.gitkeep
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -221,6 +226,11 @@ PublishScripts/
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
+
+# Keep the configured local NuGet feed path present in fresh checkouts.
+!artifacts/
+!artifacts/packages/
+!artifacts/packages/.gitkeep
 
 # Microsoft Azure Build Output
 csx/

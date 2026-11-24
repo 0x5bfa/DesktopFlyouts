@@ -34,7 +34,6 @@ jobs:
       uses: actions/setup-dotnet@v6
       with:
         dotnet-version: |
-          9.0.x
           10.0.x
     - name: NuGet login
       id: nuget-login

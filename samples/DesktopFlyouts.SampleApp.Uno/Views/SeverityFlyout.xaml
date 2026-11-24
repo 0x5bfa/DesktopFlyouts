@@ -11,7 +11,7 @@
 
     <local:DesktopFlyout.Islands>
         <!--  Attention  -->
-        <local:DesktopFlyoutIsland IslandHeight="150">
+        <local:DesktopFlyoutIsland Height="150">
             <Grid
                 Padding="16"
                 Background="{ThemeResource SystemFillColorAttentionBackgroundBrush}"
@@ -43,7 +43,7 @@
         </local:DesktopFlyoutIsland>
 
         <!--  Success  -->
-        <local:DesktopFlyoutIsland IslandHeight="150">
+        <local:DesktopFlyoutIsland Height="150">
             <Grid
                 Padding="16"
                 Background="{ThemeResource SystemFillColorSuccessBackgroundBrush}"
@@ -75,7 +75,7 @@
         </local:DesktopFlyoutIsland>
 
         <!--  Warning  -->
-        <local:DesktopFlyoutIsland IslandHeight="150">
+        <local:DesktopFlyoutIsland Height="150">
             <Grid
                 Padding="16"
                 Background="{ThemeResource SystemFillColorCautionBackgroundBrush}"
@@ -107,7 +107,7 @@
         </local:DesktopFlyoutIsland>
 
         <!--  Critical  -->
-        <local:DesktopFlyoutIsland IslandHeight="150">
+        <local:DesktopFlyoutIsland Height="150">
             <Grid
                 Padding="16"
                 Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}"

@@ -47,8 +47,8 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 	private DesktopFlyoutAcrylicBackdrop? _ownedBackdrop;
 #endif
 
-	internal GridLength IslandWidth => _definition?.IslandWidth ?? GridLength.Auto;
-	internal GridLength IslandHeight => _definition?.IslandHeight ?? GridLength.Auto;
+	internal GridLength IslandWidth => _definition?.Width ?? GridLength.Auto;
+	internal GridLength IslandHeight => _definition?.Height ?? GridLength.Auto;
 
 	internal DesktopFlyoutIslandPresenter(DesktopFlyout owner)
 	{

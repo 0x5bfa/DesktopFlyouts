@@ -12,7 +12,7 @@
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland x:Name="FirstIsland" IslandHeight="*">
+        <local:DesktopFlyoutIsland x:Name="FirstIsland" Height="*">
             <Grid>
                 <Button
                     HorizontalAlignment="Center"
@@ -34,7 +34,7 @@
                     Content="Collapse" />
             </Grid>
         </local:DesktopFlyoutIsland>
-        <local:DesktopFlyoutIsland x:Name="SecondIsland" IslandHeight="300">
+        <local:DesktopFlyoutIsland x:Name="SecondIsland" Height="300">
             <Grid>
                 <TextBlock
                     HorizontalAlignment="Center"
@@ -48,7 +48,7 @@
                     Content="Collapse" />
             </Grid>
         </local:DesktopFlyoutIsland>
-        <local:DesktopFlyoutIsland x:Name="ThirdIsland" IslandHeight="300">
+        <local:DesktopFlyoutIsland x:Name="ThirdIsland" Height="300">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />

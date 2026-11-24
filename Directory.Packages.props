@@ -7,9 +7,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageVersion Include="DesktopFlyouts.WinUI" Version="[$(DesktopFlyoutsPackageVersion)]" />
-		<PackageVersion Include="DesktopFlyouts.Uwp" Version="[$(DesktopFlyoutsPackageVersion)]" />
-		<PackageVersion Include="DesktopFlyouts.Uno" Version="[$(DesktopFlyoutsPackageVersion)]" />
+		<PackageVersion Include="DesktopFlyouts.WinUI" Version="[$(DesktopFlyoutsPackageVersion)]" Condition="'$(DesktopFlyoutsPackageVersion)' != ''" />
+		<PackageVersion Include="DesktopFlyouts.Uwp" Version="[$(DesktopFlyoutsPackageVersion)]" Condition="'$(DesktopFlyoutsPackageVersion)' != ''" />
+		<PackageVersion Include="DesktopFlyouts.Uno" Version="[$(DesktopFlyoutsPackageVersion)]" Condition="'$(DesktopFlyoutsPackageVersion)' != ''" />
 	</ItemGroup>
 
 	<ItemGroup>

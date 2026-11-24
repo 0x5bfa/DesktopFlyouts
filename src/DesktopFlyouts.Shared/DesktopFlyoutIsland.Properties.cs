@@ -26,18 +26,18 @@ public partial class DesktopFlyoutIsland
 	public partial Visibility Visibility { get; set; }
 
 	/// <summary>
-	/// Gets or sets the island width.
+	/// Gets or sets the width allocation for this island.
 	/// </summary>
 	/// <value>The width used when the owner flyout arranges islands horizontally. The default is <see cref="GridLength.Auto"/>.</value>
 	[GeneratedDependencyProperty(DefaultValueCallback = nameof(GetDefaultIslandLength))]
-	public partial GridLength IslandWidth { get; set; }
+	public partial GridLength Width { get; set; }
 
 	/// <summary>
-	/// Gets or sets the island height.
+	/// Gets or sets the height allocation for this island.
 	/// </summary>
 	/// <value>The height used when the owner flyout arranges islands vertically. The default is <see cref="GridLength.Auto"/>.</value>
 	[GeneratedDependencyProperty(DefaultValueCallback = nameof(GetDefaultIslandLength))]
-	public partial GridLength IslandHeight { get; set; }
+	public partial GridLength Height { get; set; }
 
 	partial void OnContentPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
@@ -54,12 +54,12 @@ public partial class DesktopFlyoutIsland
 		OnIslandPropertyChanged();
 	}
 
-	partial void OnIslandWidthPropertyChanged(DependencyPropertyChangedEventArgs e)
+	partial void OnWidthPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnIslandPropertyChanged();
 	}
 
-	partial void OnIslandHeightPropertyChanged(DependencyPropertyChangedEventArgs e)
+	partial void OnHeightPropertyChanged(DependencyPropertyChangedEventArgs e)
 	{
 		OnIslandPropertyChanged();
 	}

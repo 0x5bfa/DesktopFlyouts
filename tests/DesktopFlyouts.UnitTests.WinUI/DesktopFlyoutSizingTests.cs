@@ -106,8 +106,8 @@ public sealed partial class DesktopFlyoutSizingTests
 	{
 		using var flyout = CreateFlyout();
 		var definition = (DesktopFlyoutIsland)flyout.Islands[0];
-		definition.IslandHeight = new GridLength(1, GridUnitType.Star);
-		definition.IslandWidth = new GridLength(1, GridUnitType.Star);
+		definition.Height = new GridLength(1, GridUnitType.Star);
+		definition.Width = new GridLength(1, GridUnitType.Star);
 		await Open(flyout);
 		Assert.AreEqual(82, Presenter(flyout).ActualWidth, 1);
 		Assert.AreEqual(62, Presenter(flyout).ActualHeight, 1);
@@ -185,9 +185,9 @@ public sealed partial class DesktopFlyoutSizingTests
 		flyout.Width = 240;
 		flyout.Height = 360;
 		var first = (DesktopFlyoutIsland)flyout.Islands[0];
-		first.IslandHeight = new GridLength(1, GridUnitType.Star);
-		first.IslandWidth = new GridLength(1, GridUnitType.Star);
-		var second = new DesktopFlyoutIsland { IslandHeight = new GridLength(2, GridUnitType.Star), IslandWidth = new GridLength(2, GridUnitType.Star) };
+		first.Height = new GridLength(1, GridUnitType.Star);
+		first.Width = new GridLength(1, GridUnitType.Star);
+		var second = new DesktopFlyoutIsland { Height = new GridLength(2, GridUnitType.Star), Width = new GridLength(2, GridUnitType.Star) };
 		flyout.Islands.Add(second);
 		await Open(flyout);
 		var one = (FrameworkElement)Presenter(flyout).ContainerFromIndex(0);

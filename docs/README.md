@@ -61,7 +61,7 @@ Define a flyout with one or more islands:
     xmlns:desktop="using:DesktopFlyouts"
     Width="360">
 
-    <desktop:DesktopFlyoutIsland IslandHeight="300">
+    <desktop:DesktopFlyoutIsland Height="300">
         <Grid Padding="16">
             <TextBlock Text="Hello from a desktop flyout" />
         </Grid>
@@ -178,7 +178,7 @@ and allocation. Every item is displayed inside a library-owned container:
 
 ```xml
 <desktop:DesktopFlyout Width="360">
-    <desktop:DesktopFlyoutIsland IslandHeight="300">
+    <desktop:DesktopFlyoutIsland Height="300">
         <Grid Padding="16">
             <TextBlock Text="Content inside a consistent frame" />
         </Grid>
@@ -187,7 +187,7 @@ and allocation. Every item is displayed inside a library-owned container:
 ```
 
 Use `IslandsOrientation="Vertical"` for stacked sections and `Horizontal` for side-by-side sections.
-`IslandHeight` controls allocation in vertical layouts; `IslandWidth` controls it in horizontal
+`Height` controls allocation in vertical layouts; `Width` controls it in horizontal
 layouts. These are `GridLength` values: a number for DIPs, `Auto` for desired size, or weighted
 stars such as `*` and `2*` for sharing the assigned space. Stars do not implicitly stretch an
 automatically sized parent. Set a definition's `Visibility="Collapsed"` to remove its layout space.

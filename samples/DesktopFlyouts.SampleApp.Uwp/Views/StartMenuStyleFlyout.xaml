@@ -12,7 +12,7 @@
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland IslandWidth="640">
+        <local:DesktopFlyoutIsland Width="640">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -394,7 +394,7 @@
             </Grid>
         </local:DesktopFlyoutIsland>
 
-        <local:DesktopFlyoutIsland IslandWidth="210">
+        <local:DesktopFlyoutIsland Width="210">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />

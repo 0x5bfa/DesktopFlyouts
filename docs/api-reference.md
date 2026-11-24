@@ -144,8 +144,8 @@ at a time; it can be reused once its previous flyout has detached it.
 | --- | --- | --- | --- |
 | `Content` | `object?` | `null` | UI element or data displayed inside the fixed frame. DP. |
 | `ContentTemplate` | `DataTemplate?` | `null` | Definition-specific content template, taking precedence over the flyout template. DP. |
-| `IslandWidth` | `GridLength` | `Auto` | Horizontal main-axis allocation: pixels, Auto, or weighted stars. DP. |
-| `IslandHeight` | `GridLength` | `Auto` | Vertical main-axis allocation: pixels, Auto, or weighted stars. DP. |
+| `Width` | `GridLength` | `Auto` | Horizontal main-axis allocation: pixels, Auto, or weighted stars. DP. |
+| `Height` | `GridLength` | `Auto` | Vertical main-axis allocation: pixels, Auto, or weighted stars. DP. |
 | `Visibility` | `Visibility` | `Visible` | Collapsed sections consume no space. DP. |
 
 Definition changes update a connected container and its layout. Arbitrary data items in Islands

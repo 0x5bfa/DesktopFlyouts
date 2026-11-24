@@ -52,11 +52,10 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: |
-          9.0.x
           10.0.x
 
     - name: Build the sample app
-      run: msbuild /restore $env:WINUI_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
+      run: msbuild /restore $env:WINUI_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:DesktopFlyoutsPackageVersion=
 
     - name: Build the tests
       run: msbuild /restore $env:WINUI_TEST_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
@@ -86,11 +85,10 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: |
-          9.0.x
           10.0.x
 
     - name: Build the sample app
-      run: msbuild /restore $env:UWP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
+      run: msbuild /restore $env:UWP_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM /p:DesktopFlyoutsPackageVersion=
 
     - name: Build the tests
       run: msbuild /restore $env:UWP_TEST_PROJ_PATH /p:Configuration=$env:CONFIGURATION /p:Platform=$env:PLATFORM
@@ -116,10 +114,9 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: |
-          9.0.x
           10.0.x
 
     - name: Build the sample app
       run: |
-        dotnet restore $env:UNO_PROJ_PATH
-        dotnet build $env:UNO_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM --no-restore
+        dotnet restore $env:UNO_PROJ_PATH -a $env:PLATFORM -p:DesktopFlyoutsPackageVersion=
+        dotnet build $env:UNO_PROJ_PATH -c $env:CONFIGURATION -a $env:PLATFORM --no-restore -p:DesktopFlyoutsPackageVersion=

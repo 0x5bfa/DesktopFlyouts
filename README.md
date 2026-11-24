@@ -49,10 +49,10 @@ This project provides `DesktopFlyout` for lightweight desktop panels and `Deskto
 	xmlns:me="using:DesktopFlyouts"
 	Width="360">
 
-	<me:DesktopFlyoutIsland IslandHeight="300">
+	<me:DesktopFlyoutIsland Height="300">
 		<!-- Put elements here -->
 	</me:DesktopFlyoutIsland>
-	<me:DesktopFlyoutIsland IslandHeight="300">
+	<me:DesktopFlyoutIsland Height="300">
 		<!-- Put elements here -->
 	</me:DesktopFlyoutIsland>
 

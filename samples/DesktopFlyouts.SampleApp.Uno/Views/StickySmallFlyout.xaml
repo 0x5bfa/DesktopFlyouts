@@ -9,7 +9,7 @@
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland IslandHeight="260">
+        <local:DesktopFlyoutIsland Height="260">
             <Grid Padding="18" RowSpacing="14">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

@@ -12,13 +12,13 @@
     mc:Ignorable="d">
 
     <local:DesktopFlyout.Islands>
-        <local:DesktopFlyoutIsland IslandHeight="*">
+        <local:DesktopFlyoutIsland Height="*">
             <Grid>
                 <TextBlock Text="A" />
             </Grid>
         </local:DesktopFlyoutIsland>
 
-        <local:DesktopFlyoutIsland IslandHeight="Auto">
+        <local:DesktopFlyoutIsland Height="Auto">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="46" />
