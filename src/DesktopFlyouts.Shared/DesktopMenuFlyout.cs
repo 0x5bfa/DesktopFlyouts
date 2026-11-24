@@ -5,6 +5,8 @@
 using System;
 using System.Drawing;
 using Windows.Graphics;
+using Windows.Win32;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 
 #if UWP
@@ -35,6 +37,7 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	private readonly XamlIslandHostWindow? _host;
 	private MenuFlyout? _menuFlyout;
 	private bool _disposed;
+	private bool _menuPopupReported;
 
 	private Border? MenuFlyoutTargetControl;
 
@@ -76,6 +79,7 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		if (_menuFlyout is null)
 		{
 			_menuFlyout = new MenuFlyout();
+			_menuFlyout.Opened += MenuFlyout_Opened;
 			_menuFlyout.Closed += MenuFlyout_Closed;
 		}
 
@@ -104,13 +108,27 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 
 		UpdateFlyoutTheme();
 
-		_host?.MoveAndResize(new RectInt32() { X = point.X, Y = point.Y });
-		_host?.SetHWndRectRegion(new RectInt32() { Width = 1, Height = 1 });
-		_ = _host?.UpdateWindowVisibility(true);
+		bool wasOpen = IsOpen;
+		try
+		{
+			_host?.MoveAndResize(new RectInt32() { X = point.X, Y = point.Y }, activate: false);
+			_host?.SetHWndRectRegion(new RectInt32() { Width = 1, Height = 1 });
+			_ = _host?.UpdateWindowVisibility(true);
 
-		_menuFlyout.ShowAt(MenuFlyoutTargetControl);
+			_menuFlyout.ShowAt(MenuFlyoutTargetControl);
+			ReportMenuPopupOpened();
 
-		IsOpen = true;
+			IsOpen = true;
+		}
+		catch
+		{
+			if (!wasOpen)
+			{
+				HideMenuHost();
+			}
+
+			throw;
+		}
 	}
 
 	/// <summary>
@@ -126,15 +144,52 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 			return;
 		}
 
-		_ = _host?.UpdateWindowVisibility(false);
+		try
+		{
+			_menuFlyout?.Hide();
+		}
+		finally
+		{
+			HideMenuHost();
+		}
+	}
 
-		_menuFlyout?.Hide();
-
-		IsOpen = false;
+	private void MenuFlyout_Opened(object? sender, object e)
+	{
+		ReportMenuPopupOpened();
 	}
 
 	private void MenuFlyout_Closed(object? sender, object e)
 	{
+		HideMenuHost();
+	}
+
+	private void ReportMenuPopupOpened()
+	{
+		if (_disposed || _menuPopupReported || _menuFlyout?.IsOpen != true || _host is null)
+		{
+			return;
+		}
+
+		// Explorer defers overflow light dismissal while a Win32 menu popup is open.
+		_menuPopupReported = true;
+		PInvoke.NotifyWinEvent(PInvoke.EVENT_SYSTEM_MENUPOPUPSTART, _host.HWnd, (int)OBJECT_IDENTIFIER.OBJID_WINDOW, (int)PInvoke.CHILDID_SELF);
+	}
+
+	private void ReportMenuPopupClosed()
+	{
+		if (!_menuPopupReported || _host is null)
+		{
+			return;
+		}
+
+		_menuPopupReported = false;
+		PInvoke.NotifyWinEvent(PInvoke.EVENT_SYSTEM_MENUPOPUPEND, _host.HWnd, (int)OBJECT_IDENTIFIER.OBJID_WINDOW, (int)PInvoke.CHILDID_SELF);
+	}
+
+	private void HideMenuHost()
+	{
+		ReportMenuPopupClosed();
 		_ = _host?.UpdateWindowVisibility(false);
 		IsOpen = false;
 	}
@@ -180,21 +235,28 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 
 		_disposed = true;
 
-		if (_menuFlyout is not null)
+		try
 		{
-			_menuFlyout.Closed -= MenuFlyout_Closed;
-			if (IsOpen)
+			if (_menuFlyout is not null)
 			{
-				_menuFlyout.Hide();
+				_menuFlyout.Opened -= MenuFlyout_Opened;
+				_menuFlyout.Closed -= MenuFlyout_Closed;
+				if (IsOpen)
+				{
+					_menuFlyout.Hide();
+				}
+
+				_menuFlyout.Items.Clear();
+				_menuFlyout = null;
 			}
-
-			_menuFlyout.Items.Clear();
-			_menuFlyout = null;
 		}
-
-		_host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
-		_host?.Dispose();
-		IsOpen = false;
+		finally
+		{
+			ReportMenuPopupClosed();
+			_host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
+			_host?.Dispose();
+			IsOpen = false;
+		}
 
 		GC.SuppressFinalize(this);
 	}

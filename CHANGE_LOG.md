@@ -10,6 +10,8 @@
 - Define presenter styles in XAML, place default styles after their base styles, and add the
   missing Uno island presenter style.
 - Use dependency property generation for WinUI, UWP, and Uno.
+- Keep the Windows notification-area overflow open while interacting with an open
+  `DesktopMenuFlyout` on Windows builds that honor menu popup notifications.
 
 ## [3.1.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v3.1.0)
 
