@@ -1,7 +1,6 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-#if WINDOWS
 using CommunityToolkit.WinUI;
 
 namespace DesktopFlyouts;
@@ -15,4 +14,3 @@ public partial class DesktopMenuFlyout
 	[GeneratedDependencyProperty]
 	public partial bool IsOpen { get; private set; }
 }
-#endif
