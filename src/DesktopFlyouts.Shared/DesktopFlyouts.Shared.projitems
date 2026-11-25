@@ -23,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Options\DesktopFlyoutTransitionState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\TaskbarEdge.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\GeneralHelpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DesktopFlyoutBackdropPalette.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interop\IXamlSourceTransparency.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interop\ManualDefinitions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interop\WNDPROC.cs" />

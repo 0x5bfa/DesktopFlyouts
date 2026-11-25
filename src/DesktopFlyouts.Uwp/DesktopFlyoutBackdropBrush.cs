@@ -44,7 +44,7 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 		UseAccent = useAccent;
 		_canUseHostBackdrop = canUseHostBackdrop;
 		_dispatcher = Dispatcher;
-		UpdateFallbackColor();
+		UpdateFallbackColor(GetPalette().FallbackColor);
 	}
 
 	protected override void OnConnected()
@@ -67,7 +67,7 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 	protected override void OnDisconnected()
 	{
 		_connected = false;
-        _capabilities?.Changed -= Capabilities_Changed;
+		_capabilities?.Changed -= Capabilities_Changed;
 		_capabilities = null;
 		_uiSettings.AdvancedEffectsEnabledChanged -= UISettings_AdvancedEffectsEnabledChanged;
 		_uiSettings.ColorValuesChanged -= UISettings_ColorValuesChanged;
@@ -76,19 +76,17 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 		ClearCompositionResources();
 	}
 
-	private Color GetTintColor()
+	private DesktopFlyoutBackdropPalette GetPalette()
 	{
-		return UseAccent
-			? _uiSettings.GetColorValue(UIColorType.AccentDark2)
-			: UseLightTheme ? Color.FromArgb(255, 243, 243, 243) : Color.FromArgb(255, 32, 32, 32);
+		var accent = UseAccent ? _uiSettings.GetColorValue(UIColorType.AccentDark2) : (Color?)null;
+		return DesktopFlyoutBackdropPalette.ForTheme(UseLightTheme, accent);
 	}
 
-	private void UpdateFallbackColor()
+	private void UpdateFallbackColor(Color fallbackColor)
 	{
 		FallbackColor = _accessibilitySettings.HighContrast
 			? _uiSettings.GetColorValue(UIColorType.Background)
-			: UseAccent ? GetTintColor()
-			: UseLightTheme ? Color.FromArgb(255, 238, 238, 238) : Color.FromArgb(255, 28, 28, 28);
+			: fallbackColor;
 	}
 
 	private void UpdateBrush()
@@ -98,7 +96,8 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 			return;
 		}
 
-		UpdateFallbackColor();
+		var palette = GetPalette();
+		UpdateFallbackColor(palette.FallbackColor);
 		ClearCompositionResources();
 		if ((Kind is not DesktopFlyoutBackdropKind.Mica && !_canUseHostBackdrop)
 			|| _accessibilitySettings.HighContrast || !_uiSettings.AdvancedEffectsEnabled
@@ -111,9 +110,6 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 		try
 		{
 			var compositor = Window.Current.Compositor;
-			var tintColor = GetTintColor();
-			var luminosityOpacity = UseAccent ? 0.8 : UseLightTheme ? 0.9 : 0.96;
-			var tintOpacity = UseAccent ? 0.8 : UseLightTheme ? 0.0 : 0.5;
 			if (Kind is DesktopFlyoutBackdropKind.Mica)
 			{
 				if (!ApiInformation.IsMethodPresent("Windows.UI.Composition.Compositor", "TryCreateBlurredWallpaperBackdropBrush"))
@@ -128,14 +124,14 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 				}
 
 				CompositionBrush = DesktopFlyoutMicaEffect.Create(
-					compositor, _backdrop, tintColor, tintOpacity, luminosityOpacity);
+					compositor, _backdrop, palette.TintColor, palette.TintOpacity, palette.LuminosityOpacity);
 			}
 			else
 			{
 				_backdrop = compositor.CreateHostBackdropBrush();
 				CreateNoiseBrush(compositor);
 				CompositionBrush = DesktopFlyoutAcrylicEffect.Create(
-					compositor, _backdrop, _noiseBrush!, tintColor, tintOpacity, luminosityOpacity);
+					compositor, _backdrop, _noiseBrush!, palette.TintColor, palette.TintOpacity, palette.LuminosityOpacity);
 			}
 		}
 		catch (COMException exception)

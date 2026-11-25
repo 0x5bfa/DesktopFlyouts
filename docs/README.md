@@ -255,9 +255,10 @@ and outer margin overrides are not part of the public flyout API.
 
 Applications control the content inside each frame, including its padding and colors. Content is
 clipped to the frame's interior. The outer chrome uses a private resource dictionary and fixed
-policy rather than application-overridable frame resources. Windows hosts use Desktop Acrylic
-with system theme and accessibility behavior; UWP uses its Composition implementation and
-solid fallbacks. Uno uses the library's theme-appropriate solid fallback.
+policy rather than application-overridable frame resources. WinUI and UWP use Desktop Acrylic
+with the same tint and solid fallback colors. WinUI uses the solid fallback until its Acrylic
+controller attaches and whenever the controller is unavailable. UWP applies Acrylic through
+its Composition brush. Uno uses a theme-appropriate solid background.
 
 ### Closing and transitions
 

@@ -8,6 +8,9 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
 using WinRT;
 
 namespace DesktopFlyouts;
@@ -18,6 +21,8 @@ internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
 	private readonly Dictionary<ICompositionSupportsSystemBackdrop, TargetState> _targets = [];
 
 	internal bool UseLightTheme => _theme is SystemBackdropTheme.Light;
+	internal bool HasConnectedController => _targets.Values.Any(static state => state.Controller is not null);
+	internal event Action? ControllerConnectionChanged;
 
 	protected DesktopFlyoutSystemBackdrop(bool useLightTheme)
 	{
@@ -52,32 +57,58 @@ internal abstract partial class DesktopFlyoutSystemBackdrop : SystemBackdrop
 		}
 
 		var configuration = CreateConfiguration(target, xamlRoot);
-		var controller = TryCreateController(configuration);
 		// Keep the link available for UI-thread cleanup even if the material is unsupported.
-		_targets[target] = new(controller, configuration);
-		if (controller is null)
+		var state = new TargetState(null, configuration);
+		_targets.Add(target, state);
+		ISystemBackdropControllerWithTargets? controller = null;
+		try
 		{
+			controller = TryCreateController(configuration);
+			if (controller is null)
+			{
+				return;
+			}
+
+			controller.SetSystemBackdropConfiguration(configuration);
+			if (!controller.AddSystemBackdropTarget(target)
+				|| !_targets.TryGetValue(target, out var currentState) || !ReferenceEquals(state, currentState))
+			{
+				return;
+			}
+
+			_targets[target] = state with { Controller = controller };
+			controller = null;
+		}
+		catch (COMException exception)
+		{
+			Debug.WriteLine($"Could not connect the desktop flyout backdrop: 0x{exception.HResult:X8}.");
 			return;
 		}
+		finally
+		{
+			(controller as IDisposable)?.Dispose();
+		}
 
-		controller.SetSystemBackdropConfiguration(configuration);
-		controller.AddSystemBackdropTarget(target);
+		ControllerConnectionChanged?.Invoke();
 	}
 
 	protected override void OnTargetDisconnected(ICompositionSupportsSystemBackdrop target)
 	{
 		base.OnTargetDisconnected(target);
 
-		if (!_targets.Remove(target, out var state))
+		if (!_targets.Remove(target, out var state) || state.Controller is not { } controller)
 		{
 			return;
 		}
 
-		state.Controller?.RemoveSystemBackdropTarget(target);
-
-		if (state.Controller is IDisposable disposable)
+		try
 		{
-			disposable.Dispose();
+			controller.RemoveSystemBackdropTarget(target);
+		}
+		finally
+		{
+			(controller as IDisposable)?.Dispose();
+			ControllerConnectionChanged?.Invoke();
 		}
 	}
 

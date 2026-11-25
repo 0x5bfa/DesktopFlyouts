@@ -1,7 +1,6 @@
 // Copyright (c) 0x5BFA. All rights reserved.
 // Licensed under the MIT license.
 
-using Windows.UI;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Windows.UI.ViewManagement;
 
@@ -11,6 +10,14 @@ internal static class BackdropControllerHelpers
 {
 	private static UISettings UISettings => field ??= new UISettings();
 
+	internal static DesktopFlyoutBackdropPalette GetPalette(bool useLightTheme)
+	{
+		var accent = GeneralHelpers.IsTaskbarColorPrevalenceEnabled()
+			? UISettings.GetColorValue(UIColorType.AccentDark2)
+			: (Windows.UI.Color?)null;
+		return DesktopFlyoutBackdropPalette.ForTheme(useLightTheme, accent);
+	}
+
 	internal static DesktopAcrylicController? GetAcrylicController(bool useLightTheme)
 	{
 		if (!DesktopAcrylicController.IsSupported())
@@ -18,14 +25,21 @@ internal static class BackdropControllerHelpers
 			return null;
 		}
 
-		if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
+		var palette = GetPalette(useLightTheme);
+		var controller = new DesktopAcrylicController();
+		try
 		{
-			return GetAccentedAcrylicController();
+			controller.FallbackColor = palette.FallbackColor;
+			controller.TintColor = palette.TintColor;
+			controller.TintOpacity = (float)palette.TintOpacity;
+			controller.LuminosityOpacity = (float)palette.LuminosityOpacity;
+			return controller;
 		}
-
-		return useLightTheme
-			? GetLightAcrylicController()
-			: GetDarkAcrylicController();
+		catch
+		{
+			controller.Dispose();
+			throw;
+		}
 	}
 
 	internal static MicaController? GetMicaController(bool useLightTheme)
@@ -35,82 +49,20 @@ internal static class BackdropControllerHelpers
 			return null;
 		}
 
-		if (GeneralHelpers.IsTaskbarColorPrevalenceEnabled())
+		var palette = GetPalette(useLightTheme);
+		var controller = new MicaController();
+		try
 		{
-			return GetAccentedMicaController();
+			controller.FallbackColor = palette.FallbackColor;
+			controller.TintColor = palette.TintColor;
+			controller.TintOpacity = (float)palette.TintOpacity;
+			controller.LuminosityOpacity = (float)palette.LuminosityOpacity;
+			return controller;
 		}
-
-		return useLightTheme
-			? GetLightMicaController()
-			: GetDarkMicaController();
-	}
-
-	internal static DesktopAcrylicController? GetDarkAcrylicController()
-	{
-		return new DesktopAcrylicController()
+		catch
 		{
-			FallbackColor = Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1C),
-			LuminosityOpacity = 0.96F,
-			TintColor = Color.FromArgb(0xFF, 0x20, 0x20, 0x20),
-			TintOpacity = 0.5F,
-		};
+			controller.Dispose();
+			throw;
+		}
 	}
-
-	internal static DesktopAcrylicController? GetLightAcrylicController()
-	{
-		return new DesktopAcrylicController()
-		{
-			FallbackColor = Color.FromArgb(0xFF, 0xEE, 0xEE, 0xEE),
-			LuminosityOpacity = 0.9F,
-			TintColor = Color.FromArgb(0xFF, 0xF3, 0xF3, 0xF3),
-			TintOpacity = 0.0F,
-		};
-	}
-
-	internal static DesktopAcrylicController? GetAccentedAcrylicController()
-	{
-		var systemAccentColorDark2 = UISettings.GetColorValue(UIColorType.AccentDark2);
-		return new DesktopAcrylicController()
-		{
-			FallbackColor = systemAccentColorDark2,
-			LuminosityOpacity = 0.8F,
-			TintColor = systemAccentColorDark2,
-			TintOpacity = 0.8F,
-		};
-	}
-
-	internal static MicaController? GetDarkMicaController()
-	{
-		return new MicaController()
-		{
-			FallbackColor = Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1C),
-			LuminosityOpacity = 0.96F,
-			TintColor = Color.FromArgb(0xFF, 0x20, 0x20, 0x20),
-			TintOpacity = 0.5F,
-		};
-	}
-
-	internal static MicaController? GetLightMicaController()
-	{
-		return new MicaController()
-		{
-			FallbackColor = Color.FromArgb(0xFF, 0xEE, 0xEE, 0xEE),
-			LuminosityOpacity = 0.9F,
-			TintColor = Color.FromArgb(0xFF, 0xF3, 0xF3, 0xF3),
-			TintOpacity = 0.0F,
-		};
-	}
-
-	internal static MicaController? GetAccentedMicaController()
-	{
-		var systemAccentColorDark2 = UISettings.GetColorValue(UIColorType.AccentDark2);
-		return new MicaController()
-		{
-			FallbackColor = systemAccentColorDark2,
-			LuminosityOpacity = 0.8F,
-			TintColor = systemAccentColorDark2,
-			TintOpacity = 0.8F,
-		};
-	}
-
 }

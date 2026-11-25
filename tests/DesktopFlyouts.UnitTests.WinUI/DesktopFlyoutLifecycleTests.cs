@@ -64,6 +64,29 @@ public sealed class DesktopFlyoutLifecycleTests
 	}
 
 	[UITestMethod]
+	public async Task Island_keeps_an_opaque_background_when_the_backdrop_disconnects()
+	{
+		using var flyout = CreateFlyout();
+		flyout.Show(DesktopFlyoutPosition.InWorkArea(DesktopFlyoutWorkAreaPosition.BottomRight));
+		await WaitForState(flyout, DesktopFlyoutTransitionState.Open);
+
+		var island = (DesktopFlyoutIslandPresenter)flyout.Presenter.ContainerFromIndex(0);
+		await WaitForLoaded(island);
+		var element = FindBackdropElement(island);
+		Assert.IsNotNull(element);
+		var root = (Grid)VisualTreeHelper.GetParent(element);
+		var border = root.BorderBrush;
+		Assert.IsNotNull(border);
+
+		island.ClearOwnerBackdrop();
+
+		Assert.IsNull(element.SystemBackdrop);
+		Assert.IsInstanceOfType<SolidColorBrush>(root.Background);
+		Assert.AreEqual(byte.MaxValue, ((SolidColorBrush)root.Background).Color.A);
+		Assert.AreSame(border, root.BorderBrush);
+	}
+
+	[UITestMethod]
 	public async Task Library_chrome_is_not_exposed_as_consumer_styles()
 	{
 		using var flyout = CreateFlyout();

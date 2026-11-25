@@ -12,6 +12,8 @@
 - Include the compiled flyout templates in the UWP NuGet package so apps can load the default styles.
 - On Uno, update any direct references to the flyout resource dictionary to
   `ms-appx:///DesktopFlyout.xaml`.
+- Share acrylic color and opacity settings across WinUI and UWP. Keep WinUI island backgrounds
+  opaque when the acrylic controller cannot render the material on its target.
 
 ## [4.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v4.0.0)
 

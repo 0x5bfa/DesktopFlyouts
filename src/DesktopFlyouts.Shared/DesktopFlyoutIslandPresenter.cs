@@ -102,13 +102,20 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		Content = null;
 		ClearOwnerBackdrop();
 #if WASDK && !HAS_UNO
-		_ownedBackdrop = null;
+		if (_ownedBackdrop is not null)
+		{
+			_ownedBackdrop.ControllerConnectionChanged -= UpdateBackdropBackground;
+			_ownedBackdrop = null;
+		}
 #endif
 		ReleaseClip();
 	}
 
 	protected override void OnApplyTemplate()
 	{
+#if WASDK && !HAS_UNO
+		ClearOwnerBackdrop();
+#endif
 		base.OnApplyTemplate();
 
 		_root = GetTemplateChild("PART_RootGrid") as Grid
@@ -147,28 +154,32 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		{
 			_root.Shadow = null;
 			var settings = new UISettings();
-			_root.Background = new SolidColorBrush(settings.GetColorValue(UIColorType.Background));
 			ClearOwnerBackdrop();
+			_root.Background = new SolidColorBrush(settings.GetColorValue(UIColorType.Background));
 			return;
 		}
 		_root.Shadow ??= _rootShadow;
 #endif
 
 #if WASDK && !HAS_UNO
-		_root.Background = null;
 		if (_backdrop is not null)
 		{
 			if (_ownedBackdrop is null || _ownedBackdrop.UseLightTheme != light)
 			{
 				ClearOwnerBackdrop();
+				if (_ownedBackdrop is not null)
+				{
+					_ownedBackdrop.ControllerConnectionChanged -= UpdateBackdropBackground;
+				}
 				_ownedBackdrop = new DesktopFlyoutAcrylicBackdrop(light);
+				_ownedBackdrop.ControllerConnectionChanged += UpdateBackdropBackground;
 			}
 			else if (force)
 			{
 				ClearOwnerBackdrop();
 			}
 
-			// Reconnect native targets on the UI thread without replacing the backdrop instance.
+			UpdateBackdropBackground();
 			if (!ReferenceEquals(_backdrop.SystemBackdrop, _ownedBackdrop))
 			{
 				_backdrop.SystemBackdrop = _ownedBackdrop;
@@ -181,6 +192,28 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		_root.Background = new SolidColorBrush(light ? Color.FromArgb(255, 243, 243, 243) : Color.FromArgb(255, 32, 32, 32));
 #endif
 	}
+
+#if WASDK && !HAS_UNO
+	private void UpdateBackdropBackground()
+	{
+		if (!_hasItem || _root is null || _ownedBackdrop is null)
+		{
+			return;
+		}
+
+		if (_ownedBackdrop.HasConnectedController)
+		{
+			_root.Background = null;
+			return;
+		}
+
+		var fallbackColor = BackdropControllerHelpers.GetPalette(_ownedBackdrop.UseLightTheme).FallbackColor;
+		if (_root.Background is not SolidColorBrush brush || brush.Color != fallbackColor)
+		{
+			_root.Background = new SolidColorBrush(fallbackColor);
+		}
+	}
+#endif
 
 	internal void ClearOwnerBackdrop()
 	{
