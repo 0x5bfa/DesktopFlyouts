@@ -70,7 +70,7 @@
 	<Import Project="..\DesktopFlyouts.Shared\DesktopFlyouts.Shared.projitems" Label="Shared" />
 	<ItemGroup>
 		<Page Include="Themes\Generic.xaml" />
-		<Page Include="Themes\DesktopFlyout.xaml" />
+		<Page Include="DesktopFlyout.xaml" />
 	</ItemGroup>
 
 </Project>

@@ -6,7 +6,7 @@
     xmlns:local="using:DesktopFlyouts">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="ms-appx:///Themes/DesktopFlyout.xaml" />
+        <ResourceDictionary Source="ms-appx:///DesktopFlyout.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
 </ResourceDictionary>

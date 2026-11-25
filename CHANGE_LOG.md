@@ -10,6 +10,8 @@
 - Keep `DesktopMenuFlyout.IsOpen` aligned with the Windows menu and reopen after native close
   completes. On Uno / X11, rapid show requests use the latest screen point.
 - Include the compiled flyout templates in the UWP NuGet package so apps can load the default styles.
+- On Uno, update any direct references to the flyout resource dictionary to
+  `ms-appx:///DesktopFlyout.xaml`.
 
 ## [4.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v4.0.0)
 
