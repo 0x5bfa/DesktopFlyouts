@@ -70,8 +70,8 @@
 			<DocumentationProjectOutputGroupOutput Remove="@(DocumentationProjectOutputGroupOutput)" />
 			<_PathToPriFile Remove="@(_PathToPriFile)" />
 			<_WindowsReferenceOutput Include="@(_PackageReference);$(_PackageAssemblyRoot)/reference/$(TargetFramework)/$(AssemblyName).xml" />
-			<!-- WinUI resolves the library PRI beside its compile reference. -->
-			<_WindowsReferenceOutput Include="$(_PackageAssemblyRoot)/x64/$(TargetFramework)/$(AssemblyName).pri" Condition="'$(UseWinUI)' == 'true'" />
+			<!-- Windows XAML builds discover the library PRI beside its compile reference. -->
+			<_WindowsReferenceOutput Include="$(_PackageAssemblyRoot)/x64/$(TargetFramework)/$(AssemblyName).pri" />
 			<BuildOutputInPackage Include="@(_WindowsReferenceOutput)">
 				<FinalOutputPath>%(_WindowsReferenceOutput.FullPath)</FinalOutputPath>
 				<TargetPath>%(_WindowsReferenceOutput.Filename)%(_WindowsReferenceOutput.Extension)</TargetPath>

@@ -9,12 +9,20 @@
   `OnApplyTemplate` or `OnItemsChanged`. Customize the individual menu items as needed.
 - Keep `DesktopMenuFlyout.IsOpen` aligned with the Windows menu and reopen after native close
   completes. On Uno / X11, rapid show requests use the latest screen point.
+- Include the compiled flyout templates in the UWP NuGet package so apps can load the default styles.
 
-- **Breaking change:** Drop the .NET 9 target and require .NET 10 or later. Applications targeting
+## [4.0.0](https://github.com/0x5bfa/DesktopFlyouts/releases/tag/v4.0.0)
+
+### Breaking changes and migration
+
+- Drop the .NET 9 target and require .NET 10 or later. Applications targeting
   .NET 9 must upgrade to .NET 10. The Uno package remains built against Uno Platform 6.6; Uno
   applications targeting .NET 11 require a future package build against Uno Platform 7.0.
-- **Breaking change:** Rename `DesktopFlyoutIsland.IslandWidth` and `IslandHeight` to `Width` and
+- Rename `DesktopFlyoutIsland.IslandWidth` and `IslandHeight` to `Width` and
   `Height`. Update XAML attributes and C# property references on `DesktopFlyoutIsland` instances.
+
+### Misc
+
 - Define presenter styles in XAML, place default styles after their base styles, and add the
   missing Uno island presenter style.
 - Use dependency property generation for WinUI, UWP, and Uno.

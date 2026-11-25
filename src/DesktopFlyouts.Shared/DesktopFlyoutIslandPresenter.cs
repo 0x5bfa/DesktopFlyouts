@@ -112,7 +112,7 @@ internal sealed partial class DesktopFlyoutIslandPresenter : ContentControl
 		base.OnApplyTemplate();
 
 		_root = GetTemplateChild("PART_RootGrid") as Grid
-			?? throw new InvalidOperationException("The library island template has no root grid.");
+			?? throw new InvalidOperationException($"Could not find PART_RootGrid in the given {nameof(DesktopFlyoutIslandPresenter)}'s style.");
 		_contentPresenter = GetTemplateChild("PART_MainContentPresenter") as ContentPresenter
 			?? throw new InvalidOperationException("The library island template has no main content presenter.");
 

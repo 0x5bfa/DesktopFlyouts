@@ -35,6 +35,24 @@ function Assert-AssemblyArchitecture($Entry, [string] $Architecture) {
     finally { $stream.Dispose(); $buffer.Dispose() }
 }
 
+function Assert-UwpTemplateResources([string] $PriPath, [string] $MakePri) {
+    $dumpPath = Join-Path ([IO.Path]::GetTempPath()) ("DesktopFlyouts-" + [Guid]::NewGuid() + ".xml")
+    try {
+        & $MakePri dump /if $PriPath /of $dumpPath /dt detailed | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Failed to inspect UWP resources in $PriPath." }
+        [xml] $dump = Get-Content -LiteralPath $dumpPath -Raw
+        $embeddedResources = $dump.SelectNodes("//NamedResource[Candidate/@type='EmbeddedData']/@uri")
+        foreach ($template in @('Themes/Generic.xbf', 'DesktopFlyout.xbf')) {
+            $resourcePath = "/Files/DesktopFlyouts.Uwp/$template"
+            $matchingResource = $embeddedResources | Where-Object { $_.Value.EndsWith($resourcePath, [StringComparison]::Ordinal) }
+            if (-not $matchingResource) { throw "Missing embedded $resourcePath in $PriPath." }
+        }
+    }
+    finally {
+        if (Test-Path -LiteralPath $dumpPath) { Remove-Item -LiteralPath $dumpPath }
+    }
+}
+
 # Retain the repository's feed mappings, with this build's packages selected from the local feed.
 [xml] $nugetConfig = Get-Content -LiteralPath (Join-Path $repositoryRoot 'nuget.config') -Raw
 $source = $nugetConfig.SelectSingleNode('/configuration/packageSources/add[@key="Local packages"]')
@@ -86,7 +104,7 @@ foreach ($libraryFlavor in $Flavor) {
                 foreach ($architecture in @('x86', 'x64', 'arm64')) {
                     Assert-AssemblyArchitecture ($zip.GetEntry("runtimes/win-$architecture/lib/$framework/$assemblyName.dll")) $architecture
                 }
-                if ($libraryFlavor -eq 'WinUI' -and -not $zip.GetEntry("ref/$framework/$assemblyName.pri")) { throw 'Missing WinUI PRI.' }
+                if (-not $zip.GetEntry("ref/$framework/$assemblyName.pri")) { throw "Missing $assemblyName PRI." }
             }
             if (@($zip.Entries | Where-Object { $_.FullName.StartsWith('lib/') }).Count) { throw 'Windows implementations must be selected by RID.' }
         }
@@ -105,7 +123,7 @@ foreach ($libraryFlavor in $Flavor) {
         $architectureArguments = @('/p:Configuration=Release', "/p:Platform=$architecture", "/p:RuntimeIdentifier=win-$architecture")
         & $msbuild $sample /restore /nologo /verbosity:minimal @architectureArguments @consumerArguments
         if ($LASTEXITCODE -ne 0) { throw "$libraryFlavor $architecture package consumer build failed." }
-        $sampleProperties = ((& $msbuild $sample /nologo /getProperty:TargetDir,TargetFramework @architectureArguments @consumerArguments) -join "`n") | ConvertFrom-Json
+        $sampleProperties = ((& $msbuild $sample /nologo /getProperty:TargetDir,TargetFramework,MakePriExeFullPath @architectureArguments @consumerArguments) -join "`n") | ConvertFrom-Json
         $targetDir = $sampleProperties.Properties.TargetDir
         $outputDll = Join-Path $targetDir "$assemblyName.dll"
         $runtimeFramework = [regex]::Replace($sampleProperties.Properties.TargetFramework, '(windows[0-9]+\.[0-9]+\.[0-9]+)\.0$', '$1')
@@ -118,6 +136,9 @@ foreach ($libraryFlavor in $Flavor) {
             if ((Get-FileHash -LiteralPath $outputDll -Algorithm SHA256).Hash -ne $expectedHash) { throw "Incorrect runtime DLL copied to $targetDir." }
         }
         finally { $zip.Dispose() }
+        if ($libraryFlavor -eq 'Uwp') {
+            Assert-UwpTemplateResources (Join-Path $targetDir 'resources.pri') $sampleProperties.Properties.MakePriExeFullPath
+        }
         Write-Host "Verified package consumer: $libraryFlavor win-$architecture"
     }
 }
