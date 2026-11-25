@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Breaking change:** `DesktopMenuFlyout` now derives from `DependencyObject` and exposes a
+  typed `IList<MenuFlyoutItemBase>` as `Items`. Continue declaring XAML menu items directly or
+  populate `Items` in code in place of `ItemsSource`. Remove styles and templates targeting
+  `DesktopMenuFlyout`, any inherited control properties set on it, and overrides of
+  `OnApplyTemplate` or `OnItemsChanged`. Customize the individual menu items as needed.
+
 - **Breaking change:** Drop the .NET 9 target and require .NET 10 or later. Applications targeting
   .NET 9 must upgrade to .NET 10. The Uno package remains built against Uno Platform 6.6; Uno
   applications targeting .NET 11 require a future package build against Uno Platform 7.0.

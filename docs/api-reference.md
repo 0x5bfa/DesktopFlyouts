@@ -241,15 +241,16 @@ monitor while open.
 ## DesktopMenuFlyout
 
 ```csharp
-public partial class DesktopMenuFlyout : ItemsControl, IDisposable
+public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 ```
 
 Hosts a XAML menu in an independent desktop island window. `DesktopMenuFlyout()` creates the
-hidden host. Its XAML content property is the inherited `Items` collection; items must derive from
-`MenuFlyoutItemBase`, including `MenuFlyoutItem`, `MenuFlyoutSubItem`, and `MenuFlyoutSeparator`.
+hidden host. Its XAML content property is `Items`. The host owns its visual layout and follows
+the system theme. Submenus are supported in WinUI and UWP.
 
 | Property | Type | Default | Access / DP | Behavior |
 | --- | --- | --- | --- | --- |
+| `Items` | `IList<MenuFlyoutItemBase>` | Empty | Get-only, mutable collection | Items displayed in the hosted menu. |
 | `IsOpen` | `bool` | `false` | Read-only, DP | Whether the hosted menu is open. Resets on dismissal or `Hide()`. |
 
 ```csharp
@@ -260,9 +261,9 @@ public void Dispose();
 
 | Method | Parameters and behavior |
 | --- | --- |
-| `Show(point)` | Opens the hosted menu at a physical screen point. Uses the current menu items; calls after disposal are ignored. |
+| `Show(point)` | Opens the hosted menu at a physical screen point using the current items. Calls after disposal are ignored. WinUI and UWP also ignore calls with an empty collection. |
 | `Hide()` | Hides both the menu and host and resets `IsOpen`. Calls after disposal are ignored. |
-| `Dispose()` | Closes the menu and releases its host. Repeated calls are safe. |
+| `Dispose()` | Closes the menu, clears `Items`, and releases its host. Repeated calls are safe. |
 
 **UWP only:** `bool TryPreTranslateMessage(nint message)` forwards a native `MSG` pointer to the
 hosted `DesktopWindowXamlSource` before dispatch and reports whether the island handled it.

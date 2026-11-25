@@ -2,6 +2,8 @@
 // Licensed under the MIT license.
 
 #if !WINDOWS
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Drawing;
 using FoundationSize = Windows.Foundation.Size;
 using Windows.Graphics;
@@ -19,17 +21,18 @@ namespace DesktopFlyouts;
 /// Submenus are not supported in this implementation.
 /// </remarks>
 [ContentProperty(Name = nameof(Items))]
-public partial class DesktopMenuFlyout : ItemsControl, IDisposable
+public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 {
-	private const string PART_MenuFlyoutTargetControl = "PART_MenuFlyoutTargetControl";
-
 	private readonly XamlIslandHostWindow? _host;
+	private readonly Grid _menuTarget = new() { Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent) };
+	private readonly ObservableCollection<MenuFlyoutItemBase> _items = new();
 	private readonly List<MenuFlyoutItem> _subscribedItems = new();
-	private MenuFlyoutPresenter? _presenter;
+	private readonly MenuFlyoutPresenter _presenter;
 	private bool _disposed;
 	private bool _isShowPending;
 
-	private Panel? MenuFlyoutTargetControl;
+	/// <summary>Gets the items displayed in the menu.</summary>
+	public IList<MenuFlyoutItemBase> Items => _items;
 
 	/// <summary>
 	/// Initializes a new instance of <see cref="DesktopMenuFlyout"/>.
@@ -39,57 +42,29 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	/// </remarks>
 	public DesktopMenuFlyout()
 	{
-		DefaultStyleKey = typeof(DesktopMenuFlyout);
-
+		_presenter = new MenuFlyoutPresenter { ItemsSource = _items };
 		_host = new XamlIslandHostWindow();
-		_host.SetContent(this);
+		_host.SetContent(_menuTarget);
 		_ = _host.UpdateWindowVisibility(false);
 		_host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
 		_host.WindowInactivated += HostWindow_Inactivated;
+		_items.CollectionChanged += Items_CollectionChanged;
 	}
 
-	/// <inheritdoc/>
-	protected override void OnApplyTemplate()
+	private void Items_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
 	{
-		base.OnApplyTemplate();
-
-		MenuFlyoutTargetControl = GetTemplateChild(PART_MenuFlyoutTargetControl) as Panel;
-	}
-
-	/// <inheritdoc/>
-	protected override void OnItemsChanged(object e)
-	{
-		base.OnItemsChanged(e);
-
-		if (_disposed)
+		if (IsOpen)
 		{
-			return;
+			UnsubscribeItemClicks();
+			SubscribeItemClicks();
 		}
-
-		EnsurePresenter();
-	}
-
-	private void EnsurePresenter()
-	{
-		_presenter ??= new MenuFlyoutPresenter();
-
-		_presenter.ItemsSource = new List<MenuFlyoutItemBase>(
-			Items.Cast<MenuFlyoutItemBase>());
 	}
 
 	private void SubscribeItemClicks()
 	{
-		if (_presenter is null)
+		foreach (var item in Items)
 		{
-			return;
-		}
-
-		foreach (var item in _presenter.Items)
-		{
-			if (item is MenuFlyoutItemBase mfib)
-			{
-				CollectClickableItems(mfib);
-			}
+			CollectClickableItems(item);
 		}
 	}
 
@@ -139,8 +114,7 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	/// </summary>
 	/// <param name="point">The physical screen pixel where the menu host should be positioned.</param>
 	/// <remarks>
-	/// The menu is built from the current <see cref="ItemsControl.Items"/> collection. Items must
-	/// derive from <see cref="MenuFlyoutItemBase"/>. Submenus are not supported in this implementation.
+	/// Uses the current <see cref="Items"/> collection. Submenus are not supported in this implementation.
 	/// </remarks>
 	public void Show(Point point)
 	{
@@ -155,14 +129,13 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 			HideImmediate();
 		}
 
-		EnsurePresenter();
 		SubscribeItemClicks();
 
 		UpdateFlyoutTheme();
 
 		// Add the presenter to the visual tree.
-		MenuFlyoutTargetControl?.Children.Clear();
-		MenuFlyoutTargetControl?.Children.Add(_presenter);
+		_menuTarget.Children.Clear();
+		_menuTarget.Children.Add(_presenter);
 
 		// Get the work area for positioning.
 		var workArea = WindowHelpers.GetFlyoutWorkAreaRect(new Point(point.X, point.Y));
@@ -187,19 +160,13 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		// Step 2: After the window is mapped and XAML has had a layout pass,
 		// measure the presenter and resize to the correct size.
 		var showPoint = new Point(point.X, point.Y);
-		_ = Task.Run(async () =>
-		{
-#if UWP
-			await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => FinalizeShow(showPoint));
-#elif WASDK
-			DispatcherQueue.TryEnqueue(() => FinalizeShow(showPoint));
-#endif
-		});
+		var dispatcherQueue = _menuTarget.DispatcherQueue;
+		_ = Task.Run(() => dispatcherQueue.TryEnqueue(() => FinalizeShow(showPoint)));
 	}
 
 	private void FinalizeShow(Point point)
 	{
-		if (_disposed || !_isShowPending || _presenter is null || MenuFlyoutTargetControl is null)
+		if (_disposed || !_isShowPending)
 		{
 			_isShowPending = false;
 			return;
@@ -268,7 +235,7 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		_ = _host?.UpdateWindowVisibility(false);
 
 		// Remove the presenter from the visual tree.
-		MenuFlyoutTargetControl?.Children.Clear();
+		_menuTarget.Children.Remove(_presenter);
 
 		IsOpen = false;
 	}
@@ -293,26 +260,10 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		Hide();
 	}
 
-#if UWP
-	/// <summary>
-	/// Lets the XAML island process a native keyboard message before dispatch.
-	/// </summary>
-	/// <param name="message">A pointer to the native MSG structure.</param>
-	/// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
-	/// <remarks>
-	/// UWP desktop-host scenarios should call this from their native message loop so keyboard
-	/// navigation and accelerator processing can reach the hosted XAML island.
-	/// </remarks>
-	public bool TryPreTranslateMessage(nint message)
-	{
-		return _host?.TryPreTranslateMessage(message) ?? false;
-	}
-#endif
-
 	private void UpdateFlyoutTheme()
 	{
 		var isLight = GeneralHelpers.IsTaskbarLight();
-		RequestedTheme = isLight ? ElementTheme.Light : ElementTheme.Dark;
+		_menuTarget.RequestedTheme = isLight ? ElementTheme.Light : ElementTheme.Dark;
 	}
 
 	private static double Clamp(double value, double min, double max)
@@ -342,14 +293,11 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 		_isShowPending = false;
 
 		// Remove the presenter from the visual tree.
-		MenuFlyoutTargetControl?.Children.Clear();
-
-		if (_presenter is not null)
-		{
-			UnsubscribeItemClicks();
-			_presenter.ItemsSource = null;
-			_presenter = null;
-		}
+		_menuTarget.Children.Remove(_presenter);
+		_items.CollectionChanged -= Items_CollectionChanged;
+		UnsubscribeItemClicks();
+		_presenter.ItemsSource = null;
+		_items.Clear();
 
 		_host?.SystemSettingsChanged -= HostWindow_SystemSettingsChanged;
 		_host?.WindowInactivated -= HostWindow_Inactivated;

@@ -3,20 +3,24 @@
 
 #if WINDOWS
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using Windows.Graphics;
 using Windows.Win32;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-
 #if UWP
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Markup;
+using Windows.UI.Xaml.Media;
+using Colors = Windows.UI.Colors;
 #elif WASDK
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Markup;
+using Microsoft.UI.Xaml.Media;
+using Colors = Microsoft.UI.Colors;
 #endif
 
 namespace DesktopFlyouts;
@@ -30,16 +34,16 @@ namespace DesktopFlyouts;
 /// call the point-based show overload to display the menu.
 /// </remarks>
 [ContentProperty(Name = nameof(Items))]
-public partial class DesktopMenuFlyout : ItemsControl, IDisposable
+public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 {
-	private const string PART_MenuFlyoutTargetControl = "PART_MenuFlyoutTargetControl";
-
 	private readonly XamlIslandHostWindow? _host;
-	private MenuFlyout? _menuFlyout;
+	private readonly Border _menuTarget = new() { /*Background = new SolidColorBrush(Colors.Transparent)*/ };
+	private readonly MenuFlyout _menuFlyout = new();
 	private bool _disposed;
 	private bool _menuPopupReported;
 
-	private Border? MenuFlyoutTargetControl;
+	/// <summary>Gets the items displayed in the menu.</summary>
+	public IList<MenuFlyoutItemBase> Items => _menuFlyout.Items;
 
 	/// <summary>
 	/// Initializes a new instance of <see cref="DesktopMenuFlyout"/>.
@@ -49,46 +53,12 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	/// </remarks>
 	public DesktopMenuFlyout()
 	{
-		DefaultStyleKey = typeof(DesktopMenuFlyout);
-
 		_host = new XamlIslandHostWindow();
-		_host.SetContent(this);
+		_host.SetContent(_menuTarget);
 		_ = _host.UpdateWindowVisibility(false);
 		_host.SystemSettingsChanged += HostWindow_SystemSettingsChanged;
-	}
-
-	/// <inheritdoc/>
-	protected override void OnApplyTemplate()
-	{
-		base.OnApplyTemplate();
-
-		MenuFlyoutTargetControl = GetTemplateChild(PART_MenuFlyoutTargetControl) as Border
-			?? throw new MissingFieldException($"Could not find {PART_MenuFlyoutTargetControl} in the given {nameof(DesktopMenuFlyout)}'s style.");
-	}
-
-	/// <inheritdoc/>
-	protected override void OnItemsChanged(object e)
-	{
-		base.OnItemsChanged(e);
-
-		if (_disposed)
-		{
-			return;
-		}
-
-		if (_menuFlyout is null)
-		{
-			_menuFlyout = new MenuFlyout();
-			_menuFlyout.Opened += MenuFlyout_Opened;
-			_menuFlyout.Closed += MenuFlyout_Closed;
-		}
-
-		_menuFlyout.Items.Clear();
-
-		foreach (var item in Items)
-		{
-			_menuFlyout.Items.Add((MenuFlyoutItemBase)item);
-		}
+		_menuFlyout.Opened += MenuFlyout_Opened;
+		_menuFlyout.Closed += MenuFlyout_Closed;
 	}
 
 	/// <summary>
@@ -96,12 +66,11 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 	/// </summary>
 	/// <param name="point">The physical screen pixel where the menu host should be positioned.</param>
 	/// <remarks>
-	/// The menu is built from the current <see cref="ItemsControl.Items"/> collection. Items must
-	/// derive from <see cref="MenuFlyoutItemBase"/>.
+	/// Uses the current <see cref="Items"/> collection. An empty menu is not shown.
 	/// </remarks>
 	public void Show(Point point)
 	{
-		if (_disposed || _menuFlyout is null)
+		if (_disposed || Items.Count == 0)
 		{
 			return;
 		}
@@ -115,7 +84,7 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 			_host?.SetHWndRectRegion(new RectInt32() { Width = 1, Height = 1 });
 			_ = _host?.UpdateWindowVisibility(true);
 
-			_menuFlyout.ShowAt(MenuFlyoutTargetControl);
+			_menuFlyout.ShowAt(_menuTarget);
 			ReportMenuPopupOpened();
 
 			IsOpen = true;
@@ -146,7 +115,7 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 
 		try
 		{
-			_menuFlyout?.Hide();
+			_menuFlyout.Hide();
 		}
 		finally
 		{
@@ -166,7 +135,7 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 
 	private void ReportMenuPopupOpened()
 	{
-		if (_disposed || _menuPopupReported || _menuFlyout?.IsOpen != true || _host is null)
+		if (_disposed || _menuPopupReported || !_menuFlyout.IsOpen || _host is null)
 		{
 			return;
 		}
@@ -222,7 +191,7 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 
 	private void UpdateFlyoutTheme()
 	{
-		RequestedTheme = GeneralHelpers.IsTaskbarLight() ? ElementTheme.Light : ElementTheme.Dark;
+		_menuTarget.RequestedTheme = GeneralHelpers.IsTaskbarLight() ? ElementTheme.Light : ElementTheme.Dark;
 	}
 
 	/// <inheritdoc/>
@@ -237,18 +206,14 @@ public partial class DesktopMenuFlyout : ItemsControl, IDisposable
 
 		try
 		{
-			if (_menuFlyout is not null)
+			_menuFlyout.Opened -= MenuFlyout_Opened;
+			_menuFlyout.Closed -= MenuFlyout_Closed;
+			if (IsOpen)
 			{
-				_menuFlyout.Opened -= MenuFlyout_Opened;
-				_menuFlyout.Closed -= MenuFlyout_Closed;
-				if (IsOpen)
-				{
-					_menuFlyout.Hide();
-				}
-
-				_menuFlyout.Items.Clear();
-				_menuFlyout = null;
+				_menuFlyout.Hide();
 			}
+
+			Items.Clear();
 		}
 		finally
 		{

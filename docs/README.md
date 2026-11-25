@@ -386,8 +386,8 @@ island handled it.
 
 ## DesktopMenuFlyout
 
-`DesktopMenuFlyout` hosts a XAML `MenuFlyout` at a physical screen point. Use it for tray context
-menus or other menus independent of an application window.
+`DesktopMenuFlyout` is a `DependencyObject` that opens a XAML menu at a physical screen point.
+Use it for tray context menus or other menus independent of an application window.
 
 ```xml
 <desktop:DesktopMenuFlyout
@@ -416,9 +416,10 @@ private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e
 }
 ```
 
-`Items` accepts `MenuFlyoutItem`, `MenuFlyoutSubItem`, `MenuFlyoutSeparator`, or custom types derived
-from `MenuFlyoutItemBase`. The hosted menu is rebuilt when its items change. `IsOpen` is `true`
-while the menu is open and becomes `false` on dismissal or `Hide()`.
+`Items` is a mutable `IList<MenuFlyoutItemBase>` that accepts direct XAML children. Add
+`MenuFlyoutItem`, `MenuFlyoutSeparator`, or other `MenuFlyoutItemBase` types. Use
+`MenuFlyoutSubItem` for submenus on WinUI and UWP. `IsOpen` is `true` while the menu is open and
+becomes `false` on dismissal or `Hide()`.
 
 `Show(System.Drawing.Point)` uses physical screen pixels. For an offset, adjust the point:
 
