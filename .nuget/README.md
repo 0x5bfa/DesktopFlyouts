@@ -4,8 +4,10 @@ The packages target .NET 10. Newer .NET applications can use these assets when t
 dependencies support that target. The Uno package is built against Uno Platform 6.6. Uno
 applications targeting .NET 11 require the package to be rebuilt against Uno Platform 7.0.
 
-The WinUI and UWP packages include Windows x86, x64, and ARM64 implementations. Match the
-application's platform and runtime identifier; NuGet selects the appropriate implementation.
+The WinUI package requires Windows 10 version 1809 (build 17763) or later. The UWP package
+requires Windows 10 version 1903 (build 18362) or later. Both packages include Windows x86,
+x64, and ARM64 implementations. Match the application's platform and runtime identifier
+so NuGet selects the appropriate implementation.
 The Uno package contains architecture-neutral managed code for Linux / X11 hosts with supported
 Uno/native dependencies.
 

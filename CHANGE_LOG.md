@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Breaking change:** The UWP package now declares Windows 10 version 1903 (build 18362) as
+  its minimum, matching the system XAML hosting APIs it uses. Set the app project's minimum
+  OS version and the package manifest's `MinVersion` to `10.0.18362.0` or later. The WinUI
+  package declares Windows 10 version 1809 (build 17763) as its minimum.
 - **Breaking change:** `DesktopMenuFlyout` now derives from `DependencyObject` and exposes a
   typed `IList<MenuFlyoutItemBase>` as `Items`. Continue declaring XAML menu items directly or
   populate `Items` in code in place of `ItemsSource`. Remove styles and templates targeting

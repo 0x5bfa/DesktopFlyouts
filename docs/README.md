@@ -18,11 +18,15 @@ Release history and migration notes are in the [changelog](../CHANGE_LOG.md).
 
 Install the package that matches your XAML stack:
 
-| Package | Target |
-| --- | --- |
-| `DesktopFlyouts.WinUI` | Windows App SDK / WinUI 3 desktop XAML island hosting |
-| `DesktopFlyouts.Uwp` | UWP / WinUI 2 desktop XAML island hosting |
-| `DesktopFlyouts.Uno` | Uno Platform on Linux / X11 |
+| Package | Target | Minimum Windows version |
+| --- | --- | --- |
+| `DesktopFlyouts.WinUI` | Windows App SDK / WinUI 3 desktop XAML island hosting | Windows 10, version 1809 (build 17763) |
+| `DesktopFlyouts.Uwp` | UWP / WinUI 2 desktop XAML island hosting | Windows 10, version 1903 (build 18362) |
+| `DesktopFlyouts.Uno` | Uno Platform on Linux / X11 | N/A |
+
+For Windows apps, set `TargetPlatformMinVersion` in the app project and `MinVersion` in the
+package manifest to at least the library's minimum. Deployment also depends on the requirements
+of the app's .NET and XAML runtimes.
 
 All packages target .NET 10. Newer .NET applications can use these assets when their platform
 dependencies support that target. The Uno package is built against Uno Platform 6.6 and supports

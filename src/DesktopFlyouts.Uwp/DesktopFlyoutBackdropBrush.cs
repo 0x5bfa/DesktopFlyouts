@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI.Composition;
 using Windows.Foundation;
@@ -89,6 +90,10 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 			: fallbackColor;
 	}
 
+	[SupportedOSPlatformGuard("windows10.0.22000.0")]
+	private static bool IsBlurredWallpaperBackdropSupported =>
+		ApiInformation.IsMethodPresent("Windows.UI.Composition.Compositor", "TryCreateBlurredWallpaperBackdropBrush");
+
 	private void UpdateBrush()
 	{
 		if (!_connected)
@@ -112,7 +117,7 @@ internal sealed partial class DesktopFlyoutBackdropBrush : XamlCompositionBrushB
 			var compositor = Window.Current.Compositor;
 			if (Kind is DesktopFlyoutBackdropKind.Mica)
 			{
-				if (!ApiInformation.IsMethodPresent("Windows.UI.Composition.Compositor", "TryCreateBlurredWallpaperBackdropBrush"))
+				if (!IsBlurredWallpaperBackdropSupported)
 				{
 					return;
 				}

@@ -3,6 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+#if !HAS_UNO
+using System.Runtime.Versioning;
+#endif
 
 #if UWP
 using Windows.Foundation.Metadata;
@@ -42,7 +45,9 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 #if (UWP || WASDK) && !HAS_UNO
 	private readonly UISettings _uiSettings;
 	private bool _systemAnimationsEnabled;
-	private bool _isAnimationsEnabledChangedSubscribed;
+
+	[SupportedOSPlatformGuard("windows10.0.19041.0")]
+	private readonly bool _hasAnimationsEnabledChanged;
 #endif
 	private bool _disposed;
 
@@ -90,10 +95,10 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 #if (UWP || WASDK) && !HAS_UNO
 		_uiSettings = new UISettings();
 		_systemAnimationsEnabled = _uiSettings.AnimationsEnabled;
-		if (ApiInformation.IsEventPresent("Windows.UI.ViewManagement.UISettings", "AnimationsEnabledChanged"))
+		_hasAnimationsEnabledChanged = ApiInformation.IsEventPresent("Windows.UI.ViewManagement.UISettings", "AnimationsEnabledChanged");
+		if (_hasAnimationsEnabledChanged)
 		{
 			_uiSettings.AnimationsEnabledChanged += UISettings_AnimationsEnabledChanged;
-			_isAnimationsEnabledChangedSubscribed = true;
 		}
 #endif
 	}
@@ -179,7 +184,7 @@ public partial class DesktopFlyout : DependencyObject, IDisposable
 		_host?.DisplayAreaChanged -= HostWindow_DisplayAreaChanged;
 #endif
 #if (UWP || WASDK) && !HAS_UNO
-		if (_isAnimationsEnabledChangedSubscribed)
+		if (_hasAnimationsEnabledChanged)
 		{
 			_uiSettings.AnimationsEnabledChanged -= UISettings_AnimationsEnabledChanged;
 		}
