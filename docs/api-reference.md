@@ -251,7 +251,7 @@ the system theme. Submenus are supported in WinUI and UWP.
 | Property | Type | Default | Access / DP | Behavior |
 | --- | --- | --- | --- | --- |
 | `Items` | `IList<MenuFlyoutItemBase>` | Empty | Get-only, mutable collection | Items displayed in the hosted menu. |
-| `IsOpen` | `bool` | `false` | Read-only, DP | Whether the hosted menu is open. Resets on dismissal or `Hide()`. |
+| `IsOpen` | `bool` | `false` | Read-only, DP | Whether the hosted menu is open. On Windows this follows the underlying XAML menu. |
 
 ```csharp
 public void Show(Point point);
@@ -261,7 +261,7 @@ public void Dispose();
 
 | Method | Parameters and behavior |
 | --- | --- |
-| `Show(point)` | Opens the hosted menu at a physical screen point using the current items. Calls after disposal are ignored. WinUI and UWP also ignore calls with an empty collection. |
+| `Show(point)` | Opens the hosted menu at a physical screen point using the current items. On Windows, a request made while the menu closes is handled after close, and empty menus are skipped. Calls after disposal are ignored. |
 | `Hide()` | Hides both the menu and host and resets `IsOpen`. Calls after disposal are ignored. |
 | `Dispose()` | Closes the menu, clears `Items`, and releases its host. Repeated calls are safe. |
 

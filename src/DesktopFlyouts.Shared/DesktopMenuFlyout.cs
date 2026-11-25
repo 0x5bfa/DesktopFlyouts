@@ -4,6 +4,7 @@
 #if HAS_UNO
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using Microsoft.UI.Dispatching;
 using FoundationSize = Windows.Foundation.Size;
 #else
 using System;
@@ -16,13 +17,16 @@ using System.Drawing;
 using Windows.Graphics;
 
 #if UWP
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Markup;
 #else
 #if !HAS_UNO
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 #endif
 using Microsoft.UI.Xaml.Markup;
 #endif
@@ -48,11 +52,14 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 	private readonly ObservableCollection<MenuFlyoutItemBase> _items = new();
 	private readonly List<MenuFlyoutItem> _subscribedItems = new();
 	private readonly MenuFlyoutPresenter _presenter;
-	private bool _isShowPending;
+	private object? _pendingLayout;
 #else
 	private readonly Border _menuTarget = new();
 	private readonly MenuFlyout _menuFlyout = new();
 	private bool _menuPopupReported;
+	private bool _showRequested;
+	private bool _isClosing;
+	private Point? _showAfterClose;
 #endif
 
 	/// <summary>Gets the items displayed in the menu.</summary>
@@ -82,7 +89,9 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 		_host.WindowInactivated += HostWindow_Inactivated;
 		_items.CollectionChanged += Items_CollectionChanged;
 #else
+		_menuFlyout.Opening += MenuFlyout_Opening;
 		_menuFlyout.Opened += MenuFlyout_Opened;
+		_menuFlyout.Closing += MenuFlyout_Closing;
 		_menuFlyout.Closed += MenuFlyout_Closed;
 #endif
 	}
@@ -189,11 +198,17 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 	private void ShowMenu(Point point)
 	{
 		// If a previous show is still pending its deferred layout, hide first.
-		if (_isShowPending || IsOpen)
+		if (_pendingLayout is not null || IsOpen)
 		{
-			HideImmediate();
+			HideMenu();
+			if (_disposed || _pendingLayout is not null || IsOpen)
+			{
+				return;
+			}
 		}
 
+		var layoutRequest = new object();
+		_pendingLayout = layoutRequest;
 		SubscribeItemClicks();
 
 		UpdateFlyoutTheme();
@@ -203,7 +218,7 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 		_menuTarget.Children.Add(_presenter);
 
 		// Get the work area for positioning.
-		var workArea = WindowHelpers.GetFlyoutWorkAreaRect(new Point(point.X, point.Y));
+		var workArea = WindowHelpers.GetFlyoutWorkAreaRect(point);
 
 		// Step 1: Place the host window at the target position with a generous initial size
 		// so that XAML can compute layout for the MenuFlyoutPresenter.
@@ -219,27 +234,33 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 		_host.SetHWndRectRegion(new RectInt32() { Width = initRegion.Width, Height = initRegion.Height });
 		_ = _host.UpdateWindowVisibility(true);
 
-		IsOpen = true;
-		_isShowPending = true;
-
 		// Step 2: After the window is mapped and XAML has had a layout pass,
 		// measure the presenter and resize to the correct size.
-		var showPoint = new Point(point.X, point.Y);
-		var dispatcherQueue = _menuTarget.DispatcherQueue;
-		_ = Task.Run(() => dispatcherQueue.TryEnqueue(() => FinalizeShow(showPoint)));
+		if (!_menuTarget.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => FinalizeShow(point, layoutRequest)))
+		{
+			HideMenu();
+			return;
+		}
+
+		IsOpen = true;
 	}
 
-	private void FinalizeShow(Point point)
+	private void FinalizeShow(Point point, object layoutRequest)
 	{
-		if (_disposed || !_isShowPending)
+		if (!ReferenceEquals(_pendingLayout, layoutRequest))
 		{
-			_isShowPending = false;
 			return;
 		}
 
 		// Force a layout pass so the presenter calculates its desired size.
 		_presenter.Measure(new FoundationSize(double.PositiveInfinity, double.PositiveInfinity));
 		_presenter.Arrange(new Windows.Foundation.Rect(0, 0, _presenter.DesiredSize.Width, _presenter.DesiredSize.Height));
+
+		// Layout can invoke application code that hides or reopens the menu.
+		if (!ReferenceEquals(_pendingLayout, layoutRequest))
+		{
+			return;
+		}
 
 		// Get the desired size of the presenter.
 		var presenterWidth = _presenter.ActualWidth > 0 ? _presenter.ActualWidth : _presenter.DesiredSize.Width;
@@ -250,7 +271,7 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 		var regionHeight = Math.Max(1, (int)Math.Ceiling(presenterHeight));
 
 		// Get the work area for positioning.
-		var workArea = WindowHelpers.GetFlyoutWorkAreaRect(new Point(point.X, point.Y));
+		var workArea = WindowHelpers.GetFlyoutWorkAreaRect(point);
 
 		// Calculate position: align to mouse X, place above the point (like a context menu).
 		// 32 magic number is the offset between window bottom and the actual rendering - probably shadow
@@ -271,19 +292,16 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 
 		// Resize and reposition the host window to the correct size.
 		_host.MoveAndResize(region);
-		_host.SetHWndRectRegion(new RectInt32() { Width = regionWidth, Height = regionHeight });
-
-		_isShowPending = false;
+		if (ReferenceEquals(_pendingLayout, layoutRequest))
+		{
+			_pendingLayout = null;
+			_host.SetHWndRectRegion(new RectInt32() { Width = regionWidth, Height = regionHeight });
+		}
 	}
 
 	private void HideMenu()
 	{
-		_isShowPending = false;
-		HideImmediate();
-	}
-
-	private void HideImmediate()
-	{
+		_pendingLayout = null;
 		UnsubscribeItemClicks();
 
 		_ = _host.UpdateWindowVisibility(false);
@@ -321,12 +339,10 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 
 	private void DisposeMenu()
 	{
-		_isShowPending = false;
-		_menuTarget.Children.Remove(_presenter);
-		_items.CollectionChanged -= Items_CollectionChanged;
-		UnsubscribeItemClicks();
-		_presenter.ItemsSource = null;
 		_host.WindowInactivated -= HostWindow_Inactivated;
+		_items.CollectionChanged -= Items_CollectionChanged;
+		HideMenu();
+		_presenter.ItemsSource = null;
 	}
 #else
 	private void ShowMenu(Point point)
@@ -336,24 +352,48 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 			return;
 		}
 
-		UpdateFlyoutTheme();
+		if (_isClosing)
+		{
+			_showAfterClose = point;
+			return;
+		}
 
-		bool wasOpen = IsOpen;
+		bool wasOpen = _menuFlyout.IsOpen;
+		_showRequested = true;
 		try
 		{
+			UpdateFlyoutTheme();
 			_host.MoveAndResize(new RectInt32() { X = point.X, Y = point.Y }, activate: false);
 			_host.SetHWndRectRegion(new RectInt32() { Width = 1, Height = 1 });
 			_ = _host.UpdateWindowVisibility(true);
 
 			_menuFlyout.ShowAt(_menuTarget);
-			ReportMenuPopupOpened();
+			if (_disposed)
+			{
+				return;
+			}
 
-			IsOpen = true;
+			if (_menuFlyout.IsOpen)
+			{
+				if (_showRequested)
+				{
+					SetMenuOpen();
+				}
+				else
+				{
+					_menuFlyout.Hide();
+				}
+			}
+			else
+			{
+				HideMenuHost();
+			}
 		}
 		catch
 		{
 			if (!wasOpen)
 			{
+				_showRequested = false;
 				HideMenuHost();
 			}
 
@@ -363,36 +403,97 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 
 	private void HideMenu()
 	{
+		_showAfterClose = null;
+		_showRequested = false;
 		try
 		{
-			_menuFlyout.Hide();
+			if (_menuFlyout.IsOpen)
+			{
+				_menuFlyout.Hide();
+			}
 		}
 		finally
 		{
-			HideMenuHost();
+			if (_isClosing)
+			{
+				// Keep the anchor connected and visible until the native popup finishes closing.
+				IsOpen = _menuFlyout.IsOpen;
+			}
+			else if (!_menuFlyout.IsOpen)
+			{
+				HideMenuHost();
+			}
+		}
+	}
+
+	private void MenuFlyout_Opening(object? sender, object e)
+	{
+		if (!_showRequested)
+		{
+			_menuFlyout.Hide();
+		}
+		else if (!PInvoke.IsWindowVisible(_host.HWnd))
+		{
+			// A deferred native opening can arrive after ShowMenu hid the anchor window.
+			_ = _host.UpdateWindowVisibility(true);
 		}
 	}
 
 	private void MenuFlyout_Opened(object? sender, object e)
 	{
-		ReportMenuPopupOpened();
+		if (!_disposed && _showRequested && _menuFlyout.IsOpen)
+		{
+			SetMenuOpen();
+		}
+	}
+
+	private void MenuFlyout_Closing(object? sender, FlyoutBaseClosingEventArgs e)
+	{
+		if (IsOpen || _menuFlyout.IsOpen)
+		{
+			_isClosing = true;
+		}
 	}
 
 	private void MenuFlyout_Closed(object? sender, object e)
 	{
+		_showRequested = false;
+		_isClosing = true;
 		HideMenuHost();
+
+		// WinUI finishes clearing the native placement state after Closed returns.
+#if UWP
+		_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, CompleteMenuClose);
+#else
+		if (!DispatcherQueue.TryEnqueue(CompleteMenuClose))
+		{
+			_showAfterClose = null;
+			_isClosing = false;
+		}
+#endif
 	}
 
-	private void ReportMenuPopupOpened()
+	private void CompleteMenuClose()
 	{
-		if (_disposed || _menuPopupReported || !_menuFlyout.IsOpen)
+		_isClosing = false;
+		var point = _showAfterClose;
+		_showAfterClose = null;
+		if (point is Point showPoint)
 		{
-			return;
+			Show(showPoint);
+		}
+	}
+
+	private void SetMenuOpen()
+	{
+		if (!_menuPopupReported)
+		{
+			// Explorer defers overflow light dismissal while a Win32 menu popup is open.
+			_menuPopupReported = true;
+			PInvoke.NotifyWinEvent(PInvoke.EVENT_SYSTEM_MENUPOPUPSTART, _host.HWnd, (int)OBJECT_IDENTIFIER.OBJID_WINDOW, (int)PInvoke.CHILDID_SELF);
 		}
 
-		// Explorer defers overflow light dismissal while a Win32 menu popup is open.
-		_menuPopupReported = true;
-		PInvoke.NotifyWinEvent(PInvoke.EVENT_SYSTEM_MENUPOPUPSTART, _host.HWnd, (int)OBJECT_IDENTIFIER.OBJID_WINDOW, (int)PInvoke.CHILDID_SELF);
+		IsOpen = true;
 	}
 
 	private void ReportMenuPopupClosed()
@@ -415,11 +516,22 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 
 	private void DisposeMenu()
 	{
+		_showAfterClose = null;
+		_showRequested = false;
+		_menuFlyout.Opening -= MenuFlyout_Opening;
 		_menuFlyout.Opened -= MenuFlyout_Opened;
+		_menuFlyout.Closing -= MenuFlyout_Closing;
 		_menuFlyout.Closed -= MenuFlyout_Closed;
-		if (IsOpen)
+		try
 		{
-			_menuFlyout.Hide();
+			if (_menuFlyout.IsOpen)
+			{
+				_menuFlyout.Hide();
+			}
+		}
+		finally
+		{
+			ReportMenuPopupClosed();
 		}
 	}
 #endif
@@ -458,9 +570,6 @@ public partial class DesktopMenuFlyout : DependencyObject, IDisposable
 		}
 		finally
 		{
-#if !HAS_UNO
-			ReportMenuPopupClosed();
-#endif
 			_host.Dispose();
 			IsOpen = false;
 		}

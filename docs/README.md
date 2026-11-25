@@ -419,7 +419,8 @@ private void TrayIcon_RightClicked(object? sender, MouseEventReceivedEventArgs e
 `Items` is a mutable `IList<MenuFlyoutItemBase>` that accepts direct XAML children. Add
 `MenuFlyoutItem`, `MenuFlyoutSeparator`, or other `MenuFlyoutItemBase` types. Use
 `MenuFlyoutSubItem` for submenus on WinUI and UWP. `IsOpen` is `true` while the menu is open and
-becomes `false` on dismissal or `Hide()`.
+becomes `false` on dismissal or `Hide()`. On Windows, `Show()` may return before the menu opens,
+for example when reopening a menu that is still closing.
 
 `Show(System.Drawing.Point)` uses physical screen pixels. For an offset, adjust the point:
 
