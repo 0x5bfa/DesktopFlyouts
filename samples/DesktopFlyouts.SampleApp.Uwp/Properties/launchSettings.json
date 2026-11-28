@@ -1,7 +1,25 @@
 {
-  "profiles": {
-	"Run": {
-	  "commandName": "MsixPackage"
-	}
-  }
+    "profiles": {
+        "Local Machine": {
+            "commandName": "MsixPackage"
+        },
+        "Windows 10 1507": {
+            "commandName": "MsixPackage",
+            "remoteDebugEnabled": true,
+            "remoteDebugMachine": "10.100.40.0:4026",
+            "authenticationMode": "Windows"
+        },
+        "Windows 10 1809": {
+            "commandName": "MsixPackage",
+            "remoteDebugEnabled": true,
+            "remoteDebugMachine": "10.100.69.99:4026",
+            "authenticationMode": "Windows"
+        },
+        "Windows 10 1903": {
+            "commandName": "MsixPackage",
+            "remoteDebugEnabled": true,
+            "remoteDebugMachine": "10.100.71.186:4026",
+            "authenticationMode": "Windows"
+        }
+    }
 }
